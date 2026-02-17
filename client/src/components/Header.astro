@@ -1,0 +1,162 @@
+---
+import Tw from "../assets/twitter.svg";
+import Ig from "../assets/instagram.svg";
+import { Image } from "astro:assets";
+import bg from "../assets/bg-3d1.jpg";
+---
+
+<header class="relative h-screen w-full overflow-hidden bg-black">
+    <!-- Black Curtain Reveal Animation -->
+    <div class="fixed inset-0 z- bg-black animate-curtain-up pointer-events-none"></div>
+
+    <!-- Background Image -->
+    <div class="absolute inset-0 z-0">
+        <Image
+            src={bg}
+            alt="3D Background"
+            class="w-full h-full object-cover"
+        />
+        <div class="absolute inset-0 bg-black/60"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="absolute top-0 left-0 right-0 z-50 px-4 sm:px-8 md:px-16 py-6 md:py-8 animate-slide-down">
+        <div class="flex items-start justify-between">
+            <!-- Logo/Title -->
+            <div class="text-white">
+                <h1 class="text-xs sm:text-sm md:text-base font-light tracking-wider uppercase">
+                    Tutorials from<br />
+                    <span class="font-semibold">Studio27</span>
+                </h1>
+                <p class="text-[10px] sm:text-xs md:text-sm text-gray-400 mt-2 max-w-[200px] sm:max-w-xs hidden sm:block">
+                    The best ways to improve the presentation of architectural visualization
+                </p>
+            </div>
+
+            <!-- Right Menu - Desktop -->
+            <ul class="hidden md:flex flex-col text-right text-xs md:text-sm text-gray-300 space-y-2 font-light tracking-wide">
+                <li><a href="#product" class="hover:text-white transition-colors">ABOUT THE PRODUCT</a></li>
+                <li><a href="#author" class="hover:text-white transition-colors">ABOUT THE AUTHOR</a></li>
+                <li><a href="#results" class="hover:text-white transition-colors">STUDENT RESULTS</a></li>
+                <li><a href="#questions" class="hover:text-white transition-colors">QUESTIONS</a></li>
+                <li class="pt-2">
+                    <a href="#" class="hover:text-white transition-colors">RS</a> /
+                    <a href="#" class="hover:text-white transition-colors">EN</a>
+                </li>
+            </ul>
+
+            <!-- Mobile Menu Button -->
+            <button class="md:hidden text-white p-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Content -->
+    <div class="absolute inset-0 flex items-center justify-center z-10 px-4">
+        <h2 class="text-white text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-light tracking-wider drop-shadow-2xl animate-scale-in text-center">
+            Studio27
+        </h2>
+    </div>
+
+    <!-- Bottom Info -->
+    <div class="absolute bottom-0 left-0 right-0 px-4 sm:px-8 md:px-16 py-8 md:py-12 z-10">
+        <div class="flex flex-col md:flex-row items-start md:items-end justify-between text-white gap-6 md:gap-0">
+            <!-- CTA Button -->
+            <div class="flex items-center space-x-3 md:space-x-4 animate-slide-up w-full md:w-auto justify-center md:justify-start" style="animation-delay: 0.3s;">
+                <button class="px-6 md:px-8 py-2 md:py-3 border border-white rounded-full hover:bg-white hover:text-black transition-all duration-300 text-xs md:text-sm tracking-wider">
+                    BUY IT NOW
+                </button>
+                <div class="w-12 h-12 md:w-16 md:h-16 border border-white rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all duration-300 cursor-pointer">
+                    <span class="text-xl md:text-2xl">→</span>
+                </div>
+            </div>
+
+            <!-- Course Info -->
+            <div class="flex flex-col sm:flex-row gap-4 sm:gap-8 md:gap-12 text-xs md:text-sm animate-slide-up w-full md:w-auto" style="animation-delay: 0.5s;">
+                <div>
+                    <p class="text-gray-300">6.5 hours</p>
+                    <p class="text-[10px] md:text-xs text-gray-500">of well-structured information</p>
+                </div>
+                <div>
+                    <p class="text-gray-300">3dsmax, Corona renderer</p>
+                    <p class="text-[10px] md:text-xs text-gray-500">English voices</p>
+                </div>
+            </div>
+
+            <!-- Social Icons -->
+            <div class="flex flex-row md:flex-col gap-4 md:gap-4 text-gray-400 animate-slide-up" style="animation-delay: 0.7s;">
+                <a href="#" class="hover:text-white transition-colors"><Tw class="w-5 h-5" /></a>
+                <a href="#" class="hover:text-white transition-colors"><Ig class="w-5 h-5" /></a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<style>
+    @keyframes curtain-up {
+        0% {
+            transform: translateY(0);
+        }
+        100% {
+            transform: translateY(-100%);
+        }
+    }
+
+    @keyframes slide-down {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slide-up {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes scale-in {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .animate-curtain-up {
+        animation: curtain-up 1s ease-in-out forwards;
+    }
+
+    .animate-slide-down {
+        animation: slide-down 0.8s ease-out 1s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .animate-slide-up {
+        animation: slide-up 0.8s ease-out;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .animate-scale-in {
+        animation: scale-in 0.5s ease-out 1s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+</style>
