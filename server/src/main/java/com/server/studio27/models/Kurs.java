@@ -4,19 +4,26 @@ public class Kurs {
     private int id;
     private String naziv;
     private String opis;
-    private Admin admin;
     private int cena;
-
+    private int trajanje;
+    private String slikaUrl;
     public Kurs() {
 
     }
 
-    public Kurs(int id, String naziv, String opis, Admin admin, int cena) {
+    public Kurs(int id, String naziv, String opis, int cena) {
         this.id = id;
         this.naziv = naziv;
         this.opis = opis;
-        this.admin = admin;
         this.cena = cena;
+    }
+    public Kurs(int id, String naziv, String opis, int cena, int trajanje, String slikaUrl) {
+        this.id = id;
+        this.naziv = naziv;
+        this.opis = opis;
+        this.cena = cena;
+        this.trajanje = trajanje;
+        this.slikaUrl = slikaUrl;
     }
 
     public int getId() {
@@ -42,15 +49,6 @@ public class Kurs {
     public void setOpis(String opis) {
         this.opis = opis;
     }
-
-    public Admin getAdmin() {
-        return admin;
-    }
-
-    public void setAdmin(Admin admin) {
-        this.admin = admin;
-    }
-
     public int getCena() {
         return cena;
     }
@@ -58,6 +56,17 @@ public class Kurs {
     public void setCena(int cena) {
         this.cena = cena;
     }
-
+    public int getTrajanje() {
+        return trajanje;
+    } 
+    public void setTrajanje(int trajanje) {
+        this.trajanje = trajanje;
+    }
+    public String getSlikaUrl() {
+        return slikaUrl;
+    }
+    public void setSlikaUrl(String slikaUrl) {
+        this.slikaUrl = slikaUrl;
+    }
 
 }
