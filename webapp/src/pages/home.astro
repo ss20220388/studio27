@@ -10,16 +10,8 @@ import bgImage from "../assets/bg-3d1.jpg";
 ---
 
 <Layout title="Home">
-    <main class=" w-[80vw] h-screen p-5 mx-auto overflow-y-scroll scrollbar-hidden">
-         <!-- Pozadinska slika + overlay -->
-    <div class="absolute inset-0 -z-10" >
-      <img 
-        src={bgImage.src}  
-        alt="Pozadina" 
-        class="w-[80vw] h-screen object-cover" 
-      />
-      <div class="absolute inset-0 bg-black/20"></div> <!-- overlay -->
-    </div>
+    <main class=" w-[80vw] h-screen p-5 mx-auto overflow-y-scroll bg-blue-100 scrollbar-hidden">
+    
 
         <h1 class="sr-only">Home</h1>
         <HomeSection />
