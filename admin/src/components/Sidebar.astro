@@ -1,0 +1,127 @@
+---
+import Home from "../assets/house.svg";
+import Book from "../assets/book.svg";
+import User from "../assets/user.svg";
+import Payment from "../assets/hand-coins.svg";
+import Reviews from "../assets/star.svg";
+import Settings from "../assets/settings.svg";
+---
+
+<script type="module">
+    const hamburger = document.getElementById("hamburger");
+    let stanje = 0; // 0 - zatvoreno, 1 - otvoreno
+
+    function openSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
+        if (sidebar && overlay) {
+            sidebar.classList.remove("-translate-x-full");
+            sidebar.classList.add("translate-x-0");
+            overlay.classList.remove("hidden");
+            hamburger.classList.remove("opacity-100");
+            hamburger.classList.add("opacity-00");
+            hamburger.classList.add("hidden");
+            stanje = 1;
+        }
+    }
+
+    function closeSidebar() {
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
+        if (sidebar && overlay) {
+            sidebar.classList.remove("translate-x-0");
+            sidebar.classList.add("-translate-x-full");
+            overlay.classList.add("hidden");
+            hamburger.classList.remove("hidden");
+            hamburger.classList.remove("opacity-00");
+            hamburger.classList.add("opacity-100");
+        }
+    }
+
+  
+    window.openSidebar = openSidebar;
+    window.closeSidebar = closeSidebar;
+</script>
+
+<div class="flex md:h-screen bg-gray-100 flex">
+    <button
+        class="fixed top-4 left-4 z-50 bg-gray-800 rounded p-2 md:hidden cursor-pointer opacity-100 transition-transform duration-300"
+        onclick="openSidebar()"
+        type="button"
+        id="hamburger"
+    >
+        <svg width="32" height="32" fill="white">
+            <rect y="6" width="32" height="4" rx="2"></rect>
+            <rect y="14" width="32" height="4" rx="2"></rect>
+            <rect y="22" width="32" height="4" rx="2"></rect>
+        </svg>
+    </button>
+
+    <div
+        id="overlay"
+        class="fixed inset-0 bg-black bg-opacity-50 hidden z-30 md:hidden"
+        onclick="closeSidebar()"
+    >
+    </div>
+
+    <div
+        id="sidebar"
+        class="fixed  inset-y-0 left-0 z-40 w-64 bg-gray-800 transform -translate-x-full md:translate-x-0 md:static md:flex flex-col transition-transform duration-300"
+    >
+        <div class="flex items-center justify-center h-16 bg-gray-900">
+            <span class="text-white font-bold uppercase">Admin Dashboard</span>
+        </div>
+
+        <div class="flex flex-col flex-1 overflow-y-auto">
+            <nav class="flex-1 px-2 py-4 bg-gray-800">
+                <a
+                    href="#"
+                    class="flex items-center px-4 py-2 text-gray-100 hover:bg-gray-700"
+                >
+                    <Home class="w-5 h-5 mr-3" /> Home
+                </a>
+                <a
+                    href="#"
+                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
+                >
+                    <Book class="w-5 h-5 mr-3" /> Kursevi
+                </a>
+                <a
+                    href="#"
+                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
+                >
+                    <User class="w-5 h-5 mr-3" /> Studenti
+                </a>
+                <a
+                    href="#"
+                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
+                >
+                    <Payment class="w-5 h-5 mr-3" /> Placanja
+                </a>
+                <a
+                    href="#"
+                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
+                >
+                    <Reviews class="w-5 h-5 mr-3" /> Recenzije
+                </a>
+                <a
+                    href="#"
+                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
+                >
+                    <Settings class="w-5 h-5 mr-3" /> Settings
+                </a>
+                <a
+                    href="#"
+                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700 mt-[55vh]"
+                >
+                    Log out
+                </a>
+            </nav>
+            
+        </div>
+        
+    </div>
+    <div class=" p-6 md:hidden mt-10 mx-auto">
+        <h1 class="text-2xl font-bold text-center">Welcome to the Admin Dashboard</h1>
+    </div>
+</div>
