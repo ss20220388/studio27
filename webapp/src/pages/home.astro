@@ -1,0 +1,43 @@
+---
+import Layout from "../layouts/Layout.astro";
+import HomeSection from "../components/HomeSection.astro";
+import NoviKursevi from "../components/NoviKursevi.astro";
+import MojNapredak from "../components/MojNapredak.astro";
+import PreporuceniKursevi from "../components/PreporuceniKursevi.astro";
+import Obavestenja from "../components/Obavestenja.astro";
+import bgImage from "../assets/bg-3d1.jpg";
+
+---
+
+<Layout title="Home">
+    <main class=" w-[80vw] h-screen p-5 mx-auto overflow-y-scroll scrollbar-hidden">
+         <!-- Pozadinska slika + overlay -->
+    <div class="absolute inset-0 -z-10" >
+      <img 
+        src={bgImage.src}  
+        alt="Pozadina" 
+        class="w-[80vw] h-screen object-cover" 
+      />
+      <div class="absolute inset-0 bg-black/20"></div> <!-- overlay -->
+    </div>
+
+        <h1 class="sr-only">Home</h1>
+        <HomeSection />
+        <br />
+        <!-- Flex container za dve sekcije -->
+        <div class="flex flex-col lg:flex-row gap-6">
+                <NoviKursevi />
+ 
+                <MojNapredak />
+            
+        </div>
+        <br />
+        <!-- Flex container za dve sekcije -->
+        <div class="flex flex-col lg:flex-row gap-6">
+                <PreporuceniKursevi />
+ 
+                <Obavestenja />
+            
+        </div>
+    </main>
+</Layout>
