@@ -8,7 +8,13 @@ import react from '@astrojs/react';
 export default defineConfig({
   output: 'server',
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    server: {
+      allowedHosts: [
+        'admin.studio27.local'
+      ]
+    },
+
   },
 
   integrations: [react()]

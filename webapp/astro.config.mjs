@@ -10,6 +10,11 @@ export default defineConfig({
   integrations: [react()],
 
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    server: {
+      allowedHosts: [
+        'app.studio27.local'
+      ]
+    }
   }
 });

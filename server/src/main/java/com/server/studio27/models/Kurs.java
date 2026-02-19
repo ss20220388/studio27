@@ -1,5 +1,6 @@
 package com.server.studio27.models;
-
+import java.util.List;
+import com.server.studio27.models.Lekcija;
 public class Kurs {
     private int id;
     private String naziv;
@@ -7,6 +8,7 @@ public class Kurs {
     private int cena;
     private int trajanje;
     private String slikaUrl;
+    private List<Lekcija> lekcije;
     public Kurs() {
 
     }
@@ -24,6 +26,15 @@ public class Kurs {
         this.cena = cena;
         this.trajanje = trajanje;
         this.slikaUrl = slikaUrl;
+    }
+    public Kurs(int id, String naziv, String opis, int cena, int trajanje, String slikaUrl, List<Lekcija> lekcije) {
+        this.id = id;
+        this.naziv = naziv;
+        this.opis = opis;
+        this.cena = cena;
+        this.trajanje = trajanje;
+        this.slikaUrl = slikaUrl;
+        this.lekcije = lekcije;
     }
 
     public int getId() {
@@ -67,6 +78,12 @@ public class Kurs {
     }
     public void setSlikaUrl(String slikaUrl) {
         this.slikaUrl = slikaUrl;
+    }
+    public List<Lekcija> getLekcije() {
+        return lekcije;
+    }
+    public void setLekcije(List<Lekcija> lekcije) {
+        this.lekcije = lekcije;
     }
 
 }

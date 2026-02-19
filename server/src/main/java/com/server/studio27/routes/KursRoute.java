@@ -20,4 +20,8 @@ public class KursRoute {
     public List<Kurs> getAllKursevi() {
         return kursController.getAllKursevi();
     }
+    @GetMapping("/kursevi-sa-lekcijama")
+    public List<Kurs> getAllKurseviSaLekcijama() {
+        return kursController.getAllKurseviSaLekcijama();
+    }
 }

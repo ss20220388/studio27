@@ -1,0 +1,9 @@
+---
+import Layout from "../layouts/Layout.astro";
+import KursTable from "../react components/KursTable.tsx";
+---
+
+<Layout title="Kursevi">
+    <h1 class="hidden">Kursevi</h1>
+    <KursTable client:load />
+</Layout>
