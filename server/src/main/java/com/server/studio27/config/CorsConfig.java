@@ -1,4 +1,4 @@
-package com.server.studio27.cors;
+package com.server.studio27.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
