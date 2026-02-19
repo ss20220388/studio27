@@ -4,8 +4,6 @@ public class User {
     private int userId;
     private String email;
     private String password;
-    private Admin admin;
-    private Student student;
 
     public User() {
 
@@ -15,13 +13,7 @@ public class User {
         this.email = email;
         this.password = password;
     }
-    public User(int userId, String email, String password, Admin admin, Student student) {
-        this.userId = userId;
-        this.email = email;
-        this.password = password;
-        this.admin = admin;
-        this.student = student;
-    }
+
 
     public int getUserId() {
         return userId;
@@ -55,17 +47,6 @@ public class User {
         if (!email.equals(user.email)) return false;
         return password.equals(user.password);
     }
-    public Admin getAdmin() {
-        return admin;
-    }
-    public void setAdmin(Admin admin) {
-        this.admin = admin;
-    }
-    public Student getStudent() {
-        return student;
-    }
-    public void setStudent(Student student) {
-        this.student = student;
-    }
+
 
 }

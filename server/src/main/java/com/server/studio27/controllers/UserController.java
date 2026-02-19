@@ -1,14 +1,16 @@
 package com.server.studio27.controllers;
 
-import com.server.studio27.models.Admin;
-import com.server.studio27.models.Student;
-import com.server.studio27.models.User;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+
+import com.server.studio27.models.Admin;
+import com.server.studio27.models.Student;
+import com.server.studio27.models.User;
 
 @Service
 public class UserController {
@@ -52,14 +54,12 @@ public List<User> getUsers() {
             Admin admin = new Admin();
             admin.setIme(ime);
             admin.setPrezime(prezime);
-            user.setAdmin(admin);
         }
 
         if ("STUDENT".equals(role)) {
             Student student = new Student();
             student.setIme(ime);
             student.setPrezime(prezime);
-            user.setStudent(student);
         }
 
         users.add(user);

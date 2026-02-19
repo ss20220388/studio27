@@ -1,10 +1,13 @@
 package com.server.studio27.routes;
-import com.server.studio27.controllers.StudentController;
+import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
-import java.util.*;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.server.studio27.controllers.StudentController;
 import com.server.studio27.models.Student;
+
 @RestController
 @RequestMapping("/api")
 
@@ -18,6 +21,10 @@ public class StudentRoute {
     public List<Student> getStudents() {
         students = studentController.getStudents();
         return students;
+    }
+    @GetMapping("/active-students")
+    public List<Student> getActiveStudents() {
+        return studentController.getActiveStudents();
     }
     
 }
