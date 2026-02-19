@@ -1,33 +1,28 @@
 ---
+import KursComponents from "../components/KursComponents.astro";
 import Layout from "../layouts/Layout.astro";
 
 interface Kurs {
     id: number;
     naziv: string;
     opis: string;
-    cena:number;
-    trajanje:number;
-    slikaUrl:string;
+    cena: number;
+    trajanje: number;
+    slikaUrl: string;
 }
 
-const data:Response =await  fetch("http://localhost:8080/api/kursevi")
-const kursevi:Kurs[] = await data.json();
+const data: Response = await fetch("http://localhost:8080/api/kursevi");
+const kursevi: Kurs[] = await data.json();
 ---
 
-<Layout title="Kurs">
-    <main>
-        <h1 class="hidden">Kurs</h1>
-        <ul>
-            {kursevi.map((kurs:Kurs,index:number) => (
-                 <Fragment key={index}>
-                <li >
-                    <h2>{kurs.naziv}</h2>
-                    <p>{kurs.opis}</p>
-                    <p>Cena: {kurs.cena} RSD</p>
-                    <p>Trajanje: {kurs.trajanje} časova</p>
-                </li>
-                </Fragment>
+<Layout title="Kursevi">
+    <main class="p-8">
+        <h1 class="text-3xl font-bold mb-8">Svi kursevi</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {kursevi.map((kurs) => (
+                <KursComponents kurs={kurs} />
             ))}
-        </ul>
+        </div>
     </main>
 </Layout>

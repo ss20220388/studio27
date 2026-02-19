@@ -1,0 +1,36 @@
+---
+import KursComponents from "../components/KursComponents.astro";
+import Layout from "../layouts/Layout.astro";
+
+interface Kurs {
+    id: number;
+    naziv: string;
+    opis: string;
+    cena: number;
+    trajanje: number;
+    slikaUrl: string;
+}
+
+const data: Response = await fetch("http://localhost:8080/api/pohadja");
+if (!data.ok) throw new Error("Ne mogu da dobijem kurseve");
+
+const result = await data.json();
+
+// Ako backend vraća objekat { kursevi: [...] }
+const kursevi: Kurs[] = Array.isArray(result) ? result : result.kursevi || [];
+---
+<Layout title="Moji kursevi">
+    <main class="p-8">
+        <h1 class="text-3xl font-bold mb-8">Moji kursevi</h1>
+
+        {kursevi.length === 0 ? (
+            <p>Nema kurseva za prikaz</p>
+        ) : (
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {kursevi.map((kurs) => (
+                    <KursComponents kurs={kurs} />
+                ))}
+            </div>
+        )}
+    </main>
+</Layout>

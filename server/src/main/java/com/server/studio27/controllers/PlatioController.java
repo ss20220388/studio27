@@ -1,11 +1,14 @@
 package com.server.studio27.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+
+import com.server.studio27.models.Platio;
 import com.server.studio27.models.Student;
 
 @Service
@@ -34,4 +37,8 @@ public class PlatioController {
 
         return studenti;
     }
+
+   
+
+    
 }

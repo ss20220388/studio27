@@ -1,0 +1,35 @@
+---
+interface Placanje {
+    studentId: number;
+    ime: string;
+    prezime: string;
+    email: string;
+    brojTelefona: string;
+    datumPlacanja: string;
+    cenaPlacanja: number;
+}
+const { mojiPlacanja } = Astro.props as { mojiPlacanja: Placanje[] };
+---
+<section
+    class="shadow-md bg-white rounded-xl p-6 hover:shadow-xl transition duration-300 cursor-pointer w-full"
+>
+    
+    <h2 class="text-xl font-bold text-gray-800 mb-2">
+        {mojiPlacanja[0].ime} {mojiPlacanja[0].prezime}
+    </h2>
+    <h2 class="text-xl font-bold text-gray-800 mb-2">
+        {mojiPlacanja[0].email} 
+    </h2>
+
+    <p class="text-gray-600 mb-3">
+        {mojiPlacanja[0].datumPlacanja}
+    </p>
+
+    <p class="font-semibold text-indigo-600">
+        {mojiPlacanja[0].cenaPlacanja} RSD
+    </p>
+
+    <p class="text-sm text-gray-500">
+        {mojiPlacanja[0].brojTelefona}
+    </p>
+</section>
