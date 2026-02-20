@@ -9,8 +9,15 @@ public class CorsConfig implements WebMvcConfigurer {
     
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")  // Sve rute koje počinju sa /api
-                .allowedOrigins("http://localhost:4000","admin.studio27.local","studio27.local","app.studio27.local")  // Tvoj frontend
+        registry.addMapping("/api/**")
+                .allowedOrigins(
+                        "http://studio27.local",
+                        "http://admin.studio27.local",
+                        "http://app.studio27.local",
+                        "http://localhost:4000",
+                        "http://localhost:4001",
+                        "http://localhost:4002"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);

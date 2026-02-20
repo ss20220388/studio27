@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { Image } from "astro:assets";
 ---
 
 <Layout title="Admin Dashboard">
@@ -9,7 +10,7 @@ import Layout from "../layouts/Layout.astro";
 		</h1>
 		<video width="640" controls>
 			<source
-				src="http://localhost:8080/api/video/stream?remotePath=/videos/proba.mp4"
+				src="http://localhost:8080/api/video/stream?remoteFilePath=/videos/proba.mp4"
 				type="video/mp4"
 			/>
 		</video>

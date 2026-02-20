@@ -1,12 +1,11 @@
 package com.server.studio27.routes;
 
-import org.springframework.web.bind.annotation.GetMapping;
-
-import com.server.studio27.controllers.PlatioController;
-import com.server.studio27.models.Student;
 import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.server.studio27.controllers.PlacanjeController;
 import com.server.studio27.models.Placanje;
 

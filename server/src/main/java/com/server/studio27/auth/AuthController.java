@@ -1,0 +1,199 @@
+package com.server.studio27.auth;
+
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.server.studio27.requests.LoginRequest;
+import com.server.studio27.requests.RegisterAdminRequest;
+import com.server.studio27.requests.RegisterRequest;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+
+@RestController
+@RequestMapping("api/auth")
+public class AuthController {
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
+    private final JdbcTemplate jdbcTemplate;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthController(
+            AuthenticationManager authenticationManager,
+            JwtService jwtService,
+            UserDetailsService userDetailsService,
+            JdbcTemplate jdbcTemplate,
+            PasswordEncoder passwordEncoder) {
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+        this.jdbcTemplate = jdbcTemplate;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(
+            @RequestBody LoginRequest request,
+            HttpServletResponse response) {
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()));
+
+        UserDetails user = userDetailsService.loadUserByUsername(request.getEmail());
+
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setDomain(".studio27.local");
+        cookie.setMaxAge(7 * 24 * 60 * 60);
+
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok(Map.of(
+                "accessToken", accessToken));
+    }
+
+    @PostMapping("/register-user")
+    public ResponseEntity<?> registerUser(@RequestBody RegisterRequest request) {
+        String checkSQL = "SELECT COUNT(*) FROM user WHERE email = ?";
+        Integer count = jdbcTemplate.queryForObject(checkSQL, Integer.class, request.getEmail());
+        if (count != null && count > 0) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Korisnik sa ovim email-om vec postoji"));
+        }
+
+        String hashedPassword = passwordEncoder.encode(request.getPassword());
+
+        jdbcTemplate.update("INSERT INTO user (email, password) VALUES (?, ?)",
+                request.getEmail(), hashedPassword);
+
+        Integer userId = jdbcTemplate.queryForObject(
+                "SELECT userId FROM user WHERE email = ?", Integer.class, request.getEmail());
+
+        jdbcTemplate.update(
+                "INSERT INTO student (studentId, ime, prezime, brojTelefona) VALUES (?, ?, ?, ?)",
+                userId, request.getIme(), request.getPrezime(), request.getBrojTelefona());
+
+        return ResponseEntity.ok(Map.of("message", "Korisnik uspesno kreiran"));
+    }
+
+    @PostMapping("/register-admin")
+    public ResponseEntity<?> registerAdmin(@RequestBody RegisterAdminRequest entity) {
+        String checkSQL = "SELECT COUNT(*) FROM user WHERE email = ?";
+        Integer count = jdbcTemplate.queryForObject(checkSQL, Integer.class, entity.getEmail());
+        if (count != null && count > 0) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Admin sa ovim email-om vec postoji"));
+        }
+
+        String hashedPassword = passwordEncoder.encode(entity.getPassword());
+
+        jdbcTemplate.update("INSERT INTO user (email, password) VALUES (?, ?)",
+                entity.getEmail(), hashedPassword);
+
+        Integer userId = jdbcTemplate.queryForObject(
+                "SELECT userId FROM user WHERE email = ?", Integer.class, entity.getEmail());
+
+        jdbcTemplate.update(
+                "INSERT INTO admin (adminId, ime, prezime) VALUES (?, ?, ?)",
+                userId, entity.getIme(), entity.getPrezime());
+
+        return ResponseEntity.ok(Map.of("message", "Admin uspesno kreiran"));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me(Authentication authentication) {
+        if (authentication == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Niste prijavljeni"));
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String email = userDetails.getUsername();
+        String role = userDetails.getAuthorities().iterator().next().getAuthority();
+
+        String SQL = """
+                    SELECT
+                        u.userId, u.email,
+                        COALESCE(a.ime, s.ime) AS ime,
+                        COALESCE(a.prezime, s.prezime) AS prezime
+                    FROM user u
+                    LEFT JOIN admin a ON u.userId = a.adminId
+                    LEFT JOIN student s ON u.userId = s.studentId
+                    WHERE u.email = ?
+                """;
+
+        Map<String, Object> row = jdbcTemplate.queryForMap(SQL, email);
+
+        return ResponseEntity.ok(Map.of(
+                "userId", row.get("userId"),
+                "email", row.get("email"),
+                "ime", row.get("ime") != null ? row.get("ime") : "",
+                "prezime", row.get("prezime") != null ? row.get("prezime") : "",
+                "role", role));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(jakarta.servlet.http.HttpServletRequest request) {
+        // Uzmi refreshToken iz cookie-a
+        String refreshToken = null;
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("refreshToken".equals(cookie.getName())) {
+                    refreshToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (refreshToken == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Refresh token nije pronadjen"));
+        }
+
+        try {
+            String email = jwtService.extractUsername(refreshToken);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+            if (jwtService.isTokenValid(refreshToken, userDetails)) {
+                String newAccessToken = jwtService.generateAccessToken(userDetails);
+                return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
+            } else {
+                return ResponseEntity.status(401).body(Map.of("error", "Refresh token je istekao"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Nevalidan refresh token"));
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        Cookie cookie = new Cookie("refreshToken", "");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setDomain(".studio27.local");
+        cookie.setMaxAge(0); // brise cookie
+
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok(Map.of("message", "Uspesno odjavljen"));
+    }
+
+}

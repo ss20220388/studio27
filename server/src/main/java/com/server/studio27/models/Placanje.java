@@ -9,7 +9,7 @@ public class Placanje {
     private String datumPlacanja;
     private int cenaPlacanja;
     
-    public Placanje(int studentId, String ime, String prezime, String email, String brojTelefona, int cenaPlacanja) {
+    public Placanje(int studentId, String ime, String prezime, String email, String brojTelefona, String datumPlacanja, int cenaPlacanja) {
         this.studentId = studentId;
         this.ime = ime;
         this.prezime = prezime;

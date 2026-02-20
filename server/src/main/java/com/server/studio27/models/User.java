@@ -37,6 +37,7 @@ public class User {
     public boolean isValid() {
         return email != null && !email.isEmpty() && password != null && !password.isEmpty();
     }
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -46,6 +47,14 @@ public class User {
         if (userId != user.userId) return false;
         if (!email.equals(user.email)) return false;
         return password.equals(user.password);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = userId;
+        result = 31 * result + (email != null ? email.hashCode() : 0);
+        result = 31 * result + (password != null ? password.hashCode() : 0);
+        return result;
     }
 
 

@@ -1,6 +1,5 @@
 package com.server.studio27.models;
 import java.util.List;
-import com.server.studio27.models.Lekcija;
 public class Kurs {
     private int id;
     private String naziv;

@@ -1,5 +1,6 @@
 package com.server.studio27.controllers;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ public class HetznerAPIController {
     private String password;
     @Value("${hetzner.sftp.port}")
     private int port;
+
     private static final String BASE_URL = "https://api.hetzner.com/v1";
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -275,5 +277,38 @@ public class HetznerAPIController {
             return -1;
         }
     }
+
+    public String uploadEncryptedFile( String remoteFolderPath, String filename, byte[] encryptedData) {
+        JSch jsch = new JSch();
+
+        try {
+            Session session = jsch.getSession(user, host, port);
+            session.setPassword(password);
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.connect();
+
+            Channel channel = session.openChannel("sftp");
+            channel.connect();
+            ChannelSftp sftp = (ChannelSftp) channel;
+
+            String remoteFilePath = remoteFolderPath + "/" + filename;
+            createFolder( remoteFolderPath);
+
+            String fullPath = remoteFilePath;
+            sftp.put(new ByteArrayInputStream(encryptedData), fullPath);
+
+            sftp.exit();
+            session.disconnect();
+            System.out.println("Encrypted file uploaded: " + fullPath);
+            return "Success: " + fullPath;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error: " + e.getMessage();
+        }
+    }
+
+    
+    
 
 }

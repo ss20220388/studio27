@@ -1,6 +1,4 @@
 package com.server.studio27.models;
-import com.server.studio27.models.Student;
-import com.server.studio27.models.Kurs;
 
 public class Pohadja   {
     private int studentId;

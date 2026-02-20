@@ -1,5 +1,4 @@
 package com.server.studio27.models;
-import com.server.studio27.models.User;
 public class Admin extends User {
     private int userId;
     private String ime;
