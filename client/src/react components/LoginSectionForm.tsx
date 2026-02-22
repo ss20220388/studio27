@@ -87,7 +87,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
         setError(null)
         const deviceId = getDeviceId()
         try {
-            const res = await fetch('/api/auth/login', {
+            const res = await fetch('http://localhost:8080/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -103,7 +103,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
             if (!json) { setError('Server je vratio neispravan odgovor'); return }
             if (json.accessToken) {
                 localStorage.setItem('accessToken', json.accessToken)
-                const me = await fetch('/api/auth/me', {
+                const me = await fetch('http://localhost:8080/api/auth/me', {
                     headers: { 'Authorization': `Bearer ${json.accessToken}` },
                 })
                 if (me.ok) {
@@ -130,7 +130,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
         setError(null)
         setSuccess(null)
         try {
-            const res = await fetch('/api/auth/register-user', {
+            const res = await fetch('http://localhost:8080/api/auth/register-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
