@@ -1,0 +1,25 @@
+---
+import { Image } from "astro:assets"
+
+---
+<section id="onama">
+<div class="w-full h-[1000px] bg-black relative">
+    <div class="h-48 md:h-40 w-[90%] mx-auto  bg-gradient-to-b from-black via-[#1a1410] to-[#2b1f17] relative"></div>
+    
+  <div class="relative md:w-[70%] w-[80%] mx-auto ">
+    
+    <div class="absolute md:-top-[7rem] -top-[4rem] flex flex-col items-center">
+      <Image src="/src/assets/studio27.jpg" width={600} height={600} alt="Profile" class="md:w-[24rem] sm:w-[16rem] w-[10rem] object-center" />
+      <h2 class="sm:text-6xl text-6xl text-white font-serif mt-10" style="font-family: 'DM Serif Display', serif;">O nama</h2>
+      <p class="text-center text-white text-md mt-6">Studio27 je kreativni studio specijalizovan za profesionalnu 3D arhitektonsku vizualizaciju. Bavimo se izradom fotorealističnih rendera enterijera i eksterijera za klijente širom sveta.
+
+Naš cilj je da svaku ideju pretvorimo u vizuelno iskustvo koje ostavlja utisak. Kombinujemo tehničku preciznost, umetnički pristup i savremene alate poput 3ds Max-a i Corona Renderer-a kako bismo postigli vrhunski kvalitet prezentacije projekata.
+
+Pored render usluga, organizujemo i kurseve 3ds Max + Corona Renderer, namenjene svima koji žele da od nule dođu do profesionalnog nivoa. Naš program je osmišljen tako da polaznicima pruži praktično znanje, realne projekte i jasnu strukturu učenja.
+
+Verujemo da kvalitetna vizualizacija nije samo slika – već moćan alat komunikacije između ideje i realizacije.</p>
+      <button class="text-lg font-semibold px-6 py-2 mt-8 text-gray-300 border border-white rounded-full hover:bg-white hover:text-black">Contact</button>
+    </div>
+  </div>
+</div>
+</section>
