@@ -21,7 +21,7 @@ const DropDownMenu: React.FC = () => {
     useEffect(() => {
         const token = localStorage.getItem('accessToken')
         if (!token) return
-        fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch('http://localhost:8080/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
             .then(r => r.ok ? r.json() : null)
             .then(u => { if (u) setUser(u) })
             .catch(() => {})
@@ -29,7 +29,7 @@ const DropDownMenu: React.FC = () => {
 
     const handleLogout = async () => {
         try {
-            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+            await fetch('http://localhost:8080/api/auth/logout', { method: 'POST', credentials: 'include' })
         } catch { /* ignore */ }
         localStorage.removeItem('accessToken')
         setUser(null)
