@@ -50,12 +50,37 @@ public class AuthController {
             @RequestBody LoginRequest request,
             HttpServletResponse response) {
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()));
+        // deviceId je obavezan
+        if (request.getDeviceId() == null || request.getDeviceId().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "deviceId je obavezan"));
+        }
+
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()));
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Pogresan email ili lozinka"));
+        }
 
         UserDetails user = userDetailsService.loadUserByUsername(request.getEmail());
+
+        // Proveri da li je nalog vec zakljucan za neki uredjaj
+        String existingDeviceId = jdbcTemplate.queryForObject(
+                "SELECT deviceId FROM user WHERE email = ?", String.class, request.getEmail());
+
+        if (existingDeviceId != null && !existingDeviceId.equals(request.getDeviceId())) {
+            // Nalog je vezan za drugi uredjaj
+            return ResponseEntity.status(403).body(Map.of("error",
+                    "Vec ste ulogovani na drugom racunaru. Kontaktirajte admina za otkljucavanje."));
+        }
+
+        // Ako nema deviceId u bazi, zakljucaj nalog za ovaj uredjaj
+        if (existingDeviceId == null) {
+            jdbcTemplate.update("UPDATE user SET deviceId = ? WHERE email = ?",
+                    request.getDeviceId(), request.getEmail());
+        }
 
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -64,7 +89,6 @@ public class AuthController {
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
-        cookie.setDomain(".studio27.local");
         cookie.setMaxAge(7 * 24 * 60 * 60);
 
         response.addCookie(cookie);
@@ -184,11 +208,13 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
+        // NE brisemo token iz baze - nalog ostaje zakljucan za ovaj uredjaj
+        // Samo admin moze da otkljuca nalog (obrise token iz baze)
+
         Cookie cookie = new Cookie("refreshToken", "");
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
-        cookie.setDomain(".studio27.local");
         cookie.setMaxAge(0); // brise cookie
 
         response.addCookie(cookie);
