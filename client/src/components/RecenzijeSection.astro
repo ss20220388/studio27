@@ -1,0 +1,38 @@
+---
+type Recenzija = {
+  id: number;
+  korisnik: string;
+  komentar: string;
+};
+const res = await fetch("http://localhost:8080/api/recenzije");
+const recenzije:Recenzija[] = await res.json();
+console.log(recenzije);
+---
+
+<section id="recenzije" class="gap-8 space-y-8 md:columns-2 lg:columns-3">
+
+  {recenzije.map((recenzija) => (
+    <div class="p-8 bg-white border border-gray-100 shadow-2xl rounded-3xl shadow-gray-600/10 break-inside-avoid">
+
+      <div class="flex gap-4 items-start">
+        <img
+          class="w-12 h-12 rounded-full object-cover"
+          alt={recenzija.korisnik}
+          loading="lazy"
+        />
+
+        <div class="flex-1">
+          <h6 class="text-lg font-medium text-gray-700">
+            {recenzija.korisnik}
+          </h6>
+        </div>
+      </div>
+
+      <p class="mt-6 text-gray-600">
+        {recenzija.komentar}
+      </p>
+
+    </div>
+  ))}
+
+</section>
