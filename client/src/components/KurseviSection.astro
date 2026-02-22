@@ -1,0 +1,81 @@
+---
+type Kurs = {
+  id: number;
+  naziv: string;
+  opis: string;
+};
+
+/*const kursevi: Kurs[] = [
+  {
+    id: 1,
+    naziv: "Osnovni kurs arhitektonske vizualizacije",
+    opis: "Osnove 3D modelovanja, rad u 3ds Max-u i osnovni renderi enterijera.",
+  },
+  {
+    id: 2,
+    naziv: "Napredni kurs rendera enterijera",
+    opis: "Realistični materijali, osvetljenje i profesionalna postprodukcija.",
+  },
+  {
+    id: 3,
+    naziv: "Eksterijer vizualizacija",
+    opis: "Modelovanje okruženja, pejzaž, atmosfera i fotorealistični renderi.",
+  },
+];*/
+const res = await fetch("http://localhost:8080/api/kursevi");
+const kursevi:Kurs[] = await res.json();
+
+---
+
+<section id="kursevi" class="bg-black text-white text-center py-32 px-8">
+  <h2
+            class="text-5xl md:text-6xl text-white tracking-wide mb-24"
+            style="font-family: 'Playfair Display', serif;"
+        >
+            NAŠI KURSEVI
+        </h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+
+    {kursevi.map((kurs) => (
+      <div class="bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all hover:scale-105 duration-300">
+
+        <!-- Image Section -->
+        <div class="relative">
+          <div
+            class="h-72 bg-cover bg-center"
+            style="background-image: url('https://images.unsplash.com/photo-1492724441997-5dc865305da7?q=80&w=2070&auto=format&fit=crop');"
+          >
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
+            <div class="absolute inset-0 p-6 flex flex-col justify-end">
+              <h2 class="text-2xl font-bold text-white leading-tight">
+                {kurs.naziv}
+              </h2>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-6 bg-white space-y-4">
+          <p class="text-gray-600 text-sm leading-relaxed">
+            {kurs.opis}
+          </p>
+
+          <!-- CTA -->
+          <div class="flex justify-between items-center">
+            <a
+              href={`/kurs/${kurs.id}`}
+              class="bg-black text-white py-2 px-6 rounded-full text-sm font-medium shadow-md hover:bg-gray-800 transition-all"
+            >
+              Prijavi se
+            </a>
+            
+          </div>
+        </div>
+
+      </div>
+    ))}
+
+  </div>
+
+</section>
