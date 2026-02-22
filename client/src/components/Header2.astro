@@ -33,7 +33,7 @@ import LoginSectionForm from '../react components/LoginSectionForm.tsx'
                         <li><a class="inline-block no-underline hover:text-white hover:underline py-2 px-4" href="#kursevi">Kursevi</a></li>
                          <li><a class="inline-block no-underline hover:text-white hover:underline py-2 px-4" href="#prednosti">Prednosti obuke</a></li>
                           <li><a class="inline-block no-underline hover:text-white hover:underline py-2 px-4" href="#struktura">Struktura ucenja</a></li>
-                        <li><a class="inline-block no-underline hover:text-white hover:underline py-2 px-4" href="#studenti">Radovi naših studenta</a></li>
+                        <li><a class="inline-block no-underline hover:text-white hover:underline py-2 px-4" href="#recenzije">Radovi naših studenta</a></li>
                         <li><a class="inline-block no-underline hover:text-white hover:underline py-2 px-4" href="#onama">O nama</a></li>
                     </ul>
                 </nav>
@@ -68,7 +68,7 @@ import LoginSectionForm from '../react components/LoginSectionForm.tsx'
             try{
                 const token = localStorage.getItem('accessToken')
                 if(token){
-                    fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } }).then(r=>r.ok? r.json(): null).then(user=>{ if(user) setUser(user) })
+                    fetch('http://localhost:8080/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } }).then(r=>r.ok? r.json(): null).then(user=>{ if(user) setUser(user) })
                 }
             }catch(e){}
         })()

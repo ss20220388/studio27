@@ -64,12 +64,12 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
 
     const tryRestoreSession = async () => {
         try {
-            const r = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' })
+            const r = await fetch('http://localhost:8080/api/auth/refresh', { method: 'POST', credentials: 'include' })
             if (!r.ok) return
             const data = await r.json()
             if (data.accessToken) {
                 localStorage.setItem('accessToken', data.accessToken)
-                const me = await fetch('/api/auth/me', {
+                const me = await fetch('http://localhost:8080/api/auth/me', {
                     headers: { 'Authorization': `Bearer ${data.accessToken}` },
                 })
                 if (me.ok) {

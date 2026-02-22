@@ -7,7 +7,6 @@ type Kurs = {
 };
 const res = await fetch("http://localhost:8080/api/kursevi");
 const kursevi:Kurs[] = await res.json();
-console.log(kursevi);
 ---
 
 <section id="kursevi" class="bg-black text-white text-center py-32 px-8">
