@@ -93,11 +93,14 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
                 credentials: 'include',
                 body: JSON.stringify({ email, password, deviceId }),
             })
-            const json = await res.json()
+            const text = await res.text()
+            let json: any
+            try { json = JSON.parse(text) } catch { json = null }
             if (!res.ok) {
-                setError(json.error || 'Greška pri prijavi')
+                setError(json?.error || `Greška pri prijavi (${res.status})`)
                 return
             }
+            if (!json) { setError('Server je vratio neispravan odgovor'); return }
             if (json.accessToken) {
                 localStorage.setItem('accessToken', json.accessToken)
                 const me = await fetch('/api/auth/me', {
@@ -132,9 +135,11 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             })
-            const json = await res.json()
+            const text = await res.text()
+            let json: any
+            try { json = JSON.parse(text) } catch { json = null }
             if (!res.ok) {
-                setError(json.error || 'Greška pri registraciji')
+                setError(json?.error || `Greška pri registraciji (${res.status})`)
                 return
             }
             setSuccess('Uspešno ste se registrovali! Sada se ulogujte.')
