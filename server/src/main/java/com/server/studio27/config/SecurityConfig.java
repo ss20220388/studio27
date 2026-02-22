@@ -34,6 +34,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/kursevi/**").permitAll()
                         .requestMatchers("/api/kursevi-sa-lekcijama/**").permitAll()
+                        .requestMatchers("/api/download-file").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
