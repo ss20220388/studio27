@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+*{
+    --webkit-scrollbar-width: none;
+    scrollbar-width: none;
+}
 .work-sans {
             font-family: 'Work Sans', sans-serif;
         }
