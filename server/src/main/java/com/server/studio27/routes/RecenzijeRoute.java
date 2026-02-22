@@ -12,15 +12,13 @@ import com.server.studio27.models.Recenzije;
 @RequestMapping("/api")
 public class RecenzijeRoute {
     private final RecenzijeController recenzijeController;
-    private List<Recenzije> recenzije;
 
     public RecenzijeRoute(RecenzijeController recenzijeController) {
         this.recenzijeController = recenzijeController;
-        this.recenzije = recenzijeController.getRecenzije();
     }
     
     @GetMapping("/recenzije")
     public List<Recenzije> getRecenzije() {
-        return recenzije;
+        return recenzijeController.getRecenzije();
     }
 }
