@@ -128,7 +128,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
 
                 <div className="text-center">
                     <p className="text-sm text-gray-600">
-                        {loginForm ? 'Jos uvek nemas nalog?' : 'Vec imaš nalog?'}
+                        {loginForm ? 'Jos uvek nemas nalog? ' : 'Vec imaš nalog? '}
                         <button onClick={() => setLoginForm(!loginForm)} className="font-medium text-black transition-colors hover:text-gray-700">{loginForm ? 'Registruj se' : 'Uloguj se'}</button>
                     </p>
                 </div>
