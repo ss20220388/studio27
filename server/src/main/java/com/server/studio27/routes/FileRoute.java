@@ -114,7 +114,7 @@ public class FileRoute {
         return hetznerapiService.listFilesInFolder(remoteFolderPath);
     }
 
-    @GetMapping("/download-file")
+    @GetMapping("/media")
     public ResponseEntity<byte[]> downloadFile(@RequestParam String remoteFilePath) {
         byte[] fileData = hetznerapiService.downloadFile(remoteFilePath);
         if (fileData == null || fileData.length == 0) {

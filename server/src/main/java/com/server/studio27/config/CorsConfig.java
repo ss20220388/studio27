@@ -15,8 +15,8 @@ public class CorsConfig implements WebMvcConfigurer {
                         "http://admin.studio27.local",
                         "http://app.studio27.local",
                         "http://localhost:4000",
-                        "http://localhost:4001",
-                        "http://localhost:4002"
+                        "http://localhost:5000",
+                        "http://localhost:3000"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")

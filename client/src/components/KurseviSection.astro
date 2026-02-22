@@ -5,24 +5,6 @@ type Kurs = {
   opis: string;
   slikaUrl: string;
 };
-
-/*const kursevi: Kurs[] = [
-  {
-    id: 1,
-    naziv: "Osnovni kurs arhitektonske vizualizacije",
-    opis: "Osnove 3D modelovanja, rad u 3ds Max-u i osnovni renderi enterijera.",
-  },
-  {
-    id: 2,
-    naziv: "Napredni kurs rendera enterijera",
-    opis: "Realistični materijali, osvetljenje i profesionalna postprodukcija.",
-  },
-  {
-    id: 3,
-    naziv: "Eksterijer vizualizacija",
-    opis: "Modelovanje okruženja, pejzaž, atmosfera i fotorealistični renderi.",
-  },
-];*/
 const res = await fetch("http://localhost:8080/api/kursevi");
 const kursevi:Kurs[] = await res.json();
 console.log(kursevi);
@@ -45,7 +27,7 @@ console.log(kursevi);
         <div class="relative">
           <div
             class="h-72 bg-cover bg-center"
-            style={`background-image: url('http://localhost:8080/api/download-file?remoteFilePath=${kurs.slikaUrl}');`}
+            style={`background-image: url('http://localhost:8080/api/media?remoteFilePath=${kurs.slikaUrl}');`}
           >
             <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
             <div class="absolute inset-0 p-6 flex flex-col justify-end">
