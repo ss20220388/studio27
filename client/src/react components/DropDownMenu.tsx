@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import Cookies from 'js-cookie';
 
 type User = {
     ime?: string
