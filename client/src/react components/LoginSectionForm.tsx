@@ -184,7 +184,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
 
     /* -------- JSX -------- */
     return (
-        <section className="fixed inset-0 z-50 flex items-center justify-center">
+        <section  className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={close}></div>
 
             <div className="relative rounded-none bg-white p-8 shadow-sm w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">

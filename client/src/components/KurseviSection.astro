@@ -5,54 +5,55 @@ type Kurs = {
   opis: string;
   slikaUrl: string;
 };
+
 const res = await fetch("http://localhost:8080/api/kursevi");
-const kursevi:Kurs[] = await res.json();
+const kursevi: Kurs[] = await res.json();
 ---
 
-<section id="kursevi" class="bg-black text-white text-center py-32 px-8">
-  <h2
-            class="text-5xl md:text-6xl text-white tracking-wide mb-24"
-            style="font-family: 'Playfair Display', serif;"
-        >
-            NAŠI KURSEVI
-        </h2>
+<section id="kursevi" class="bg-black py-20 px-6 sm:px-10 md:px-16">
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+  <h2 class="text-3xl sm:text-4xl md:text-5xl text-center mb-16 font-semibold text-white tracking-wide">
+    NAŠI KURSEVI
+  </h2>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
 
     {kursevi.map((kurs) => (
-      <div class="bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all hover:scale-105 duration-300">
+      <div class="relative h-[420px]  sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group">
 
-        <!-- Image Section -->
-        <div class="relative">
-          <div
-            class="h-72 bg-cover bg-center"
-            style={`background-image: url('http://localhost:8080/api/media?remoteFilePath=${kurs.slikaUrl}');`}
-          >
-            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
-            <div class="absolute inset-0 p-6 flex flex-col justify-end">
-              <h2 class="text-2xl font-bold text-white leading-tight">
-                {kurs.naziv}
-              </h2>
-            </div>
+        <!-- Image -->
+        <div
+          class="absolute inset-0 bg-cover bg-center transform group-hover:scale-110 transition duration-500"
+          style={`background-image: url('http://localhost:8080/api/media?remoteFilePath=${kurs.slikaUrl}');`}
+        ></div>
+
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-black/70 group-hover:bg-black/60 transition duration-300"></div>
+
+        <!-- Content -->
+        <div class="relative z-10 h-full flex flex-col justify-between p-6 text-white">
+
+          <!-- Top -->
+          <div>
+            <h3 class="text-lg sm:text-xl md:text-2xl font-bold mb-4">
+              {kurs.naziv}
+            </h3>
+
+            <p class="text-xs sm:text-sm md:text-base opacity-90 leading-relaxed">
+              {kurs.opis}
+            </p>
           </div>
-        </div>
 
-        <!-- Card Body -->
-        <div class="p-6 bg-gray-800 space-y-4">
-          <p class="text-gray-300 text-sm leading-relaxed">
-            {kurs.opis}
-          </p>
-
-          <!-- CTA -->
-          <div class="flex justify-between items-center">
+          <!-- Button -->
+          <div class="flex justify-end">
             <a
               href={`/kurs/${kurs.id}`}
-              class="bg-black text-white py-2 px-6 rounded-full text-sm font-medium shadow-md hover:bg-gray-800 transition-all"
+              class="bg-red-900 hover:bg-red-800 transition-all duration-300 px-5 py-2 sm:px-6 sm:py-3 text-sm font-semibold"
             >
-              Prijavi se
+              Detaljnije
             </a>
-            
           </div>
+
         </div>
 
       </div>
