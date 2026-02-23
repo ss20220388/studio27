@@ -25,7 +25,7 @@ const KursTable = (props: Props) => {
     useEffect(() => {
         async function fetchKursevi() {
             try {
-                const response = await fetch("http://localhost:8080/api/kursevi-sa-lekcijama")
+                const response = await fetch("/api/kursevi-sa-lekcijama")
                 const data = await response.json();
                 console.log(data);
                 setKursevi(data);

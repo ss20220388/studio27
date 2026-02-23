@@ -12,7 +12,7 @@ interface Placanje {
     cenaPlacanja: number;
 }
 
-const data: Response = await fetch("http://localhost:8080/api/placanje");
+const data: Response = await fetch("http://localhost:8080/api/placanje"); // SSR: server-side fetch
 if (!data.ok) throw new Error("Ne mogu da dobijem placanja");
 
 const result = await data.json();

@@ -1,8 +1,19 @@
-
 ---
 import "../styles/global.css";
 const { title } = Astro.props;
 import Sidebar from "../components/Sidebar2.astro";
+import { type AstroCookies } from "astro";
+
+const cookies = Astro.cookies as AstroCookies;
+const token = cookies.get("accessToken")?.value || null;
+console.log("Token on Home page:", token);
+const response = await fetch("http://api.studio27.rs/api/auth/me", {
+	headers: {
+		Authorization: `Bearer ${token}`,
+	},
+});
+const userData = await response.json();
+console.log("User data from /api/auth/me:", userData);
 ---
 
 <!doctype html>
@@ -15,9 +26,13 @@ import Sidebar from "../components/Sidebar2.astro";
 
     </head>
     <body>
-        <div class="min-h-screen  flex">
+        {!userData.error?<div class="min-h-screen  flex">
             <Sidebar />
+            <p>{userData.userId}</p>
             <slot />
-        </div>
+        </div>:<div>
+            <h2>Niste logovani pa ne mozete pristupiti ovoj stranici</h2>
+            <p>Molim vas vratitite se na <a href="http://studio27.rs">pocetna</a> i ulogujte se kako bi ste koristili aplikaciju</p>
+            </div>}
     </body>
 </html>

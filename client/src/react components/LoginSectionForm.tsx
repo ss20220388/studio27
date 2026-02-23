@@ -5,7 +5,6 @@ type Props = {
     onClose?: () => void
 }
 
-/* helper: get or create deviceId in localStorage */
 function getDeviceId(): string {
     try {
         const existing = localStorage.getItem('deviceId')
@@ -51,7 +50,6 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
         return () => { document.body.style.overflow = '' }
     }, [internalOpen])
 
-    // on mount try restore session (if refresh cookie exists)
     useEffect(() => { tryRestoreSession() }, [])
 
     /* -------- helpers -------- */
@@ -64,12 +62,12 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
 
     const tryRestoreSession = async () => {
         try {
-            const r = await fetch('http://localhost:8080/api/auth/refresh', { method: 'POST', credentials: 'include' })
+            const r = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' })
             if (!r.ok) return
             const data = await r.json()
             if (data.accessToken) {
                 localStorage.setItem('accessToken', data.accessToken)
-                const me = await fetch('http://localhost:8080/api/auth/me', {
+                const me = await fetch('/api/auth/me', {
                     headers: { 'Authorization': `Bearer ${data.accessToken}` },
                 })
                 if (me.ok) {
@@ -87,7 +85,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
         setError(null)
         const deviceId = getDeviceId()
         try {
-            const res = await fetch('http://localhost:8080/api/auth/login', {
+            const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -103,7 +101,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
             if (!json) { setError('Server je vratio neispravan odgovor'); return }
             if (json.accessToken) {
                 localStorage.setItem('accessToken', json.accessToken)
-                const me = await fetch('http://localhost:8080/api/auth/me', {
+                const me = await fetch('/api/auth/me', {
                     headers: { 'Authorization': `Bearer ${json.accessToken}` },
                 })
                 if (me.ok) {
@@ -112,6 +110,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
                 }
                 close()
             }
+
         } catch (e: any) {
             setError(e?.message || 'Greška pri komunikaciji sa serverom')
         } finally {
@@ -130,7 +129,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
         setError(null)
         setSuccess(null)
         try {
-            const res = await fetch('http://localhost:8080/api/auth/register-user', {
+            const res = await fetch('/api/auth/register-user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
