@@ -5,9 +5,14 @@ type Kurs = {
   opis: string;
   slikaUrl: string;
 };
+<<<<<<< HEAD
 
 const res = await fetch("http://localhost:8080/api/kursevi");
 const kursevi: Kurs[] = await res.json();
+=======
+const res = await fetch("http://api.studio27.rs/api/kursevi"); // SSR: server-side fetch mora koristiti apsolutni URL
+const kursevi:Kurs[] = await res.json();
+>>>>>>> 7fe1b792ff38221f44af601c12fa9c67f043fcbe
 ---
 
 <section id="kursevi" class="bg-black py-20 px-6 sm:px-10 md:px-16">
@@ -21,27 +26,18 @@ const kursevi: Kurs[] = await res.json();
     {kursevi.map((kurs) => (
       <div class="relative h-[420px]  sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group">
 
-        <!-- Image -->
-        <div
-          class="absolute inset-0 bg-cover bg-center transform group-hover:scale-110 transition duration-500"
-          style={`background-image: url('http://localhost:8080/api/media?remoteFilePath=${kurs.slikaUrl}');`}
-        ></div>
-
-        <!-- Overlay -->
-        <div class="absolute inset-0 bg-black/70 group-hover:bg-black/60 transition duration-300"></div>
-
-        <!-- Content -->
-        <div class="relative z-10 h-full flex flex-col justify-between p-6 text-white">
-
-          <!-- Top -->
-          <div>
-            <h3 class="text-lg sm:text-xl md:text-2xl font-bold mb-4">
-              {kurs.naziv}
-            </h3>
-
-            <p class="text-xs sm:text-sm md:text-base opacity-90 leading-relaxed">
-              {kurs.opis}
-            </p>
+        <!-- Image Section -->
+        <div class="relative">
+          <div
+            class="h-72 bg-cover bg-center"
+            style={`background-image: url('http://api.studio27.rs/api/media?remoteFilePath=${kurs.slikaUrl}');`}
+          >
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
+            <div class="absolute inset-0 p-6 flex flex-col justify-end">
+              <h2 class="text-2xl font-bold text-white leading-tight">
+                {kurs.naziv}
+              </h2>
+            </div>
           </div>
 
           <!-- Button -->

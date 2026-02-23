@@ -10,7 +10,7 @@ export default defineConfig({
     vite: {
         plugins: [tailwindcss()],
         server: {
-            allowedHosts: ['studio27.local'],
+            allowedHosts: ['studio27.rs'],
             proxy: {
                 '/api': {
                     target: 'http://localhost:8080',

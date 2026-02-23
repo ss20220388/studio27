@@ -36,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/kursevi-sa-lekcijama").permitAll()
                         .requestMatchers("/api/media/**").permitAll()
                         .requestMatchers("/api/recenzije").permitAll()
+                        .requestMatchers("/api/unlock-admin").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

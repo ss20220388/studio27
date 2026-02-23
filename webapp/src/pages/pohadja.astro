@@ -11,7 +11,7 @@ interface Kurs {
     slikaUrl: string;
 }
 
-const data: Response = await fetch("http://localhost:8080/api/pohadja");
+const data: Response = await fetch("http://localhost:8080/api/pohadja"); // SSR: server-side fetch
 if (!data.ok) throw new Error("Ne mogu da dobijem kurseve");
 
 const result = await data.json();

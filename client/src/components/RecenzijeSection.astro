@@ -20,7 +20,7 @@ type Recenzija = {
 
 let recenzije: Recenzija[] = [];
 try {
-  const res = await fetch("http://localhost:8080/api/recenzije");
+  const res = await fetch("http://localhost:8080/api/recenzije"); // SSR: server-side fetch
   if (res.ok) {
     recenzije = await res.json();
   }
