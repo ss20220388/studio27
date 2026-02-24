@@ -21,26 +21,26 @@ function getDeviceId(): string {
 }
 
 const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
-    /* -------- ALL hooks at the top (React Rules of Hooks) -------- */
+    
     const [loginForm, setLoginForm] = useState(true)
     const [internalOpen, setInternalOpen] = useState(!!isOpen)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
 
-    // sync controlled prop -> internal
+    
     useEffect(() => {
         if (typeof isOpen === 'boolean') setInternalOpen(isOpen)
     }, [isOpen])
 
-    // listen global event to open modal
+    
     useEffect(() => {
         const handler = () => setInternalOpen(true)
         window.addEventListener('open-login', handler)
         return () => window.removeEventListener('open-login', handler)
     }, [])
 
-    // lock scroll when modal is open
+    
     useEffect(() => {
         if (internalOpen) {
             document.body.style.overflow = 'hidden'
@@ -52,7 +52,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
 
     useEffect(() => { tryRestoreSession() }, [])
 
-    /* -------- helpers -------- */
+    
     const close = () => {
         setInternalOpen(false)
         setError(null)
@@ -62,11 +62,10 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
 
     const tryRestoreSession = async () => {
         try {
-            const r = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' })
+            const r = await fetch('/api/auth/getAccessToken', { method: 'POST', credentials: 'include' })
             if (!r.ok) return
             const data = await r.json()
             if (data.accessToken) {
-                localStorage.setItem('accessToken', data.accessToken)
                 const me = await fetch('/api/auth/me', {
                     headers: { 'Authorization': `Bearer ${data.accessToken}` },
                 })

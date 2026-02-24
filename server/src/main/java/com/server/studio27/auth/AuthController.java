@@ -88,27 +88,17 @@ public class AuthController {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
-            .httpOnly(true)
-            .secure(false) // Secure=true za SameSite=None
-            .path("/")
-            .domain(".studio27.rs")
-            .maxAge(7 * 24 * 60 * 60) // 7 dana
-            .sameSite("Lax") // dozvoljava cross-subdomain
-            .build();
 
         ResponseCookie cookieAccess = ResponseCookie.from("accessToken", accessToken)
             .httpOnly(true)
             .secure(false) // Secure=true za SameSite=None
             .path("/")
             .domain(".studio27.rs")
-            .maxAge( 24 * 60 * 60) // 7 dana
+            .maxAge( 7 * 24 * 60 * 60) // 7 dana
             .sameSite("Lax") // dozvoljava cross-subdomain
             .build();
 
         
-
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, cookieAccess.toString());
         
         return ResponseEntity.ok(Map.of(
@@ -194,42 +184,27 @@ public class AuthController {
                 "role", role));
     }
 
-    @PostMapping("/refresh")
+    @PostMapping("/getAccessToken")
     public ResponseEntity<?> refresh(jakarta.servlet.http.HttpServletRequest request) {
-        // Uzmi refreshToken iz cookie-a
-        String refreshToken = null;
+        String accessToken = null;
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if ("refreshToken".equals(cookie.getName())) {
-                    refreshToken = cookie.getValue();
+                if ("accessToken".equals(cookie.getName())) {
+                    accessToken = cookie.getValue();
                     break;
                 }
             }
         }
 
-        if (refreshToken == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Refresh token nije pronadjen"));
+        if (accessToken == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Access token nije pronadjen"));
         }
-
-        try {
-            String email = jwtService.extractUsername(refreshToken);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-            if (jwtService.isTokenValid(refreshToken, userDetails)) {
-                String newAccessToken = jwtService.generateAccessToken(userDetails);
-                return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
-            } else {
-                return ResponseEntity.status(401).body(Map.of("error", "Refresh token je istekao"));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body(Map.of("error", "Nevalidan refresh token"));
-        }
+        return ResponseEntity.ok(Map.of("accessToken", accessToken,"message", "Uspesno osvezen token"));
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
 
-        // Clear refreshToken
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", null)
             .httpOnly(true)
             .secure(false)

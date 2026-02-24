@@ -1,6 +1,14 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { Image } from "astro:assets";
+const accesToken = Astro.cookies.get("accessToken")?.value;	
+
+const response = await fetch("http://api.studio27.rs/api/auth/refresh", {
+	method: "POST",
+	credentials: "include",
+});
+console.log("Refresh response:", response);
+
 
 ---
 
@@ -9,11 +17,8 @@ import { Image } from "astro:assets";
 		<h1 class="text-2xl font-bold text-center hidden md:block">
 			Welcome to the Admin Dashboard
 		</h1>
-		<video width="640" controls>
-			<source
-				src="/api/video/stream?remoteFilePath=/videos/proba.mp4"
-				type="video/mp4"
-			/>
-		</video>
+		<p>response: {response.status}</p>
+		
+		
 	</main>
 </Layout>
