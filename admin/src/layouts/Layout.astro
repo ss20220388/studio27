@@ -12,7 +12,6 @@ const response  = await fetch("http://api.studio27.rs/api/auth/me", {
     }
 });
 const userData = await response.json();
-console.log("User data in Layout.astro:", userData);
 ---
 <!DOCTYPE html>
 <html lang="en">
