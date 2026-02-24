@@ -226,6 +226,24 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/access-token")
+    public ResponseEntity<?> getAccess(jakarta.servlet.http.HttpServletRequest request) {
+        String accessToken = null;
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    accessToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        if (accessToken == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Access token nije pronadjen"));
+        }
+        return ResponseEntity.ok(Map.of("accessToken", accessToken,"message", "Access token pronadjen"));
+    }
+    
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
 

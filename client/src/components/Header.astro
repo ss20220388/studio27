@@ -1,19 +1,18 @@
 ---
 import { Image } from "astro:assets";
-import bg from "../assets/bg-3d1.jpg";
 
 ---
 
 <header id="home" class="relative min-h-screen w-full overflow-hidden bg-black text-white">
 
     <!-- Background -->
-    <div class="absolute inset-0 z-0">
+    <div class="absolute inset-0 z-0 w-screen h-screen overflow-hidden">
         <Image
-            src={"http://api.studio27.rs/api/media?remoteFilePath=/uploads/naslovna2.jpg"}
+            src={"http://api.studio27.rs/api/uploaded-images/naslovna2.jpg"}
             alt="Interior Background"
-            width={1920}
-            height={1080}
-            class="  bg-fixed object-cover  w-full h-full opacity-80"
+            width={50}
+            height={20}
+            class=" bg-fixed object-cover  w-screen h-screen opacity-80"
         />
         <div class="absolute inset-0 bg-black/70"></div>
     </div>

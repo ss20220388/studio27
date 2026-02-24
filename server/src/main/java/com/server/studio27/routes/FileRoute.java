@@ -28,7 +28,7 @@ import com.server.studio27.controllers.HetznerAPIController;
 @RestController
 @RequestMapping("/api")
 public class FileRoute {
-    private final String UPLOAD_DIR = "C:/uploads/"; // Promeni putanju po potrebi
+    private final String UPLOAD_DIR = "/uploads/"; 
 
     @Autowired
     private HetznerAPIController hetznerapiService;
