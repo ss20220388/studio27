@@ -5,10 +5,10 @@ import Sidebar from "../components/Sidebar.astro";
 import type { AstroCookies } from "astro";
 
 const cookies = Astro.cookies as AstroCookies;
-const accessToken = cookies.get("accessToken");
+const refresToken = cookies.get("refreshToken");
 const response  = await fetch("http://api.studio27.rs/api/auth/me", {
     headers: {
-        "Authorization": `Bearer ${accessToken?.value}`
+        "Authorization": `Bearer ${refresToken?.value}`
     }
 });
 const userData = await response.json();
@@ -27,7 +27,7 @@ console.log("User data in Layout.astro:", userData);
             <slot />
         </div>:
         <div class="flex items-center justify-center h-screen">
-            <h1 class="text-2xl font-bold">Nemate pristup ovoj stranici, mozda je vasa sesija istekla</h1><br/>
+            <h1 class="text-2xl font-bold">Nemate pristup ovoj stranici, mozda je vasa sesija</h1><br/>
             <p class="text-center mt-4">Molimo vas da se ulogujete sa administratorskim nalogom. Prijavu izvrsite na ovoj strani <a href="http://studio27.rs">ovde</a></p>
             </div>}
         

@@ -88,6 +88,14 @@ public class AuthController {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+            .httpOnly(true)
+            .secure(false) // Secure=true za SameSite=None
+            .path("/")
+            .domain(".studio27.rs")
+            .maxAge(7 * 24 * 60 * 60) // 7 dana
+            .sameSite("Lax") // dozvoljava cross-subdomain
+            .build();
 
         ResponseCookie cookieAccess = ResponseCookie.from("accessToken", accessToken)
             .httpOnly(true)
@@ -99,18 +107,10 @@ public class AuthController {
             .build();
 
         
-        response.addHeader(HttpHeaders.SET_COOKIE, cookieAccess.toString());
 
-         ResponseCookie cookieRefresh = ResponseCookie.from("refreshToken", refreshToken)
-            .httpOnly(true)
-            .secure(false) // Secure=true za SameSite=None
-            .path("/")
-            .domain(".studio27.rs")
-            .maxAge( 7 * 24 * 60 * 60) // 7 dana
-            .sameSite("Lax") // dozvoljava cross-subdomain
-            .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieAccess.toString());
         
-        response.addHeader(HttpHeaders.SET_COOKIE, cookieRefresh.toString());
         return ResponseEntity.ok(Map.of(
             "accessToken", accessToken,
             "message", "Uspesno ulogovan"
@@ -196,6 +196,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(jakarta.servlet.http.HttpServletRequest request) {
+  
         String refreshToken = null;
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
@@ -224,24 +225,6 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("error", "Nevalidan refresh token"));
         }
     }
-    @PostMapping("/getAccesToken")
-    public Map<String, Object> getAccessTokeString(jakarta.servlet.http.HttpServletRequest request) {
-        String accessToken = null;
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("accessToken".equals(cookie.getName())) {
-                    accessToken = cookie.getValue();
-                    break;
-                }
-            }
-        }
-        if(accessToken == null) {
-            return Map.of("error", "Nije pronadjen access token");
-        }
-        
-        return Map.of("accessToken", accessToken, "message", "Access token pronadjen");
-    }
-    
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {

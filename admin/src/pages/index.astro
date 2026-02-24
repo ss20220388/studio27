@@ -1,15 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { Image } from "astro:assets";
-const accesToken = Astro.cookies.get("accessToken")?.value;	
 
-const response = await fetch("http://api.studio27.rs/api/auth/refresh", {
-	method: "POST",
-	credentials: "include",
-});
-console.log("Refresh response:", response);
+const accessToken = Astro.cookies.get("accessToken")?.value;
 
-
+const videoUrl =
+	"http://api.studio27.rs/api/video/stream?remoteFilePath=/videos/proba.mp4";
 ---
 
 <Layout title="Admin Dashboard">
@@ -17,8 +12,20 @@ console.log("Refresh response:", response);
 		<h1 class="text-2xl font-bold text-center hidden md:block">
 			Welcome to the Admin Dashboard
 		</h1>
-		<p>response: {response.status}</p>
-		
-		
+		{
+			accessToken ? (
+				<>
+					<p>
+						Ne možeš koristiti &lt;video&gt; tag bez proxy-ja ako je
+						endpoint zaštićen!
+					</p>
+					<a href={videoUrl} target="_blank" rel="noopener">
+						Preuzmi video
+					</a>
+				</>
+			) : (
+				<p class="text-red-500">Niste ulogovani ili nema tokena.</p>
+			)
+		}
 	</main>
 </Layout>
