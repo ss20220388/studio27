@@ -1,16 +1,19 @@
 ---
 import { Image } from "astro:assets";
 import bg from "../assets/bg-3d1.jpg";
+
 ---
 
-<header class="relative min-h-screen w-full overflow-hidden bg-black text-white">
+<header id="home" class="relative min-h-screen w-full overflow-hidden bg-black text-white">
 
     <!-- Background -->
     <div class="absolute inset-0 z-0">
         <Image
-            src={bg}
+            src={"http://api.studio27.rs/api/media?remoteFilePath=/uploads/naslovna2.jpg"}
             alt="Interior Background"
-            class="w-full h-full object-cover"
+            width={1920}
+            height={1080}
+            class="  bg-fixed object-cover  w-full h-full opacity-80"
         />
         <div class="absolute inset-0 bg-black/70"></div>
     </div>
@@ -22,7 +25,7 @@ import bg from "../assets/bg-3d1.jpg";
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20">
 
             <!-- Left -->
-            <div class="text-center md:text-left">
+            <div class="text-center md:text-left md:pl-16 lg:pl-56">
                 <h1 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-8">
                     3D ŠKOLA <br /> KURSEVA
                 </h1>
@@ -51,13 +54,13 @@ import bg from "../assets/bg-3d1.jpg";
         </div>
 
         <!-- Bottom -->
-        <div class="mt-16 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="mt-16 flex flex-col md:flex-row items-center md:pl-16 lg:pl-56 justify-between gap-8">
 
             <h2 class="text-lg sm:text-xl md:text-2xl lg:text-3xl font-semibold text-center md:text-left">
                 3Ds Max | Corona render | Photoshop
             </h2>
 
-            <button class="bg-red-700 hover:bg-red-800 transition-all duration-300 px-8 py-3 sm:px-10 sm:py-4 text-base sm:text-lg font-bold shadow-lg w-full md:w-auto">
+            <button onclick="window.location.href='#kursevi'" class="bg-red-900 hover:bg-red-800 transition-all duration-300 px-8 py-3 sm:px-10 sm:py-4 text-base sm:text-lg font-bold shadow-lg w-full md:w-auto">
                 Pogledaj kurseve
             </button>
 
