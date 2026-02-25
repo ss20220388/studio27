@@ -11,10 +11,16 @@ export default defineConfig({
     plugins: [tailwindcss()],
     server: {
       allowedHosts: [
-        'admin.studio27.local'
-      ]
+        'admin.studio27.rs'
+      ],
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false
+        }
+      }
     },
-
   },
 
   integrations: [react()]

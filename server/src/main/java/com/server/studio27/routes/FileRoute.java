@@ -28,7 +28,7 @@ import com.server.studio27.controllers.HetznerAPIController;
 @RestController
 @RequestMapping("/api")
 public class FileRoute {
-    private final String UPLOAD_DIR = "C:/uploads/"; // Promeni putanju po potrebi
+    private final String UPLOAD_DIR = "/uploads/"; 
 
     @Autowired
     private HetznerAPIController hetznerapiService;
@@ -114,7 +114,7 @@ public class FileRoute {
         return hetznerapiService.listFilesInFolder(remoteFolderPath);
     }
 
-    @GetMapping("/download-file")
+    @GetMapping("/media")
     public ResponseEntity<byte[]> downloadFile(@RequestParam String remoteFilePath) {
         byte[] fileData = hetznerapiService.downloadFile(remoteFilePath);
         if (fileData == null || fileData.length == 0) {

@@ -1,10 +1,14 @@
 package com.server.studio27.controllers;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+
 import com.server.studio27.models.Admin;
-import java.util.*;
 
 @Service
 public class AdminController {
@@ -31,4 +35,11 @@ public class AdminController {
 
         return admins;
     }
+
+    public String editAdmin(Admin admin) {
+        String SQL = "UPDATE admin SET email = ?, password = ?, ime = ?, prezime = ? WHERE adminId = ?";
+        jdbcTemplate.update(SQL, admin.getEmail(), admin.getPassword(), admin.getIme(), admin.getPrezime(), admin.getUserId());
+        return "Admin updated successfully";
+    }
+
 }

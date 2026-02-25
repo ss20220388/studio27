@@ -1,7 +1,10 @@
 package com.server.studio27.auth;
 
+
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -70,14 +73,14 @@ public class AuthController {
         String existingDeviceId = jdbcTemplate.queryForObject(
                 "SELECT deviceId FROM user WHERE email = ?", String.class, request.getEmail());
 
-        if (existingDeviceId != null && !existingDeviceId.equals(request.getDeviceId())) {
+        if (existingDeviceId != null && !existingDeviceId.isBlank() && !existingDeviceId.equals(request.getDeviceId())) {
             // Nalog je vezan za drugi uredjaj
             return ResponseEntity.status(403).body(Map.of("error",
                     "Vec ste ulogovani na drugom racunaru. Kontaktirajte admina za otkljucavanje."));
         }
 
         // Ako nema deviceId u bazi, zakljucaj nalog za ovaj uredjaj
-        if (existingDeviceId == null) {
+        if (existingDeviceId == null || existingDeviceId.isBlank()) {
             jdbcTemplate.update("UPDATE user SET deviceId = ? WHERE email = ?",
                     request.getDeviceId(), request.getEmail());
         }
@@ -85,16 +88,33 @@ public class AuthController {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        Cookie cookie = new Cookie("refreshToken", refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(7 * 24 * 60 * 60);
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+            .httpOnly(true)
+            .secure(false) // Secure=true za SameSite=None
+            .path("/")
+            .domain(".studio27.rs")
+            .maxAge(7 * 24 * 60 * 60) // 7 dana
+            .sameSite("Lax") // dozvoljava cross-subdomain
+            .build();
 
-        response.addCookie(cookie);
+        ResponseCookie cookieAccess = ResponseCookie.from("accessToken", accessToken)
+            .httpOnly(true)
+            .secure(false) // Secure=true za SameSite=None
+            .path("/")
+            .domain(".studio27.rs")
+            .maxAge( 7 * 24 * 60 * 60) // 7 dana
+            .sameSite("Lax") // dozvoljava cross-subdomain
+            .build();
 
+        
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieAccess.toString());
+        
         return ResponseEntity.ok(Map.of(
-                "accessToken", accessToken));
+            "accessToken", accessToken,
+            "message", "Uspesno ulogovan"
+        ));
     }
 
     @PostMapping("/register-user")
@@ -146,7 +166,7 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> me(Authentication authentication) {
         if (authentication == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Niste prijavljeni"));
+            return ResponseEntity.status(200).body(Map.of("error", "Niste prijavljeni"));
         }
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
@@ -176,7 +196,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(jakarta.servlet.http.HttpServletRequest request) {
-        // Uzmi refreshToken iz cookie-a
+  
         String refreshToken = null;
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
@@ -206,18 +226,50 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/access-token")
+    public ResponseEntity<?> getAccess(jakarta.servlet.http.HttpServletRequest request) {
+        String accessToken = null;
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    accessToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        if (accessToken == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Access token nije pronadjen"));
+        }
+        return ResponseEntity.ok(Map.of("accessToken", accessToken,"message", "Access token pronadjen"));
+    }
+    
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
-        // NE brisemo token iz baze - nalog ostaje zakljucan za ovaj uredjaj
-        // Samo admin moze da otkljuca nalog (obrise token iz baze)
 
-        Cookie cookie = new Cookie("refreshToken", "");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(0); // brise cookie
+        // Clear refreshToken
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", null)
+            .httpOnly(true)
+            .secure(false)
+            .path("/")
+            .domain(".studio27.rs")
+            .sameSite("Lax")
+            .maxAge(0)
+            .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        response.addCookie(cookie);
+        // Optionally clear accessToken and deviceId if you use them as cookies
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", null)
+            .httpOnly(true)
+            .secure(false)
+            .path("/")
+            .domain(".studio27.rs")
+            .sameSite("Lax")
+            .maxAge(0)
+            .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+
+      
 
         return ResponseEntity.ok(Map.of("message", "Uspesno odjavljen"));
     }

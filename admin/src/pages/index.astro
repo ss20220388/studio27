@@ -1,6 +1,10 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { Image } from "astro:assets";
+const accessToken = Astro.cookies.get("accessToken")?.value;
+const refreshToken = Astro.cookies.get("refreshToken")?.value;
+
+
+
 ---
 
 <Layout title="Admin Dashboard">
@@ -8,11 +12,19 @@ import { Image } from "astro:assets";
 		<h1 class="text-2xl font-bold text-center hidden md:block">
 			Welcome to the Admin Dashboard
 		</h1>
-		<video width="640" controls>
-			<source
-				src="http://localhost:8080/api/video/stream?remoteFilePath=/videos/proba.mp4"
-				type="video/mp4"
-			/>
-		</video>
+		{
+			accessToken ? (
+				<>
+					<p>
+						Ne možeš koristiti &lt;video&gt; tag bez proxy-ja ako je
+						endpoint zaštićen!
+					</p>
+					<button id="button">Click to test proxy</button>
+					
+				</>
+			) : (
+				<p class="text-red-500">Niste ulogovani ili nema tokena.</p>
+			)
+		}
 	</main>
 </Layout>
