@@ -14,7 +14,7 @@ const kursevi_2 = kursevi.slice(4, 6);
 
 <section id="kursevi" class="bg-black py-28 px-6 sm:px-10 md:px-16">
 
-  <h2 class="text-3xl sm:text-4xl md:text-5xl text-center mb-16 text-white font-semibold tracking-wide">
+  <h2 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white text-center font-extrabold leading-tight mb-16">
     NAŠI KURSEVI
   </h2>
 
@@ -26,7 +26,7 @@ const kursevi_2 = kursevi.slice(4, 6);
         <!-- Image -->
         <div
           class="absolute inset-0 bg-cover bg-center transform group-hover:scale-110 transition duration-500"
-          style={`background-image: url('http://localhost:8080/api/media?remoteFilePath=${kurs.slikaUrl}');`}
+          style={`background-image: url('http://api.studio27.rs/api/uploaded-images${kurs.slikaUrl}');`}
         ></div>
 
         <!-- Overlay -->
@@ -72,7 +72,7 @@ const kursevi_2 = kursevi.slice(4, 6);
         <!-- Image -->
         <div
           class="absolute inset-0 bg-cover bg-center transform group-hover:scale-110 transition duration-500"
-          style={`background-image: url('http://localhost:8080/api/media?remoteFilePath=${kurs.slikaUrl}');`}
+          style={`background-image: url('http://api.studio27.rs/api/uploaded-images${kurs.slikaUrl}');`}
         ></div>
 
         <!-- Overlay -->
@@ -108,4 +108,97 @@ const kursevi_2 = kursevi.slice(4, 6);
     ))}
 
   </div>
+ <div class="max-w-7xl mx-auto mt-24 text-white">
+
+  <div class="grid md:grid-cols-2 gap-16">
+
+    <!-- LEVA STRANA -->
+    <div class="space-y-8">
+
+      <div>
+        <h3 class="font-bold text-lg mb-3">
+          Koja oprema i programi su mi potrebni?
+        </h3>
+        <p class="text-gray-300 leading-relaxed">
+          Za praćenje kursa potreban je računar sa minimum Intel i7 / Ryzen 7 procesorom i 16GB RAM memorije (preporučeno 32GB za brži rad).
+          Radi se u programima 3ds Max i Corona Renderer.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="font-bold text-lg mb-3">
+          Da li je kurs za početnike?
+        </h3>
+        <p class="text-gray-300 leading-relaxed">
+          Da. Kurs je prilagođen i početnicima i onima koji već imaju osnovno znanje.
+          Sve se objašnjava korak po korak – od interfejsa do finalnog rendera.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="font-bold text-lg mb-3">
+          Kako izgleda format kursa?
+        </h3>
+        <p class="text-gray-300 leading-relaxed">
+          Kurs je online i sastoji se od snimljenih lekcija koje možeš gledati svojim tempom.
+          Uz video lekcije dobijaš i dodatne materijale, fajlove za vežbu i konkretne projekte.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="font-bold text-lg mb-3">
+          Da li imam vremensko ograničenje za završetak kursa?
+        </h3>
+        <p class="text-gray-300 leading-relaxed">
+          Ne. Kurs prolaziš svojim tempom, bez pritiska i rokova.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- DESNA STRANA -->
+    <div class="space-y-8">
+
+      <div>
+        <h3 class="font-bold text-lg mb-3">
+          Da li dobijam sertifikat?
+        </h3>
+        <p class="text-gray-300 leading-relaxed">
+          Da. Nakon uspešno završenog projekta dobijaš sertifikat o završenom kursu.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="font-bold text-lg mb-3">
+          Da li postoji feedback?
+        </h3>
+        <p class="text-gray-300 leading-relaxed">
+          Da. Imaš mogućnost dobijanja povratnih informacija na svoje radove,
+          kao i podršku bez obzira na vreme kupovine.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="font-bold text-lg mb-3">
+          Da li dobijam pristup svim lekcijama odmah?
+        </h3>
+        <p class="text-gray-300 leading-relaxed">
+          Da. Nakon uplate dobijaš kompletan pristup svim modulima.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="font-bold text-lg mb-3">
+          Da li dobijam fajlove i resurse?
+        </h3>
+        <p class="text-gray-300 leading-relaxed">
+          Da. Uz lekcije dobijaš radne fajlove, modele, materijale i dodatne resurse potrebne za vežbu.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 </section>
