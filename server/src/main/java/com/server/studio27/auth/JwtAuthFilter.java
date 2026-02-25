@@ -61,9 +61,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
-                    // Ako nema u headeru, pokušaj iz cookie-ja
-                    System.out.println("[JwtAuthFilter] Cookies sent:");
-                    System.out.println("[JwtAuthFilter] Token valid: " + jwtService.isTokenValid(jwt, userDetails));
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken =
@@ -71,7 +68,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     userDetails, null, userDetails.getAuthorities()
                             );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        System.out.println("[JwtAuthFilter] accessToken found: " + (jwt != null ? jwt : "null"));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }

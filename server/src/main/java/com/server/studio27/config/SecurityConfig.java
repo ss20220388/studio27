@@ -37,7 +37,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/media/**").permitAll()
                         .requestMatchers("/api/recenzije").permitAll()
                         .requestMatchers("/api/unlock-admin").permitAll()
-                        .requestMatchers("/api/video/stream").permitAll()
+                        .requestMatchers("/api/video/stream-protected").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
