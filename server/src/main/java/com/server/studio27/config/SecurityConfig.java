@@ -27,14 +27,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {}) // koristi CorsConfig bean
+                .cors(cors -> {}) 
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/kursevi/**").permitAll()
-                        .requestMatchers("/api/kursevi-sa-lekcijama/**").permitAll()
-                        .requestMatchers("/api/download-file").permitAll()
+                        .requestMatchers("/api/kursevi-sa-lekcijama").permitAll()
+                        .requestMatchers("/api/media/**").permitAll()
+                        .requestMatchers("/api/recenzije").permitAll()
+                        .requestMatchers("/api/unlock-admin").permitAll()
+                        .requestMatchers("/api/video/stream").permitAll()
+                        .requestMatchers("/api/radovi").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
