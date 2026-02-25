@@ -15,7 +15,7 @@ const refreshToken = Astro.cookies.get("refreshToken")?.value;
 				<>
 					<p>
 						Ne možeš koristiti &lt;video&gt; tag bez proxy-ja ako je
-						endpoint zaštićen!
+						endpoint zaštićen!AAA
 					</p>
 					<button id="button">Click to test proxy</button>
 					<VideoPlayer client:idle videoPath="/videos/proba.mp4" accessToken={refreshToken} />
