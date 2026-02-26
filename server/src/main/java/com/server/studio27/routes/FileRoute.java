@@ -16,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,45 +23,22 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.server.studio27.controllers.HetznerAPIController;
+import com.server.studio27.services.VideoHlsService;
 
 @RestController
 @RequestMapping("/api")
 public class FileRoute {
-    private final String UPLOAD_DIR = "/uploads/"; 
+    private final String UPLOAD_DIR = "/uploads/";
 
     @Autowired
     private HetznerAPIController hetznerapiService;
 
-    @GetMapping("/storage")
-    public ResponseEntity<String> getStorageBoxes(
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String label_selector,
-            @RequestParam(defaultValue = "id") String sort,
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "25") Integer per_page) {
+    @Autowired
+    private VideoHlsService videoHlsService;
 
-        String result = hetznerapiService.getStorageBoxes(
-                name,
-                label_selector,
-                sort,
-                page,
-                per_page);
-
-        return ResponseEntity.ok()
-                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                .body(result);
-    }
-
-    @GetMapping("/storage/{id}")
-    public ResponseEntity<String> getStorageBoxFolders(
-            @PathVariable Long id,
-            @RequestParam(defaultValue = ".") String path) {
-
-        String result = hetznerapiService.getStorageBoxFolders(id);
-
-        return ResponseEntity.ok()
-                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                .body(result);
+    @PostMapping("/upload-hls-hetzner")
+    public String uploadVideo(@RequestParam("file") MultipartFile file) throws Exception {
+        return videoHlsService.convertToHlsAndUpload(file);
     }
 
     @PostMapping("/upload-local")
@@ -141,7 +117,5 @@ public class FileRoute {
         String result = hetznerapiService.deleteFile(remoteFilePath);
         return ResponseEntity.ok().body(result);
     }
-
-
 
 }

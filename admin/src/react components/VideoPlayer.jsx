@@ -45,11 +45,9 @@ export default function VideoPlayer({ videoPath, accessToken }) {
   useEffect(() => {
     if (!accessToken || !videoPath) return;
 
-    // prvi fetch tokena
+    
     fetchVideoToken();
-
-    // refresh token pre isteka (4.5min za 5min token)
-    intervalRef.current = setInterval(fetchVideoToken, 4.5 * 60 * 1000);
+    intervalRef.current = setInterval(fetchVideoToken, 1* 60 * 1000);
 
     return () => clearInterval(intervalRef.current);
   }, [videoPath, accessToken]);
@@ -61,7 +59,7 @@ export default function VideoPlayer({ videoPath, accessToken }) {
     <video
       ref={videoRef}
       controls
-      autoPlay
+      download={false}
       width="720"
       src={videoUrl}
       

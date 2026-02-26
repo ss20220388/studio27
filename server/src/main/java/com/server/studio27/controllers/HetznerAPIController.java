@@ -5,310 +5,232 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Vector;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 import com.server.studio27.models.SftpStream;
 
 @Component
 public class HetznerAPIController {
-
     @Value("${hetzner.api.token}")
     private String apiToken;
-
     @Value("${hetzner.host}")
     private String host;
+
     @Value("${hetzner.username}")
     private String user;
+
     @Value("${hetzner.password}")
     private String password;
+
     @Value("${hetzner.sftp.port}")
     private int port;
 
-    private static final String BASE_URL = "https://api.hetzner.com/v1";
-    private final RestTemplate restTemplate = new RestTemplate();
+    /* ========================= */
+    /*  PRIVATE SESSION FACTORY  */
+    /* ========================= */
 
-    public String uploadFile(MultipartFile file) {
+    private Session createSession() throws JSchException {
+        JSch jsch = new JSch();
+        Session session = jsch.getSession(user, host, port);
+        session.setPassword(password);
 
-        return file != null ? file.getOriginalFilename() : null;
+        Properties config = new Properties();
+        config.put("StrictHostKeyChecking", "no");
+        session.setConfig(config);
+
+        session.connect(15000); // 15s timeout
+        return session;
     }
 
-    public String getStorageBoxes(String name, String labelSelector, String sort, Integer page, Integer perPage) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(BASE_URL + "/storage_boxes");
-
-        if (name != null && !name.isEmpty()) {
-            builder.queryParam("name", name);
-        }
-        if (labelSelector != null && !labelSelector.isEmpty()) {
-            builder.queryParam("label_selector", labelSelector);
-        }
-        if (sort != null && !sort.isEmpty()) {
-            builder.queryParam("sort", sort);
-        }
-        if (page != null) {
-            builder.queryParam("page", page);
-        }
-        if (perPage != null) {
-            builder.queryParam("per_page", perPage);
-        }
-
-        String url = builder.toUriString();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + apiToken);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    String.class);
-            return response.getBody();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return String.format("{\"error\": \"%s\"}", e.getMessage());
-        }
-    }
-
-    public String getStorageBoxFolders(Long storageBoxId) {
-
-        String url = String.format("%s/storage_boxes/%d/folders", BASE_URL, storageBoxId);
-        System.out.println("🗂️ Listing folders URL: " + url);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + apiToken);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    entity,
-                    String.class);
-            System.out.println("✅ Response status: " + response.getStatusCode());
-            return response.getBody();
-        } catch (Exception e) {
-            System.err.println("❌ Error: " + e.getMessage());
-            e.printStackTrace();
-            return String.format("{\"error\": \"%s\", \"url\": \"%s\"}", e.getMessage(), url);
-        }
-    }
+    /* ========================= */
+    /*  BASIC OPERATIONS         */
+    /* ========================= */
 
     public String createFolder(String path) {
-        JSch jsch = new JSch();
+        Session session = null;
+        ChannelSftp sftp = null;
+
         try {
-            Session session = jsch.getSession(user, host, port);
-            session.setPassword(password);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
+            session = createSession();
+            sftp = (ChannelSftp) session.openChannel("sftp");
+            sftp.connect();
 
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            ChannelSftp sftp = (ChannelSftp) channel;
+            try {
+                sftp.mkdir(path);
+            } catch (SftpException ignored) {
+                // Folder možda već postoji
+            }
 
-            sftp.mkdir(path);
+            return "Folder ready";
 
-            sftp.exit();
-            session.disconnect();
-            return "Folder created successfully";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error creating folder: " + e.getMessage();
+            return "Error: " + e.getMessage();
+        } finally {
+            if (sftp != null && sftp.isConnected()) sftp.disconnect();
+            if (session != null && session.isConnected()) session.disconnect();
         }
     }
 
     public String addFiletoFolder(String remoteFolderPath, MultipartFile file) {
-        JSch jsch = new JSch();
+        Session session = null;
+        ChannelSftp sftp = null;
+
         try {
-            Session session = jsch.getSession(user, host, port);
-            session.setPassword(password);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
+            session = createSession();
+            sftp = (ChannelSftp) session.openChannel("sftp");
+            sftp.connect();
 
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            ChannelSftp sftp = (ChannelSftp) channel;
+            String fullPath = remoteFolderPath + "/" + file.getOriginalFilename();
+            sftp.put(file.getInputStream(), fullPath);
 
-            sftp.put(file.getInputStream(), remoteFolderPath + "/" + file.getOriginalFilename());
+            return "File uploaded";
 
-            sftp.exit();
-            session.disconnect();
-            return "File uploaded successfully";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error uploading file: " + e.getMessage();
+            return "Error uploading: " + e.getMessage();
+        } finally {
+            if (sftp != null && sftp.isConnected()) sftp.disconnect();
+            if (session != null && session.isConnected()) session.disconnect();
         }
     }
 
     public List<String> listFilesInFolder(String remoteFolderPath) {
         List<String> fileNames = new ArrayList<>();
-        JSch jsch = new JSch();
-        try {
-            Session session = jsch.getSession(user, host, port);
-            session.setPassword(password);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
+        Session session = null;
+        ChannelSftp sftp = null;
 
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            ChannelSftp sftp = (ChannelSftp) channel;
+        try {
+            session = createSession();
+            sftp = (ChannelSftp) session.openChannel("sftp");
+            sftp.connect();
 
             Vector<ChannelSftp.LsEntry> files = sftp.ls(remoteFolderPath);
             for (ChannelSftp.LsEntry entry : files) {
                 fileNames.add(entry.getFilename());
             }
 
-            sftp.exit();
-            session.disconnect();
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            if (sftp != null && sftp.isConnected()) sftp.disconnect();
+            if (session != null && session.isConnected()) session.disconnect();
         }
-        return fileNames;
 
+        return fileNames;
     }
 
     public byte[] downloadFile(String remoteFilePath) {
-        JSch jsch = new JSch();
-        try {
-            Session session = jsch.getSession(user, host, port);
-            session.setPassword(password);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
+        Session session = null;
+        ChannelSftp sftp = null;
 
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            ChannelSftp sftp = (ChannelSftp) channel;
+        try {
+            session = createSession();
+            sftp = (ChannelSftp) session.openChannel("sftp");
+            sftp.connect();
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             sftp.get(remoteFilePath, baos);
 
-            byte[] fileData = baos.toByteArray();
+            return baos.toByteArray();
 
-            sftp.exit();
-            session.disconnect();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            headers.setContentDispositionFormData("attachment",
-                    remoteFilePath.substring(remoteFilePath.lastIndexOf("/") + 1));
-            return fileData;
         } catch (Exception e) {
             e.printStackTrace();
-            return new byte[0];
+            return null;
+        } finally {
+            if (sftp != null && sftp.isConnected()) sftp.disconnect();
+            if (session != null && session.isConnected()) session.disconnect();
         }
     }
 
     public String deleteFile(String remoteFilePath) {
-        JSch jsch = new JSch();
-        try {
-            Session session = jsch.getSession(user, host, port);
-            session.setPassword(password);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
+        Session session = null;
+        ChannelSftp sftp = null;
 
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            ChannelSftp sftp = (ChannelSftp) channel;
+        try {
+            session = createSession();
+            sftp = (ChannelSftp) session.openChannel("sftp");
+            sftp.connect();
 
             sftp.rm(remoteFilePath);
+            return "Deleted";
 
-            sftp.exit();
-            session.disconnect();
-            return "File deleted successfully";
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error deleting file: " + e.getMessage();
+            return "Error deleting: " + e.getMessage();
+        } finally {
+            if (sftp != null && sftp.isConnected()) sftp.disconnect();
+            if (session != null && session.isConnected()) session.disconnect();
+        }
+    }
+
+    /* ========================= */
+    /*  STREAMING METHODS        */
+    /* ========================= */
+
+    public long getFileSize(String remoteFilePath) throws Exception {
+        Session session = null;
+        ChannelSftp sftp = null;
+
+        try {
+            session = createSession();
+            sftp = (ChannelSftp) session.openChannel("sftp");
+            sftp.connect();
+
+            return sftp.stat(remoteFilePath).getSize();
+
+        } finally {
+            if (sftp != null && sftp.isConnected()) sftp.disconnect();
+            if (session != null && session.isConnected()) session.disconnect();
         }
     }
 
     public SftpStream getVideoStream(String remotePath, long start) throws Exception {
-        JSch jsch = new JSch();
-        Session session = jsch.getSession(user, host, port);
-        session.setPassword(password);
-        session.setConfig("StrictHostKeyChecking", "no");
-        session.connect();
 
+        Session session = createSession();
         ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
         channel.connect();
 
         InputStream is = channel.get(remotePath, null, start);
+
         return new SftpStream(is, session, channel);
     }
 
-    public long getFileSize(String remoteFilePath) {
-        JSch jsch = new JSch();
-        try {
-            Session session = jsch.getSession(user, host, port);
-            session.setPassword(password);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
+    public String uploadEncryptedFile(String remoteFolderPath, String filename, byte[] encryptedData) {
 
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            ChannelSftp sftp = (ChannelSftp) channel;
-
-            long fileSize = sftp.stat(remoteFilePath).getSize();
-
-            sftp.exit();
-            session.disconnect();
-
-            return fileSize;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return -1;
-        }
-    }
-
-    public String uploadEncryptedFile( String remoteFolderPath, String filename, byte[] encryptedData) {
-        JSch jsch = new JSch();
+        Session session = null;
+        ChannelSftp sftp = null;
 
         try {
-            Session session = jsch.getSession(user, host, port);
-            session.setPassword(password);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
+            session = createSession();
+            sftp = (ChannelSftp) session.openChannel("sftp");
+            sftp.connect();
 
-            Channel channel = session.openChannel("sftp");
-            channel.connect();
-            ChannelSftp sftp = (ChannelSftp) channel;
+            try {
+                sftp.mkdir(remoteFolderPath);
+            } catch (Exception ignored) {}
 
-            String remoteFilePath = remoteFolderPath + "/" + filename;
-            createFolder( remoteFolderPath);
-
-            String fullPath = remoteFilePath;
+            String fullPath = remoteFolderPath + "/" + filename;
             sftp.put(new ByteArrayInputStream(encryptedData), fullPath);
 
-            sftp.exit();
-            session.disconnect();
-            System.out.println("Encrypted file uploaded: " + fullPath);
             return "Success: " + fullPath;
 
         } catch (Exception e) {
             e.printStackTrace();
             return "Error: " + e.getMessage();
+        } finally {
+            if (sftp != null && sftp.isConnected()) sftp.disconnect();
+            if (session != null && session.isConnected()) session.disconnect();
         }
     }
-
-    
-    
-
 }

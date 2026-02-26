@@ -53,7 +53,7 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject("validateVideoURL")
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 *60 * 5)) 
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 *60)) 
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
