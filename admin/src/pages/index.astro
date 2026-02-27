@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import VideoPlayer from "../react components/VideoPlayer";
+import VideoPlayerHLS from "../react components/VideoPlayerHLS";
 const accessToken = Astro.cookies.get("accessToken")?.value;
 const refreshToken = Astro.cookies.get("refreshToken")?.value;
 ---
@@ -18,7 +18,7 @@ const refreshToken = Astro.cookies.get("refreshToken")?.value;
 						endpoint zaštićen!AAA
 					</p>
 					<button id="button">Click to test proxy</button>
-					<VideoPlayer client:idle videoPath="/videos/proba.mp4" accessToken={refreshToken} />
+					<VideoPlayerHLS client:idle videoId="f53ed21d-19e1-4dde-bc9a-ca7c001f84a2" accessToken={refreshToken} />
 				</>
 			) : (
 				<p class="text-red-500">Niste ulogovani ili nema tokena.</p>

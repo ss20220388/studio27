@@ -1,64 +1,120 @@
 ---
-import LoginSectionForm from '../react-components/LoginSectionForm.tsx'
-import DropDownMenu from '../react-components/DropDownMenu.tsx'
-import KontakModal from '../react-components/KontakModal.tsx'
-import { Image } from "astro:assets"
+import { useState } from "react";
+import LoginSectionForm from "../react-components/LoginSectionForm.tsx";
+import DropDownMenu from "../react-components/DropDownMenu.tsx";
+import KontakModal from "../react-components/KontakModal.tsx";
+import { Image } from "astro:assets";
 ---
 
-<section class="bg-black text-gray-400 work-sans leading-normal text-base tracking-normal">
-
-  <!-- Navbar -->
+<section
+  class="bg-black text-gray-400 work-sans leading-normal text-base tracking-normal"
+>
   <nav id="header" class="w-full fixed top-0 z-50 bg-black shadow py-3">
-    <div class="w-screen container mx-auto flex flex-wrap items-center justify-between mt-0 py-3">
-
+    <div
+      class="w-screen relative container mx-auto flex flex-wrap items-center justify-between mt-0 py-3"
+    >
       <!-- Logo -->
-      <div class="order-1 md:order-1 flex items-center">
-        <a class="flex items-center tracking-wide no-underline hover:no-underline font-bold text-white text-l" href="#home">
+      <div class="flex items-center px-4">
+        <a
+          class="flex items-center tracking-wide no-underline hover:no-underline font-bold text-white text-l"
+          href="#home"
+        >
           STUDIO27
-          <Image src="/src/assets/studio27.jpg" width={100} height={100} alt="Profile" class="md:w-[2rem] sm:w-[1.5rem] w-[1rem] object-center ml-2" />
+          <Image
+            src="/src/assets/studio27.jpg"
+            width={100}
+            height={100}
+            alt="Profile"
+            class="md:w-[2rem] sm:w-[1.5rem] w-[1rem] object-center ml-2"
+          />
         </a>
       </div>
 
-      <!-- Navigation Links -->
-      <div class="hidden md:flex md:items-center md:w-auto w-full order-3 md:order-2">
-        <nav>
-          <ul class="md:flex items-center justify-between text-base text-gray-400 pt-4 md:pt-0">
-            <li><a class="inline-block no-underline font-bold text-white text-l py-2 px-4" href="#home">Početna</a></li>
-            <li><a class="inline-block no-underline font-bold text-white text-l py-2 px-4" href="#kursevi">Program kursa</a></li>
-            <li><a class="inline-block no-underline font-bold text-white text-l py-2 px-4" href="#prednosti">Prednosti obuke</a></li>
-            <li><a class="inline-block no-underline font-bold text-white text-l py-2 px-4" href="#struktura">Struktura učenja</a></li>
-            <li><a class="inline-block no-underline font-bold text-white text-l py-2 px-4" href="#recenzije">Radovi studenata</a></li>
-            <li><a class="inline-block no-underline font-bold text-white text-l py-2 px-4" href="#onama">O nama</a></li>
-          </ul>
-        </nav>
+      <button
+        id="mobile-menu-btn"
+        class="md:hidden flex items-center px-3 py-2 border rounded text-gray-200 border-gray-400 hover:text-white hover:border-white"
+      >
+        <svg class="fill-current h-6 w-6" viewBox="0 0 20 20"
+          ><title>Menu</title>
+          <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z"></path>
+        </svg>
+      </button>
+      <div
+        class="inline-block sm:inline lg:hidden font-bold text-white transition-colors duration-200 py-2 px-7 text-lg rounded shadow-md"
+      >
+        <DropDownMenu client:load />
       </div>
 
-      <!-- Dropdown Menu + Kontakt Button -->
-      <div class="hidden md:flex md:items-center md:w-auto w-full order-3 md:order-3">
-        <nav>
-          <ul class="md:flex items-center justify-between text-base text-white pt-4 md:pt-0 space-x-4">
-            <li>
-              <DropDownMenu client:load />
-            </li>
-            <li>
-              <a
-                class="inline-block no-underline font-bold text-white text-l py-2 px-4 cursor-pointer"
-                id="kontaktLink"
-              >
-                Kontakt
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </div>
+      <ul
+        id="main-nav"
+        class="flex-col md:flex-row py-8 px-4 items-center justify-between text-base pt-4 md:pt-0 absolute md:static left-0 top-full w-full md:w-auto bg-black md:bg-transparent z-40 transition-all duration-300 hidden md:flex"
+      >
+        <li>
+          <a
+            class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
+            href="#home">Početna</a
+          >
+        </li>
+        <li>
+          <a
+            class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
+            href="#kursevi">Program kursa</a
+          >
+        </li>
+        <li>
+          <a
+            class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
+            href="#prednosti">Prednosti obuke</a
+          >
+        </li>
+        <li>
+          <a
+            class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
+            href="#struktura">Struktura učenja</a
+          >
+        </li>
+        <li>
+          <a
+            class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
+            href="#recenzije">Radovi studenata</a
+          >
+        </li>
+        <li>
+          <a
+            class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
+            href="#onama">O nama</a
+          >
+        </li>
 
+        <li class="md:ml-4 md:pl-6 mt-2 md:mt-0">
+          <div
+            class="inline-block font-bold text-white bg-red-900 hover:bg-red-800 transition-colors duration-200 py-2 px-6 shadow-md"
+          >
+            <KontakModal client:load />
+          </div>
+        </li>
+        <li class="hidden lg:inline md:ml-4 md:pl-6 mt-2 md:mt-0">
+          <div
+            class="inline-block font-bold text-whit transition-colors duration-200 py-2 px-7 text-lg rounded shadow-md"
+          >
+            <DropDownMenu client:load />
+          </div>
+        </li>
+      </ul>
     </div>
   </nav>
 
-  <!-- React Modal za Kontakt -->
-  <KontakModal client:load triggerId="kontaktLink" />
-
-  <!-- Login Section -->
   <LoginSectionForm client:load />
 
+  <script>
+    if (typeof window !== "undefined") {
+      const btn = document.getElementById("mobile-menu-btn");
+      const nav = document.getElementById("main-nav");
+      if (btn && nav) {
+        btn.onclick = () => {
+          nav.classList.toggle("hidden");
+        };
+      }
+    }
+  </script>
 </section>

@@ -1,7 +1,14 @@
 ---
 import { Image } from "astro:assets"
+import DugmeKontakt from "../react-components/DugmeKontakt"
 ---
+<script>
+  const button = document.getElementById('kontaktDugme');
+  button?.addEventListener('click', () => {
+    localStorage.setItem('kontakModalOpen', 'true');
+  });
 
+</script>
 <section id="onama" class="pt-40 bg-black">
   <div class="w-full h-[1000px] bg-black relative">
     <div class="h-48 md:h-40 w-[90%] mx-auto bg-gradient-to-b from-black via-[#1a1410] to-[#2b1f17] relative"></div>
@@ -19,9 +26,7 @@ import { Image } from "astro:assets"
           <br/><br/>
           Verujemo da kvalitetna vizualizacija nije samo slika – već moćan alat komunikacije između ideje i realizacije.
         </p>
-        <button class="text-lg font-semibold px-6 py-2 mt-8 text-gray-300 border border-white rounded-full hover:bg-white hover:text-black">
-          Contact
-        </button>
+        <DugmeKontakt client:load  />
       </div>
     </div>
   </div>

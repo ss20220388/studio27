@@ -35,9 +35,36 @@ public class HetznerAPIController {
     @Value("${hetzner.sftp.port}")
     private int port;
 
-    /* ========================= */
-    /*  PRIVATE SESSION FACTORY  */
-    /* ========================= */
+    public void uploadFileStream(String remotePath, InputStream inputStream) throws JSchException, Exception {
+
+        JSch jsch = new JSch();
+        Session session = null;
+        ChannelSftp channel = null;
+
+        try {
+            session = jsch.getSession(user, host, 22);
+            session.setPassword(password);
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.connect();
+
+            channel = (ChannelSftp) session.openChannel("sftp");
+            channel.connect();
+
+            // Upload fajla
+            channel.put(inputStream, remotePath);
+
+        } finally {
+            if (channel != null && channel.isConnected()) {
+                channel.disconnect();
+            }
+            if (session != null && session.isConnected()) {
+                session.disconnect();
+            }
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        }
+    }
 
     private Session createSession() throws JSchException {
         JSch jsch = new JSch();
@@ -51,10 +78,6 @@ public class HetznerAPIController {
         session.connect(15000); // 15s timeout
         return session;
     }
-
-    /* ========================= */
-    /*  BASIC OPERATIONS         */
-    /* ========================= */
 
     public String createFolder(String path) {
         Session session = null;
@@ -77,8 +100,10 @@ public class HetznerAPIController {
             e.printStackTrace();
             return "Error: " + e.getMessage();
         } finally {
-            if (sftp != null && sftp.isConnected()) sftp.disconnect();
-            if (session != null && session.isConnected()) session.disconnect();
+            if (sftp != null && sftp.isConnected())
+                sftp.disconnect();
+            if (session != null && session.isConnected())
+                session.disconnect();
         }
     }
 
@@ -100,8 +125,10 @@ public class HetznerAPIController {
             e.printStackTrace();
             return "Error uploading: " + e.getMessage();
         } finally {
-            if (sftp != null && sftp.isConnected()) sftp.disconnect();
-            if (session != null && session.isConnected()) session.disconnect();
+            if (sftp != null && sftp.isConnected())
+                sftp.disconnect();
+            if (session != null && session.isConnected())
+                session.disconnect();
         }
     }
 
@@ -123,8 +150,10 @@ public class HetznerAPIController {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if (sftp != null && sftp.isConnected()) sftp.disconnect();
-            if (session != null && session.isConnected()) session.disconnect();
+            if (sftp != null && sftp.isConnected())
+                sftp.disconnect();
+            if (session != null && session.isConnected())
+                session.disconnect();
         }
 
         return fileNames;
@@ -148,8 +177,32 @@ public class HetznerAPIController {
             e.printStackTrace();
             return null;
         } finally {
-            if (sftp != null && sftp.isConnected()) sftp.disconnect();
-            if (session != null && session.isConnected()) session.disconnect();
+            if (sftp != null && sftp.isConnected())
+                sftp.disconnect();
+            if (session != null && session.isConnected())
+                session.disconnect();
+        }
+    }
+    public String removeFolder(String remoteFolderPath) {
+        Session session = null;
+        ChannelSftp sftp = null;
+
+        try {
+            session = createSession();
+            sftp = (ChannelSftp) session.openChannel("sftp");
+            sftp.connect();
+
+            sftp.rmdir(remoteFolderPath);
+            return "Deleted";
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error deleting: " + e.getMessage();
+        } finally {
+            if (sftp != null && sftp.isConnected())
+                sftp.disconnect();
+            if (session != null && session.isConnected())
+                session.disconnect();
         }
     }
 
@@ -169,14 +222,12 @@ public class HetznerAPIController {
             e.printStackTrace();
             return "Error deleting: " + e.getMessage();
         } finally {
-            if (sftp != null && sftp.isConnected()) sftp.disconnect();
-            if (session != null && session.isConnected()) session.disconnect();
+            if (sftp != null && sftp.isConnected())
+                sftp.disconnect();
+            if (session != null && session.isConnected())
+                session.disconnect();
         }
     }
-
-    /* ========================= */
-    /*  STREAMING METHODS        */
-    /* ========================= */
 
     public long getFileSize(String remoteFilePath) throws Exception {
         Session session = null;
@@ -190,8 +241,10 @@ public class HetznerAPIController {
             return sftp.stat(remoteFilePath).getSize();
 
         } finally {
-            if (sftp != null && sftp.isConnected()) sftp.disconnect();
-            if (session != null && session.isConnected()) session.disconnect();
+            if (sftp != null && sftp.isConnected())
+                sftp.disconnect();
+            if (session != null && session.isConnected())
+                session.disconnect();
         }
     }
 
@@ -218,7 +271,8 @@ public class HetznerAPIController {
 
             try {
                 sftp.mkdir(remoteFolderPath);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
 
             String fullPath = remoteFolderPath + "/" + filename;
             sftp.put(new ByteArrayInputStream(encryptedData), fullPath);
@@ -229,8 +283,34 @@ public class HetznerAPIController {
             e.printStackTrace();
             return "Error: " + e.getMessage();
         } finally {
-            if (sftp != null && sftp.isConnected()) sftp.disconnect();
-            if (session != null && session.isConnected()) session.disconnect();
+            if (sftp != null && sftp.isConnected())
+                sftp.disconnect();
+            if (session != null && session.isConnected())
+                session.disconnect();
+        }
+    }
+
+    public void uploadFile(String remoteFolder, String fileName, byte[] fileBytes) throws JSchException, SftpException {
+        Session session = null;
+        ChannelSftp channel = null;
+        try {
+            JSch jsch = new JSch();
+            session = jsch.getSession(user, host, 22);
+            session.setPassword(password);
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.connect();
+
+            channel = (ChannelSftp) session.openChannel("sftp");
+            channel.connect();
+
+            createFolder(remoteFolder); // kreira folder ako ne postoji
+            channel.put(new ByteArrayInputStream(fileBytes), remoteFolder + "/" + fileName);
+
+        } finally {
+            if (channel != null && channel.isConnected())
+                channel.disconnect();
+            if (session != null && session.isConnected())
+                session.disconnect();
         }
     }
 }

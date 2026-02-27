@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/video/stream").permitAll()
                         .requestMatchers("/api/video/stream-protected").permitAll()
                         .requestMatchers("/api/radovi").permitAll()
+                        .requestMatchers("/api/upload-hls-hetzner").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

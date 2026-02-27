@@ -37,8 +37,37 @@ public class FileRoute {
     private VideoHlsService videoHlsService;
 
     @PostMapping("/upload-hls-hetzner")
-    public String uploadVideo(@RequestParam("file") MultipartFile file) throws Exception {
-        return videoHlsService.convertToHlsAndUpload(file);
+    public ResponseEntity<Map<String, Object>> uploadVideo(@RequestParam("file") MultipartFile file) throws Exception {
+        try {
+            String videoId = videoHlsService.convertToHlsAndUpload(file);
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Video uspešno konvertovan i postavljen!");
+            response.put("videoId", videoId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Greška prilikom konverzije i postavljanja videa: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @DeleteMapping("/delete-folder")
+    public ResponseEntity<Map<String, Object>> deleteFolder(@RequestParam String remoteFolderPath) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<String> files = hetznerapiService.listFilesInFolder(remoteFolderPath);
+            for (String file : files) {
+                if (".".equals(file) || "..".equals(file)) continue;
+                hetznerapiService.deleteFile(remoteFolderPath + "/" + file);
+            }
+            hetznerapiService.removeFolder(remoteFolderPath);
+            response.put("message", "Folder i svi fajlovi su obrisani.");
+            response.put("result", "Folder obrisan.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("message", "Greška prilikom brisanja foldera: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
     }
 
     @PostMapping("/upload-local")
@@ -81,8 +110,16 @@ public class FileRoute {
     }
 
     @PostMapping("/upload-hetzner")
-    public String postMethodName(@RequestParam String path, @RequestParam MultipartFile file) {
-        return hetznerapiService.addFiletoFolder(path, file);
+    public ResponseEntity<Map<String, String>> postMethodName(@RequestParam String path,
+            @RequestParam MultipartFile file) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            hetznerapiService.addFiletoFolder(path, file);
+            response.put("message", "Fajl uspešno postavljen na Hetzner!");
+        } catch (Exception e) {
+            response.put("message", "Greška prilikom postavljanja fajla: " + e.getMessage());
+        }
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/all-files-in-folder")

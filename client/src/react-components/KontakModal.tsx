@@ -1,28 +1,31 @@
-import React, { useEffect, useState } from 'react'
+import React, { use, useEffect, useState } from 'react'
 
-interface KontaktModalProps {
-  triggerId?: string; // ID elementa koji otvara modal
-}
 
-export default function KontaktModal({ triggerId }: KontaktModalProps) {
+
+export default function KontaktModal({ }) {
   const [open, setOpen] = useState(false);
-
-  // Poveži klik na header link sa otvaranjem modala
   useEffect(() => {
-    if (!triggerId) return;
-    const el = document.getElementById(triggerId);
-    if (!el) return;
-    const handleClick = () => setOpen(true);
-    el.addEventListener('click', handleClick);
-    return () => el.removeEventListener('click', handleClick);
-  }, [triggerId]);
+    const value = localStorage.getItem('kontakModalOpen');
+    setOpen(value === 'true');
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('kontakModalOpen', open.toString().toLowerCase());
+  }, [open]);
+
+  useEffect(() => {
+    const handleOpen = () => setOpen(true);
+    window.addEventListener('openKontaktModal', handleOpen);
+    return () => window.removeEventListener('openKontaktModal', handleOpen);
+  }, []);
+
+
 
   return (
     <>
       {open && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-200 w-full max-w-4xl mx-4 lg:mx-0 rounded-2xl shadow-lg relative overflow-hidden">
-            {/* Close button */}
             <button
               onClick={() => setOpen(false)}
               className="absolute top-4 right-4 text-gray-700 hover:text-red-700 text-2xl font-bold"
@@ -34,7 +37,7 @@ export default function KontaktModal({ triggerId }: KontaktModalProps) {
               {/* Left side image */}
               <div className="relative h-full">
                 <img
-                  src="http://api.studio27.rs/api/media?remoteFilePath=/uploads/slikaenterijer.jpg"
+                  src="http://api.studio27.rs/api/uploaded-images/slikaenterijer.jpg"
                   alt="ContactUs"
                   className="w-full h-full lg:rounded-l-2xl rounded-t-2xl object-cover"
                 />
@@ -114,7 +117,7 @@ export default function KontaktModal({ triggerId }: KontaktModalProps) {
 
                   <button
                     type="submit"
-                    className="w-full h-12 text-white text-base font-semibold leading-6 rounded-full transition-all duration-700 hover:bg-red-800 bg-red-900 shadow-sm"
+                    className="w-full h-12 text-white text-base font-semibold leading-6  transition-all duration-700 hover:bg-red-800 bg-red-900 shadow-sm"
                   >
                     Send
                   </button>
@@ -125,6 +128,12 @@ export default function KontaktModal({ triggerId }: KontaktModalProps) {
           </div>
         </div>
       )}
+      {!open && <button
+        className="inline-block no-underline font-bold text-white text-l py-2 px-4 cursor-pointer"
+        onClick={() => setOpen(true)}
+      >
+        Kontakt
+      </button>}
     </>
   )
 }
