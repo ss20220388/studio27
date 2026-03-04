@@ -1,15 +1,29 @@
 ---
 type Kurs = {
-  id: number;
+  kursId: number;
   naziv: string;
   opis: string;
   slikaUrl: string;
 };
+type ResponseData = {
+  kursevi: Kurs[];
+};
 
-const res = await fetch("http://localhost:8080/api/kursevi");
-const kursevi: Kurs[] = await res.json();
-const kursevi_1 = kursevi.slice(0, 4);
-const kursevi_2 = kursevi.slice(4, 6);
+const res = await fetch("http://api.studio27.rs/api/kursevi");
+const data: ResponseData = await res.json();
+console.log(data);
+
+
+const token = Astro.cookies.get("refreshToken")?.value || null;
+const response = await fetch("http://api.studio27.rs/api/auth/me", {
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+});
+const userData = await response.json();
+console.log(userData);
+const kursevi_1 = data?.kursevi?.slice(0, 4);
+const kursevi_2 = data?.kursevi?.slice(4, 6);
 ---
 
 <section id="kursevi" class="bg-black py-28 px-6 sm:px-10 md:px-16">
@@ -49,7 +63,7 @@ const kursevi_2 = kursevi.slice(4, 6);
           <!-- Button -->
           <div class="flex justify-end">
             <a
-              href={`/kurs/${kurs.id}`}
+              href={`/kurs/${kurs.kursId}`}
               class="bg-red-900 hover:bg-red-800 transition-all duration-300 px-5 py-2 sm:px-6 sm:py-3 text-sm font-semibold"
             >
               Detaljnije
@@ -95,7 +109,7 @@ const kursevi_2 = kursevi.slice(4, 6);
           <!-- Button -->
           <div class="flex justify-end">
             <a
-              href={`/kurs/${kurs.id}`}
+              href={`/kurs/${kurs.kursId}`}
               class="bg-red-900 hover:bg-red-800 transition-all duration-300 px-5 py-2 sm:px-6 sm:py-3 text-sm font-semibold"
             >
               Detaljnije

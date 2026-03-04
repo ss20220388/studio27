@@ -5,6 +5,14 @@ import User from "../assets/user.svg";
 import Payment from "../assets/hand-coins.svg";
 import Reviews from "../assets/star.svg";
 import Settings from "../assets/settings.svg";
+
+const token = Astro.cookies.get("refreshToken")?.value || null;
+const response = await fetch("http://api.studio27.rs/api/auth/me", {
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+});
+const userData = await response.json();
 ---
 
 <script type="module">
@@ -44,7 +52,6 @@ import Settings from "../assets/settings.svg";
                 hamburger.classList.remove("opacity-0");
                 hamburger.classList.remove("pointer-events-none");
                 hamburger.classList.add("opacity-100");
-                
             }, 300);
         }
     }
@@ -79,13 +86,13 @@ import Settings from "../assets/settings.svg";
         class="fixed inset-y-0 left-0 z-40 w-64 bg-gray-800 transform -translate-x-full md:translate-x-0 md:static md:flex flex-col transition-transform duration-300"
     >
         <div class="flex items-center justify-center h-16 bg-gray-900">
-            <span class="text-white font-bold uppercase">Admin Dashboard</span>
+            <span class="text-white font-bold uppercase">Studio27 APP</span>
         </div>
 
         <div class="flex flex-col flex-1 overflow-y-auto">
             <nav class="flex-1 px-2 py-4 bg-gray-800">
                 <a
-                    href="/home"
+                    href="/"
                     class="flex items-center px-4 py-2 text-gray-100 hover:bg-gray-700"
                 >
                     <Home class="w-5 h-5 mr-3" /> Home
@@ -120,12 +127,23 @@ import Settings from "../assets/settings.svg";
                 >
                     <Settings class="w-5 h-5 mr-3" /> Settings
                 </a>
-                <a
-                    href="/logout"
-                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700 absolute bottom-10 w-[90%]"
+
+                <div
+                    class="flex flex-col items-center px-4 py-2 mt-2 text-gray-100 absolute bottom-10 w-[90%]"
                 >
-                    Log out
-                </a>
+                    <p class="mb-2">{userData.email}-{userData.role}</p>
+                    <button
+                        class="bg-red-900 hover:bg-red-800 px-4 py-1 text-sm font-semibold rounded transition duration-300"
+                        onclick=`
+                        async function logout() {
+                            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+                            window.location.href = "http://studio27.rs";
+                        }
+                        logout();
+                        `>
+                        Logout
+                    </button>
+                </div>
             </nav>
         </div>
     </div>

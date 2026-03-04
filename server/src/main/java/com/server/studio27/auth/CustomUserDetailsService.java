@@ -25,8 +25,8 @@ public class CustomUserDetailsService implements UserDetailsService {
             SELECT 
                 u.userId, u.email, u.password,
                 CASE 
-                    WHEN a.adminId IS NOT NULL THEN 'ROLE_ADMIN'
-                    WHEN s.studentId IS NOT NULL THEN 'ROLE_STUDENT'
+                    WHEN a.adminId IS NOT NULL THEN 'ADMIN'
+                    WHEN s.studentId IS NOT NULL THEN 'STUDENT'
                     ELSE 'ROLE_USER'
                 END AS role
             FROM user u

@@ -1,6 +1,8 @@
 ---
+import { intersection } from "astro:schema";
 import KursComponents from "../components/KursComponents.astro";
 import Layout from "../layouts/Layout.astro";
+import ReactKurs from "../react components/ReactKurs";
 
 interface Kurs {
     id: number;
@@ -10,9 +12,22 @@ interface Kurs {
     trajanje: number;
     slikaUrl: string;
 }
+interface ResponseData {
+    kursevi: Kurs[];
+}
 
 const data: Response = await fetch("http://localhost:8080/api/kursevi"); // SSR: server-side fetch
-const kursevi: Kurs[] = await data.json();
+
+const kurseviRes: ResponseData = await data.json();
+const kursevi = kurseviRes.kursevi;
+
+const token = Astro.cookies.get("refreshToken")?.value || null;
+const response = await fetch("http://api.studio27.rs/api/auth/me", {
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+});
+const userData = await response.json();
 ---
 
 <Layout title="Kursevi">
@@ -20,8 +35,8 @@ const kursevi: Kurs[] = await data.json();
         <h1 class="text-3xl font-bold mb-8">Svi kursevi</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {kursevi.map((kurs) => (
-                <KursComponents kurs={kurs} />
+            {kursevi?.map((kurs) => (
+                <ReactKurs client:idle  kurs={kurs} userId={userData.userId} accessToken={token} />
             ))}
         </div>
     </main>

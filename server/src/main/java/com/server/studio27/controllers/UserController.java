@@ -49,7 +49,7 @@ public class UserController {
             String prezime = (String) row.get("prezime");
             String role = (String) row.get("role");
 
-            User user = new User(userId, email, password);
+            User user = new User(userId, email, password,role);
 
             if ("ADMIN".equals(role)) {
                 Admin admin = new Admin();
@@ -74,5 +74,28 @@ public class UserController {
         jdbcTemplate.update(SQL, email);
         return "Uredjaj otkljucan za " + email;
 
+    }
+
+    public User getUserById(Integer userId) {
+        String SQL = "SELECT\r\n" + //
+                "    u.userId,\r\n" + //
+                "    u.email,\r\n" + //
+                "    u.password,\r\n" + //
+                "    COALESCE(a.ime, s.ime) AS ime,\r\n" + //
+                "    COALESCE(a.prezime, s.prezime) AS prezime,\r\n" + //
+                "    CASE\r\n" + //
+                "        WHEN a.adminId IS NOT NULL THEN 'ADMIN'\r\n" + //
+                "        WHEN s.studentId IS NOT NULL THEN 'STUDENT'\r\n" + //
+                "    END AS role\r\n" + //
+                "FROM user u\r\n" + //
+                "LEFT JOIN admin a ON u.userId = a.adminId\r\n" + //
+                "LEFT JOIN student s ON u.userId = s.studentId\r\n" + //
+                "WHERE u.userId = ?";
+        Map<String, Object> row = jdbcTemplate.queryForMap(SQL, userId);
+        return new User(
+                ((Number) row.get("userId")).intValue(),
+                (String) row.get("email"),
+                (String) row.get("password"),
+                (String) row.get("role"));
     }
 }

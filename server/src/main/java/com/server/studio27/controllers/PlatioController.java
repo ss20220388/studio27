@@ -28,7 +28,8 @@ public class PlatioController {
                 (String)row.get("prezime"),
                 (String)row.get("email"),
                 (String)row.get("password"),
-                (String)row.get("brojTelefona")
+                (String)row.get("brojTelefona"),
+                "STUDENT"
 
             ));
         

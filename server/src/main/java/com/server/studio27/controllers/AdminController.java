@@ -29,7 +29,8 @@ public class AdminController {
                     (String) row.get("email"),
                     (String) row.get("password"),
                     (String) row.get("ime"),
-                    (String) row.get("prezime")
+                    (String) row.get("prezime"),
+                    "ADMIN"
             ));
         }
 

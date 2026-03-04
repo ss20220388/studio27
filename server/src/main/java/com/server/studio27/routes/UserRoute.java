@@ -29,7 +29,7 @@ public class UserRoute {
         return userController.getUsers();
     }
 
-    @PostMapping("/unlock-admin")
+    @PostMapping("/unlock-device")
     public ResponseEntity<?> unlockDevice(@RequestBody Map<String, String> request) {
         String email = request.get("email");
         userController.unlockDevice(email);

@@ -1,12 +1,17 @@
 package com.server.studio27.controllers;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+
+import com.server.studio27.models.Kurs;
 import com.server.studio27.models.Recenzije;
 import com.server.studio27.models.Student;
-import com.server.studio27.models.Kurs;
-import java.util.*;
 
 @Service
 public class RecenzijeController {
@@ -38,7 +43,8 @@ public class RecenzijeController {
                     studentId.intValue(), null, null,
                     (String) row.get("ime"),
                     (String) row.get("prezime"),
-                    (String) row.get("brojTelefona")
+                    (String) row.get("brojTelefona"),
+                    "STUDENT"
                 );
             }
 

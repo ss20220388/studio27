@@ -52,7 +52,6 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
 
     useEffect(() => { tryRestoreSession() }, [])
 
-    /* -------- helpers -------- */
     const close = () => {
         setInternalOpen(false)
         setError(null)
@@ -100,7 +99,6 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
             }
             if (!json) { setError('Server je vratio neispravan odgovor'); return }
             if (json.accessToken) {
-                localStorage.setItem('accessToken', json.accessToken)
                 const me = await fetch('/api/auth/me', {
                     headers: { 'Authorization': `Bearer ${json.accessToken}` },
                 })

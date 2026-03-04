@@ -30,7 +30,8 @@ public class StudentController {
                     (String) row.get("password"),
                     (String) row.get("ime"),
                     (String) row.get("prezime"),
-                    (String) row.get("brojTelefona")
+                    (String) row.get("brojTelefona"),
+                    "STUDENT"
             ));
         }
 
@@ -51,7 +52,8 @@ public class StudentController {
                     (String) row.get("password"),
                     (String) row.get("ime"),
                     (String) row.get("prezime"),
-                    (String) row.get("brojTelefona")
+                    (String) row.get("brojTelefona"),
+                    "STUDENT"
             ));
         }
 

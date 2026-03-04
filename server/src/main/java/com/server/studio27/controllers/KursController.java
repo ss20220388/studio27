@@ -1,10 +1,12 @@
 package com.server.studio27.controllers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,27 +18,22 @@ public class KursController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public List<Kurs> getAllKursevi() {
-        List<Kurs> kursevi = new ArrayList<>();
-        String SQL = "SELECT * FROM kurs";
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
-
-        for (Map<String, Object> row : rows) {
-            kursevi.add(new Kurs(
-                    ((Number) row.get("kursId")).intValue(),
-                    (String) row.get("naziv"),
-                    (String) row.get("opis"),
-                    ((Number) row.get("cena")).intValue(),
-                    ((Number) row.get("trajanje")).intValue(),
-                    (String) row.get("slikaUrl")));
-
-        }
-
-        return kursevi;
+    public ResponseEntity<Map<String, Object>> getAllKursevi() {
+       try{
+        String SQL = "Select * from kurs";
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(SQL);
+        Map<String, Object> response = Map.of("kursevi", result);
+        return ResponseEntity.ok(response);
+       }
+         catch(Exception e){
+             Map<String, Object> response = new HashMap<>();
+             response.put("kursevi", null);
+             response.put("error", e.getMessage());
+             return ResponseEntity.badRequest().body(response);
+         }
     }
 
-    public List<Kurs> getAllKurseviSaLekcijama() {
+    public ResponseEntity<List<Kurs>> getAllKurseviSaLekcijama() {
         List<Kurs> kursevi = new ArrayList<>();
         String SQL = "Select kursId,k.naziv as \"Naziv kursa\",k.opis as \"Opis kursa\", cena, trajanje as \"Trajanje u danima\", slikaUrl as \"Slika kursa\",lekcijaId, l.naziv as \"Naziv  lekcije\",\nl.opis as \"Opis lekcije\", url as \"Video url\" from Kurs k\n"
                 +
@@ -75,7 +72,7 @@ public class KursController {
             }
 
         }
-        return kursevi;
+        return ResponseEntity.ok(kursevi);
     }
 
 }

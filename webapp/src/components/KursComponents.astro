@@ -1,6 +1,6 @@
 ---
 interface Kurs {
-    id: number;
+    kursId: number;
     naziv: string;
     opis: string;
     cena: number;
@@ -9,29 +9,17 @@ interface Kurs {
 }
 
 const { kurs } = Astro.props as { kurs: Kurs };
-import Java from "../assets/sta-je-java.jpg";
-import Spring from "../assets/images.png";
-import React from "../assets/react.png";
-import type { ImageMetadata } from "astro";
 
-let slika: ImageMetadata;
 
-if (kurs.naziv.includes("Java")) {
-    slika = Java;
-} else if (kurs.naziv.includes("Spring")) {
-    slika = Spring;
-} else if (kurs.naziv.includes("React")) {
-    slika = React;
-} else {
-    slika = Java; // fallback
-}
+
 ---
 
 <section
     class="shadow-md bg-white rounded-xl p-6 hover:shadow-xl transition duration-300 cursor-pointer w-full"
+    onclick={`window.location.href = '/kurs/${kurs.kursId}'`}
 >
     <img
-        src={slika.src}
+        src={`http://api.studio27.rs/api/uploaded-images${kurs.slikaUrl}`}
         alt={kurs.naziv}
         class="w-full h-40 object-cover rounded-lg mb-4"
     />

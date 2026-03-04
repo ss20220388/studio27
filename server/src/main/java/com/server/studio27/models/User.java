@@ -4,14 +4,17 @@ public class User {
     private int userId;
     private String email;
     private String password;
+    private String role;
 
     public User() {
 
     }
-    public User(int userId, String email, String password) {
+    public User(int userId, String email, String password, String role) {
         this.userId = userId;
         this.email = email;
         this.password = password;
+        this.role = role;
+        
     }
 
 
@@ -33,6 +36,13 @@ public class User {
     }
     public void setPassword(String password) {
         this.password = password;
+        
+    }
+    public void setRole(String role) {
+        this.role = role;
+    }
+    public String getRole() {
+        return role;
     }
     public boolean isValid() {
         return email != null && !email.isEmpty() && password != null && !password.isEmpty();
@@ -46,6 +56,7 @@ public class User {
 
         if (userId != user.userId) return false;
         if (!email.equals(user.email)) return false;
+        if (!role.equals(user.role)) return false;
         return password.equals(user.password);
     }
 
@@ -54,6 +65,7 @@ public class User {
         int result = userId;
         result = 31 * result + (email != null ? email.hashCode() : 0);
         result = 31 * result + (password != null ? password.hashCode() : 0);
+        result = 31 * result + (role != null ? role.hashCode() : 0);
         return result;
     }
 

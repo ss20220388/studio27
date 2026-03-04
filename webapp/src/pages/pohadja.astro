@@ -1,5 +1,6 @@
 ---
-import KursComponents from "../components/KursComponents.astro";
+import React from "react";
+import ReactKurs from "../react components/ReactKurs";
 import Layout from "../layouts/Layout.astro";
 
 interface Kurs {
@@ -10,27 +11,30 @@ interface Kurs {
     trajanje: number;
     slikaUrl: string;
 }
+const token = Astro.cookies.get("refreshToken")?.value || null;
+const response = await fetch("http://api.studio27.rs/api/auth/me", {
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+});
+const userData = await response.json();
 
-const data: Response = await fetch("http://localhost:8080/api/pohadja"); // SSR: server-side fetch
-if (!data.ok) throw new Error("Ne mogu da dobijem kurseve");
-
-const result = await data.json();
-
-// Ako backend vraća objekat { kursevi: [...] }
-const kursevi: Kurs[] = Array.isArray(result) ? result : result.kursevi || [];
+const kurseviResponse = await fetch("http://api.studio27.rs/api/moj-kursevi?userId=" + userData.userId, {
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+});
+const kurseviData = await kurseviResponse.json();
+console.log(kurseviData);
 ---
-<Layout title="Moji kursevi">
-    <main class="p-8">
-        <h1 class="text-3xl font-bold mb-8">Moji kursevi</h1>
 
-        {kursevi.length === 0 ? (
-            <p>Nema kurseva za prikaz</p>
-        ) : (
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {kursevi.map((kurs) => (
-                    <KursComponents kurs={kurs} />
-                ))}
-            </div>
-        )}
+<Layout title="Moji kursevi">
+    <main class="p-8 overflow-y-scroll max-h-screen">
+        <h1 class="text-3xl font-bold mb-8">Moji kursevi</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {kurseviData.kursevi?.map((kurs: Kurs) => (
+                <ReactKurs client:idle  kurs={kurs} userId={userData.userId} accessToken={token} />
+            ))}
+        </div>
     </main>
 </Layout>

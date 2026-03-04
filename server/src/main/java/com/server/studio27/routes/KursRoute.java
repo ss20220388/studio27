@@ -1,11 +1,15 @@
 package com.server.studio27.routes;
 
-import com.server.studio27.controllers.KursController;
 import java.util.List;
-import com.server.studio27.models.Kurs;
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.server.studio27.controllers.KursController;
+import com.server.studio27.models.Kurs;
 
 @RestController
 @RequestMapping("/api")
@@ -17,11 +21,11 @@ public class KursRoute {
         this.kursController = kursController;
     }
     @GetMapping("/kursevi")
-    public List<Kurs> getAllKursevi() {
+    public ResponseEntity<Map<String, Object>> getAllKursevi() {
         return kursController.getAllKursevi();
     }
     @GetMapping("/kursevi-sa-lekcijama")
-    public List<Kurs> getAllKurseviSaLekcijama() {
+    public ResponseEntity<List<Kurs>> getAllKurseviSaLekcijama() {
         return kursController.getAllKurseviSaLekcijama();
     }
 }
