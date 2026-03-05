@@ -14,16 +14,16 @@ const stats = {
 ---
 
 <Layout title="Home">
-	<main class="w-[80vw] p-5 flex-1 flex flex-col justify-center">
-		<div class="space-y-10 ">
-			<h1 class="text-3xl font-bold text-gray-800">Dobrodošli </h1>
+	<main class="w-[80vw] p-5 flex-1 overflow-y-scroll h-screen  flex flex-col justify-center">
+		<div class="space-y-10 overflow-y-scroll h-screen ">
+			<h1 class="text-3xl pb-4 font-bold text-gray-800">Dobrodošli </h1>
 			<StatsCards stats={stats} />
 
 			<div
-				class="bg-white  p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 w-full"
+				class="bg-white   p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 w-full"
 			>
 				<div
-					class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-2"
+					class="flex flex-col sm:flex-row sm:items-center sm:justify-between  gap-2"
 				>
 					<h2 class="text-lg sm:text-xl font-semibold text-gray-800">
 						Statistika učenja
