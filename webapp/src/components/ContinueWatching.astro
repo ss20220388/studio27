@@ -1,0 +1,20 @@
+---
+import CourseCard from "./CourseCard.astro";
+
+const courses = [
+    { title: "React Kurs", progress: 70 },
+    { title: "SQL Masterclass", progress: 35 },
+];
+---
+
+<div>
+    <h2 class="text-2xl font-semibold mb-4">Nastavi gde si stao</h2>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        {
+            courses.map((course) => (
+                <CourseCard title={course.title} progress={course.progress} />
+            ))
+        }
+    </div>
+</div>

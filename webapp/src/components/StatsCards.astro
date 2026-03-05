@@ -1,0 +1,25 @@
+---
+const { stats } = Astro.props;
+---
+
+<div class="grid md:grid-cols-4 gap-6">
+    <div class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-gray-500">Ukupno kurseva</h3>
+        <p class="text-3xl font-bold">{stats.totalCourses}</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-gray-500">Završeno</h3>
+        <p class="text-3xl font-bold">{stats.finished}</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-gray-500">U toku</h3>
+        <p class="text-3xl font-bold">{stats.inProgress}</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-gray-500">Sati gledanja</h3>
+        <p class="text-3xl font-bold">{stats.hours}h</p>
+    </div>
+</div>

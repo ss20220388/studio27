@@ -1,13 +1,42 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import HomeSection from "../components/HomeSection.astro";
+import StatsCards from "../components/StatsCards.astro";
+import ProgressChart from "../react components/ProgressChart";
+import ContinueWatching from "../components/ContinueWatching.astro";
 
+const stats = {
+	totalCourses: 5,
+	finished: 1,
+	inProgress: 3,
+	hours: 12,
+};
 ---
 
 <Layout title="Home">
-	<main class="w-[80vw] p-5">
-		<h1>Home</h1>
-		<p>Welcome to the home page!</p>
-		<HomeSection />
+	<main class="w-[80vw] p-5 flex-1 flex flex-col justify-center">
+		<div class="space-y-10 ">
+			<h1 class="text-3xl font-bold text-gray-800">Dobrodošli </h1>
+			<StatsCards stats={stats} />
+
+			<div
+				class="bg-white  p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 w-full"
+			>
+				<div
+					class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-2"
+				>
+					<h2 class="text-lg sm:text-xl font-semibold text-gray-800">
+						Statistika učenja
+					</h2>
+
+					<span class="text-xs sm:text-sm text-gray-500">
+						pregled kurseva
+					</span>
+				</div>
+
+				<ProgressChart client:load />
+			</div>
+			<ContinueWatching />
+		</div>
 	</main>
 </Layout>
