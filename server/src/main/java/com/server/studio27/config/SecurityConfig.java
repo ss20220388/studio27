@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/video/stream-protected").permitAll()
                         .requestMatchers("/api/radovi").permitAll()
                         .requestMatchers("/api/upload-hls-hetzner").permitAll()
+                        .requestMatchers("/api/kursevi/{id}").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

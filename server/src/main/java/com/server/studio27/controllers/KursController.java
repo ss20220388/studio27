@@ -33,12 +33,74 @@ public class KursController {
          }
     }
 
+public ResponseEntity<Kurs> getKursSaLekcijama(int id) {
+    try {
+        String SQL = "" + //
+        "SELECT" + 
+        " k.kursId," +//
+        " k.naziv," +//
+        " k.opis," +//
+        " k.cena," +//
+        " k.trajanje," +//
+        " k.slikaUrl," +//
+        " l.lekcijaId," +//
+        " l.naziv AS nazivLekcije," +//
+        " l.opis AS opisLekcije" +//
+        " FROM Kurs k" +//
+        " LEFT JOIN lekcija l USING(kursId)" +//
+        " WHERE k.kursId = ?" +//
+        "";
+        System.out.println("Executing SQL: " + SQL + " with id: " + id);
+
+    List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL, id);
+    System.out.println("Query returned " + rows.size() + " rows");
+
+    if (rows.isEmpty()) {
+        return ResponseEntity.badRequest().build();
+    }
+
+    List<Lekcija> lekcije = new ArrayList<>();
+    if (rows.get(0).get("lekcijaId") != null) {
+    for (Map<String, Object> row : rows) {
+
+        lekcije.add(new Lekcija(
+            ((Number) row.get("lekcijaId")).intValue(),
+            (String) row.get("nazivLekcije"),
+            (String) row.get("opisLekcije")
+        ));
+    }
+    }
+    System.out.println("Parsed " + lekcije.size() + " lekcije for kursId: " + id);
+
+
+    Map<String, Object> first = rows.get(0);
+
+    Kurs kurs = new Kurs(
+        ((Number) first.get("kursId")).intValue(),
+        (String) first.get("naziv"),
+        (String) first.get("opis"),
+        ((Number) first.get("cena")).intValue(),
+        ((Number) first.get("trajanje")).intValue(),
+        (String) first.get("slikaUrl"),
+        lekcije
+    );
+    System.out.println("Constructed Kurs object: " + kurs.getNaziv() + " with " + lekcije.size() + " lekcije");
+
+
+    return ResponseEntity.ok(kurs);
+        
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().build();
+    }
+}
+
+
     public ResponseEntity<List<Kurs>> getAllKurseviSaLekcijama() {
         List<Kurs> kursevi = new ArrayList<>();
         String SQL = "Select kursId,k.naziv as \"Naziv kursa\",k.opis as \"Opis kursa\", cena, trajanje as \"Trajanje u danima\", slikaUrl as \"Slika kursa\",lekcijaId, l.naziv as \"Naziv  lekcije\",\nl.opis as \"Opis lekcije\", url as \"Video url\" from Kurs k\n"
                 +
-                "join Lekcija l using(kursId)\n" +
-                "join Video  v using(lekcijaId)\n" +
+                "left join Lekcija l using(kursId)\n" +
+                "left join Video  v using(lekcijaId)\n" +
                 "Group by kursId,lekcijaId,videoId;";
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
         int currentKursId = -1;

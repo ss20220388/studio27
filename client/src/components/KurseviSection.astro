@@ -4,6 +4,10 @@ type Kurs = {
   naziv: string;
   opis: string;
   slikaUrl: string;
+  glavniKurs: string;
+  komentarDole: string;
+  komentarSredina: string;
+  komentarGore: string;
 };
 type ResponseData = {
   kursevi: Kurs[];
@@ -49,26 +53,40 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
         <!-- Content -->
         <div class="relative z-10 h-full flex flex-col justify-between p-6 text-white">
 
-          <!-- Top -->
-          <div>
-            <h3 class="text-lg sm:text-xl md:text-2xl font-bold mb-4">
-              {kurs.naziv}
-            </h3>
+           <!-- Top -->
+        <!-- Gornji tekst -->
+    <div class="space-y-10">
+      <h2 class="text-xl font-extrabold leading-snug">
+        {kurs.naziv}
+      </h2>
+        <p class="text-base font-bold space-y-3">
+        {kurs.glavniKurs}
+      </p>
 
-            <p class="text-xs sm:text-sm md:text-base opacity-90 leading-relaxed">
-              {kurs.opis}
-            </p>
-          </div>
+      <p class="text-sm opacity-90 space-y-2 font-bold">
+        {kurs.komentarGore}
+      </p>
+
+        <p class="text-base space-y-10 font-bold">
+        {kurs.komentarSredina}
+      </p>
+
+     
+    </div>
 
           <!-- Button -->
-          <div class="flex justify-end">
-            <a
-              href={`/kurs/${kurs.kursId}`}
-              class="bg-red-900 hover:bg-red-800 transition-all duration-300 px-5 py-2 sm:px-6 sm:py-3 text-sm font-semibold"
-            >
-              Detaljnije
-            </a>
-          </div>
+         <!-- Donji deo -->
+    <div class="space-y-3">
+      <p class="text-xs font-extrabold  text-xl tracking-wide">
+        {kurs.komentarDole}
+      </p>
+
+      <div class="flex w-full justify-end" > 
+        <a href={`/kurs/${kurs.kursId}`} class="bg-red-900 hover:bg-red-800 px-4 py-2 text-sm  font-semibold">
+        Detaljnije
+      </a>
+      </div>
+    </div>
 
         </div>
 
@@ -78,10 +96,10 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
   </div>
 
 
-   <div class="flex justify-center items-center mt-3 gap-8 max-w-7xl mx-auto">
+   <div class="flex flex-col md:flex-row flex-wrap justify-center items-center mt-3 gap-8 max-w-7xl mx-auto">
 
     {kursevi_2.map((kurs) => (
-      <div class="relative max-w-[300px] h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group">
+      <div class="relative md:max-w-[300px] h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group">
 
         <!-- Image -->
         <div
@@ -95,26 +113,40 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
         <!-- Content -->
         <div class="relative z-10 h-full flex flex-col justify-between p-6 text-white">
 
-          <!-- Top -->
-          <div>
-            <h3 class="text-lg sm:text-xl md:text-2xl font-bold mb-4">
-              {kurs.naziv}
-            </h3>
+        <!-- Top -->
+        <!-- Gornji tekst -->
+    <div class="space-y-10">
+      <h2 class="text-xl font-extrabold leading-snug">
+        {kurs.naziv}
+      </h2>
+        <p class="text-base font-bold space-y-3">
+        {kurs.glavniKurs}
+      </p>
 
-            <p class="text-xs sm:text-sm md:text-base opacity-90 leading-relaxed">
-              {kurs.opis}
-            </p>
-          </div>
+      <p class="text-sm opacity-90 space-y-2 font-bold">
+        {kurs.komentarGore}
+      </p>
+
+        <p class="text-base space-y-10 font-bold">
+        {kurs.komentarSredina}
+      </p>
+
+     
+    </div>
 
           <!-- Button -->
-          <div class="flex justify-end">
-            <a
-              href={`/kurs/${kurs.kursId}`}
-              class="bg-red-900 hover:bg-red-800 transition-all duration-300 px-5 py-2 sm:px-6 sm:py-3 text-sm font-semibold"
-            >
-              Detaljnije
-            </a>
-          </div>
+         <!-- Donji deo -->
+    <div class="space-y-3">
+      <p class="text-xs font-extrabold  text-xl tracking-wide">
+        {kurs.komentarDole}
+      </p>
+
+      <div class="flex w-full justify-end" > 
+        <a href={`/kurs/${kurs.kursId}`} class="bg-red-900 hover:bg-red-800 px-4 py-2 text-sm  font-semibold">
+        Detaljnije
+      </a>
+      </div>
+    </div>
 
         </div>
 

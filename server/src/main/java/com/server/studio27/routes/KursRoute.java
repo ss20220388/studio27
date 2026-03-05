@@ -5,11 +5,13 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.server.studio27.controllers.KursController;
 import com.server.studio27.models.Kurs;
+
 
 @RestController
 @RequestMapping("/api")
@@ -27,5 +29,9 @@ public class KursRoute {
     @GetMapping("/kursevi-sa-lekcijama")
     public ResponseEntity<List<Kurs>> getAllKurseviSaLekcijama() {
         return kursController.getAllKurseviSaLekcijama();
+    }
+    @GetMapping("/kursevi/{id}")
+    public ResponseEntity<Kurs> getKursSaLekcijama(@PathVariable int id) {
+        return kursController.getKursSaLekcijama(id);
     }
 }

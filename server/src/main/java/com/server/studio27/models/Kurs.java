@@ -8,8 +8,26 @@ public class Kurs {
     private int trajanje;
     private String slikaUrl;
     private List<Lekcija> lekcije;
+    private String glavniKurs;
+    private String komentarDole;
+    private String komentarSredina;
+    private String komentarGore;
     public Kurs() {
 
+    }
+
+    public Kurs(int id, String naziv, String opis, int cena, int trajanje, String slikaUrl,  String glavniKurs, String komentarDole, String komentarSredina, String komentarGore) {
+        this.id = id;
+        this.naziv = naziv;
+        this.opis = opis;
+        this.cena = cena;
+        this.trajanje = trajanje;
+        this.slikaUrl = slikaUrl;
+    
+        this.glavniKurs = glavniKurs;
+        this.komentarDole = komentarDole;
+        this.komentarSredina = komentarSredina;
+        this.komentarGore = komentarGore;
     }
 
     public Kurs(int id, String naziv, String opis, int cena) {
@@ -84,5 +102,29 @@ public class Kurs {
     public void setLekcije(List<Lekcija> lekcije) {
         this.lekcije = lekcije;
     }
-
+    public String getGlavniKurs() {
+        return glavniKurs;
+    }
+    public void setGlavniKurs(String glavniKurs) {
+        this.glavniKurs = glavniKurs;
+    }
+    public String getKomentarDole() {
+        return komentarDole;
+    }
+    public void setKomentarDole(String komentarDole) {
+        this.komentarDole = komentarDole;
+    }
+    public String getKomentarSredina() {
+        return komentarSredina;
+    }
+    public void setKomentarSredina(String komentarSredina) {
+        this.komentarSredina = komentarSredina;
+    }
+    public String getKomentarGore() {
+        return komentarGore;
+    }
+    public void setKomentarGore(String komentarGore) {
+        this.komentarGore = komentarGore;
+    }
+    
 }

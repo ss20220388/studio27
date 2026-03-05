@@ -15,6 +15,13 @@ public class Lekcija {
         this.opis = opis;
         this.videoUrl = videoUrl;
     }
+     public Lekcija(int lekcijaId, String naziv, String opis) {
+        this.lekcijaId = lekcijaId;
+        this.naziv = naziv;
+        this.opis = opis;
+        
+    }
+
 
     public int getLekcijaId() {
         return lekcijaId;
