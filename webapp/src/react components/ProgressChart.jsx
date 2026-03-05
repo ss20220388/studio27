@@ -23,7 +23,7 @@ export default function ProgressChart() {
     return (
         <div className="w-full h-[260px]">
 
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer minWidth={250} minHeight={250} width={"100%"} height={"100%"}>
 
                 <PieChart>
 

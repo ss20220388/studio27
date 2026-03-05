@@ -28,31 +28,31 @@ const ReactKurs = ({ kurs, userId, accessToken }) => {
         }
         fetchPohadjanje();
     }, []);
-     if (loading) {
-            return (
-                <div className="shadow-md w-[300px] bg-white rounded-xl p-6  animate-pulse">
+    if (loading) {
+        return (
+            <div className="shadow-md w-[350px] h-[500px] bg-white rounded-xl p-6  animate-pulse">
 
-                    <div className="w-full h-40 bg-gray-300 rounded-lg mb-4"></div>
+                <div className="w-full h-40 bg-gray-300 rounded-lg mb-4"></div>
 
-                    <div className="h-6 bg-gray-300 rounded w-3/4 mb-3"></div>
+                <div className="h-6 bg-gray-300 rounded w-3/4 mb-3"></div>
 
-                    <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                    <div className="h-4 bg-gray-200 rounded w-5/6 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-5/6 mb-4"></div>
 
-                    <div className="flex justify-between">
-                        <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-                        <div className="h-4 bg-gray-300 rounded w-1/5"></div>
-                    </div>
-
+                <div className="flex justify-between">
+                    <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+                    <div className="h-4 bg-gray-300 rounded w-1/5"></div>
                 </div>
-            );
-        }
-    
+
+            </div>
+        );
+    }
+
 
     return (
-        <div className="relative w-full">
+        <div className="relative w-full ">
             <div
-                className={`shadow-md bg-white rounded-xl p-6 transition duration-300 w-full 
+                className={` bg-white rounded-xl relative   max-w-[400px] h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group p-6 transition duration-300 w-full 
             ${pohadjanje ? "hover:shadow-xl cursor-pointer" : "opacity-70"}`}
                 onClick={() => {
                     if (pohadjanje) {
@@ -60,27 +60,42 @@ const ReactKurs = ({ kurs, userId, accessToken }) => {
                     }
                 }}
             >
-                <img
-                    src={`http://api.studio27.rs/api/uploaded-images${kurs.slikaUrl}`}
-                    alt={kurs.naziv}
-                    className="w-full h-40 object-cover rounded-lg mb-4"
-                />
+                    
+                    <div
+                        className="absolute inset-0 bg-cover bg-center transform group-hover:scale-110 transition duration-500"
+                        style={{ backgroundImage: `url('http://api.studio27.rs/api/uploaded-images${kurs.slikaUrl}')` }}
+                    ></div>
 
-                <h2 className="text-xl font-bold text-gray-800 mb-2">
-                    {kurs.naziv}
-                </h2>
+                    
+                    <div className="absolute inset-0 bg-black/70 group-hover:bg-black/60 transition duration-500"></div>
 
-                <p className="text-gray-600 mb-3">
-                    {kurs.opis}
-                </p>
+                    
+                    <div className="relative z-10 h-full flex flex-col justify-between p-6 text-white">
 
-                <p className="font-semibold text-indigo-600">
-                    {kurs.cena} RSD
-                </p>
+                        
+                        <div>
+                            <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4">
+                                {kurs.naziv}
+                            </h3>
 
-                <p className="text-sm text-gray-500">
-                    {kurs.trajanje} časova
-                </p>
+                            <p className="text-xs sm:text-sm md:text-base opacity-90 leading-relaxed">
+                                {kurs.opis}
+                            </p>
+                        </div>
+
+                        
+                        <div className="flex justify-end">
+                            <a
+                                href={`/kurs/${kurs.kursId}`}
+                                className="bg-red-900 hover:bg-red-800 transition-all duration-300 px-5 py-2 sm:px-6 sm:py-3 text-sm font-semibold"
+                            >
+                                Detaljnije
+                            </a>
+                        </div>
+
+                    </div>
+
+                
             </div>
 
             {!pohadjanje && (
