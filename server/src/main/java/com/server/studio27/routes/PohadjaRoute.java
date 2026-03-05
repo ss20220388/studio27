@@ -26,6 +26,11 @@ public class PohadjaRoute {
     public ResponseEntity<Map<String,Object>> studentPohadjaKurs(@RequestParam Integer userId, @RequestParam Integer kursId) {
         return pohadjaController.studentPohadjaKurs(userId, kursId);
     }
+    @GetMapping("/pohadjam-kurs-lekcije")
+    public ResponseEntity<Map<String,Object>> studentPohadjaKursSaLekcijama(@RequestParam Integer userId, @RequestParam Integer kursId) {
+        return pohadjaController.pohadjaKursILekcije(userId, kursId);
+    }
+    
     
     
     

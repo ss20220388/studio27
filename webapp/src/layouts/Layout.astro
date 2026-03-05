@@ -25,7 +25,7 @@ const userData = await response.json();
 
     </head>
     <body>
-        {!userData.error?<div class="min-h-screen  flex">
+        {!userData.error?<div class="relative  min-h-screen pt-6 md:pt-0  flex">
             <Sidebar user={userData} />
             <slot />
         </div>:<div>

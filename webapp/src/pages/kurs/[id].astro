@@ -1,60 +1,37 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import KursPlayer from "../../react components/KursPlayer";
 
 const token = Astro.cookies.get("refreshToken")?.value || null;
+
 const response = await fetch("http://api.studio27.rs/api/auth/me", {
-    headers: {
-        Authorization: `Bearer ${token}`,
-    },
+  headers: { Authorization: `Bearer ${token}` },
 });
 const userData = await response.json();
 
-console.log("User data:", userData);
+const klipIlekcijeRes = await fetch(
+  `http://api.studio27.rs/api/pohadjam-kurs-lekcije?userId=${userData.userId}&kursId=${Astro.params.id}`,
+  { headers: { Authorization: `Bearer ${token}` } }
+);
 
-const pohadjaRes = await fetch(`http://api.studio27.rs/api/pohadjam-kurs?userId=${userData.userId}&kursId=${Astro.params.id}`, {
-    headers: {
-        Authorization: `Bearer ${token}`,
-    },
-});
-
-const pohadjaData = await pohadjaRes.json();
-console.log("Pohadja data:", pohadjaData);
-const pohadjanje = pohadjaData.pohadja;
-if (pohadjanje) {
-    try{
-        const updateResponse = await fetch(`http://api.studio27.rs/api/pohadjam-kurs/${pohadjanje.id}/update-status`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ status: "active" }),
-        });
-
-        if (!updateResponse.ok) {
-            console.error("Failed to update course status");
-        } else {
-            console.log("Course status updated successfully");
-        }
-    } catch (error) {
-        console.error("Error updating course status:", error);
-    }
-} else {
-    console.log("Niste upisani na ovaj kurs.");
-}
+const klipIlekcijeData = await klipIlekcijeRes.json();
+const pohadjanje = klipIlekcijeData.pohadja ? klipIlekcijeData : null;
 ---
-<Layout title="Detalji kursa">
-    <main class="p-8">
-        <h1 class="text-3xl font-bold mb-4">Detalji kursa</h1>
-        {pohadjanje ? (
-            <div>
-                <p class="text-lg mb-2">Status: {pohadjanje.status}</p>
-                <p class="text-lg mb-2">Datum početka: {new Date(pohadjanje.datumPocetka).toLocaleDateString()}</p>
-                <p class="text-lg mb-2">Datum završetka: {new Date(pohadjanje.datumZavrsetka).toLocaleDateString()}</p>
-            </div>
-        ) : (
-            <p class="text-lg mb-2">Niste upisani na ovaj kurs.</p>
-        )}
 
-    </main>
+<Layout title="Detalji kursa">
+  <main class="p-8 overflow-y-scroll h-screen">
+    <h1 class="text-3xl font-bold mb-6">Detalji kursa</h1>
+
+    {pohadjanje ? (
+      <KursPlayer
+        lekcije={klipIlekcijeData.lekcije}
+        token={token}
+        client:load
+      />
+    ) : (
+      <div class="bg-red-100 text-red-700 p-4 rounded-lg">
+        Niste upisani na ovaj kurs.
+      </div>
+    )}
+  </main>
 </Layout>
