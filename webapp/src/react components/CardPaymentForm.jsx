@@ -13,7 +13,7 @@ export default function CardPaymentForm({ onSuccess, naziv, cena, onBack }) {
 
   return (
     <>
-      <h2 className="text-2xl font-bold mb-4">Plaćanje karticom</h2>
+      <h2 className="text-2xl font-bold mb-4 text-black">Plaćanje karticom</h2>
       <p className="text-gray-500 mb-6">{naziv} - {cena} RSD</p>
 
       <form className="space-y-4" onSubmit={handleSubmit}>

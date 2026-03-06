@@ -1,0 +1,38 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+<Layout title="Kontakt">
+	<main class="flex flex-col items-center min-h-screen w-screen bg-gray-50 py-10 px-2">
+		<div class=" max-w-2xl bg-white rounded-2xl shadow-xl p-8 mb-10">
+			<h1 class="text-2xl font-bold mb-4 text-red-900">Kontaktirajte nas</h1>
+			<div class="mb-2 text-gray-700">
+				<div class="mb-1">Telefon 1: <a href="tel:+381601234567" class="text-red-900 font-semibold hover:underline">+381 60 123 4567</a></div>
+				<div>Telefon 2: <a href="tel:+381641112233" class="text-red-900 font-semibold hover:underline">+381 64 111 2233</a></div>
+			</div>
+		</div>
+		<div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8">
+			<h2 class="text-xl font-semibold mb-4 text-gray-800">Pošaljite nam poruku</h2>
+			<form class="flex flex-col gap-4">
+				<div>
+					<label class="block text-sm font-medium mb-1" for="naslov">Naslov</label>
+					<input id="naslov" name="naslov" type="text" class="border rounded px-3 py-2 w-full" placeholder="Unesite naslov poruke" required />
+				</div>
+				<div>
+					<label class="block text-sm font-medium mb-1" for="poruka">Poruka</label>
+					  <textarea id="poruka" name="poruka" rows="7" class="border rounded px-3 py-2 w-full resize-none" placeholder="Unesite vašu poruku" required></textarea>
+				</div>
+				<div>
+					<label class="block text-sm font-medium mb-1" for="prilog">Priložite podatak (opciono)</label>
+					<div class="flex items-center gap-2">
+						<label for="prilog" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded cursor-pointer transition border border-gray-300">
+							Izaberi fajl
+						</label>
+						<span id="prilog-fajl" class="text-xs text-gray-600"></span>
+						<input id="prilog" name="prilog" type="file" class="hidden" onchange="document.getElementById('prilog-fajl').textContent = this.files[0]?.name || ''" />
+					</div>
+				</div>
+				<button type="submit" class="bg-red-900 text-white rounded px-6 py-2 font-semibold hover:bg-red-800 transition">Pošalji poruku</button>
+			</form>
+		</div>
+	</main>
+</Layout>

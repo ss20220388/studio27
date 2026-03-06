@@ -25,14 +25,14 @@ public class PohadjaController {
 
       try {
          User user = UserController.getUserById(userId);
-         System.out.println("User role: " + user.getEmail() + " - " + user.getRole());
          switch (user.getRole()) {
             case "STUDENT" -> {
+               System.out.println("Student access - fetching enrolled courses for userId: " + userId);
                String SQL = "Select kurs.*\r\n" + //
-                     "from kurs\r\n" + //
-                     "join pohadja using(kursId)\r\n" + //
-                     "join student using(studentId)\r\n" + //
-                     "where studentId = ?";
+                     " from kurs\r\n" + //
+                     " left join pohadja using(kursId)\r\n" + //
+                     " left join student using(studentId)\r\n" + //
+                     " where studentId = ?";
                List<Map<String, Object>> result = jdbcTemplate.queryForList(SQL, userId);
                Map<String, Object> response = new HashMap<>();
                response.put("kursevi", result);
@@ -108,19 +108,23 @@ public class PohadjaController {
          if (lekcije == null) {
             response.put("pohadja", false);
             response.put("error", "Lekcije nisu dostupne (null)");
+            System.out.println("Lekcije nisu dostupne (null)");
             return ResponseEntity.ok(response);
          }
          switch (user.getRole()) {
             case "STUDENT" -> {
-               String SQL = "  Select k.*  from pohadja join kurs k on pohadja.kursId = k.kursId where studentId = ? and kursId = ? limit 1";
+               String SQL = "Select k.*  from pohadja join kurs k on pohadja.kursId = k.kursId where studentId = ? and  k.kursId = ? limit 1";
                Map<String, Object> result = jdbcTemplate.queryForMap(SQL, userId, kursId);
                if (result != null && !result.isEmpty()) {
+
                   response.put("pohadja", true);
                   response.put("message", "Student is enrolled in the course");
                   response.put("kurs", result);
                   List<Map<String, Object>> kursLekcije = new java.util.ArrayList<>();
                   for (Map<String, Object> lekcija : lekcije.values()) {
-                     if (lekcija.get("kursId").equals(kursId)) {
+                      Number kursIdNum = (Number) lekcija.get("kursId");
+                      Integer kursidLekcija = kursIdNum.intValue();
+                     if (kursidLekcija.equals(kursId)) {
                         Map<String, Object> lekcijaData = new HashMap<>();
                         lekcijaData.put("lekcijaId", lekcija.get("lekcijaId"));
                         lekcijaData.put("naziv", lekcija.get("naziv"));
@@ -201,8 +205,6 @@ public class PohadjaController {
 
                lekcijaMap.put(lekcijaId, lekcija);
             }
-
-            // 🔥 KLJUČNA PROVERA
             if (entry.get("videoId") != null) {
                Map<String, Object> video = new HashMap<>();
                video.put("videoId", entry.get("videoId"));

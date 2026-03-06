@@ -30,10 +30,10 @@ const userData = await response.json();
 ---
 
 <Layout title="Kursevi">
-    <main class="p-8 flex flex-col items-center justify-center">
-        <h1 class="text-3xl font-bold mb-8">Svi kursevi</h1>
+   <main class="px-10 py-4 flex flex-col items-center justify-center h-screen  ">
+    <h1 class="text-3xl font-bold mb-10">Svi kursevi</h1>
 
-        <div class="grid  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+   <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-8 overflow-y-scroll h-full">
             {kursevi?.map((kurs) => (
                 <ReactKurs client:idle  kurs={kurs} userId={userData.userId} accessToken={token} />
             ))}

@@ -1,0 +1,12 @@
+---
+import Layout from "../layouts/Layout.astro";
+import SettingsCard from "../react components/SettingsTabs/SettingsCard";
+---
+<Layout title="Podešavanja">
+  <main class="px-4 py-8 flex flex-col items-center min-h-screen w-screen bg-gray-50">
+    <h1 class="text-3xl font-bold mb-8">Podešavanja naloga</h1>
+    <div class="w-full max-w-2xl">
+      <SettingsCard client:visible />
+    </div>
+  </main>
+</Layout>

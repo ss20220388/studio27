@@ -1,91 +1,50 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import BuyCourseModal from "../react components/BuyCourseModal.jsx";
-
+import ReactKurs from "../react components/ReactKurs";
 
 const token = Astro.cookies.get("refreshToken")?.value || null;
 const response = await fetch("http://api.studio27.rs/api/auth/me", {
-    headers: {
-        Authorization: `Bearer ${token}`,
-    },
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
 });
 const userData = await response.json();
 
 interface Kurs {
-    id: number;
-    naziv: string;
-    opis: string;
-    cena: number;
-    trajanje: number;
-    slikaUrl: string;
+  id: number;
+  naziv: string;
+  opis: string;
+  cena: number;
+  trajanje: number;
+  slikaUrl: string;
 }
 interface ResponseData {
-    kursevi: Kurs[];
+  kursevi: Kurs[];
 }
 
-const data: Response = await fetch("http://localhost:8080/api/kursevi"); // SSR: server-side fetch
+const data: Response = await fetch("http://api.studio27.rs/api/kursevi"); // SSR: server-side fetch
 
 const kurseviRes: ResponseData = await data.json();
 const kursevi = kurseviRes.kursevi;
-
 ---
 
 <Layout title="Kursevi">
-  <main class="max-w-6xl mx-auto p-8 overflow-y-scroll h-screen">
+  <main class="px-10 py-4 flex flex-col items-center justify-center h-screen  ">
     <h1 class="text-3xl font-bold mb-10">Otključaj kurseve</h1>
 
-    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
-
-      {kursevi.map((kurs) => (
-        <div class="flex flex-col justify-between bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition duration-300 overflow-hidden">
-
-          <!-- header -->
-          <div class="h-36 bg-linear-to-r from-red-800 to-red-600 flex items-end p-6">
-            <span class="bg-white/20 text-white text-sm px-4 py-2 rounded-full backdrop-blur">
-              Online kurs
-            </span>
-          </div>
-
-          <!-- body -->
-          <div class="p-8 flex flex-col justify-between flex-1">
-
-            <div>
-              <h2 class="text-2xl font-semibold text-gray-900 mb-3 group-hover:text-red-800 transition">
-                {kurs.naziv}
-              </h2>
-
-              <p class="text-gray-600 text-sm leading-relaxed mb-6">
-                {kurs.opis}
-              </p>
-            </div>
-
-            <!-- footer -->
-            <div class="mt-auto">
-
-              <div class="flex items-center justify-between mb-4">
-                <div>
-                  <span class="text-xs text-gray-400 block">
-                    Cena kursa
-                  </span>
-
-                  <span class="text-2xl font-bold text-red-800">
-                    {kurs.cena} RSD
-                  </span>
-                </div>
-              </div>
-
-              <BuyCourseModal
-                client:load
-                naziv={kurs.naziv}
-                cena={kurs.cena}
-              />
-
-            </div>
-          </div>
-
-        </div>
-      ))}
-
+   <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-8 overflow-y-scroll h-full">
+      {
+        kursevi.map((kurs) => (
+          <ReactKurs
+            paid={false}
+            client:idle
+            kurs={kurs}
+            userId={userData.userId}
+            accessToken={token}
+          />
+        ))
+      }
     </div>
   </main>
 </Layout>

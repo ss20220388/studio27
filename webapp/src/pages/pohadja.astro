@@ -19,22 +19,35 @@ const response = await fetch("http://api.studio27.rs/api/auth/me", {
 });
 const userData = await response.json();
 
-const kurseviResponse = await fetch("http://api.studio27.rs/api/moj-kursevi?userId=" + userData.userId, {
-    headers: {
-        Authorization: `Bearer ${token}`,
+const kurseviResponse = await fetch(
+    "http://api.studio27.rs/api/moj-kursevi/" + userData.userId,
+    {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
     },
-});
+);
 const kurseviData = await kurseviResponse.json();
 console.log(kurseviData);
 ---
 
 <Layout title="Moji kursevi">
-    <main class="p-8 overflow-y-scroll max-h-screen">
-        <h1 class="text-3xl font-bold mb-8">Moji kursevi</h1>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {kurseviData.kursevi?.map((kurs: Kurs) => (
-                <ReactKurs client:idle  kurs={kurs} userId={userData.userId} accessToken={token} />
-            ))}
+    <main class="px-10 py-4 flex flex-col items-center justify-center h-screen">
+        <h1 class="text-3xl font-bold mb-10">Moj kursevi</h1>
+
+        <div
+            class="grid md:grid-cols-2 xl:grid-cols-3 gap-8 overflow-y-scroll h-full"
+        >
+            {
+                kurseviData.kursevi?.map((kurs: Kurs) => (
+                    <ReactKurs
+                        client:idle
+                        kurs={kurs}
+                        userId={userData.userId}
+                        accessToken={token}
+                    />
+                ))
+            }
         </div>
     </main>
 </Layout>
