@@ -19,9 +19,7 @@ const pohadjanje = klipIlekcijeData.pohadja ? klipIlekcijeData : null;
 ---
 
 <Layout title="Detalji kursa">
-  <main class="p-8 overflow-y-scroll h-screen">
-    <h1 class="text-3xl font-bold mb-6">Detalji kursa</h1>
-
+  <div class="animate-fade-in">
     {pohadjanje ? (
       <KursPlayer
         lekcije={klipIlekcijeData.lekcije}
@@ -29,9 +27,9 @@ const pohadjanje = klipIlekcijeData.pohadja ? klipIlekcijeData : null;
         client:load
       />
     ) : (
-      <div class="bg-red-100 text-red-700 p-4 rounded-lg">
+      <div class="bg-red-900/15 border border-red-900/20 text-red-400 p-4 rounded-xl text-sm">
         Niste upisani na ovaj kurs.
       </div>
     )}
-  </main>
+  </div>
 </Layout>

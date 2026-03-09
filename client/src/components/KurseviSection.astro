@@ -32,14 +32,14 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
 
 <section id="kursevi" class="bg-black py-28 px-6 sm:px-10 md:px-16">
 
-  <h2 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white text-center font-extrabold leading-tight mb-16">
+  <h2 class="anim-fade-up text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white text-center font-extrabold leading-tight mb-16">
     NAŠI KURSEVI
   </h2>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
 
-    {kursevi_1.map((kurs) => (
-      <div class="relative h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group">
+    {kursevi_1.map((kurs, i) => (
+      <div class="kurs-card relative h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group" style={`--card-i:${i}`}>
 
         <!-- Image -->
         <div
@@ -98,8 +98,8 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
 
    <div class="flex flex-col md:flex-row flex-wrap justify-center items-center mt-3 gap-8 max-w-7xl mx-auto">
 
-    {kursevi_2.map((kurs) => (
-      <div class="relative md:max-w-[300px] h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group">
+    {kursevi_2.map((kurs, i) => (
+      <div class="kurs-card relative md:max-w-[300px] h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group" style={`--card-i:${i + 4}`}>
 
         <!-- Image -->
         <div
@@ -161,7 +161,7 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
     <!-- LEVA STRANA -->
     <div class="space-y-8">
 
-      <div>
+      <div class="faq-item" style="--faq-i:0">
         <h3 class="font-bold text-lg mb-3">
           Koja oprema i programi su mi potrebni?
         </h3>
@@ -171,7 +171,7 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
         </p>
       </div>
 
-      <div>
+      <div class="faq-item" style="--faq-i:1">
         <h3 class="font-bold text-lg mb-3">
           Da li je kurs za početnike?
         </h3>
@@ -181,7 +181,7 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
         </p>
       </div>
 
-      <div>
+      <div class="faq-item" style="--faq-i:2">
         <h3 class="font-bold text-lg mb-3">
           Kako izgleda format kursa?
         </h3>
@@ -191,7 +191,7 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
         </p>
       </div>
 
-      <div>
+      <div class="faq-item" style="--faq-i:3">
         <h3 class="font-bold text-lg mb-3">
           Da li imam vremensko ograničenje za završetak kursa?
         </h3>
@@ -205,7 +205,7 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
     <!-- DESNA STRANA -->
     <div class="space-y-8">
 
-      <div>
+      <div class="faq-item" style="--faq-i:4">
         <h3 class="font-bold text-lg mb-3">
           Da li dobijam sertifikat?
         </h3>
@@ -214,7 +214,7 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
         </p>
       </div>
 
-      <div>
+      <div class="faq-item" style="--faq-i:5">
         <h3 class="font-bold text-lg mb-3">
           Da li postoji feedback?
         </h3>
@@ -224,7 +224,7 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
         </p>
       </div>
 
-      <div>
+      <div class="faq-item" style="--faq-i:6">
         <h3 class="font-bold text-lg mb-3">
           Da li dobijam pristup svim lekcijama odmah?
         </h3>
@@ -233,7 +233,7 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
         </p>
       </div>
 
-      <div>
+      <div class="faq-item" style="--faq-i:7">
         <h3 class="font-bold text-lg mb-3">
           Da li dobijam fajlove i resurse?
         </h3>
@@ -248,3 +248,55 @@ const kursevi_2 = data?.kursevi?.slice(4, 6);
 
 </div>
 </section>
+
+<style>
+  /* Course cards - slide up with stagger */
+  .kurs-card {
+    opacity: 0;
+    transform: translateY(60px) scale(0.96);
+    transition: opacity 0.7s cubic-bezier(0.25,0.46,0.45,0.94),
+                transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
+    transition-delay: calc(var(--card-i) * 0.12s);
+  }
+  .kurs-card.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  /* FAQ items - slide in from left */
+  .faq-item {
+    opacity: 0;
+    transform: translateX(-25px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transition-delay: calc(var(--faq-i) * 0.08s);
+  }
+  .faq-item.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Generic fade up */
+  .anim-fade-up {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+  .anim-fade-up.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+  document.querySelectorAll('.kurs-card, .faq-item, #kursevi .anim-fade-up').forEach(el => {
+    observer.observe(el);
+  });
+</script>

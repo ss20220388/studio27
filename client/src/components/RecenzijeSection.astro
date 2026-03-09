@@ -70,14 +70,14 @@ const radoviPrikaz = radovi.slice(0, 6);
     <!-- ========================= -->
 
     <div class="mb-32">
-      <h3 class="text-3xl font-bold text-white text-center mb-16">
+      <h3 class="rec-title text-3xl font-bold text-white text-center mb-16">
         Pogledajte radove naših studenata
       </h3>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
         {
-          radoviPrikaz.map((rad) => (
-            <article class="relative isolate flex flex-col justify-end overflow-hidden rounded-2xl h-[450px] group">
+          radoviPrikaz.map((rad, i) => (
+            <article class="rad-card relative isolate flex flex-col justify-end overflow-hidden rounded-2xl h-[450px] group" style={`--rad-i:${i}`}>
               <img
                 src={`http://api.studio27.rs/api/uploaded-images${rad.url}`}
                 alt={rad.naziv}
@@ -102,7 +102,7 @@ const radoviPrikaz = radovi.slice(0, 6);
     <!-- RECENZIJE -->
     <!-- ========================= -->
 
-    <div class="text-center mb-20">
+    <div class="rec-subtitle text-center mb-20">
       <p class="text-gray-400 text-lg max-w-2xl mx-auto mt-4">
         Pročitajte iskustva polaznika koji su završili naše kurseve
       </p>
@@ -115,7 +115,7 @@ const radoviPrikaz = radovi.slice(0, 6);
         </p>
       ) : (
         <div class="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-          {recenzije.map((recenzija) => {
+          {recenzije.map((recenzija, i) => {
             const ime = recenzija.student
               ? `${recenzija.student.ime} ${recenzija.student.prezime}`
               : "Anonimni korisnik";
@@ -125,7 +125,7 @@ const radoviPrikaz = radovi.slice(0, 6);
               : "?";
 
             return (
-              <div class="p-6 bg-gray-800 border border-gray-800 rounded-2xl shadow-lg break-inside-avoid hover:border-gray-700 transition-all duration-300">
+              <div class="rec-card p-6 bg-gray-800 border border-gray-800 rounded-2xl shadow-lg break-inside-avoid hover:border-gray-700 transition-all duration-300" style={`--rec-i:${i}`}>
                 <div class="flex gap-1 mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <svg
@@ -163,3 +163,70 @@ const radoviPrikaz = radovi.slice(0, 6);
     }
   </div>
 </section>
+
+<style>
+  /* Section titles */
+  .rec-title, .rec-subtitle {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+  .rec-title.is-visible, .rec-subtitle.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Student work cards - scale up reveal */
+  .rad-card {
+    opacity: 0;
+    transform: scale(0.88);
+    transition: opacity 0.7s ease-out, transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
+    transition-delay: calc(var(--rad-i) * 0.15s);
+  }
+  .rad-card.is-visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Review cards - fade up stagger */
+  .rec-card {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transition-delay: calc(var(--rec-i) * 0.07s);
+  }
+  .rec-card.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Star rating shimmer on visible */
+  .rec-card.is-visible .text-yellow-400 {
+    animation: starPop 0.4s ease-out backwards;
+  }
+  .rec-card.is-visible .flex.gap-1 > :nth-child(1) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.07s + 0.1s); }
+  .rec-card.is-visible .flex.gap-1 > :nth-child(2) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.07s + 0.15s); }
+  .rec-card.is-visible .flex.gap-1 > :nth-child(3) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.07s + 0.2s); }
+  .rec-card.is-visible .flex.gap-1 > :nth-child(4) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.07s + 0.25s); }
+  .rec-card.is-visible .flex.gap-1 > :nth-child(5) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.07s + 0.3s); }
+
+  @keyframes starPop {
+    0% { transform: scale(0); opacity: 0; }
+    70% { transform: scale(1.3); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+</style>
+
+<script>
+  const recObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+  document.querySelectorAll('.rec-title, .rec-subtitle, .rad-card, .rec-card').forEach(el => {
+    recObserver.observe(el);
+  });
+</script>

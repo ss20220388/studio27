@@ -1,9 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import KursTable from "../react components/KursTable.tsx";
+import CoursesPage from "../react components/CoursesPage";
 ---
 
 <Layout title="Kursevi">
-    <h1 class="hidden">Kursevi</h1>
-    <KursTable client:load />
+    <CoursesPage client:load />
 </Layout>

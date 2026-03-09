@@ -14,21 +14,52 @@ const response  = await fetch("http://api.studio27.rs/api/auth/me", {
 const userData = await response.json();
 ---
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sr">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+        <title>{title} — Studio 27 Admin</title>
     </head>
-    <body>
-        {!userData.error ? <div class="md:flex ">
-            <Sidebar />
-            <slot />
-        </div>:
-        <div class="flex items-center justify-center h-screen">
-            <h1 class="text-2xl font-bold">Nemate pristup ovoj stranici, mozda je vasa sesija</h1><br/>
-            <p class="text-center mt-4">Molimo vas da se ulogujete sa administratorskim nalogom. Prijavu izvrsite na ovoj strani <a href="http://studio27.rs">ovde</a></p>
-            </div>}
-        
+    <body class="bg-[#0a0a0a] min-h-screen">
+        {!userData.error ? (
+            <div class="flex h-screen overflow-hidden">
+                <Sidebar />
+                <main class="flex-1 overflow-y-auto flex flex-col">
+                    <!-- Sticky topbar -->
+                    <header class="sticky top-0 z-10 h-12 bg-[#0a0a0a]/85 backdrop-blur-md border-b border-neutral-800/60 flex items-center px-5 md:px-6 lg:px-8 shrink-0">
+                        <div class="w-full max-w-7xl mx-auto flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-neutral-600">Admin</span>
+                                <svg class="w-3 h-3 text-neutral-700 shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
+                                <span class="text-sm font-medium text-neutral-300">{title}</span>
+                            </div>
+                            
+                        </div>
+                    </header>
+                    <!-- Content -->
+                    <div class="flex-1 p-5 md:p-6 lg:p-8">
+                        <div class="max-w-7xl mx-auto">
+                            <slot />
+                        </div>
+                    </div>
+                </main>
+            </div>
+        ) : (
+            <div class="flex items-center justify-center h-screen px-4">
+                <div class="text-center max-w-md">
+                    <div class="w-16 h-16 rounded-2xl bg-red-900/15 border border-red-900/20 flex items-center justify-center mx-auto mb-6">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-8 h-8 text-red-400"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" /></svg>
+                    </div>
+                    <h1 class="text-xl font-bold text-white mb-2">Pristup odbijen</h1>
+                    <p class="text-neutral-400 text-sm mb-6">Nemate pristup ovoj stranici. Vaša sesija je možda istekla.</p>
+                    <a href="http://studio27.rs" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-900 hover:bg-red-800 text-white text-sm font-medium transition-colors duration-200">
+                        Prijavi se ponovo
+                    </a>
+                </div>
+            </div>
+        )}
     </body>
 </html>

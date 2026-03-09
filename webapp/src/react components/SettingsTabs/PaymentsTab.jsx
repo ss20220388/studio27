@@ -13,40 +13,36 @@ export default function PaymentsTab() {
   };
 
   return (
-    <div className="w-full max-w-full">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-center">Moja plaćanja</h2>
-      {/* Skrol naznaka za mobilne */}
-      <div className="sm:hidden flex items-center justify-center mb-1">
-        <span className="text-xs text-gray-400 flex items-center gap-1">
-          
-          Skroluje tabelu u desno
-        </span>
-      </div>
-      <div className="rounded-xl shadow border bg-white overflow-x-auto relative">
-        <table className="w-full text-xs sm:text-sm min-w-[600px]">
+    <div className="w-full">
+      <div className="overflow-x-auto rounded-lg border border-neutral-800">
+        <table className="w-full text-sm min-w-[550px]">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="p-2">Kurs</th>
-              <th className="p-2">Datum</th>
-              <th className="p-2">Iznos</th>
-              <th className="p-2">Status</th>
-              <th className="p-2">Pretplata</th>
-              <th className="p-2">Akcija</th>
+            <tr className="border-b border-neutral-800">
+              {["Kurs", "Datum", "Iznos", "Status", "Pretplata", "Akcija"].map((h) => (
+                <th key={h} className="text-left px-4 py-3 text-[11px] font-semibold tracking-wider uppercase text-neutral-500">{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {fakePayments.map(p => (
-              <tr key={p.id} className="text-center border-t">
-                <td className="p-2 whitespace-nowrap">{p.kurs}</td>
-                <td className="p-2 whitespace-nowrap">{p.datum}</td>
-                <td className="p-2 whitespace-nowrap">{p.iznos}</td>
-                <td className="p-2 whitespace-nowrap">{p.status}</td>
-                <td className={`p-2 font-bold whitespace-nowrap ${p.pretplata === "Aktivna" ? "text-green-700" : "text-red-700"}`}>
-                  {p.pretplata} <span className="text-xs text-gray-500">({p.do})</span>
+              <tr key={p.id} className="border-b border-neutral-800/50 hover:bg-neutral-800/30 transition-colors">
+                <td className="px-4 py-3 text-neutral-200 font-medium">{p.kurs}</td>
+                <td className="px-4 py-3 text-neutral-400">{p.datum}</td>
+                <td className="px-4 py-3 text-neutral-300">{p.iznos}</td>
+                <td className="px-4 py-3">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-900/20 text-emerald-400 border border-emerald-800/30">
+                    {p.status}
+                  </span>
                 </td>
-                <td className="p-2 whitespace-nowrap">
+                <td className="px-4 py-3">
+                  <span className={`text-xs font-medium ${p.pretplata === "Aktivna" ? "text-emerald-400" : "text-red-400"}`}>
+                    {p.pretplata}
+                  </span>
+                  <span className="text-[10px] text-neutral-600 ml-1">({p.do})</span>
+                </td>
+                <td className="px-4 py-3">
                   <button
-                    className="bg-red-900 text-white rounded px-3 py-1 hover:bg-red-800 transition text-xs w-full sm:w-auto"
+                    className="px-3 py-1.5 rounded-lg bg-red-900 hover:bg-red-800 text-white text-xs font-medium transition-colors"
                     onClick={() => handleRenew(p.kurs)}
                   >
                     {p.pretplata === "Aktivna" ? "Obnovi" : "Aktiviraj"}
@@ -56,11 +52,9 @@ export default function PaymentsTab() {
             ))}
           </tbody>
         </table>
-        {/* Fade desno za vizuelnu naznaku */}
-        <div className="pointer-events-none absolute top-0 right-0 h-full w-8 bg-gradient-to-l from-white via-white/80 to-transparent hidden sm:block" />
       </div>
       {message && (
-        <div className="bg-green-100 text-green-800 rounded p-2 mt-4 text-center text-xs sm:text-sm">{message}</div>
+        <div className="bg-emerald-900/20 border border-emerald-800/30 text-emerald-400 rounded-lg p-3 mt-4 text-xs text-center">{message}</div>
       )}
     </div>
   );

@@ -41,14 +41,14 @@ const ReactKurs = ({
 
     if (loading) {
         return (
-            <div className="shadow-md w-[350px] h-[500px] bg-white rounded-xl p-6 animate-pulse">
-                <div className="w-full h-40 bg-gray-300 rounded-lg mb-4"></div>
-                <div className="h-6 bg-gray-300 rounded w-3/4 mb-3"></div>
-                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-5/6 mb-4"></div>
+            <div className="w-full h-[420px] bg-neutral-900 border border-neutral-800 rounded-xl p-6 animate-pulse">
+                <div className="w-full h-40 bg-neutral-800 rounded-lg mb-4"></div>
+                <div className="h-5 bg-neutral-800 rounded w-3/4 mb-3"></div>
+                <div className="h-4 bg-neutral-800/60 rounded w-full mb-2"></div>
+                <div className="h-4 bg-neutral-800/60 rounded w-5/6 mb-4"></div>
                 <div className="flex justify-between">
-                    <div className="h-4 bg-gray-300 rounded w-1/4"></div>
-                    <div className="h-4 bg-gray-300 rounded w-1/5"></div>
+                    <div className="h-4 bg-neutral-800 rounded w-1/4"></div>
+                    <div className="h-4 bg-neutral-800 rounded w-1/5"></div>
                 </div>
             </div>
         );
@@ -67,8 +67,8 @@ const ReactKurs = ({
     return (
         <div className="relative w-full">
             <div
-                className={`bg-white rounded-xl relative max-w-[400px] h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group p-6 transition duration-300 w-full 
-        ${pohadjanje ? "hover:shadow-xl cursor-pointer" : "opacity-70"}`}
+                className={`bg-neutral-900 border border-neutral-800 rounded-xl relative max-w-[400px] h-[420px] overflow-hidden group p-6 transition-all duration-300 w-full 
+        ${pohadjanje ? "hover:border-neutral-700 cursor-pointer" : "opacity-70"}`}
                 onClick={() => {
                     if (pohadjanje) {
                         window.location.href = `/kurs/${kurs.kursId}`;

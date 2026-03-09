@@ -1,11 +1,4 @@
 ---
-import Home from "../assets/house.svg";
-import Book from "../assets/book.svg";
-import User from "../assets/user.svg";
-import Payment from "../assets/hand-coins.svg";
-import Reviews from "../assets/star.svg";
-import Settings from "../assets/settings.svg";
-
 const token = Astro.cookies.get("refreshToken")?.value || null;
 const response = await fetch("http://api.studio27.rs/api/auth/me", {
     headers: {
@@ -13,139 +6,173 @@ const response = await fetch("http://api.studio27.rs/api/auth/me", {
     },
 });
 const userData = await response.json();
+
+const currentPath = Astro.url.pathname;
+
+const navSections = [
+  {
+    label: "Pregled",
+    items: [
+      { href: "/", label: "Početna", icon: "home" },
+    ],
+  },
+  {
+    label: "Kursevi",
+    items: [
+      { href: "/kurs", label: "Svi kursevi", icon: "book" },
+      { href: "/pohadja", label: "Moji kursevi", icon: "play" },
+      { href: "/korpa", label: "Korpa", icon: "cart" },
+    ],
+  },
+  {
+    label: "Ostalo",
+    items: [
+      { href: "/kontakt", label: "Kontakt", icon: "mail" },
+      { href: "/settings", label: "Podešavanja", icon: "settings" },
+    ],
+  },
+];
 ---
 
 <script type="module">
-    const hamburger = document.getElementById("hamburger");
-    let stanje = 0; // 0 - zatvoreno, 1 - otvoreno
+  const hamburger = document.getElementById("hamburger");
 
-    function openSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("overlay");
-
-        if (sidebar && overlay) {
-            sidebar.classList.remove("-translate-x-full");
-            sidebar.classList.add("translate-x-0");
-
-            overlay.classList.remove("hidden");
-
-            // hamburger fade out
-            hamburger.classList.remove("opacity-100");
-            hamburger.classList.add("opacity-0");
-            hamburger.classList.add("pointer-events-none");
-            hamburger.classList.add("hidden");
-        }
+  function openSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    if (sidebar && overlay) {
+      sidebar.classList.remove("-translate-x-full");
+      sidebar.classList.add("translate-x-0");
+      overlay.classList.remove("hidden");
+      if (hamburger) hamburger.classList.add("opacity-0", "pointer-events-none");
     }
+  }
 
-    function closeSidebar() {
-        const sidebar = document.getElementById("sidebar");
-        const overlay = document.getElementById("overlay");
-
-        if (sidebar && overlay) {
-            sidebar.classList.remove("translate-x-0");
-            sidebar.classList.add("-translate-x-full");
-
-            overlay.classList.add("hidden");
-
-            setTimeout(() => {
-                hamburger.classList.remove("hidden");
-                hamburger.classList.remove("opacity-0");
-                hamburger.classList.remove("pointer-events-none");
-                hamburger.classList.add("opacity-100");
-            }, 300);
-        }
+  function closeSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+    if (sidebar && overlay) {
+      sidebar.classList.remove("translate-x-0");
+      sidebar.classList.add("-translate-x-full");
+      overlay.classList.add("hidden");
+      setTimeout(() => {
+        if (hamburger) hamburger.classList.remove("opacity-0", "pointer-events-none");
+      }, 300);
     }
+  }
 
-    window.openSidebar = openSidebar;
-    window.closeSidebar = closeSidebar;
+  window.openSidebar = openSidebar;
+  window.closeSidebar = closeSidebar;
 </script>
 
-<div class="flex md:h-screen bg-gray-100 flex">
+<!-- Mobile hamburger -->
+<button
+  id="hamburger"
+  onclick="openSidebar()"
+  class="fixed top-4 right-4 z-50 p-2.5 rounded-lg bg-neutral-800/90 backdrop-blur border border-neutral-700/50 md:hidden transition-opacity duration-300"
+>
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+    <line x1="3" y1="5" x2="17" y2="5" />
+    <line x1="3" y1="10" x2="17" y2="10" />
+    <line x1="3" y1="15" x2="17" y2="15" />
+  </svg>
+</button>
+
+<!-- Overlay -->
+<div id="overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-30 md:hidden" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<aside
+  id="sidebar"
+  class="fixed inset-y-0 left-0 z-40 w-64 flex flex-col bg-neutral-900 border-r border-neutral-800 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300"
+>
+  <!-- Logo -->
+  <div class="px-5 py-6 border-b border-neutral-800">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-red-900 flex items-center justify-center">
+        <span class="text-white font-bold text-sm">S27</span>
+      </div>
+      <div>
+        <p class="text-sm font-semibold text-white tracking-wide">Studio 27</p>
+        <p class="text-[11px] text-neutral-500">Platforma za učenje</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
+    {navSections.map((section, si) => (
+      <div>
+        <p class="px-3 mb-2 text-[10px] font-semibold tracking-[0.15em] uppercase text-neutral-500">{section.label}</p>
+        <div class="space-y-1">
+          {section.items.map(item => {
+            const isActive = currentPath === item.href || (item.href !== "/" && currentPath.startsWith(item.href));
+            return (
+              <a
+                href={item.href}
+                class={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive
+                    ? "bg-red-900/15 text-red-400 border border-red-900/20"
+                    : "text-neutral-400 hover:text-white hover:bg-neutral-800/70"
+                }`}
+              >
+                <span class={`w-5 h-5 flex items-center justify-center ${isActive ? "text-red-400" : "text-neutral-500 group-hover:text-neutral-300"}`}>
+                  {item.icon === "home" && (
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+                  )}
+                  {item.icon === "book" && (
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>
+                  )}
+                  {item.icon === "play" && (
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" /></svg>
+                  )}
+                  {item.icon === "cart" && (
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg>
+                  )}
+                  {item.icon === "mail" && (
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
+                  )}
+                  {item.icon === "settings" && (
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
+                  )}
+                </span>
+                {item.label}
+              </a>
+            );
+          })}
+        </div>
+        {si < navSections.length - 1 && (
+          <div class="mt-4 border-b border-neutral-800/60" />
+        )}
+      </div>
+    ))}
+  </nav>
+
+  <!-- Bottom section -->
+  <div class="px-3 py-4 border-t border-neutral-800 space-y-3">
+    <!-- User email -->
+    <div class="flex items-center gap-3 px-3 py-2">
+      <div class="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center">
+        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-neutral-400"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-medium text-neutral-300 truncate">{userData.email}</p>
+        <p class="text-[10px] text-neutral-500">Korisnik</p>
+      </div>
+    </div>
+    <!-- Logout -->
     <button
-        class="fixed  top-4 left-4 z-50 bg-gray-800 rounded p-2 md:hidden cursor-pointer opacity-100 transition-opacity duration-500"
-        onclick="openSidebar()"
-        type="button"
-        id="hamburger"
+      onclick={`
+        async function logout() {
+          await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+          window.location.href = 'http://studio27.rs';
+        }
+        logout();
+      `}
+      class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-red-900/10 border border-red-900/20 text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-all duration-200 text-sm font-medium cursor-pointer"
     >
-        <svg width="32" height="32" fill="white">
-            <rect y="6" width="32" height="4" rx="2"></rect>
-            <rect y="14" width="32" height="4" rx="2"></rect>
-            <rect y="22" width="32" height="4" rx="2"></rect>
-        </svg>
+      <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+      Odjavi se
     </button>
-
-    <div
-        id="overlay"
-        class="fixed inset-0 bg-black bg-opacity-50 hidden z-30 md:hidden"
-        onclick="closeSidebar()"
-    >
-    </div>
-
-    <div
-        id="sidebar"
-        class="fixed inset-y-0 left-0 z-40 w-64 bg-gray-800 transform -translate-x-full md:translate-x-0 md:static md:flex flex-col transition-transform duration-300"
-    >
-        <div class="flex items-center justify-center h-16 bg-gray-900">
-            <span class="text-white font-bold uppercase">Studio27 APP</span>
-        </div>
-
-        <div class="flex flex-col flex-1 overflow-y-auto">
-            <nav class="flex-1 px-2 py-4 bg-gray-800">
-                <a
-                    href="/"
-                    class="flex items-center px-4 py-2 text-gray-100 hover:bg-gray-700"
-                >
-                    <Home class="w-5 h-5 mr-3" /> Home
-                </a>
-                <a
-                    href="/kurs"
-                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
-                >
-                    <Book class="w-5 h-5 mr-3" /> Kursevi
-                </a>
-                <a
-                    href="/pohadja"
-                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
-                >
-                    <User class="w-5 h-5 mr-3" /> Moji kursevi
-                </a>
-                <a
-                    href="/korpa"
-                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
-                >
-                    <Payment class="w-5 h-5 mr-3" /> Korpa
-                </a>
-                <a
-                    href="/kontakt"
-                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
-                >
-                    <Reviews class="w-5 h-5 mr-3" /> Kontakt
-                </a>
-                <a
-                    href="/settings"
-                    class="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
-                >
-                    <Settings class="w-5 h-5 mr-3" /> Settings
-                </a>
-
-                <div
-                    class="flex flex-col items-center px-4 py-2 mt-2 text-gray-100 absolute bottom-10 w-[90%]"
-                >
-                    <p class="pb-2">{userData.email}</p>
-                    <button
-                        class="bg-red-900 hover:bg-red-800 px-4 py-1 text-sm font-semibold rounded transition duration-300"
-                        onclick=`
-                        async function logout() {
-                            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
-                            window.location.href = "http://studio27.rs";
-                        }
-                        logout();
-                        `>
-                        Logout
-                    </button>
-                </div>
-            </nav>
-        </div>
-    </div>
-    
-</div>
+  </div>
+</aside>

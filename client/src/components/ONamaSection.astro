@@ -15,9 +15,9 @@ import DugmeKontakt from "../react-components/DugmeKontakt"
     
     <div class="relative md:w-[70%] w-[80%] mx-auto">
       <div class="absolute md:-top-[7rem] -top-[4rem] flex flex-col items-center">
-        <Image src="/src/assets/studio27.jpg" width={600} height={600} alt="Profile" class="md:w-[24rem] sm:w-[16rem] w-[10rem] object-center" />
-        <h2 class="sm:text-6xl text-6xl text-white font-serif font-extrabold">O nama</h2>
-        <p class="text-center text-white text-md mt-6">
+        <Image src="/src/assets/studio27.jpg" width={600} height={600} alt="Profile" class="onama-img md:w-[24rem] sm:w-[16rem] w-[10rem] object-center" />
+        <h2 class="onama-heading sm:text-6xl text-6xl text-white font-serif font-extrabold">O nama</h2>
+        <p class="onama-text text-center text-white text-md mt-6">
           Studio27 je kreativni studio specijalizovan za profesionalnu 3D arhitektonsku vizualizaciju. Bavimo se izradom fotorealističnih rendera enterijera i eksterijera za klijente širom sveta.
           <br/><br/>
           Naš cilj je da svaku ideju pretvorimo u vizuelno iskustvo koje ostavlja utisak. Kombinujemo tehničku preciznost, umetnički pristup i savremene alate poput 3ds Max-a i Corona Renderer-a kako bismo postigli vrhunski kvalitet prezentacije projekata.
@@ -26,8 +26,70 @@ import DugmeKontakt from "../react-components/DugmeKontakt"
           <br/><br/>
           Verujemo da kvalitetna vizualizacija nije samo slika – već moćan alat komunikacije između ideje i realizacije.
         </p>
-        <DugmeKontakt client:load  />
+        <div class="onama-btn">
+          <DugmeKontakt client:load  />
+        </div>
       </div>
     </div>
   </div>
 </section>
+
+<style>
+  /* Image reveal */
+  .onama-img {
+    opacity: 0;
+    transform: scale(0.85);
+    transition: opacity 1s ease-out, transform 1s cubic-bezier(0.25,0.46,0.45,0.94);
+  }
+  .onama-img.is-visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Heading slide up */
+  .onama-heading {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease-out 0.3s, transform 0.8s ease-out 0.3s;
+  }
+  .onama-heading.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Text fade in */
+  .onama-text {
+    opacity: 0;
+    transform: translateY(25px);
+    transition: opacity 0.9s ease-out 0.5s, transform 0.9s ease-out 0.5s;
+  }
+  .onama-text.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Button pop */
+  .onama-btn {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+    transition: opacity 0.6s ease-out 0.8s, transform 0.6s ease-out 0.8s;
+  }
+  .onama-btn.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+</style>
+
+<script>
+  const onamaObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.onama-img, .onama-heading, .onama-text, .onama-btn').forEach(el => {
+    onamaObserver.observe(el);
+  });
+</script>

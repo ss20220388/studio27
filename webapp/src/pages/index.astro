@@ -12,30 +12,23 @@ const stats = {
 };
 ---
 
-<Layout title="Home">
-	<main class="w-[80vw] p-5 flex-1 overflow-y-scroll h-screen  flex flex-col justify-center">
-		<div class="space-y-10 overflow-y-scroll h-screen ">
-			<h1 class="text-3xl pb-4 font-bold text-gray-800">Dobrodošli </h1>
-			<StatsCards stats={stats} />
-
-			<div
-				class="bg-white   p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 w-full"
-			>
-				<div
-					class="flex flex-col sm:flex-row sm:items-center sm:justify-between  gap-2"
-				>
-					<h2 class="text-lg sm:text-xl font-semibold text-gray-800">
-						Statistika učenja
-					</h2>
-
-					<span class="text-xs sm:text-sm text-gray-500">
-						pregled kurseva
-					</span>
-				</div>
-
-				<ProgressChart client:load />
-			</div>
-			<ContinueWatching />
+<Layout title="Početna">
+	<div class="space-y-8 animate-fade-in">
+		<div>
+			<h1 class="text-2xl font-bold text-white">Dobrodošli</h1>
+			<p class="text-sm text-neutral-500 mt-1">Vaš pregled napretka i aktivnosti</p>
 		</div>
-	</main>
+
+		<StatsCards stats={stats} />
+
+		<div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
+			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+				<h2 class="text-base font-semibold text-white">Statistika učenja</h2>
+				<span class="text-xs text-neutral-500">pregled kurseva</span>
+			</div>
+			<ProgressChart client:load />
+		</div>
+
+		<ContinueWatching />
+	</div>
 </Layout>

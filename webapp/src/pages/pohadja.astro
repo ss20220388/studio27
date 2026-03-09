@@ -32,12 +32,13 @@ console.log(kurseviData);
 ---
 
 <Layout title="Moji kursevi">
-    <main class="px-10 py-4 flex flex-col items-center justify-center h-screen">
-        <h1 class="text-3xl font-bold mb-10">Moj kursevi</h1>
+    <div class="space-y-6 animate-fade-in">
+        <div>
+            <h1 class="text-2xl font-bold text-white">Moji kursevi</h1>
+            <p class="text-sm text-neutral-500 mt-1">Kursevi na koje ste upisani</p>
+        </div>
 
-        <div
-            class="grid md:grid-cols-2 xl:grid-cols-3 gap-8 overflow-y-scroll h-full"
-        >
+        <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 stagger-children">
             {
                 kurseviData.kursevi?.map((kurs: Kurs) => (
                     <ReactKurs
@@ -49,5 +50,5 @@ console.log(kurseviData);
                 ))
             }
         </div>
-    </main>
+    </div>
 </Layout>

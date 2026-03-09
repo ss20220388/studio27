@@ -2,20 +2,20 @@
 const { title, progress } = Astro.props;
 ---
 
-<div class="bg-white rounded-xl shadow p-6">
-    <h3 class="text-lg font-semibold mb-4">
+<div class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-colors">
+    <h3 class="text-sm font-semibold text-white mb-4">
         {title}
     </h3>
 
-    <div class="w-full bg-gray-200 rounded h-3">
-        <div class="bg-red-700 h-3 rounded" style={`width:${progress}%`}></div>
+    <div class="w-full bg-neutral-800 rounded-full h-2">
+        <div class="bg-red-900 h-2 rounded-full transition-all duration-500" style={`width:${progress}%`}></div>
     </div>
 
-    <p class="mt-2 text-sm text-gray-600">
+    <p class="mt-2 text-xs text-neutral-500">
         {progress}% završeno
     </p>
 
-    <button class="mt-4 bg-black text-white px-4 py-2 rounded">
+    <button class="mt-4 px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 text-white text-xs font-medium hover:bg-neutral-700 transition-colors">
         Nastavi
     </button>
 </div>

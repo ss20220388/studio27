@@ -14,9 +14,9 @@ const data = [
 ]
 
 const COLORS = [
-  "#7C444F", 
-  "#9F5255", 
-  "#E16A54"  
+  "#34d399",
+  "#7f1d1d",
+  "#525252"
 ]
 
 export default function ProgressChart() {
@@ -33,17 +33,27 @@ export default function ProgressChart() {
                         outerRadius="70%"
                         innerRadius="40%"
                         paddingAngle={3}
+                        stroke="none"
                     >
                         {data.map((entry, index) => (
                             <Cell key={index} fill={COLORS[index]} />
                         ))}
                     </Pie>
 
-                    <Tooltip />
+                    <Tooltip
+                        contentStyle={{
+                            backgroundColor: "#171717",
+                            border: "1px solid #262626",
+                            borderRadius: "8px",
+                            color: "#e5e5e5",
+                            fontSize: "12px",
+                        }}
+                    />
 
                     <Legend
                         verticalAlign="bottom"
                         height={36}
+                        formatter={(value) => <span style={{ color: "#a3a3a3", fontSize: "12px" }}>{value}</span>}
                     />
 
                 </PieChart>

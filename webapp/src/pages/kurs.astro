@@ -1,5 +1,4 @@
 ---
-import { intersection } from "astro:schema";
 import Layout from "../layouts/Layout.astro";
 import ReactKurs from "../react components/ReactKurs";
 
@@ -15,7 +14,7 @@ interface ResponseData {
     kursevi: Kurs[];
 }
 
-const data: Response = await fetch("http://localhost:8080/api/kursevi"); // SSR: server-side fetch
+const data: Response = await fetch("http://localhost:8080/api/kursevi");
 
 const kurseviRes: ResponseData = await data.json();
 const kursevi = kurseviRes.kursevi;
@@ -29,14 +28,17 @@ const response = await fetch("http://api.studio27.rs/api/auth/me", {
 const userData = await response.json();
 ---
 
-<Layout title="Kursevi">
-   <main class="px-10 py-4 flex flex-col items-center justify-center h-screen  ">
-    <h1 class="text-3xl font-bold mb-10">Svi kursevi</h1>
+<Layout title="Svi kursevi">
+  <div class="space-y-6 animate-fade-in">
+    <div>
+      <h1 class="text-2xl font-bold text-white">Svi kursevi</h1>
+      <p class="text-sm text-neutral-500 mt-1">Pregledajte sve dostupne kurseve</p>
+    </div>
 
-   <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-8 overflow-y-scroll h-full">
-            {kursevi?.map((kurs) => (
-                <ReactKurs client:idle  kurs={kurs} userId={userData.userId} accessToken={token} />
-            ))}
-        </div>
-    </main>
+    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 stagger-children">
+      {kursevi?.map((kurs) => (
+        <ReactKurs client:idle kurs={kurs} userId={userData.userId} accessToken={token} />
+      ))}
+    </div>
+  </div>
 </Layout>

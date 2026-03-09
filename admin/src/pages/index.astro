@@ -1,28 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import VideoPlayerHLS from "../react components/VideoPlayerHLS";
-const accessToken = Astro.cookies.get("accessToken")?.value;
-const refreshToken = Astro.cookies.get("refreshToken")?.value;
+import Dashboard from "../react components/Dashboard";
 ---
 
-<Layout title="Admin Dashboard">
-	<main>
-		<h1 class="text-2xl font-bold text-center hidden md:block">
-			Welcome to the Admin Dashboard
-		</h1>
-		{
-			accessToken ? (
-				<>
-					<p>
-						Ne možeš koristiti &lt;video&gt; tag bez proxy-ja ako je
-						endpoint zaštićen!AAA
-					</p>
-					<button id="button">Click to test proxy</button>
-					<VideoPlayerHLS client:idle videoId="f53ed21d-19e1-4dde-bc9a-ca7c001f84a2" accessToken={refreshToken} />
-				</>
-			) : (
-				<p class="text-red-500">Niste ulogovani ili nema tokena.</p>
-			)
-		}
-	</main>
+<Layout  title="Dashboard">
+	<Dashboard client:load />
 </Layout>

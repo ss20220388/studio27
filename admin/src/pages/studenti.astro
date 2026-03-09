@@ -1,10 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
-
-
+import UsersPage from "../react components/UsersPage";
 ---
 
-<Layout title="Studenti">
-    <h1 class="hidden">Studenti</h1>
-    <p>Ova stranica je u izradi. Molimo vas da se vratite kasnije.</p>
+<Layout title="Korisnici">
+    <UsersPage client:load />
 </Layout>
