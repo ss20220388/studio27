@@ -3,9 +3,25 @@ import Layout from "../layouts/Layout.astro";
 import StatsCards from "../components/StatsCards.astro";
 import ProgressChart from "../react components/ProgressChart";
 import ContinueWatching from "../components/ContinueWatching.astro";
-
+const token = Astro.cookies.get("refreshToken")?.value;
+const userRes = await fetch("http://api.studio27.rs/api/auth/me", {
+	headers: {
+		Authorization: `Bearer ${token}`,
+	},	
+});
+const userData = await userRes.json();
+console.log(userData);
+const brojKursevaResponse = await fetch(`http://api.studio27.rs/api/broj-kurseva/${userData.userId}`,
+	{
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	}
+);
+const brojKursevaData = await brojKursevaResponse.json();
+console.log(brojKursevaData);
 const stats = {
-	totalCourses: 5,
+	totalCourses: brojKursevaData.brojKurseva || 0,
 	finished: 1,
 	inProgress: 3,
 	hours: 12,

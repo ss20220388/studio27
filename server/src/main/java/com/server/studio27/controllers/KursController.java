@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import com.server.studio27.models.Kurs;
 import com.server.studio27.models.Lekcija;
-
 @Service
 public class KursController {
     @Autowired
@@ -28,6 +27,26 @@ public class KursController {
          catch(Exception e){
              Map<String, Object> response = new HashMap<>();
              response.put("kursevi", null);
+             response.put("error", e.getMessage());
+             return ResponseEntity.badRequest().body(response);
+         }
+    }
+
+     public ResponseEntity<Map<String, Object>> getBrojSvihKursevi(int studentId) {
+       try{
+        String SQL = "Select count(*) as brojKurseva from kurs k join platio p on k.kursId=p.kursId where p.studentId=?";
+        
+        Map<String, Object> result = jdbcTemplate.queryForMap(SQL, studentId);
+       System.out.println("Query result: " + result);
+        Map<String, Object> response =new HashMap<>();
+        response.put("brojKurseva", ((Number) result.get("brojKurseva")).intValue());
+        
+        response.put("message", "Broj kurseva uspešno preuzet");
+        return ResponseEntity.ok(response);
+       }
+         catch(Exception e){
+             Map<String, Object> response = new HashMap<>();
+             response.put("brojKurseva", null);
              response.put("error", e.getMessage());
              return ResponseEntity.badRequest().body(response);
          }
