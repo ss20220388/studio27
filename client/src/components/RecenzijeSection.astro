@@ -1,7 +1,7 @@
 ---
 type Student = {
-  ime: string;
-  prezime: string;
+  sime: string;
+  sprezime: string;
 };
 
 type Rad = {
@@ -10,9 +10,11 @@ type Rad = {
   idKurs: number;
   slikaId: number;
   naziv: string;
+  sime: string;
+  sprezime: string;
+  url: string;
   ime: string;
   prezime: string;
-  url: string;
 };
 
 type Recenzija = {
@@ -60,7 +62,8 @@ try {
   console.error("Greška pri učitavanju recenzija:", e);
 }
 
-const radoviPrikaz = radovi.slice(0, 6);
+const radoviPrikaz = radovi.slice(0, 15);
+const recenzijePrikaz = recenzije.slice(0, 6);
 ---
 
 <section id="recenzije" class="py-16 px-4 bg-black">
@@ -88,9 +91,8 @@ const radoviPrikaz = radovi.slice(0, 6);
                 <h3 class="text-lg sm:text-xl md:text-2xl font-bold">
                   {rad.naziv}
                 </h3>
-                <p class="text-xs sm:text-sm md:text-base leading-relaxed">
-                  {rad.ime} {rad.prezime}
-                </p>
+             
+      
               </div>
             </article>
           ))
@@ -102,7 +104,11 @@ const radoviPrikaz = radovi.slice(0, 6);
     <!-- RECENZIJE -->
     <!-- ========================= -->
 
-    <div class="rec-subtitle text-center mb-20">
+    <div class="rec-subtitle text-center mb-20">\
+       <h4 class="rec-title text-3xl font-bold text-white text-center mb-16">
+        Pogledajte recenzije naših studenata
+      </h4>
+
       <p class="text-gray-400 text-lg max-w-2xl mx-auto mt-4">
         Pročitajte iskustva polaznika koji su završili naše kurseve
       </p>
@@ -114,18 +120,18 @@ const radoviPrikaz = radovi.slice(0, 6);
           Još uvek nema recenzija.
         </p>
       ) : (
-        <div class="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-          {recenzije.map((recenzija, i) => {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 space-y-6">
+          {recenzijePrikaz.map((recenzija, i) => {
             const ime = recenzija.student
-              ? `${recenzija.student.ime} ${recenzija.student.prezime}`
+              ? `${recenzija.student.sime} ${recenzija.student.sprezime}`
               : "Anonimni korisnik";
 
             const inicijali = recenzija.student
-              ? `${recenzija.student.ime?.charAt(0) || ""}${recenzija.student.prezime?.charAt(0) || ""}`
+              ? `${recenzija.student.sime?.charAt(0) || ""}${recenzija.student.sprezime?.charAt(0) || ""}`
               : "?";
 
             return (
-              <div class="rec-card p-6 bg-gray-800 border border-gray-800 rounded-2xl shadow-lg break-inside-avoid hover:border-gray-700 transition-all duration-300" style={`--rec-i:${i}`}>
+              <div class="rec-card flex flex-col p-6 bg-gray-800 border border-gray-800 rounded-2xl shadow-lg break-inside-avoid hover:border-gray-700 transition-all duration-300" style={`--rec-i:${i}`}>
                 <div class="flex gap-1 mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <svg
@@ -138,11 +144,11 @@ const radoviPrikaz = radovi.slice(0, 6);
                   ))}
                 </div>
 
-                <p class="text-gray-300 leading-relaxed mb-6">
+                <p class="text-gray-300 leading-relaxed mb-6 flex-1">
                   {recenzija.opis || "Bez komentara"}
                 </p>
 
-                <div class="flex items-center gap-4 pt-4 border-t border-gray-800">
+                <div class="flex items-center gap-4 pt-4 border-t border-gray-800 mt-auto">
                   <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-black font-semibold text-sm">
                     {inicijali}
                   </div>
@@ -194,6 +200,7 @@ const radoviPrikaz = radovi.slice(0, 6);
     transform: translateY(40px);
     transition: opacity 0.6s ease-out, transform 0.6s ease-out;
     transition-delay: calc(var(--rec-i) * 0.07s);
+    height: 230px;
   }
   .rec-card.is-visible {
     opacity: 1;
