@@ -5,9 +5,18 @@ public class User {
     private String email;
     private String password;
     private String role;
+    private String deviceId;
 
     public User() {
 
+    }
+    public User(int userId, String email, String password, String role, String deviceId) {
+        this.userId = userId;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.deviceId = deviceId;
+        
     }
     public User(int userId, String email, String password, String role) {
         this.userId = userId;
@@ -43,6 +52,12 @@ public class User {
     }
     public String getRole() {
         return role;
+    }
+    public String getDeviceId() {
+        return deviceId;
+    }
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
     public boolean isValid() {
         return email != null && !email.isEmpty() && password != null && !password.isEmpty();

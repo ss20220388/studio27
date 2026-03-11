@@ -17,6 +17,13 @@ public class Student extends User {
         this.prezime = prezime;
         this.brojTelefona = brojTelefona;
     }
+    public Student(int userId, String email, String password, String ime, String prezime, String brojTelefona, String deviceId, String role) {
+        super(userId, email, password, role, deviceId);
+        this.userId = userId;
+        this.ime = ime;
+        this.prezime = prezime;
+        this.brojTelefona = brojTelefona;
+    }
     public int getUserId() {
         return userId;
     }
@@ -41,5 +48,6 @@ public class Student extends User {
     public void setBrojTelefona(String brojTelefona) {
         this.brojTelefona = brojTelefona;
     }
+
     
 }

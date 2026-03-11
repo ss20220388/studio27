@@ -1,3 +1,4 @@
+import { set } from "astro:schema";
 import React, { useState } from "react";
 
 interface User {
@@ -10,7 +11,8 @@ interface User {
   status: "aktivan" | "neaktivan";
   deviceId: string | null;
   deviceInfo: string | null;
-  kursevi: string[];
+
+  kursevi: Kurs[];
 }
 
 interface StudentApiResponse {
@@ -19,10 +21,20 @@ interface StudentApiResponse {
   prezime: string;
   email: string;
   brojTelefona: string;
+  deviceId: string | null;
+  userId: number;
+  active: number;
+  kursevi: Kurs[];
+}
+interface Kurs {
+  kursId: number;
+  naziv: string;
 }
 
 interface UsersPageProps {
   students: StudentApiResponse[];
+  sviKursevi: Kurs[];
+  token: string;
 }
 
 // Input component
@@ -81,7 +93,7 @@ const Modal = ({
           <h3 className="text-base font-semibold text-white">{title}</h3>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-md flex items-center justify-center text-neutral-500 hover:bg-neutral-800 hover:text-white transition-colors"
+            className="w-7 h-7 rounded-md cursor-pointer flex items-center justify-center text-neutral-500 hover:bg-neutral-800 hover:text-white transition-colors"
           >
             ×
           </button>
@@ -92,7 +104,7 @@ const Modal = ({
   );
 };
 
-export default function UsersPage({ students }: UsersPageProps) {
+export default function UsersPage({ students, sviKursevi, token }: UsersPageProps) {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const limit = 20;
@@ -104,16 +116,19 @@ export default function UsersPage({ students }: UsersPageProps) {
     email: student.email,
     telefon: student.brojTelefona ?? "",
     datumRegistracije: "-",
-    status: "aktivan",
-    deviceId: null,
+    status: (student.active == 1 ? "aktivan" : "neaktivan") as "aktivan" | "neaktivan",
+    deviceId: student.deviceId,
     deviceInfo: null,
-    kursevi: [],
+    kursevi: student.kursevi,
   }));
+
 
   // Modals
   const [showAdd, setShowAdd] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deviceUser, setDeviceUser] = useState<User | null>(null);
+  const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  const [selectedCourse, setSelectedCourse] = React.useState("");
 
   // Add form
   const [addForm, setAddForm] = useState({ ime: "", prezime: "", email: "", telefon: "" });
@@ -129,6 +144,108 @@ export default function UsersPage({ students }: UsersPageProps) {
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const users = filtered.slice(page * limit, (page + 1) * limit);
 
+  function handleAddCourse() {
+    if (!selectedCourse || !editUser) return;
+    const kurs = sviKursevi.find((k) => k.kursId == parseInt(selectedCourse));
+    if (!kurs) return;
+    if (editUser.kursevi.some((k) => k.kursId === kurs.kursId)) {
+      setSelectedCourse("");
+      return;
+    }
+    setEditUser({
+      ...editUser,
+      kursevi: [...editUser.kursevi, kurs],
+    });
+    setSelectedCourse("");
+  }
+
+  async function dodajKorisnikaUBazu() {
+    try {
+      const response = await fetch("/api/auth/register-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          ime: addForm.ime,
+          prezime: addForm.prezime,
+          email: addForm.email,
+          brojTelefona: addForm.telefon,
+        }),
+      });
+      window.location.reload();
+    }
+    catch (error) {
+      console.log("Greška prilikom dodavanja korisnika:", error);
+    }
+
+  }
+
+
+  async function obrisiKorisnika(studentId:number) {
+    try {
+      const response = await fetch("/api/obrisi-studenta", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: studentId.toString(),
+      });
+      setDeleteUser(null);
+      window.location.reload();
+    }
+    catch (error) {
+      console.log("Greška prilikom brisanja korisnika:", error);
+    }
+  }
+
+
+  async function ukloniDeviceId() {
+    if (!deviceUser) return;
+    try {
+      const response = await fetch("/api/unlock-device", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({ email: deviceUser.email }),
+      });
+      setDeviceUser(null);
+      window.location.reload();
+    } catch (error) {
+      console.log("Greška prilikom uklanjanja Device ID-a:", error);
+    }
+  }
+
+  async function editujKorisnika() {
+    if (!editUser) return;
+    try {
+      const response = await fetch("/api/edit-student-sa-adminom", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          studentId: editUser.id,
+          ime: editUser.ime,
+          prezime: editUser.prezime,
+          email: editUser.email,
+          brojTelefona: editUser.telefon,
+          kursevi: editUser.kursevi.map(k => k.kursId)
+        })
+      });
+      setEditUser(null);
+      window.location.reload();
+    } catch (error) {
+      console.log("Greška prilikom uređivanja korisnika:", error);
+    }
+  }
+
+
   return (
     <div className="space-y-6 animate-fade-in" style={{ paddingInline: "20px", paddingBlock: "10px" }}>
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-neutral-800/60">
@@ -140,7 +257,7 @@ export default function UsersPage({ students }: UsersPageProps) {
         <button
           onClick={() => setShowAdd(true)}
           style={{ paddingInline: "20px", paddingBlock: "10px", marginBottom: "10px" }}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-red-900 hover:bg-red-800 text-white text-sm font-medium transition-colors duration-200 shadow-lg shadow-red-900/20 shrink-0"
+          className="cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-lg bg-red-900 hover:bg-red-800 text-white text-sm font-medium transition-colors duration-200 shadow-lg shadow-red-900/20 shrink-0"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
             <path
@@ -206,16 +323,14 @@ export default function UsersPage({ students }: UsersPageProps) {
                   <td className="px-5 py-3 text-neutral-400">{u.email}</td>
                   <td className="px-5 py-3">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                        u.status === "aktivan"
-                          ? "bg-emerald-900/20 text-emerald-400 border border-emerald-800/30"
-                          : "bg-neutral-800 text-neutral-500 border border-neutral-700"
-                      }`}
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${u.status === "aktivan"
+                        ? "bg-emerald-900/20 text-emerald-400 border border-emerald-800/30"
+                        : "bg-neutral-800 text-neutral-500 border border-neutral-700"
+                        }`}
                     >
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          u.status === "aktivan" ? "bg-emerald-400" : "bg-neutral-600"
-                        }`}
+                        className={`w-1.5 h-1.5 rounded-full ${u.status === "aktivan" ? "bg-emerald-400" : "bg-neutral-600"
+                          }`}
                       />
                       {u.status}
                     </span>
@@ -224,7 +339,7 @@ export default function UsersPage({ students }: UsersPageProps) {
                     {u.deviceId ? (
                       <button
                         onClick={() => setDeviceUser(u)}
-                        className="flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                        className="flex items-center gap-1.5 text-xs text-amber-400 cursor-pointer hover:text-amber-300 transition-colors"
                       >
                         <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
                           <path
@@ -243,7 +358,7 @@ export default function UsersPage({ students }: UsersPageProps) {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => setEditUser(u)}
-                        className="p-1.5 rounded-md text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors"
+                        className="p-1.5 rounded-md cursor-pointer text-neutral-500 hover:text-white hover:bg-neutral-800 transition-colors"
                         title="Izmeni"
                       >
                         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -251,7 +366,8 @@ export default function UsersPage({ students }: UsersPageProps) {
                         </svg>
                       </button>
                       <button
-                        className="p-1.5 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-900/10 transition-colors"
+                        onClick={() => setDeleteUser(u)}
+                        className="p-1.5 rounded-md cursor-pointer text-neutral-500 hover:text-red-400 hover:bg-red-900/10 transition-colors"
                         title="Obriši"
                       >
                         <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
@@ -290,17 +406,16 @@ export default function UsersPage({ students }: UsersPageProps) {
               disabled={page === 0}
               className="px-3 py-1.5 rounded-md text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              ← Prethodna
+              ←
             </button>
             {Array.from({ length: totalPages }, (_, i) => (
               <button
                 key={i}
                 onClick={() => setPage(i)}
-                className={`w-8 h-8 rounded-md text-xs font-medium transition-colors ${
-                  i === page
-                    ? "bg-red-900 text-white"
-                    : "text-neutral-400 hover:text-white hover:bg-neutral-800"
-                }`}
+                className={`w-8 h-8 rounded-md text-xs font-medium transition-colors ${i === page
+                  ? "bg-red-900 text-white"
+                  : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                  }`}
               >
                 {i + 1}
               </button>
@@ -310,7 +425,7 @@ export default function UsersPage({ students }: UsersPageProps) {
               disabled={page === totalPages - 1 || total === 0}
               className="px-3 py-1.5 rounded-md text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              Sledeća →
+              →
             </button>
           </div>
         </div>
@@ -331,7 +446,12 @@ export default function UsersPage({ students }: UsersPageProps) {
             >
               Otkaži
             </button>
-            <button className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20">
+            <button
+              onClick={() => {
+                dodajKorisnikaUBazu();
+                setShowAdd(false);
+              }}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20">
               Sačuvaj
             </button>
           </div>
@@ -353,10 +473,58 @@ export default function UsersPage({ students }: UsersPageProps) {
               </label>
               <div className="flex flex-wrap gap-1.5">
                 {editUser.kursevi.map((k) => (
-                  <span key={k} className="px-2 py-1 rounded-md bg-neutral-800 text-neutral-300 text-xs font-medium">
-                    {k}
-                  </span>
+                  <div
+                    key={k.kursId}
+                    className="flex items-center gap-1 bg-neutral-800 text-neutral-300 text-xs font-medium px-2 py-1 rounded-md max-w-[180px]"
+                  >
+                    <span className="truncate">{k.naziv}</span>
+
+                    <button
+                      onClick={() =>
+                        setEditUser({
+                          ...editUser,
+                          kursevi: editUser.kursevi.filter((c) => c.kursId !== k.kursId),
+                        })
+                      }
+                      className="text-red-400 hover:text-red-300 ml-1 cursor-pointer transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 ))}
+                <div className="flex gap-2 mt-3 items-center">
+                  <div className="relative flex-1 max-w-[220px]">
+                    <select
+                      value={selectedCourse}
+                      onChange={(e) => setSelectedCourse(e.target.value)}
+                      className="w-full appearance-none  bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 pr-8 text-sm text-neutral-200 outline-none focus:border-red-900  transition-all duration-200 cursor-pointer"
+                    >
+                      <option value="" className="bg-neutral-800 text-neutral-500">Izaberi kurs...</option>
+                      {sviKursevi.map((k) => (
+                        <option key={k.kursId} value={k.kursId} className="bg-neutral-800 hover:bg-red-900 focus:bg-red-900  text-neutral-200">
+                          {k.naziv}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-neutral-500">
+                      <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleAddCourse()}
+                    disabled={!selectedCourse}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-900 hover:bg-red-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors duration-200 shrink-0"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                    </svg>
+                    Dodaj
+                  </button>
+                </div>
+
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
@@ -366,7 +534,9 @@ export default function UsersPage({ students }: UsersPageProps) {
               >
                 Otkaži
               </button>
-              <button className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20">
+              <button 
+              onClick={() => editujKorisnika()}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20">
                 Sačuvaj izmene
               </button>
             </div>
@@ -384,10 +554,7 @@ export default function UsersPage({ students }: UsersPageProps) {
                   {deviceUser.deviceId}
                 </code>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-neutral-500">Uređaj / Browser</span>
-                <span className="text-xs text-neutral-300">{deviceUser.deviceInfo}</span>
-              </div>
+
               <div className="flex items-center justify-between">
                 <span className="text-xs text-neutral-500">Korisnik</span>
                 <span className="text-xs text-neutral-300">
@@ -398,7 +565,7 @@ export default function UsersPage({ students }: UsersPageProps) {
 
             <div className="bg-amber-900/10 border border-amber-800/20 rounded-lg p-3">
               <p className="text-xs text-amber-400">
-                Uklanjanjem Device ID-a korisnik će morati ponovo da se prijavi sa novog uređaja.
+                Uklanjanjem Device ID-a korisnik će moći da se prijavi sa novog uređaja.
               </p>
             </div>
 
@@ -409,8 +576,30 @@ export default function UsersPage({ students }: UsersPageProps) {
               >
                 Zatvori
               </button>
-              <button className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-amber-700 hover:bg-amber-600 transition-colors">
+              <button 
+              onClick={() => ukloniDeviceId()}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-amber-700 hover:bg-amber-600 transition-colors">
                 Ukloni Device ID
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+      <Modal open={!!deleteUser} onClose={() => setDeleteUser(null)} title="Obriši studenta">
+        {deleteUser && (
+          <div className="space-y-4">
+            <p>Da li ste sigurni da želite da obrišete studenta {deleteUser.ime} {deleteUser.prezime}?</p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setDeleteUser(null)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+              >
+                Otkaži
+              </button>
+              <button 
+              onClick={()=> obrisiKorisnika(deleteUser.id)}
+              className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20">
+                Obriši
               </button>
             </div>
           </div>

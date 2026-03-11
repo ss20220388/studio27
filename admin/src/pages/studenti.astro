@@ -5,10 +5,10 @@ import type { AstroCookies } from "astro";
 
 const cookies = Astro.cookies as AstroCookies;
 const refreshToken = cookies.get("refreshToken");
-
-const authHeaders: Record<string, string> = refreshToken?.value
+const token = refreshToken?.value;
+const authHeaders: Record<string, string> = token
   ? {
-      Authorization: `Bearer ${refreshToken.value}`,
+      Authorization: `Bearer ${token}`,
     }
   : {};
 
@@ -23,8 +23,26 @@ try {
 } catch {
   studentsData = [];
 }
+console.log("Students data fetched from API:")
+console.log(studentsData)
+
+let kurseviData = [];
+try{
+  const kurseviResponse = await fetch("http://api.studio27.rs/api/kursevi", {
+    headers: authHeaders,
+  });
+  kurseviData = kurseviResponse.ok ? await kurseviResponse.json() : [];
+  
+} catch{
+    console.log("Failed to fetch courses data")
+}
+console.log("Courses data fetched from API:")
+console.log(kurseviData)
+
+
+
 ---
 
 <Layout title="Korisnici">
-  <UsersPage students={studentsData} client:load />
+  <UsersPage students={studentsData.students} token= {token?token : ""} sviKursevi={kurseviData.kursevi} client:load />
 </Layout>
