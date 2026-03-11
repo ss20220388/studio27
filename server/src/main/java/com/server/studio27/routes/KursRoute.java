@@ -38,4 +38,12 @@ public class KursRoute {
     public ResponseEntity<Map<String, Object>> getBrojSvihKurseva(@PathVariable int studentId) {
         return kursController.getBrojSvihKursevi(studentId);
     }
+    @GetMapping("/broj-odgledanih-kurseva/{studentId}")
+    public ResponseEntity<Map<String, Object>> getBrojOdgledanihKurseva(@PathVariable int studentId) {
+        return kursController.getBrojOdgledanihKursevi(studentId);
+    }
+     @GetMapping("/broj-u-toku-kurseva/{studentId}")
+    public ResponseEntity<Map<String, Object>> getBrojUTokuKurseva(@PathVariable int studentId) {
+        return kursController.getBrojUTokuKursevi(studentId);
+    }
 }

@@ -20,10 +20,29 @@ const brojKursevaResponse = await fetch(`http://api.studio27.rs/api/broj-kurseva
 );
 const brojKursevaData = await brojKursevaResponse.json();
 console.log(brojKursevaData);
+const brojOdgledanihKursevaResponse = await fetch(`http://api.studio27.rs/api/broj-odgledanih-kurseva/${userData.userId}`,
+	{
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	}
+);
+const brojOdgledanihKursevaData = await brojOdgledanihKursevaResponse.json();
+console.log(brojOdgledanihKursevaData);
+
+const brojUTokuKursevaResponse = await fetch(`http://api.studio27.rs/api/broj-u-toku-kurseva/${userData.userId}`,
+	{
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	}
+);
+const brojUTokuKursevaData = await brojUTokuKursevaResponse.json();
+console.log(brojUTokuKursevaData);
 const stats = {
 	totalCourses: brojKursevaData.brojKurseva || 0,
-	finished: 1,
-	inProgress: 3,
+	finished: brojOdgledanihKursevaData.brojOdgledanihKurseva || 0,
+	inProgress: brojUTokuKursevaData.brojUTokuKurseva || 0,
 	hours: 12,
 };
 ---
