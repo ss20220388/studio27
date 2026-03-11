@@ -1,8 +1,30 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import UsersPage from "../react components/UsersPage";
+import type { AstroCookies } from "astro";
+
+const cookies = Astro.cookies as AstroCookies;
+const refreshToken = cookies.get("refreshToken");
+
+const authHeaders: Record<string, string> = refreshToken?.value
+  ? {
+      Authorization: `Bearer ${refreshToken.value}`,
+    }
+  : {};
+
+let studentsData = [];
+
+try {
+  const studentsResponse = await fetch("http://api.studio27.rs/api/students", {
+    headers: authHeaders,
+  });
+
+  studentsData = studentsResponse.ok ? await studentsResponse.json() : [];
+} catch {
+  studentsData = [];
+}
 ---
 
 <Layout title="Korisnici">
-    <UsersPage client:load />
+  <UsersPage students={studentsData} client:load />
 </Layout>

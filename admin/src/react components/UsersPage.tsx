@@ -13,51 +13,17 @@ interface User {
   kursevi: string[];
 }
 
-// Mock users
-const generateUsers = (): User[] => {
-  const names = [
-    ["Marko", "Petrović"], ["Ana", "Jovanović"], ["Stefan", "Nikolić"], ["Jovana", "Ilić"],
-    ["Luka", "Đorđević"], ["Milica", "Popović"], ["Nikola", "Stojanović"], ["Sara", "Pavlović"],
-    ["Đorđe", "Milivojević"], ["Tamara", "Radovanović"], ["Filip", "Savić"], ["Ivana", "Kostić"],
-    ["Aleksandar", "Živković"], ["Maja", "Stanković"], ["Dušan", "Todorović"], ["Jelena", "Obradović"],
-    ["Miloš", "Vasić"], ["Teodora", "Ristić"], ["Vuk", "Đukić"], ["Katarina", "Perić"],
-    ["Nemanja", "Lazarević"], ["Milena", "Marjanović"], ["Bogdan", "Cvijović"], ["Nataša", "Krstić"],
-    ["Uroš", "Matić"], ["Dragana", "Simić"], ["Petar", "Gavrilović"], ["Kristina", "Lukić"],
-    ["Rastko", "Branković"], ["Sofija", "Subotić"],
-  ];
-  const courses = ["3D Modeling", "Texturing", "Animation", "Rendering", "Compositing"];
-  const devices = [
-    { id: "dev_a1b2c3", info: "Chrome / Windows 11" },
-    { id: "dev_d4e5f6", info: "Safari / macOS 14" },
-    { id: "dev_g7h8i9", info: "Firefox / Ubuntu 22" },
-    { id: null, info: null },
-  ];
+interface StudentApiResponse {
+  studentId: number;
+  ime: string;
+  prezime: string;
+  email: string;
+  brojTelefona: string;
+}
 
-  return names.map(([ime, prezime], i) => {
-    const d = devices[i % devices.length];
-    const phoneDigit = i % 10;
-    const phoneNum = String((i * 1234567 + 3456789) % 10000000).padStart(7, "0");
-    const day = String((i * 7 % 28) + 1).padStart(2, "0");
-    const months = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "avg", "sep", "okt", "nov", "dec"];
-    const month = months[i % 12];
-    const statusActive = i % 5 !== 0;
-    const courseCount = (i % 3) + 1;
-    return {
-      id: i + 1,
-      ime,
-      prezime,
-      email: `${ime.toLowerCase()}.${prezime.toLowerCase().slice(0, 3)}@gmail.com`,
-      telefon: `+381 6${phoneDigit} ${phoneNum}`,
-      datumRegistracije: `${day}. ${month} 2025`,
-      status: statusActive ? "aktivan" : "neaktivan",
-      deviceId: d.id,
-      deviceInfo: d.info,
-      kursevi: courses.slice(0, courseCount),
-    };
-  });
-};
-
-const allUsers = generateUsers();
+interface UsersPageProps {
+  students: StudentApiResponse[];
+}
 
 // Input component
 const Input = ({
@@ -100,8 +66,12 @@ const Modal = ({
   children: React.ReactNode;
 }) => {
   if (!open) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div
         className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-lg shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -122,10 +92,23 @@ const Modal = ({
   );
 };
 
-export default function UsersPage() {
+export default function UsersPage({ students }: UsersPageProps) {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const limit = 20;
+
+  const allUsers: User[] = students.map((student) => ({
+    id: student.studentId,
+    ime: student.ime,
+    prezime: student.prezime,
+    email: student.email,
+    telefon: student.brojTelefona ?? "",
+    datumRegistracije: "-",
+    status: "aktivan",
+    deviceId: null,
+    deviceInfo: null,
+    kursevi: [],
+  }));
 
   // Modals
   const [showAdd, setShowAdd] = useState(false);
@@ -141,13 +124,13 @@ export default function UsersPage() {
       u.prezime.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase())
   );
+
   const total = filtered.length;
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = Math.max(1, Math.ceil(total / limit));
   const users = filtered.slice(page * limit, (page + 1) * limit);
 
   return (
-    <div className="space-y-6 animate-fade-in" style={{paddingInline:"20px", paddingBlock:"10px"}}>
-      {/* Header */}
+    <div className="space-y-6 animate-fade-in" style={{ paddingInline: "20px", paddingBlock: "10px" }}>
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-neutral-800/60">
         <div>
           <p className="text-xs font-semibold text-neutral-600 uppercase tracking-widest mb-1">Upravljanje</p>
@@ -156,18 +139,21 @@ export default function UsersPage() {
         </div>
         <button
           onClick={() => setShowAdd(true)}
-          style={{paddingInline:"20px", paddingBlock:"10px",marginBottom:"10px"}}
+          style={{ paddingInline: "20px", paddingBlock: "10px", marginBottom: "10px" }}
           className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-red-900 hover:bg-red-800 text-white text-sm font-medium transition-colors duration-200 shadow-lg shadow-red-900/20 shrink-0"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+            <path
+              fillRule="evenodd"
+              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+              clipRule="evenodd"
+            />
           </svg>
           Dodaj korisnika
         </button>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm " style={{marginBlock:"10px"}} >
+      <div className="relative max-w-sm" style={{ marginBlock: "10px" }}>
         <input
           type="text"
           placeholder="Pretraži korisnike..."
@@ -176,13 +162,12 @@ export default function UsersPage() {
             setSearch(e.target.value);
             setPage(0);
           }}
-          style={{paddingInline:"15px",paddingBlock:"10px"}}
+          style={{ paddingInline: "15px", paddingBlock: "10px" }}
           className="w-full h-10 pl-11 pr-4 text-sm text-neutral-200 bg-neutral-900 border border-neutral-800 rounded-lg outline-none focus:border-neutral-700 transition-colors duration-200 placeholder-neutral-600"
         />
       </div>
 
-      {/* Table */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden" style={{paddingInline:"20px", paddingBlock:"10px"}}>
+      <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden" style={{ paddingInline: "20px", paddingBlock: "10px" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -281,14 +266,23 @@ export default function UsersPage() {
                   </td>
                 </tr>
               ))}
+
+              {users.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-5 py-10 text-center text-sm text-neutral-500">
+                    Nema pronađenih korisnika.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
         <div className="flex items-center justify-between px-5 py-3 border-t border-neutral-800">
           <p className="text-xs text-neutral-500">
-            Prikazano {page * limit + 1}–{Math.min((page + 1) * limit, total)} od {total}
+            {total === 0
+              ? "Prikazano 0 od 0"
+              : `Prikazano ${page * limit + 1}–${Math.min((page + 1) * limit, total)} od ${total}`}
           </p>
           <div className="flex items-center gap-1">
             <button
@@ -313,7 +307,7 @@ export default function UsersPage() {
             ))}
             <button
               onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
-              disabled={page === totalPages - 1}
+              disabled={page === totalPages - 1 || total === 0}
               className="px-3 py-1.5 rounded-md text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               Sledeća →
@@ -322,7 +316,6 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Add user modal */}
       <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Dodaj korisnika">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -345,7 +338,6 @@ export default function UsersPage() {
         </div>
       </Modal>
 
-      {/* Edit user modal */}
       <Modal open={!!editUser} onClose={() => setEditUser(null)} title="Izmeni korisnika">
         {editUser && (
           <div className="space-y-4">
@@ -382,7 +374,6 @@ export default function UsersPage() {
         )}
       </Modal>
 
-      {/* Device modal */}
       <Modal open={!!deviceUser} onClose={() => setDeviceUser(null)} title="Upravljanje uređajem">
         {deviceUser && (
           <div className="space-y-4">

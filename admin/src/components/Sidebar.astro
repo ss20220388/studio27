@@ -4,9 +4,7 @@ const currentPath = Astro.url.pathname;
 const navSections = [
   {
     label: "Pregled",
-    items: [
-      { href: "/", label: "Dashboard", icon: "home" },
-    ],
+    items: [{ href: "/", label: "Dashboard", icon: "home" }],
   },
   {
     label: "Upravljanje",
@@ -75,8 +73,7 @@ const navSections = [
 <!-- Sidebar -->
 <aside
   id="sidebar"
-style={{paddingInline:"20px", paddingBlock:"10px"}}
-  class="fixed  inset-y-0 left-0 z-40 w-64 flex flex-col justify-center gap-8 bg-neutral-900 border-r border-neutral-800 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300"
+  class="fixed inset-y-0 left-0 z-40 w-72 h-screen flex flex-col overflow-hidden bg-neutral-900 border-r border-neutral-800 transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300"
 >
   <!-- Logo -->
   <div class="px-5 py-6 border-b border-neutral-800">
@@ -92,13 +89,19 @@ style={{paddingInline:"20px", paddingBlock:"10px"}}
   </div>
 
   <!-- Navigation -->
-  <nav class="flex-1 px-3 py-4 space-y-5 overflow-y-auto" style="padding-inline: 20px; padding-block: 10px;">
+  <nav class="flex-1 min-h-0 px-4 py-5 space-y-5 overflow-y-auto">
     {navSections.map((section, si) => (
       <div>
-        <p class="px-3 mb-2 text-[10px] font-semibold tracking-[0.15em] uppercase text-neutral-500">{section.label}</p>
+        <p class="px-3 mb-2 text-[10px] font-semibold tracking-[0.15em] uppercase text-neutral-500">
+          {section.label}
+        </p>
+
         <div class="space-y-1">
-          {section.items.map(item => {
-            const isActive = currentPath === item.href || (item.href !== "/" && currentPath.startsWith(item.href));
+          {section.items.map((item) => {
+            const isActive =
+              currentPath === item.href ||
+              (item.href !== "/" && currentPath.startsWith(item.href));
+
             return (
               <a
                 href={item.href}
@@ -108,21 +111,41 @@ style={{paddingInline:"20px", paddingBlock:"10px"}}
                     : "text-neutral-400 hover:text-white hover:bg-neutral-800/70"
                 }`}
               >
-                <span class={`w-5 h-5 flex items-center justify-center ${isActive ? "text-red-400" : "text-neutral-500 group-hover:text-neutral-300"}`}>
+                <span
+                  class={`w-5 h-5 flex items-center justify-center ${
+                    isActive
+                      ? "text-red-400"
+                      : "text-neutral-500 group-hover:text-neutral-300"
+                  }`}
+                >
                   {item.icon === "home" && (
-                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
+                      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                    </svg>
                   )}
                   {item.icon === "users" && (
-                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
+                      <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                    </svg>
                   )}
                   {item.icon === "book" && (
-                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
+                      <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                    </svg>
                   )}
                   {item.icon === "edit" && (
-                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
+                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
                   )}
                   {item.icon === "settings" && (
-                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
+                      <path
+                        fill-rule="evenodd"
+                        d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
                   )}
                 </span>
                 {item.label}
@@ -130,31 +153,37 @@ style={{paddingInline:"20px", paddingBlock:"10px"}}
             );
           })}
         </div>
-        {si < navSections.length - 1 && (
-          <div class="mt-4 border-b border-neutral-800/60" />
-        )}
+
+        {si < navSections.length - 1 && <div class="mt-4 border-b border-neutral-800/60" />}
       </div>
     ))}
   </nav>
 
   <!-- Bottom section -->
-  <div class="px-3 py-4 border-t border-neutral-800 space-y-3" style="padding-inline: 20px; padding-block: 10px;">
-    <!-- Admin email -->
-    <div class="flex items-center gap-3 px-3 py-2" style="margin-bottom: 10px;">
+  <div class="shrink-0 mt-auto px-4 py-4 border-t border-neutral-800 space-y-3">
+    <div class="flex items-center gap-3 px-3 py-2">
       <div class="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center">
-        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-neutral-400"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
+        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-neutral-400">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+        </svg>
       </div>
       <div class="flex-1 min-w-0">
         <p class="text-xs font-medium text-neutral-300 truncate">admin@studio27.rs</p>
         <p class="text-[10px] text-neutral-500">Administrator</p>
       </div>
     </div>
-    <!-- Logout -->
+
     <a
       href="/logout"
       class="flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-red-900/10 border border-red-900/20 text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-all duration-200 text-sm font-medium"
     >
-      <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+      <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+        <path
+          fill-rule="evenodd"
+          d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z"
+          clip-rule="evenodd"
+        />
+      </svg>
       Odjavi se
     </a>
   </div>
