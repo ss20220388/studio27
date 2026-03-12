@@ -1,20 +1,29 @@
 ---
 import CourseCard from "./CourseCard.astro";
 
-const courses = [
-    { title: "React Kurs", progress: 70 },
-    { title: "SQL Masterclass", progress: 35 },
-];
+const token = Astro.cookies.get("refreshToken")?.value;
+const userRes = await fetch("http://api.studio27.rs/api/auth/me", {
+    headers: { Authorization: `Bearer ${token}` },
+});
+const userData = await userRes.json();
+
+const kurseviUTokuRes = await fetch(`http://api.studio27.rs/api/kursevi-u-toku/${userData.userId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+});
+const kurseviUToku = await kurseviUTokuRes.json();
 ---
 
 <div>
     <h2 class="text-base font-semibold text-white mb-4">Nastavi gde si stao</h2>
 
     <div class="grid md:grid-cols-2 gap-4 pb-8">
-        {
-            courses.map((course) => (
-                <CourseCard title={course.title} progress={course.progress} />
-            ))
-        }
+        {kurseviUToku.map((kurs: any) => (
+            <CourseCard
+                title={kurs.naziv}
+                progress={kurs.progress}
+                slikaUrl={kurs.slikaUrl}
+                kursId={kurs.kursId}
+            />
+        ))}
     </div>
 </div>

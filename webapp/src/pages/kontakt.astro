@@ -1,56 +1,72 @@
 ---
 import Layout from "../layouts/Layout.astro";
 ---
+
 <Layout title="Kontakt">
-	<div class="space-y-6 animate-fade-in max-w-2xl">
-		<div>
-			<h1 class="text-2xl font-bold text-white">Kontakt</h1>
-			<p class="text-sm text-neutral-500 mt-1">Javite nam se za bilo kakva pitanja</p>
-		</div>
+    <div class="space-y-6 animate-fade-in max-w-2xl">
+        <div>
+            <h1 class="text-2xl font-bold text-white">Kontakt</h1>
+            <p class="text-sm text-neutral-500 mt-1">Javite nam se za bilo kakva pitanja</p>
+        </div>
 
-		<div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-			<h2 class="text-sm font-semibold text-white mb-3">Telefon</h2>
-			<div class="space-y-2">
-				<div class="flex items-center gap-3">
-					<div class="w-8 h-8 rounded-lg bg-red-900/15 flex items-center justify-center">
-						<svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-red-400"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
-					</div>
-					<a href="tel:+381601234567" class="text-sm text-red-400 hover:text-red-300 transition-colors">+381 60 123 4567</a>
-				</div>
-				<div class="flex items-center gap-3">
-					<div class="w-8 h-8 rounded-lg bg-red-900/15 flex items-center justify-center">
-						<svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-red-400"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
-					</div>
-					<a href="tel:+381641112233" class="text-sm text-red-400 hover:text-red-300 transition-colors">+381 64 111 2233</a>
-				</div>
-			</div>
-		</div>
+        <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
+            <h2 class="text-sm font-semibold text-white mb-3">Telefon</h2>
+            <div class="space-y-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-red-900/15 flex items-center justify-center">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-red-400"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
+                    </div>
+                    <a href="tel:+381601234567" class="text-sm text-red-400 hover:text-red-300 transition-colors">+381 60 123 4567</a>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-red-900/15 flex items-center justify-center">
+                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-red-400"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" /></svg>
+                    </div>
+                    <a href="tel:+381641112233" class="text-sm text-red-400 hover:text-red-300 transition-colors">+381 64 111 2233</a>
+                </div>
+            </div>
+        </div>
 
-		<div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
-			<h2 class="text-sm font-semibold text-white mb-4">Pošaljite nam poruku</h2>
-			<form class="space-y-4">
-				<div>
-					<label class="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5" for="naslov">Naslov</label>
-					<input id="naslov" name="naslov" type="text" class="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 focus:ring-1 focus:ring-red-900/30 transition-all duration-200 placeholder-neutral-600" placeholder="Unesite naslov poruke" required />
-				</div>
-				<div>
-					<label class="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5" for="poruka">Poruka</label>
-					<textarea id="poruka" name="poruka" rows="5" class="w-full px-3 py-2 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 focus:ring-1 focus:ring-red-900/30 transition-all duration-200 placeholder-neutral-600 resize-none" placeholder="Unesite vašu poruku" required></textarea>
-				</div>
-				<div>
-					<label class="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5" for="prilog">Prilog (opciono)</label>
-					<div class="flex items-center gap-3">
-						<label for="prilog" class="px-4 py-2 rounded-lg bg-neutral-800 border border-neutral-700 text-neutral-300 text-xs font-medium hover:bg-neutral-700 cursor-pointer transition-colors">
-							Izaberi fajl
-						</label>
-						<span id="prilog-fajl" class="text-xs text-neutral-500"></span>
-						<input id="prilog" name="prilog" type="file" class="hidden" onchange="document.getElementById('prilog-fajl').textContent = this.files[0]?.name || ''" />
-					</div>
-				</div>
-				<button type="submit" class="px-5 py-2.5 rounded-lg bg-red-900 hover:bg-red-800 text-white text-sm font-medium transition-colors duration-200 shadow-lg shadow-red-900/20">
-					Pošalji poruku
-				</button>
-			</form>
-		</div>
-	</div>
+        <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-6">
+            <h2 class="text-sm font-semibold text-white mb-4">Pošaljite nam poruku</h2>
+            <form id="kontakt-form" class="space-y-4">
+                <div>
+                    <label class="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5" for="naslov">Naslov</label>
+                    <input id="naslov" name="naslov" type="text" class="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 focus:ring-1 focus:ring-red-900/30 transition-all duration-200 placeholder-neutral-600" placeholder="Unesite naslov poruke" required />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5" for="poruka">Poruka</label>
+                    <textarea id="poruka" name="poruka" rows="5" class="w-full px-3 py-2 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 focus:ring-1 focus:ring-red-900/30 transition-all duration-200 placeholder-neutral-600 resize-none" placeholder="Unesite vašu poruku" required></textarea>
+                </div>
+
+                <button type="submit" class="px-5 py-2.5 rounded-lg bg-red-900 hover:bg-red-800 text-white text-sm font-medium transition-colors duration-200 shadow-lg shadow-red-900/20">
+                    Pošalji poruku
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById("kontakt-form");
+        form?.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const naslovEl = document.getElementById("naslov") as HTMLInputElement | null;
+            const porukaEl = document.getElementById("poruka") as HTMLTextAreaElement | null;
+
+            const naslov = naslovEl?.value?.trim() ?? "";
+            const poruka = porukaEl?.value?.trim() ?? "";
+
+            if (!naslov || !poruka) return;
+
+            const to = "stojanovicstefana157@gmail.com";
+            const gmailUrl =
+                `https://mail.google.com/mail/?view=cm&fs=1` +
+                `&to=${encodeURIComponent(to)}` +
+                `&su=${encodeURIComponent(naslov)}` +
+                `&body=${encodeURIComponent(poruka)}`;
+
+            window.location.href = gmailUrl;
+        });
+    </script>
 </Layout>

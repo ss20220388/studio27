@@ -46,4 +46,16 @@ public class KursRoute {
     public ResponseEntity<Map<String, Object>> getBrojUTokuKurseva(@PathVariable int studentId) {
         return kursController.getBrojUTokuKursevi(studentId);
     }
+     @GetMapping("/kursevi-u-toku/{studentId}")
+    public ResponseEntity<List<Map<String, Object>>> getKurseviUToku(@PathVariable int studentId) {
+        return kursController.getKurseviUToku(studentId);
+    }
+   // ...existing code...
+
+    @GetMapping("/progress-stats/{studentId}")
+    public ResponseEntity<Map<String, Object>> getProgressChartStats(@PathVariable int studentId) {
+        return kursController.getProgressChartStats(studentId);
+    }
+
+// ...existing code...
 }
