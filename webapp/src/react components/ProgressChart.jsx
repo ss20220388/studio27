@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import {
     PieChart,
     Pie,
@@ -5,28 +6,37 @@ import {
     Legend,
     Cell,
     ResponsiveContainer
-} from "recharts"
-
-const data = [
-    { name: "Završeno", value: 1 },
-    { name: "U toku", value: 3 },
-    { name: "Nije početo", value: 1 }
-]
+} from "recharts";
 
 const COLORS = [
-  "#34d399",
-  "#7f1d1d",
-  "#525252"
-]
+    "#34d399",
+    "#7f1d1d",
+    "#525252"
+];
 
-export default function ProgressChart() {
+export default function ProgressChart({
+    zavrseno = 0,
+    uToku = 0,
+    nijePoceto = 0,
+}) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const data = [
+        { name: "Završeno", value: zavrseno },
+        { name: "U toku", value: uToku },
+        { name: "Nije početo", value: nijePoceto },
+    ];
+
+    if (!mounted) return null;
+
     return (
-        <div className="w-full h-[260px]">
-
-            <ResponsiveContainer minWidth={250} minHeight={250} width={"100%"} height={"100%"}>
-
+        <div style={{ width: "100%", height: 260 }}>
+            <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-
                     <Pie
                         data={data}
                         dataKey="value"
@@ -42,8 +52,8 @@ export default function ProgressChart() {
 
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: "#171717",
-                            border: "1px solid #262626",
+                            backgroundColor: "#faf5f5",
+                            border: "1px solid #c7bdbd",
                             borderRadius: "8px",
                             color: "#e5e5e5",
                             fontSize: "12px",
@@ -53,13 +63,14 @@ export default function ProgressChart() {
                     <Legend
                         verticalAlign="bottom"
                         height={36}
-                        formatter={(value) => <span style={{ color: "#a3a3a3", fontSize: "12px" }}>{value}</span>}
+                        formatter={(value) => (
+                            <span style={{ color: "#a3a3a3", fontSize: "12px" }}>
+                                {value}
+                            </span>
+                        )}
                     />
-
                 </PieChart>
-
             </ResponsiveContainer>
-
         </div>
-    )
+    );
 }

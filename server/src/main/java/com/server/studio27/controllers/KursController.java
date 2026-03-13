@@ -8,12 +8,12 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.server.studio27.models.Kurs;
 import com.server.studio27.models.Lekcija;
 
-@Service
+@RestController
 public class KursController {
 
     @Autowired
@@ -71,9 +71,150 @@ public class KursController {
         }
     }
 
-    public ResponseEntity<Map<String, Object>> getBrojUTokuKursevi(int studentId) {
+    public ResponseEntity<Map<String, Object>> getBrojUTokuKursevi1(int studentId) {
         try {
             String SQL = "SELECT COUNT(*) as brojKursevaUToku FROM kurs k Join pohadja p On k.kursId=p.kursId where p.studentId=? and (SELECT COUNT(*) FROM student_lekcija sl join lekcija l on sl.lekcijaId=l.lekcijaId where sl.studentId=p.studentId and l.kursId=k.kursId)=(select count(*) from lekcija l where l.kursId=k.kursId);";
+            Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("brojUTokuKurseva", broj != null ? broj : 0);
+            response.put("message", "Broj kurseva uspešno preuzet");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("brojUTokuKurseva", null);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+
+
+    public ResponseEntity<Map<String, Object>> getProgressChartStats(int studentId) {
+        try {
+            String SQL = """
+                SELECT
+                    (SELECT COUNT(*) FROM kurs) AS ukupno,
+                    SUM(CASE WHEN odgledano_lekcija = ukupno_lekcija AND ukupno_lekcija > 0 THEN 1 ELSE 0 END) AS zavrseno,
+                    SUM(CASE WHEN odgledano_lekcija > 0 AND odgledano_lekcija < ukupno_lekcija THEN 1 ELSE 0 END) AS uToku,
+                    (SELECT COUNT(*) FROM kurs)
+                        - SUM(CASE WHEN odgledano_lekcija = ukupno_lekcija AND ukupno_lekcija > 0 THEN 1 ELSE 0 END)
+                        - SUM(CASE WHEN odgledano_lekcija > 0 AND odgledano_lekcija < ukupno_lekcija THEN 1 ELSE 0 END)
+                    AS nijePoceto
+                FROM (
+                    SELECT
+                        k.kursId,
+                        COUNT(DISTINCT l.lekcijaId) AS ukupno_lekcija,
+                        COUNT(DISTINCT sl.lekcijaId) AS odgledano_lekcija
+                    FROM kurs k
+                    JOIN platio p ON k.kursId = p.kursId
+                    LEFT JOIN lekcija l ON l.kursId = k.kursId
+                    LEFT JOIN student_lekcija sl
+                        ON sl.lekcijaId = l.lekcijaId
+                        AND sl.studentId = p.studentId
+                    WHERE p.studentId = ?
+                    GROUP BY k.kursId
+                ) stats;
+            """;
+
+            Map<String, Object> result = jdbcTemplate.queryForMap(SQL, studentId);
+
+            int zavrseno = ((Number) result.get("zavrseno")).intValue();
+            int uToku = ((Number) result.get("uToku")).intValue();
+            int nijePoceto = ((Number) result.get("nijePoceto")).intValue();
+            int ukupno = ((Number) result.get("ukupno")).intValue();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("zavrseno", zavrseno);
+            response.put("uToku", uToku);
+            response.put("nijePoceto", nijePoceto);
+            response.put("ukupno", ukupno);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("zavrseno", 0);
+            response.put("uToku", 0);
+            response.put("nijePoceto", 0);
+            response.put("ukupno", 0);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+
+
+    public ResponseEntity<List<Map<String, Object>>> getKurseviUToku(int studentId) {
+        try {
+            String SQL = """
+                SELECT
+                    k.kursId,
+                    k.naziv,
+                    k.slikaUrl,
+                    COUNT(DISTINCT l.lekcijaId) AS ukupno_lekcija,
+                    COUNT(DISTINCT sl.lekcijaId) AS odgledano_lekcija
+                FROM kurs k
+                JOIN platio p ON k.kursId = p.kursId
+                LEFT JOIN lekcija l ON l.kursId = k.kursId
+                LEFT JOIN student_lekcija sl
+                    ON sl.lekcijaId = l.lekcijaId
+                    AND sl.studentId = p.studentId
+                WHERE p.studentId = ?
+                GROUP BY k.kursId, k.naziv, k.slikaUrl
+                HAVING COUNT(DISTINCT sl.lekcijaId) > 0
+                    AND COUNT(DISTINCT sl.lekcijaId) < COUNT(DISTINCT l.lekcijaId)
+            """;
+
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL, studentId);
+
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (Map<String, Object> row : rows) {
+                int ukupno = ((Number) row.get("ukupno_lekcija")).intValue();
+                int odgledano = ((Number) row.get("odgledano_lekcija")).intValue();
+                int progress = ukupno > 0 ? (odgledano * 100 / ukupno) : 0;
+
+                Map<String, Object> kurs = new HashMap<>();
+                kurs.put("kursId", ((Number) row.get("kursId")).intValue());
+                kurs.put("naziv", row.get("naziv"));
+                kurs.put("slikaUrl", row.get("slikaUrl"));
+                kurs.put("progress", progress);
+                result.add(kurs);
+            }
+
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+
+    public ResponseEntity<Map<String, Object>> getBrojUTokuKursevi(int studentId) {
+        try {
+            String SQL = """
+                SELECT COUNT(*) AS brojKursevaUToku
+                FROM kurs k
+                JOIN platio p ON k.kursId = p.kursId
+                WHERE p.studentId = ?
+                  AND (
+                    SELECT COUNT(*)
+                    FROM student_lekcija sl
+                    JOIN lekcija l ON sl.lekcijaId = l.lekcijaId
+                    WHERE sl.studentId = p.studentId
+                      AND l.kursId = k.kursId
+                  ) > 0
+                  AND (
+                    SELECT COUNT(*)
+                    FROM student_lekcija sl
+                    JOIN lekcija l ON sl.lekcijaId = l.lekcijaId
+                    WHERE sl.studentId = p.studentId
+                      AND l.kursId = k.kursId
+                  ) < (
+                    SELECT COUNT(*)
+                    FROM lekcija l
+                    WHERE l.kursId = k.kursId
+                  );
+            """;
+
             Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
 
             Map<String, Object> response = new HashMap<>();
@@ -89,36 +230,25 @@ public class KursController {
         }
     }
 
+// ...existing code...
     public ResponseEntity<Kurs> getKursSaLekcijama(int id) {
         try {
-            String SQL = ""
-                    + //
-                    "SELECT"
-                    + " k.kursId,"
-                    + //
-                    " k.naziv,"
-                    + //
-                    " k.opis,"
-                    + //
-                    " k.cena,"
-                    + //
-                    " k.trajanje,"
-                    + //
-                    " k.slikaUrl,"
-                    + //
-                    " l.lekcijaId,"
-                    + //
-                    " l.naziv AS nazivLekcije,"
-                    + //
-                    " l.opis AS opisLekcije"
-                    + //
-                    " FROM Kurs k"
-                    + //
-                    " LEFT JOIN lekcija l USING(kursId)"
-                    + //
-                    " WHERE k.kursId = ?"
-                    + //
-                    "";
+            String SQL = """
+                    SELECT
+                     k.kursId,
+                     k.naziv,
+                    k.opis,
+                    k.cena,
+                     k.trajanje,
+                     k.slikaUrl,
+                     l.lekcijaId,
+                     l.naziv AS nazivLekcije,
+                     l.opis AS opisLekcije
+                    FROM Kurs k
+                    LEFT JOIN lekcija l USING(kursId)
+                     WHERE k.kursId = ?
+                   
+                    """;
             System.out.println("Executing SQL: " + SQL + " with id: " + id);
 
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL, id);

@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/radovi").permitAll()
                         .requestMatchers("/api/upload-hls-hetzner").permitAll()
                         .requestMatchers("/api/kursevi/{id}").permitAll()
+                        .requestMatchers("/api/progress-chart/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

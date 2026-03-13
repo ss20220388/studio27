@@ -52,4 +52,14 @@ public class KursRoute {
         return kursController.getKursProdatoOvajMesec();
     }
     
+     @GetMapping("/kursevi-u-toku/{studentId}")
+    public ResponseEntity<List<Map<String, Object>>> getKurseviUToku(@PathVariable int studentId) {
+        return kursController.getKurseviUToku(studentId);
+    }
+
+    @GetMapping("/progress-stats/{studentId}")
+    public ResponseEntity<Map<String, Object>> getProgressChartStats(@PathVariable int studentId) {
+        return kursController.getProgressChartStats(studentId);
+    }
+
 }
