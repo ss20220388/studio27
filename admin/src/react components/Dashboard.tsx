@@ -1,3 +1,9 @@
+interface StatCardType {
+  label: string;
+  value: string | number;
+  up: boolean;
+  icon: React.ReactNode;
+}
 import React, { useState } from "react";
 import {
   AreaChart,
@@ -11,85 +17,9 @@ import {
   Bar,
 } from "recharts";
 
-// Mock data
-const revenueData = [
-  { mesec: "Jan", prihod: 185000, korisnici: 12 },
-  { mesec: "Feb", prihod: 220000, korisnici: 18 },
-  { mesec: "Mar", prihod: 310000, korisnici: 25 },
-  { mesec: "Apr", prihod: 275000, korisnici: 22 },
-  { mesec: "Maj", prihod: 390000, korisnici: 31 },
-  { mesec: "Jun", prihod: 420000, korisnici: 35 },
-  { mesec: "Jul", prihod: 350000, korisnici: 28 },
-  { mesec: "Avg", prihod: 480000, korisnici: 42 },
-  { mesec: "Sep", prihod: 520000, korisnici: 45 },
-  { mesec: "Okt", prihod: 460000, korisnici: 38 },
-  { mesec: "Nov", prihod: 550000, korisnici: 48 },
-  { mesec: "Dec", prihod: 610000, korisnici: 55 },
-];
 
-const courseStats = [
-  { naziv: "3D Modeling", prodato: 142 },
-  { naziv: "Texturing", prodato: 98 },
-  { naziv: "Animation", prodato: 76 },
-  { naziv: "Rendering", prodato: 64 },
-  { naziv: "Compositing", prodato: 45 },
-];
 
-const recentUsers = [
-  { ime: "Marko Petrović", email: "marko@gmail.com", kurs: "3D Modeling", datum: "08. mar 2026" },
-  { ime: "Ana Jovanović", email: "ana.j@gmail.com", kurs: "Texturing", datum: "07. mar 2026" },
-  { ime: "Stefan Nikolić", email: "stefan.n@yahoo.com", kurs: "3D Modeling", datum: "06. mar 2026" },
-  { ime: "Jovana Ilić", email: "jovana@outlook.com", kurs: "Animation", datum: "05. mar 2026" },
-  { ime: "Luka Đorđević", email: "luka.dj@gmail.com", kurs: "Rendering", datum: "04. mar 2026" },
-];
 
-const stats = [
-  {
-    label: "Ukupno korisnika",
-    value: "1,247",
-    change: "+12.5%",
-    up: true,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Kupovine ovog meseca",
-    value: "55",
-    change: "+23.1%",
-    up: true,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-      </svg>
-    ),
-  },
-  {
-    label: "Prihod ovog meseca",
-    value: "610,000 RSD",
-    change: "+8.3%",
-    up: true,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-        <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-        <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
-      </svg>
-    ),
-  },
-  {
-    label: "Aktivni kursevi",
-    value: "5",
-    change: "+1",
-    up: true,
-    icon: (
-      <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-        <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
-      </svg>
-    ),
-  },
-];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -98,8 +28,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="text-xs text-neutral-400 mb-1">{label}</p>
         {payload.map((entry: any, i: number) => (
           <p key={i} className="text-sm font-medium" style={{ color: entry.color }}>
-            {entry.name === "prihod"
-              ? `${(entry.value / 1000).toFixed(0)}k RSD`
+            {entry.name === "zarada"
+              ? `${(entry.value).toFixed(0)}RSD`
               : `${entry.value} korisnika`}
           </p>
         ))}
@@ -109,13 +39,59 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export default function Dashboard() {
-  const [chartTab, setChartTab] = useState<"prihod" | "korisnici">("prihod");
+export default function Dashboard({ students, prihodi, kursProdato, stats }: { students: any[]; prihodi: any[], kursProdato: any[], stats: { activeStudents: number, kupovineOvogMeseca: number, prihodiOvogMeseca: number, brojKurseva: number } }) {
+  const [chartTab, setChartTab] = useState<"zarada" | "korisnici">("zarada");
+  const [fullStats, setFullStats] = useState<StatCardType[]>([]);
 
+  React.useEffect(() => {
+    setFullStats([
+      {
+        label: "Ukupno aktivnih korisnika",
+        value: stats?.activeStudents ?? "0",
+        up: true,
+        icon: (
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+          </svg>
+        ),
+      },
+      {
+        label: "Kupovine ovog meseca",
+        value: stats?.kupovineOvogMeseca ?? "0",
+        up: true,
+        icon: (
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+          </svg>
+        ),
+      },
+      {
+        label: "Prihod ovog meseca",
+        value: stats?.prihodiOvogMeseca ?? "0 RSD",
+        up: true,
+        icon: (
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+            <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+            <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+          </svg>
+        ),
+      },
+      {
+        label: "Aktivni kursevi",
+        value: stats?.brojKurseva ?? "0",
+        up: true,
+        icon: (
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+          </svg>
+        ),
+      },
+    ])
+  }, [stats]);
   return (
     <div className=" px-4 animate-fade-in max-w-7xl flex flex-col justify-center items-center flex-1 gap-8  mx-auto w-full">
       <div className="flex items-end justify-between x-12 pb-5 border-b border-neutral-800/60 w-full">
-        <div className="w-full p-4" style={{paddingInline:"10px"}} >
+        <div className="w-full p-4" style={{ paddingInline: "10px" }} >
           <p className="text-xs  font-semibold text-neutral-600 uppercase tracking-widest mb-1">Pregled</p>
           <h1 className="text-2xl font-bold text-white">Dashboard</h1>
           <p className="text-sm text-neutral-500 mt-1">Statistike i aktivnosti za tekući period</p>
@@ -125,9 +101,9 @@ export default function Dashboard() {
 
       {/* Stat cards */}
       <div className="grid w-4/5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 stagger-children">
-        {stats.map((s, i) => (
+        {fullStats.map((s, i) => (
           <div
-          style={{paddingInline:"20px", paddingBlock:"10px"}}
+            style={{ paddingInline: "20px", paddingBlock: "10px" }}
             key={i}
             className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-colors duration-200"
           >
@@ -135,22 +111,13 @@ export default function Dashboard() {
               <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center text-neutral-400">
                 {s.icon}
               </div>
-              <span
-                className={`text-xs font-medium px-2 py-1 rounded-full ${
-                  s.up
-                    ? "bg-emerald-900/20 text-emerald-400 border border-emerald-800/30"
-                    : "bg-red-900/20 text-red-400 border border-red-800/30"
-                }`}
-              >
-                {s.change}
-              </span>
             </div>
             <p className="text-2xl font-bold text-white">{s.value}</p>
             <p className="text-xs text-neutral-500 mt-1">{s.label}</p>
           </div>
         ))}
       </div>
-      
+
 
       {/* Charts row */}
       <div className="gri w-4/5  grid-cols-1 xl:grid-cols-3 gap-6">
@@ -163,22 +130,20 @@ export default function Dashboard() {
             </div>
             <div className="flex bg-neutral-800 rounded-lg border border-neutral-700 p-0.5">
               <button
-                onClick={() => setChartTab("prihod")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
-                  chartTab === "prihod"
-                    ? "bg-red-900 text-white shadow-sm"
-                    : "text-neutral-400 hover:text-white"
-                }`}
+                onClick={() => setChartTab("zarada")}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${chartTab === "zarada"
+                  ? "bg-red-900 text-white shadow-sm"
+                  : "text-neutral-400 hover:text-white"
+                  }`}
               >
                 Prihod
               </button>
               <button
                 onClick={() => setChartTab("korisnici")}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
-                  chartTab === "korisnici"
-                    ? "bg-red-900 text-white shadow-sm"
-                    : "text-neutral-400 hover:text-white"
-                }`}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${chartTab === "korisnici"
+                  ? "bg-red-900 text-white shadow-sm"
+                  : "text-neutral-400 hover:text-white"
+                  }`}
               >
                 Korisnici
               </button>
@@ -187,7 +152,7 @@ export default function Dashboard() {
 
           <div className="h-70 mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData}>
+              <AreaChart data={prihodi}>
                 <defs>
                   <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#7f1d1d" stopOpacity={0.3} />
@@ -206,7 +171,7 @@ export default function Dashboard() {
                   axisLine={{ stroke: "#262626" }}
                   tickLine={false}
                   tickFormatter={(v: number) =>
-                    chartTab === "prihod" ? `${(v / 1000).toFixed(0)}k` : `${v}`
+                    chartTab === "zarada" ? `${(v).toFixed(0)}RSD` : `${v}`
                   }
                 />
                 <Tooltip content={<CustomTooltip />} />
@@ -230,7 +195,7 @@ export default function Dashboard() {
 
           <div className="h-70">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={courseStats} layout="vertical" barSize={18}>
+              <BarChart data={kursProdato} layout="vertical" barSize={18}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#262626" horizontal={false} />
                 <XAxis
                   type="number"
@@ -266,7 +231,7 @@ export default function Dashboard() {
 
 
       {/* Recent activity table */}
-      <div className="bg-neutral-900 border w-5/6 mb-10 border-neutral-800 rounded-xl overflow-hidden" style={{paddingInline:"20px", paddingBlock:"10px"}}>
+      <div className="bg-neutral-900 border w-5/6 mb-10 border-neutral-800 rounded-xl overflow-hidden" style={{ paddingInline: "20px", paddingBlock: "10px" }}>
         <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-semibold text-white">Poslednje kupovine</h2>
@@ -289,16 +254,14 @@ export default function Dashboard() {
                 <th className="text-left px-5 py-3 text-[11px] font-semibold tracking-wider uppercase text-neutral-500">
                   Email
                 </th>
+
                 <th className="text-left px-5 py-3 text-[11px] font-semibold tracking-wider uppercase text-neutral-500">
-                  Kurs
-                </th>
-                <th className="text-left px-5 py-3 text-[11px] font-semibold tracking-wider uppercase text-neutral-500">
-                  Datum
+                  Status
                 </th>
               </tr>
             </thead>
             <tbody>
-              {recentUsers.map((u, i) => (
+              {students.map((u, i) => (
                 <tr
                   key={i}
                   className="border-b border-neutral-800/50 hover:bg-neutral-800/30 transition-colors"
@@ -308,7 +271,7 @@ export default function Dashboard() {
                       <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-medium text-neutral-300">
                         {u.ime
                           .split(" ")
-                          .map((w) => w[0])
+                          .map((w: any) => w[0])
                           .join("")}
                       </div>
                       <span className="font-medium text-neutral-200">{u.ime}</span>
@@ -316,11 +279,19 @@ export default function Dashboard() {
                   </td>
                   <td className="px-5 py-3 text-neutral-400">{u.email}</td>
                   <td className="px-5 py-3">
-                    <span className="px-2 py-1 rounded-md bg-neutral-800 text-neutral-300 text-xs font-medium">
-                      {u.kurs}
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${u.active == 1
+                        ? "bg-emerald-900/20 text-emerald-400 border border-emerald-800/30"
+                        : "bg-neutral-800 text-neutral-500 border border-neutral-700"
+                        }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${u.active == 1 ? "bg-emerald-400" : "bg-neutral-600"
+                          }`}
+                      />
+                      {u.active == 1 ? "Aktivan" : "Neaktivan"}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-neutral-500">{u.datum}</td>
                 </tr>
               ))}
             </tbody>

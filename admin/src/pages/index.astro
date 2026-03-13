@@ -1,8 +1,64 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Dashboard from "../react components/Dashboard";
+
+let students = [];
+const token = Astro.cookies.get("refreshToken")?.value;
+try {
+	const sviStudentiRes = await fetch(`http://api.studio27.rs/api/students`, {
+		method: "GET",
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	students = await sviStudentiRes.json();
+} catch (error) {
+	console.error("Error fetching student data:", error);
+}
+let prihodi = [];
+try{
+	const prihodiRes = await fetch(`http://api.studio27.rs/api/kupljeni-poslednjih-12meseci`, {
+	method: "GET",
+	headers: {
+		Authorization: `Bearer ${token}`,
+	},
+});
+	prihodi = await prihodiRes.json();
+
+}catch(error){
+	console.error("Error fetching prihodi data:", error);
+}
+
+let kursProdatoOvajMesec = [];
+try{
+	const kursProdatoOvajMesecRes = await fetch(`http://api.studio27.rs/api/kurs-prodato-ovaj-mesec`, {
+	method: "GET",
+	headers: {
+		Authorization: `Bearer ${token}`,
+	},
+});
+	kursProdatoOvajMesec = await kursProdatoOvajMesecRes.json();
+}catch(error){
+	console.error("Error fetching kursProdatoOvajMesec data:", error);
+}
+
+let stats = []
+
+try{
+	const statsRes = await fetch(`http://api.studio27.rs/api/admin-stats`, {
+	method: "GET",
+	headers: {
+		Authorization: `Bearer ${token}`,
+	},
+});
+	stats = await statsRes.json();
+}catch(error){
+	console.error("Error fetching stats data:", error);
+}
+console.log("Stats data:", stats);
+
 ---
 
-<Layout  title="Dashboard">
-	<Dashboard client:load />
+<Layout title="Dashboard">
+	<Dashboard client:load students={students.students} prihodi={prihodi.data} kursProdato={kursProdatoOvajMesec.data} stats = {stats} />
 </Layout>

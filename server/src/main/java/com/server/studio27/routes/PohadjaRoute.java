@@ -1,6 +1,8 @@
 package com.server.studio27.routes;
+
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,26 +16,25 @@ import com.server.studio27.controllers.PohadjaController;
 @RequestMapping("/api")
 
 public class PohadjaRoute {
-  
-    private final PohadjaController pohadjaController;
-    public PohadjaRoute(PohadjaController pohadjaController) {
-        this.pohadjaController = pohadjaController;
-    }
-@GetMapping("/moj-kursevi/{userId}")
+
+    @Autowired
+    private PohadjaController pohadjaController;
+
+    @GetMapping("/moj-kursevi/{userId}")
     public ResponseEntity<Map<String, Object>> mojKursevi(@PathVariable Integer userId) {
         return pohadjaController.mojKursevi(userId);
     }
+
     @GetMapping("/pohadjam-kurs")
-    public ResponseEntity<Map<String,Object>> studentPohadjaKurs(@RequestParam Integer userId, @RequestParam Integer kursId) {
+    public ResponseEntity<Map<String, Object>> studentPohadjaKurs(@RequestParam Integer userId,
+            @RequestParam Integer kursId) {
         return pohadjaController.studentPohadjaKurs(userId, kursId);
     }
+
     @GetMapping("/pohadjam-kurs-lekcije")
-    public ResponseEntity<Map<String,Object>> studentPohadjaKursSaLekcijama(@RequestParam Integer userId, @RequestParam Integer kursId) {
+    public ResponseEntity<Map<String, Object>> studentPohadjaKursSaLekcijama(@RequestParam Integer userId,
+            @RequestParam Integer kursId) {
         return pohadjaController.pohadjaKursILekcije(userId, kursId);
     }
-    
-    
-    
-    
-       
+
 }

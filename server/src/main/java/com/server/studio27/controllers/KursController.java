@@ -56,13 +56,13 @@ public class KursController {
         try {
             String SQL = "SELECT COUNT(*) as brojOdgledanihKurseva FROM kurs k Join pohadja p On k.kursId=p.kursId where p.studentId=? and (SELECT COUNT(*) FROM LEKCIJA l where l.kursId=k.kursId)=(select count(*) from student_lekcija sl join lekcija l on sl.lekcijaId=l.lekcijaId where sl.studentId=p.studentId and l.kursId=k.kursId);";
 
-           Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
+            Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("brojOdgledanihKurseva", broj != null ? broj : 0);
-        response.put("message", "Broj kurseva uspešno preuzet");
+            Map<String, Object> response = new HashMap<>();
+            response.put("brojOdgledanihKurseva", broj != null ? broj : 0);
+            response.put("message", "Broj kurseva uspešno preuzet");
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("brojOdgledanihKurseva", null);
@@ -71,16 +71,16 @@ public class KursController {
         }
     }
 
-     public ResponseEntity<Map<String, Object>> getBrojUTokuKursevi(int studentId) {
+    public ResponseEntity<Map<String, Object>> getBrojUTokuKursevi(int studentId) {
         try {
             String SQL = "SELECT COUNT(*) as brojKursevaUToku FROM kurs k Join pohadja p On k.kursId=p.kursId where p.studentId=? and (SELECT COUNT(*) FROM student_lekcija sl join lekcija l on sl.lekcijaId=l.lekcijaId where sl.studentId=p.studentId and l.kursId=k.kursId)=(select count(*) from lekcija l where l.kursId=k.kursId);";
-           Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
+            Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("brojUTokuKurseva", broj != null ? broj : 0);
-        response.put("message", "Broj kurseva uspešno preuzet");
+            Map<String, Object> response = new HashMap<>();
+            response.put("brojUTokuKurseva", broj != null ? broj : 0);
+            response.put("message", "Broj kurseva uspešno preuzet");
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("brojUTokuKurseva", null);
@@ -95,29 +95,29 @@ public class KursController {
                     + //
                     "SELECT"
                     + " k.kursId,"
-                    +//
+                    + //
                     " k.naziv,"
-                    +//
+                    + //
                     " k.opis,"
-                    +//
+                    + //
                     " k.cena,"
-                    +//
+                    + //
                     " k.trajanje,"
-                    +//
+                    + //
                     " k.slikaUrl,"
-                    +//
+                    + //
                     " l.lekcijaId,"
-                    +//
+                    + //
                     " l.naziv AS nazivLekcije,"
-                    +//
+                    + //
                     " l.opis AS opisLekcije"
-                    +//
+                    + //
                     " FROM Kurs k"
-                    +//
+                    + //
                     " LEFT JOIN lekcija l USING(kursId)"
-                    +//
+                    + //
                     " WHERE k.kursId = ?"
-                    +//
+                    + //
                     "";
             System.out.println("Executing SQL: " + SQL + " with id: " + id);
 
@@ -135,8 +135,7 @@ public class KursController {
                     lekcije.add(new Lekcija(
                             ((Number) row.get("lekcijaId")).intValue(),
                             (String) row.get("nazivLekcije"),
-                            (String) row.get("opisLekcije")
-                    ));
+                            (String) row.get("opisLekcije")));
                 }
             }
             System.out.println("Parsed " + lekcije.size() + " lekcije for kursId: " + id);
@@ -150,8 +149,7 @@ public class KursController {
                     ((Number) first.get("cena")).intValue(),
                     ((Number) first.get("trajanje")).intValue(),
                     (String) first.get("slikaUrl"),
-                    lekcije
-            );
+                    lekcije);
             System.out.println("Constructed Kurs object: " + kurs.getNaziv() + " with " + lekcije.size() + " lekcije");
 
             return ResponseEntity.ok(kurs);
@@ -200,6 +198,26 @@ public class KursController {
 
         }
         return ResponseEntity.ok(kursevi);
+    }
+
+    public ResponseEntity<Map<String, Object>> getKursProdatoOvajMesec() {
+        try {
+            String SQL = """
+                    Select kurs.naziv,
+                    (Select count(*) from  platio p where p.kursId = kurs.kursId and p.datumPlacanja like DATE_FORMAT(CURDATE(), '%Y-%m%')) as "prodato"
+                    from kurs
+                    """;
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
+            Map<String, Object> response = new HashMap<>();
+            response.put("data", rows);
+            response.put("message", "Broj prodatih kurseva uspešno preuzet");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("data", null);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
 }

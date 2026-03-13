@@ -13,6 +13,7 @@ import com.server.studio27.controllers.KursController;
 import com.server.studio27.models.Kurs;
 
 
+
 @RestController
 @RequestMapping("/api")
 public class KursRoute {
@@ -46,4 +47,9 @@ public class KursRoute {
     public ResponseEntity<Map<String, Object>> getBrojUTokuKurseva(@PathVariable int studentId) {
         return kursController.getBrojUTokuKursevi(studentId);
     }
+    @GetMapping("/kurs-prodato-ovaj-mesec")
+    public ResponseEntity<Map<String,Object>> getKursProdatoOvajMesec() {
+        return kursController.getKursProdatoOvajMesec();
+    }
+    
 }
