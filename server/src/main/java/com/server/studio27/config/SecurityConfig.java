@@ -33,7 +33,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/kursevi/**").permitAll()
-                        .requestMatchers("/api/kursevi-sa-lekcijama").permitAll()
+                        .requestMatchers("/api/kursevi-sa-lekcijama/**").permitAll()
                         .requestMatchers("/api/media/**").permitAll()
                         .requestMatchers("/api/recenzije").permitAll()
                         .requestMatchers("/api/unlock-admin").permitAll()
@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/upload-hls-hetzner").permitAll()
                         .requestMatchers("/api/kursevi/{id}").permitAll()
                         .requestMatchers("/api/progress-chart/**").permitAll()
+                        
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
