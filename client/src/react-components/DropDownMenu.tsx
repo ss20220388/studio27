@@ -28,8 +28,9 @@ const DropDownMenu: React.FC = () => {
         } catch (error) { /* ignore */ }
         setUser(null)
         setOpen(false)
-        window.location.reload();
+       window.dispatchEvent(new CustomEvent('user-logged-out'))
     }
+    
 
     if (!user) {
         return (

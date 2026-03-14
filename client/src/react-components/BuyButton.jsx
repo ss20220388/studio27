@@ -1,11 +1,11 @@
 import { set } from "astro:schema";
 import { motion } from "framer-motion";
 import React from "react";
-export default function BuyButton({ price, token }) {
+export default function BuyButton({ price ,userPocetni}) {
   const [nistePrijavljeni, setNistePrijavljeni] = React.useState(false);
   const [user, setUser] = React.useState({ data: null, error: null });
   function handelBut() {
-    if (!token) {
+    if (user.error) {
       setNistePrijavljeni(true);
       setTimeout(() => setNistePrijavljeni(false), 1500);
     } else {
@@ -15,25 +15,25 @@ export default function BuyButton({ price, token }) {
   }
 
   React.useEffect(() => {
-    if (token) {
-      async function fetchUser() {
-        try {
-          const res = await fetch(`http://api.studio27.rs/api/auth/me`, {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          const data = await res.json();
-          setUser(data);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-          return { error: "Failed to fetch user data" };
-        }
-      }
-      fetchUser()
+    function handleUserLoggedIn(e) {
+      setUser({ data: e.detail, error: null });
     }
-  }, [token]);
+    window.addEventListener('user-logged-in', handleUserLoggedIn);
+    return () => window.removeEventListener('user-logged-in', handleUserLoggedIn);
+  }, []);
+
+  React.useEffect(() => {
+     function handleUserLoggedOut() {
+      setUser({ data: null, error: null });
+    }
+    window.addEventListener('user-logged-out', handleUserLoggedOut);
+    return () => window.removeEventListener('user-logged-out', handleUserLoggedOut);
+  }, []);
+ 
+  React.useEffect(() => {
+     setUser(userPocetni);
+     console.log(user)
+  }, []);
 
   return (
     <>

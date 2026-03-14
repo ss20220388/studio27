@@ -1,7 +1,7 @@
 ---
 type Student = {
-  sime: string;
-  sprezime: string;
+  ime: string;
+  prezime: string;
 };
 
 type Rad = {
@@ -10,11 +10,9 @@ type Rad = {
   idKurs: number;
   slikaId: number;
   naziv: string;
-  sime: string;
-  sprezime: string;
-  url: string;
   ime: string;
   prezime: string;
+  url: string;
 };
 
 type Recenzija = {
@@ -32,9 +30,6 @@ type Recenzija = {
   
 };
 
-/* ========================= */
-/* UCITAVANJE RADOVA STUDENATA */
-/* ========================= */
 
 let radovi: Rad[] = [];
 
@@ -47,9 +42,6 @@ try {
   console.error("Greška pri učitavanju radova:", e);
 }
 
-/* ========================= */
-/* UCITAVANJE RECENZIJA */
-/* ========================= */
 
 let recenzije: Recenzija[] = [];
 
@@ -64,14 +56,13 @@ try {
 
 const radoviPrikaz = radovi.slice(0, 15);
 const recenzijePrikaz = recenzije.slice(0, 6);
+
+console.log("Radovi:", radoviPrikaz);
+console.log("Recenzije:", recenzijePrikaz);
 ---
 
 <section id="recenzije" class="py-16 px-4 bg-black">
   <div class="max-w-7xl mx-auto">
-    <!-- ========================= -->
-    <!-- RADOVI STUDENATA -->
-    <!-- ========================= -->
-
     <div class="mb-32">
       <h3 class="rec-title text-3xl font-bold text-white text-center mb-16">
         Pogledajte radove naših studenata
@@ -86,7 +77,7 @@ const recenzijePrikaz = recenzije.slice(0, 6);
                 alt={rad.naziv}
                 class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"
               />
-              <div class="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+              <div class="absolute inset-0 bg-linear-to-t from-black via-black/70 to-transparent" />
               <div class="absolute inset-0 flex flex-col items-center justify-center text-white text-center space-y-2">
                 <h3 class="text-lg sm:text-xl md:text-2xl font-bold">
                   {rad.naziv}
@@ -123,11 +114,11 @@ const recenzijePrikaz = recenzije.slice(0, 6);
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 space-y-6">
           {recenzijePrikaz.map((recenzija, i) => {
             const ime = recenzija.student
-              ? `${recenzija.student.sime} ${recenzija.student.sprezime}`
+              ? `${recenzija.student.ime} ${recenzija.student.prezime}`
               : "Anonimni korisnik";
 
             const inicijali = recenzija.student
-              ? `${recenzija.student.sime?.charAt(0) || ""}${recenzija.student.sprezime?.charAt(0) || ""}`
+              ? `${recenzija.student.ime?.charAt(0) || ""}${recenzija.student.prezime?.charAt(0) || ""}`
               : "?";
 
             return (

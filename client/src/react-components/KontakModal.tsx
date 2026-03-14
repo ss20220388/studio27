@@ -15,7 +15,11 @@ export default function KontaktModal({ }) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-
+  const [naslov, setNaslov] = useState('');
+  const [poruka, setPoruka] = useState('');
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [telefon, setTelefon] = useState('');
   useEffect(() => {
     const value = localStorage.getItem('kontakModalOpen');
     if (value === 'true') setOpen(true);
@@ -62,6 +66,21 @@ export default function KontaktModal({ }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  function handleSumit(e: React.FormEvent) {
+    e.preventDefault();
+    const to = "stojanovicstefana157@gmail.com";
+    const pravaPoruka = `${poruka} \n\n Sa pozdravom, ${name}\nEmail: ${email}\nTelefon: ${telefon}\n`;
+    const gmailUrl =
+      `https://mail.google.com/mail/?view=cm&fs=1` +
+      `&to=${encodeURIComponent(to)}` +
+      `&su=${encodeURIComponent(naslov)}` +
+      `&body=${encodeURIComponent(pravaPoruka)}`;
+
+    window.location.href = gmailUrl;
+
+    handleClose();
+  }
+
   return (
     <>
       {open && (
@@ -106,49 +125,40 @@ export default function KontaktModal({ }) {
                   <div className="w-10 h-0.5 bg-red-900 rounded-full mt-2" />
                 </div>
 
-                <form action="https://fabform.io/f/xxxxx" method="post" className="space-y-3.5">
-                  {/* Name + Email row */}
+                <form action="https://fabform.io/f/xxxxx" method="post" className="space-y-3.5" onSubmit={handleSumit}>
+                  <div>
+                    <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">Ime</label>
+                    <input value={name} onChange={(e) => setName(e.target.value)} type="text" name="name" placeholder="Vaše ime" className={inputBase} required />
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">Ime</label>
-                      <input type="text" name="name" placeholder="Vaše ime" className={inputBase} required />
-                    </div>
+
                     <div>
                       <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">Email</label>
-                      <input type="email" name="email" placeholder="email@primer.com" className={inputBase} required />
+                      <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" name="email" placeholder="email@primer.com" className={inputBase} required />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">Telefon</label>
+                      <input value={telefon} onChange={(e) => setTelefon(e.target.value)} type="tel" name="phone" placeholder="Vaš telefon" className={inputBase} />
                     </div>
                   </div>
 
-                  {/* Phone */}
                   <div>
-                    <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">Telefon</label>
-                    <input type="text" name="phone" placeholder="+381..." className={inputBase} />
+                    <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">Naslov</label>
+                    <input value={naslov} onChange={(e) => setNaslov(e.target.value)} type="text" name="name" placeholder="Naslov poruke" className={inputBase} required />
                   </div>
+                  {/* Name + Email row */}
 
-                  {/* Communication preference */}
-                  <div>
-                    <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2">Način komunikacije</label>
-                    <div className="flex gap-3">
-                      <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer rounded-lg border border-gray-300 bg-white/60 py-2.5 text-sm text-gray-600 hover:border-red-900/40 has-checked:border-red-900 has-checked:bg-red-900/5 has-checked:text-red-900 transition-all duration-200">
-                        <input type="radio" name="contact_method" value="email" className="sr-only" />
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-                        <span className="font-medium">Email</span>
-                      </label>
-                      <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer rounded-lg border border-gray-300 bg-white/60 py-2.5 text-sm text-gray-600 hover:border-red-900/40 has-checked:border-red-900 has-checked:bg-red-900/5 has-checked:text-red-900 transition-all duration-200">
-                        <input type="radio" name="contact_method" value="phone" className="sr-only" />
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" /></svg>
-                        <span className="font-medium">Telefon</span>
-                      </label>
-                    </div>
-                  </div>
+
 
                   {/* Message */}
                   <div>
                     <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">Poruka</label>
                     <textarea
+                      value={poruka}
+                      onChange={(e) => setPoruka(e.target.value)}
                       name="message"
                       placeholder="Vaša poruka..."
-                      rows={3}
+                      rows={5}
                       className="w-full text-sm text-gray-800 placeholder-gray-400 bg-white/60 backdrop-blur-sm rounded-lg border border-gray-300 focus:border-red-900 focus:ring-1 focus:ring-red-900/30 outline-none p-3 transition-all duration-200 resize-none"
                       required
                     />
@@ -168,14 +178,14 @@ export default function KontaktModal({ }) {
         </div>
       )}
 
-     
-        <button
-          className="inline-block no-underline font-bold text-white text-l py-2 px-4 cursor-pointer hover:text-red-400 transition-colors duration-200"
-          onClick={() => setOpen(true)}
-        >
-          Kontakt
-        </button>
-      
+
+      <button
+        className="inline-block no-underline font-bold text-white text-l py-2 px-4 cursor-pointer hover:text-red-400 transition-colors duration-200"
+        onClick={() => setOpen(true)}
+      >
+        Kontakt
+      </button>
+
     </>
   )
 }

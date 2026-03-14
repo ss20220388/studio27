@@ -6,28 +6,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 @Service
 public class StudentLekcijaController {
-     @Autowired
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @PostMapping("/lekcija/zavrsena")
-    public ResponseEntity<?> zavrsenaLekcija(@RequestBody Map<String, Integer> body){
+    public ResponseEntity<Map<String, Object>> updateSatiGledanja(Integer studentId, String role, Integer lekcijaId, Integer satiGledanja) {
+        try {
+            if (!"STUDENT".equals(role)) {
+                return ResponseEntity.status(403).body(Map.of("error", "Samo studenti mogu ažurirati sate gledanja"));
+            }
+            String sql = "UPDATE student_lekcija SET satiGledanja = ? WHERE studentId = ? AND lekcijaId = ?";
+            jdbcTemplate.update(sql, satiGledanja, studentId, lekcijaId);
 
-    int studentId = body.get("studentId");
-    int lekcijaId = body.get("lekcijaId");
+            return ResponseEntity.ok(Map.of("message", "Sati gledanja uspješno ažurirani"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Došlo je do greške prilikom ažuriranja sati gledanja"));
+        }
+    }
 
-    String SQL = """
-        INSERT INTO student_lekcija(studentId, lekcijaId, zavrsena)
-        VALUES (?, ?, true)
-        ON DUPLICATE KEY UPDATE zavrsena = true
-    """;
-
-    jdbcTemplate.update(SQL, studentId, lekcijaId);
-
-    return ResponseEntity.ok("Lekcija završena");
-}
+    
 }

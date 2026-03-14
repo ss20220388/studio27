@@ -50,7 +50,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
         return () => { document.body.style.overflow = '' }
     }, [internalOpen])
 
-    useEffect(() => { tryRestoreSession() }, [])
+    
 
     const close = () => {
         setInternalOpen(false)
@@ -59,25 +59,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
         if (onClose) onClose()
     }
 
-    const tryRestoreSession = async () => {
-        try {
-            const r = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' })
-            if (!r.ok) return
-            const data = await r.json()
-            if (data.accessToken) {
-                localStorage.setItem('accessToken', data.accessToken)
-                const me = await fetch('/api/auth/me', {
-                    headers: { 'Authorization': `Bearer ${data.accessToken}` },
-                })
-                if (me.ok) {
-                    const user = await me.json()
-                    window.dispatchEvent(new CustomEvent('user-logged-in', { detail: user }))
-                }
-            }
-        } catch {
-            // ignore — no session
-        }
-    }
+    
 
     const doLogin = async (email: string, password: string) => {
         setLoading(true)
@@ -108,7 +90,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
                 }
                 close()
             }
-            window.location.reload();
+            
 
         } catch (e: any) {
             setError(e?.message || 'Greška pri komunikaciji sa serverom')
@@ -142,7 +124,6 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
             }
             setSuccess('Uspešno ste se registrovali! Sada se ulogujte.')
             setLoginForm(true)
-             window.location.reload();
         } catch (e: any) {
             setError(e?.message || 'Greška pri komunikaciji sa serverom')
         } finally {
