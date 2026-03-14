@@ -8,7 +8,7 @@ const features = [
   { icon: "🚀", text: "Digitalni proizvodi" },
 ];
 
-export default function BigTextSection() {
+export default function BigTextSection({ naslov, opis, glavniTekst }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -27,7 +27,7 @@ export default function BigTextSection() {
       <div className="relative mb-12 overflow-hidden">
         <motion.div style={{ x: textX }} className="whitespace-nowrap">
           <span className="text-[70px] md:text-[110px] font-black text-white/3 select-none tracking-tighter">
-            AI COURSE &nbsp; AI COURSE &nbsp; AI COURSE &nbsp;
+            {glavniTekst} &nbsp; {glavniTekst} &nbsp; {glavniTekst} &nbsp;
           </span>
         </motion.div>
         <motion.div style={{ x: textX2 }} className="whitespace-nowrap -mt-6">
@@ -46,10 +46,10 @@ export default function BigTextSection() {
           transition={{ duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="text-4xl md:text-6xl font-bold tracking-tight mb-8"
         >
-          Veštačka inteligencija
+          {naslov.split(" ").slice(0, -2).join(" ")} <br />
           <br />
           <span className="bg-linear-to-r from-red-800 to-red-500 bg-clip-text text-transparent">
-            je sadašnjost.
+            {naslov.split(" ").slice(-2).join(" ")}
           </span>
         </motion.h2>
 
@@ -60,9 +60,7 @@ export default function BigTextSection() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="text-lg md:text-xl text-gray-400 leading-relaxed max-w-3xl mx-auto mb-16"
         >
-          U ovom kursu naučićete kako da koristite moderne AI alate za
-          generisanje ideja, automatizaciju poslovnih procesa, analizu
-          podataka i kreiranje digitalnih proizvoda.
+          {opis? opis : "Ovaj kurs je dizajniran da vam pokaže kako da iskoristite savremene AI alate i tehnologije kako biste ubrzali svoj rad, automatizovali procese i stvorili nove poslovne prilike."}
         </motion.p>
 
         {/* Feature pills */}

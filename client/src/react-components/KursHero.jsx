@@ -67,9 +67,7 @@ export default function KursHero({ kurs }) {
           transition={{ duration: 0.8, delay: 0.7 }}
           className="text-lg md:text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto"
         >
-          Ovaj kurs je dizajniran da vam pokaže kako da iskoristite savremene
-          AI alate i tehnologije kako biste ubrzali svoj rad, automatizovali
-          procese i stvorili nove poslovne prilike.
+          {kurs.opis? kurs.opis : "U ovom kursu naučićete kako da koristite moderne AI alate za generisanje ideja, automatizaciju poslovnih procesa, analizu podataka i kreiranje digitalnih proizvoda."}
         </motion.p>
 
         {/* Scroll indicator */}

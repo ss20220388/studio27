@@ -55,7 +55,7 @@ export default function KursInfo({ kurs }) {
               transition={{ duration: 0.7, delay: 0.15 }}
               className="text-lg text-gray-400 leading-relaxed mb-10"
             >
-              {kurs.opis}
+              {kurs.opis?kurs.opis : "Ovaj kurs je dizajniran da vam pokaže kako da iskoristite savremene AI alate i tehnologije kako biste ubrzali svoj rad, automatizovali procese i stvorili nove poslovne prilike."}
             </motion.p>
 
             {/* Info cards */}
@@ -63,7 +63,7 @@ export default function KursInfo({ kurs }) {
               {[
                 { label: "Format", value: "Video lekcije", icon: "🎬" },
                 { label: "Nivo", value: "Svi nivoi", icon: "📈" },
-                { label: "Pristup", value: "Doživotno", icon: "♾️" },
+                { label: "Pomoc", value: "Doživotno", icon: "♾️" },
                 { label: "Podrška", value: "24/7", icon: "💬" },
               ].map((item, i) => (
                 <motion.div

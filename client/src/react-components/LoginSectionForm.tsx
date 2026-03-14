@@ -108,6 +108,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
                 }
                 close()
             }
+            window.location.reload();
 
         } catch (e: any) {
             setError(e?.message || 'Greška pri komunikaciji sa serverom')
@@ -141,11 +142,13 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
             }
             setSuccess('Uspešno ste se registrovali! Sada se ulogujte.')
             setLoginForm(true)
+             window.location.reload();
         } catch (e: any) {
             setError(e?.message || 'Greška pri komunikaciji sa serverom')
         } finally {
             setLoading(false)
         }
+
     }
 
     const handleSubmit = async () => {

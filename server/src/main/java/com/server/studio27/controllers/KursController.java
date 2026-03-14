@@ -88,34 +88,32 @@ public class KursController {
         }
     }
 
-
-
     public ResponseEntity<Map<String, Object>> getProgressChartStats(int studentId) {
         try {
             String SQL = """
-                SELECT
-                    (SELECT COUNT(*) FROM kurs) AS ukupno,
-                    SUM(CASE WHEN odgledano_lekcija = ukupno_lekcija AND ukupno_lekcija > 0 THEN 1 ELSE 0 END) AS zavrseno,
-                    SUM(CASE WHEN odgledano_lekcija > 0 AND odgledano_lekcija < ukupno_lekcija THEN 1 ELSE 0 END) AS uToku,
-                    (SELECT COUNT(*) FROM kurs)
-                        - SUM(CASE WHEN odgledano_lekcija = ukupno_lekcija AND ukupno_lekcija > 0 THEN 1 ELSE 0 END)
-                        - SUM(CASE WHEN odgledano_lekcija > 0 AND odgledano_lekcija < ukupno_lekcija THEN 1 ELSE 0 END)
-                    AS nijePoceto
-                FROM (
-                    SELECT
-                        k.kursId,
-                        COUNT(DISTINCT l.lekcijaId) AS ukupno_lekcija,
-                        COUNT(DISTINCT sl.lekcijaId) AS odgledano_lekcija
-                    FROM kurs k
-                    JOIN platio p ON k.kursId = p.kursId
-                    LEFT JOIN lekcija l ON l.kursId = k.kursId
-                    LEFT JOIN student_lekcija sl
-                        ON sl.lekcijaId = l.lekcijaId
-                        AND sl.studentId = p.studentId
-                    WHERE p.studentId = ?
-                    GROUP BY k.kursId
-                ) stats;
-            """;
+                        SELECT
+                            (SELECT COUNT(*) FROM kurs) AS ukupno,
+                            SUM(CASE WHEN odgledano_lekcija = ukupno_lekcija AND ukupno_lekcija > 0 THEN 1 ELSE 0 END) AS zavrseno,
+                            SUM(CASE WHEN odgledano_lekcija > 0 AND odgledano_lekcija < ukupno_lekcija THEN 1 ELSE 0 END) AS uToku,
+                            (SELECT COUNT(*) FROM kurs)
+                                - SUM(CASE WHEN odgledano_lekcija = ukupno_lekcija AND ukupno_lekcija > 0 THEN 1 ELSE 0 END)
+                                - SUM(CASE WHEN odgledano_lekcija > 0 AND odgledano_lekcija < ukupno_lekcija THEN 1 ELSE 0 END)
+                            AS nijePoceto
+                        FROM (
+                            SELECT
+                                k.kursId,
+                                COUNT(DISTINCT l.lekcijaId) AS ukupno_lekcija,
+                                COUNT(DISTINCT sl.lekcijaId) AS odgledano_lekcija
+                            FROM kurs k
+                            JOIN platio p ON k.kursId = p.kursId
+                            LEFT JOIN lekcija l ON l.kursId = k.kursId
+                            LEFT JOIN student_lekcija sl
+                                ON sl.lekcijaId = l.lekcijaId
+                                AND sl.studentId = p.studentId
+                            WHERE p.studentId = ?
+                            GROUP BY k.kursId
+                        ) stats;
+                    """;
 
             Map<String, Object> result = jdbcTemplate.queryForMap(SQL, studentId);
 
@@ -142,28 +140,26 @@ public class KursController {
         }
     }
 
-
-
     public ResponseEntity<List<Map<String, Object>>> getKurseviUToku(int studentId) {
         try {
             String SQL = """
-                SELECT
-                    k.kursId,
-                    k.naziv,
-                    k.slikaUrl,
-                    COUNT(DISTINCT l.lekcijaId) AS ukupno_lekcija,
-                    COUNT(DISTINCT sl.lekcijaId) AS odgledano_lekcija
-                FROM kurs k
-                JOIN platio p ON k.kursId = p.kursId
-                LEFT JOIN lekcija l ON l.kursId = k.kursId
-                LEFT JOIN student_lekcija sl
-                    ON sl.lekcijaId = l.lekcijaId
-                    AND sl.studentId = p.studentId
-                WHERE p.studentId = ?
-                GROUP BY k.kursId, k.naziv, k.slikaUrl
-                HAVING COUNT(DISTINCT sl.lekcijaId) > 0
-                    AND COUNT(DISTINCT sl.lekcijaId) < COUNT(DISTINCT l.lekcijaId)
-            """;
+                        SELECT
+                            k.kursId,
+                            k.naziv,
+                            k.slikaUrl,
+                            COUNT(DISTINCT l.lekcijaId) AS ukupno_lekcija,
+                            COUNT(DISTINCT sl.lekcijaId) AS odgledano_lekcija
+                        FROM kurs k
+                        JOIN platio p ON k.kursId = p.kursId
+                        LEFT JOIN lekcija l ON l.kursId = k.kursId
+                        LEFT JOIN student_lekcija sl
+                            ON sl.lekcijaId = l.lekcijaId
+                            AND sl.studentId = p.studentId
+                        WHERE p.studentId = ?
+                        GROUP BY k.kursId, k.naziv, k.slikaUrl
+                        HAVING COUNT(DISTINCT sl.lekcijaId) > 0
+                            AND COUNT(DISTINCT sl.lekcijaId) < COUNT(DISTINCT l.lekcijaId)
+                    """;
 
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL, studentId);
 
@@ -187,33 +183,32 @@ public class KursController {
         }
     }
 
-
     public ResponseEntity<Map<String, Object>> getBrojUTokuKursevi(int studentId) {
         try {
             String SQL = """
-                SELECT COUNT(*) AS brojKursevaUToku
-                FROM kurs k
-                JOIN platio p ON k.kursId = p.kursId
-                WHERE p.studentId = ?
-                  AND (
-                    SELECT COUNT(*)
-                    FROM student_lekcija sl
-                    JOIN lekcija l ON sl.lekcijaId = l.lekcijaId
-                    WHERE sl.studentId = p.studentId
-                      AND l.kursId = k.kursId
-                  ) > 0
-                  AND (
-                    SELECT COUNT(*)
-                    FROM student_lekcija sl
-                    JOIN lekcija l ON sl.lekcijaId = l.lekcijaId
-                    WHERE sl.studentId = p.studentId
-                      AND l.kursId = k.kursId
-                  ) < (
-                    SELECT COUNT(*)
-                    FROM lekcija l
-                    WHERE l.kursId = k.kursId
-                  );
-            """;
+                        SELECT COUNT(*) AS brojKursevaUToku
+                        FROM kurs k
+                        JOIN platio p ON k.kursId = p.kursId
+                        WHERE p.studentId = ?
+                          AND (
+                            SELECT COUNT(*)
+                            FROM student_lekcija sl
+                            JOIN lekcija l ON sl.lekcijaId = l.lekcijaId
+                            WHERE sl.studentId = p.studentId
+                              AND l.kursId = k.kursId
+                          ) > 0
+                          AND (
+                            SELECT COUNT(*)
+                            FROM student_lekcija sl
+                            JOIN lekcija l ON sl.lekcijaId = l.lekcijaId
+                            WHERE sl.studentId = p.studentId
+                              AND l.kursId = k.kursId
+                          ) < (
+                            SELECT COUNT(*)
+                            FROM lekcija l
+                            WHERE l.kursId = k.kursId
+                          );
+                    """;
 
             Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
 
@@ -230,7 +225,7 @@ public class KursController {
         }
     }
 
-// ...existing code...
+    // ...existing code...
     public ResponseEntity<Kurs> getKursSaLekcijama(int id) {
         try {
             String SQL = """
@@ -239,6 +234,10 @@ public class KursController {
                      k.naziv,
                     k.opis,
                     k.cena,
+                    k.glavniKurs,
+                    k.komentarDole,
+                    k.komentarSredina,
+                    k.komentarGore,
                      k.trajanje,
                      k.slikaUrl,
                      l.lekcijaId,
@@ -247,7 +246,7 @@ public class KursController {
                     FROM Kurs k
                     LEFT JOIN lekcija l USING(kursId)
                      WHERE k.kursId = ?
-                   
+
                     """;
             System.out.println("Executing SQL: " + SQL + " with id: " + id);
 
@@ -279,7 +278,11 @@ public class KursController {
                     ((Number) first.get("cena")).intValue(),
                     ((Number) first.get("trajanje")).intValue(),
                     (String) first.get("slikaUrl"),
-                    lekcije);
+                    (String) first.get("glavniKurs"),
+                    (String) first.get("komentarDole"),
+                    (String) first.get("komentarSredina"),
+                    (String) first.get("komentarGore"),
+                     lekcije);
             System.out.println("Constructed Kurs object: " + kurs.getNaziv() + " with " + lekcije.size() + " lekcije");
 
             return ResponseEntity.ok(kurs);
@@ -315,6 +318,10 @@ public class KursController {
                         ((Number) row.get("cena")).intValue(),
                         ((Number) row.get("Trajanje u danima")).intValue(),
                         (String) row.get("Slika kursa"),
+                        (String) row.get("glavniKurs"),
+                        (String) row.get("komentarDole"),
+                        (String) row.get("komentarSredina"),
+                        (String) row.get("komentarGore"),   
                         lekcije));
 
                 currentKursId = kursId;

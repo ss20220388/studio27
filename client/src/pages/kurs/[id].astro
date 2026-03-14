@@ -11,18 +11,25 @@ const kursRes = await fetch(`http://api.studio27.rs/api/kursevi/${id}`);
 const kurs = await kursRes.json();
 
 const token = Astro.cookies.get("refreshToken")?.value || null;
+
+console.log("Kurs:", token);
 ---
 
 <Layout title={kurs.naziv}>
   <KursHero kurs={kurs} client:load />
 
-   <BigTextSection client:load />
+  <BigTextSection
+    glavniTekst={kurs.glavniKurs}
+    naslov={kurs.naziv}
+    opis={kurs.opis}
+    client:load
+  />
 
   <KursInfo kurs={kurs} client:load />
 
   <!-- CTA Section -->
   <section class="py-32 bg-black flex flex-col items-center gap-6">
     <p class="text-white/50 text-sm uppercase tracking-widest">Spremni?</p>
-    <BuyButton price={kurs.cena} client:load />
+    <BuyButton price={kurs.cena} token={token} client:load />
   </section>
 </Layout>

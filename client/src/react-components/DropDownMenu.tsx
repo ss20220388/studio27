@@ -28,6 +28,7 @@ const DropDownMenu: React.FC = () => {
         } catch (error) { /* ignore */ }
         setUser(null)
         setOpen(false)
+        window.location.reload();
     }
 
     if (!user) {

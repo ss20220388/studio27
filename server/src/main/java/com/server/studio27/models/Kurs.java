@@ -44,7 +44,7 @@ public class Kurs {
         this.trajanje = trajanje;
         this.slikaUrl = slikaUrl;
     }
-    public Kurs(int id, String naziv, String opis, int cena, int trajanje, String slikaUrl, List<Lekcija> lekcije) {
+    public Kurs(int id, String naziv, String opis, int cena, int trajanje, String slikaUrl,String glavniKurs, String komentarDole, String komentarSredina, String komentarGore, List<Lekcija> lekcije) {
         this.id = id;
         this.naziv = naziv;
         this.opis = opis;
@@ -52,6 +52,10 @@ public class Kurs {
         this.trajanje = trajanje;
         this.slikaUrl = slikaUrl;
         this.lekcije = lekcije;
+        this.glavniKurs = glavniKurs;
+        this.komentarDole = komentarDole;
+        this.komentarSredina = komentarSredina;
+        this.komentarGore = komentarGore;
     }
 
     public int getId() {
