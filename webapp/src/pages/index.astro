@@ -14,57 +14,70 @@ let progressStats={
 	nijePoceto:0,
 };
 
-
-const userRes = await fetch(`${API_URL}/api/auth/me`, {
-	headers: {
-		Authorization: `Bearer ${token}`,
-	},	
-});
-const userData = await userRes.json();
-console.log(userData);
-const brojKursevaResponse = await fetch(`${API_URL}/api/broj-kurseva/${userData.userId}`,
-	{
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	}
-);
-const brojKursevaData = await brojKursevaResponse.json();
-console.log(brojKursevaData);
-const brojOdgledanihKursevaResponse = await fetch(`${API_URL}/api/broj-odgledanih-kurseva/${userData.userId}`,
-	{
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	}
-);
-const brojOdgledanihKursevaData = await brojOdgledanihKursevaResponse.json();
-console.log(brojOdgledanihKursevaData);
-
-const brojUTokuKursevaResponse = await fetch(`${API_URL}/api/broj-u-toku-kurseva/${userData.userId}`,
-	{
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	}
-);
-const brojUTokuKursevaData = await brojUTokuKursevaResponse.json();
-console.log(brojUTokuKursevaData);
-const stats = {
-	totalCourses: brojKursevaData.brojKurseva || 0,
-	finished: brojOdgledanihKursevaData.brojOdgledanihKurseva || 0,
-	inProgress: brojUTokuKursevaData.brojUTokuKurseva || 0,
+let userData: any = { userId: null };
+let stats = {
+	totalCourses: 0,
+	finished: 0,
+	inProgress: 0,
 	hours: 12,
 };
-try {
-    const response = await fetch(`${API_URL}/api/progress-stats/${userData.userId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
 
-    if (response.ok) {
-        progressStats = await response.json();
-    }
-} catch {}
+try {
+	const userRes = await fetch(`${API_URL}/api/auth/me`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},	
+	});
+	userData = await userRes.json();
+	console.log(userData);
+
+	const brojKursevaResponse = await fetch(`${API_URL}/api/broj-kurseva/${userData.userId}`,
+		{
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		}
+	);
+	const brojKursevaData = await brojKursevaResponse.json();
+	console.log(brojKursevaData);
+
+	const brojOdgledanihKursevaResponse = await fetch(`${API_URL}/api/broj-odgledanih-kurseva/${userData.userId}`,
+		{
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		}
+	);
+	const brojOdgledanihKursevaData = await brojOdgledanihKursevaResponse.json();
+	console.log(brojOdgledanihKursevaData);
+
+	const brojUTokuKursevaResponse = await fetch(`${API_URL}/api/broj-u-toku-kurseva/${userData.userId}`,
+		{
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		}
+	);
+	const brojUTokuKursevaData = await brojUTokuKursevaResponse.json();
+	console.log(brojUTokuKursevaData);
+
+	stats = {
+		totalCourses: brojKursevaData.brojKurseva || 0,
+		finished: brojOdgledanihKursevaData.brojOdgledanihKurseva || 0,
+		inProgress: brojUTokuKursevaData.brojUTokuKurseva || 0,
+		hours: 12,
+	};
+
+	const response = await fetch(`${API_URL}/api/progress-stats/${userData.userId}`, {
+		headers: token ? { Authorization: `Bearer ${token}` } : {},
+	});
+
+	if (response.ok) {
+		progressStats = await response.json();
+	}
+} catch (error) {
+	console.error("Greška pri učitavanju podataka:", error);
+}
 ---
 
 <Layout title="Početna">
