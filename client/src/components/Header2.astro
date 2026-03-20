@@ -5,7 +5,7 @@ import DropDownMenu from "../react-components/DropDownMenu.tsx";
 import KontakModal from "../react-components/KontakModal.tsx";
 import { Image } from "astro:assets";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const CLIENT_URL = import.meta.env.PUBLIC_CLIENT_URL || "http://studio27.rs";
 ---
 
 <section
@@ -54,37 +54,37 @@ const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
         <li>
           <a
             class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
-            href=`${API_URL}/#home`>Početna</a
+            href={`${CLIENT_URL}/#home`}>Početna</a
           >
         </li>
         <li>
           <a
             class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
-            href=`${API_URL}/#kursevi`>Program kursa</a
+            href={`${CLIENT_URL}/#kursevi`}>Program kursa</a
           >
         </li>
         <li>
           <a
             class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
-            href=`${API_URL}/#prednosti`>Prednosti obuke</a
+            href={`${CLIENT_URL}/#prednosti`}>Prednosti obuke</a
           >
         </li>
         <li>
           <a
             class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
-            href=`${API_URL}/#struktura`>Struktura učenja</a
+            href={`${CLIENT_URL}/#struktura`}>Struktura učenja</a
           >
         </li>
         <li>
           <a
             class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
-            href=`${API_URL}/#recenzije`>Radovi studenata</a
+            href={`${CLIENT_URL}/#recenzije`}>Radovi studenata</a
           >
         </li>
         <li>
           <a
             class="inline-block no-underline font-medium text-gray-200 hover:text-white text-l py-2 px-4 transition-colors duration-200"
-            href=`${API_URL}/#onama`>O nama</a
+            href={`${CLIENT_URL}/#onama`}>O nama</a
           >
         </li>
 
