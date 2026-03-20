@@ -243,10 +243,9 @@ public class KursController {
                      l.lekcijaId,
                      l.naziv AS nazivLekcije,
                      l.opis AS opisLekcije
-                    FROM Kurs k
+                    FROM kurs k
                     LEFT JOIN lekcija l USING(kursId)
                      WHERE k.kursId = ?
-
                     """;
             System.out.println("Executing SQL: " + SQL + " with id: " + id);
 
