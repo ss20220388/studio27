@@ -100,7 +100,7 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
       </div>
 
       {/* Stat cards */}
-      <div className="grid w-4/5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 stagger-children">
+      <div className="grid w-full grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 stagger-children max-w-7xl">
         {fullStats.map((s, i) => (
           <div
             style={{ paddingInline: "20px", paddingBlock: "10px" }}
@@ -120,7 +120,7 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
 
 
       {/* Charts row */}
-      <div className="gri w-4/5  grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid w-full grid-cols-1 xl:grid-cols-3 gap-6 max-w-7xl">
         {/* Main chart */}
         <div className="xl:col-span-2 mb-4 bg-neutral-900 border border-neutral-800 rounded-xl p-5">
           <div className="flex items-center justify-between mb-6">
@@ -150,8 +150,8 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
             </div>
           </div>
 
-          <div className="h-70 mt-4">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[280px] mt-4">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={prihodi}>
                 <defs>
                   <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
@@ -188,13 +188,12 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
         </div>
 
         {/* Course bar chart */}
-        <br />
         <div className="bg-neutral-900  border border-neutral-800 rounded-xl p-5">
           <h2 className="text-sm font-semibold text-white mb-1">Prodaja po kursu</h2>
           <p className="text-xs text-neutral-500 mb-6">Ukupno prodatih pristupa</p>
 
-          <div className="h-70">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={kursProdato} layout="vertical" barSize={18}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#262626" horizontal={false} />
                 <XAxis
@@ -231,7 +230,7 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
 
 
       {/* Recent activity table */}
-      <div className="bg-neutral-900 border w-5/6 mb-10 border-neutral-800 rounded-xl overflow-hidden" style={{ paddingInline: "20px", paddingBlock: "10px" }}>
+      <div className="bg-neutral-900 border w-full mb-10 border-neutral-800 rounded-xl overflow-hidden max-w-7xl" style={{ paddingInline: "20px", paddingBlock: "10px" }}>
         <div className="px-5 py-4 border-b border-neutral-800 flex items-center justify-between">
           <div>
             <h2 className="text-sm font-semibold text-white">Poslednje kupovine</h2>

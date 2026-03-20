@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import VideoPlayerHLS from "./VideoPlayerHLS";
 
 interface Video {
@@ -25,105 +25,6 @@ interface Kurs {
   lekcije: Lekcija[];
 }
 
-// Mock data
-const mockKursevi: Kurs[] = [
-  {
-    id: 1,
-    naziv: "3D Modeling — Od početka do profesionalca",
-    opis: "Kompletna obuka za 3D modelovanje u industriji. Od osnova do naprednih tehnika.",
-    cena: 24990,
-    slikaUrl: "",
-    brojStudenata: 142,
-    lekcije: [
-      {
-        id: 1, naziv: "Uvod u 3D prostor", opis: "Osnove navigacije i interfejsa",
-        videos: [
-          { id: 1, naziv: "Uvod.mp4", trajanje: "12:34", url: "#" },
-          { id: 2, naziv: "Navigacija.mp4", trajanje: "08:21", url: "#" },
-        ],
-      },
-      {
-        id: 2, naziv: "Rad sa mesh objektima", opis: "Kreiranje i manipulacija mesh-ova",
-        videos: [
-          { id: 3, naziv: "Mesh osnove.mp4", trajanje: "15:42", url: "#" },
-          { id: 4, naziv: "Modifikatori.mp4", trajanje: "22:10", url: "#" },
-          { id: 5, naziv: "Subdivision.mp4", trajanje: "18:55", url: "#" },
-        ],
-      },
-      {
-        id: 3, naziv: "Materijali i teksture", opis: "Primena materijala na 3D objekte",
-        videos: [
-          { id: 6, naziv: "PBR materijali.mp4", trajanje: "20:00", url: "#" },
-        ],
-      },
-      {
-        id: 4, naziv: "Osvetljenje scene", opis: "Tehnike osvetljenja za realistične scene",
-        videos: [
-          { id: 7, naziv: "HDRI osvetljenje.mp4", trajanje: "14:30", url: "#" },
-          { id: 8, naziv: "Three-point lighting.mp4", trajanje: "11:45", url: "#" },
-        ],
-      },
-    ],
-  },
-  {
-    id: 2,
-    naziv: "Texturing Masterclass",
-    opis: "Napredne tehnike teksturiranja za film i igre.",
-    cena: 19990,
-    slikaUrl: "",
-    brojStudenata: 98,
-    lekcije: [
-      {
-        id: 5, naziv: "UV Unwrapping", opis: "Razlaganje UV mapa",
-        videos: [
-          { id: 9, naziv: "UV Basics.mp4", trajanje: "16:20", url: "#" },
-        ],
-      },
-      {
-        id: 6, naziv: "Substance Painter", opis: "Rad u Substance Painter-u",
-        videos: [
-          { id: 10, naziv: "SP Interface.mp4", trajanje: "12:00", url: "#" },
-          { id: 11, naziv: "Smart Materials.mp4", trajanje: "19:30", url: "#" },
-        ],
-      },
-    ],
-  },
-  {
-    id: 3,
-    naziv: "Animation Fundamentals",
-    opis: "Osnove animacije: principi, keyframe, rigging.",
-    cena: 21990,
-    slikaUrl: "",
-    brojStudenata: 76,
-    lekcije: [
-      {
-        id: 7, naziv: "12 principa animacije", opis: "Disney-evi principi",
-        videos: [
-          { id: 12, naziv: "Squash & Stretch.mp4", trajanje: "10:15", url: "#" },
-        ],
-      },
-    ],
-  },
-  {
-    id: 4,
-    naziv: "Rendering & Post Production",
-    opis: "Render podešavanja, compositing i finalizacija.",
-    cena: 17990,
-    slikaUrl: "",
-    brojStudenata: 64,
-    lekcije: [],
-  },
-  {
-    id: 5,
-    naziv: "Compositing za VFX",
-    opis: "After Effects i Nuke za vizuelne efekte.",
-    cena: 15990,
-    slikaUrl: "",
-    brojStudenata: 45,
-    lekcije: [],
-  },
-];
-
 // Modal
 const Modal = ({ open, onClose, title, children, wide = false }: {
   open: boolean; onClose: () => void; title: string; children: React.ReactNode; wide?: boolean;
@@ -147,6 +48,25 @@ const Modal = ({ open, onClose, title, children, wide = false }: {
 };
 
 export default function CoursesPage() {
+  const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+  
+  // Helper funkcija za izgradnju URL slike
+  const getImageUrl = (slikaUrl: string | undefined): string | null => {
+    if (!slikaUrl) return null;
+    
+    // Ako je već puni URL (počinje sa http), vrati ga direktno
+    if (slikaUrl.startsWith("http")) return slikaUrl;
+    
+    // Ukloni vodeci / ako postoji
+    const cleanUrl = slikaUrl.startsWith("/") ? slikaUrl.substring(1) : slikaUrl;
+    
+    // Konstruiši URL: API_URL + /api/uploaded-images/ + URL iz baze
+    return `${API_URL}/api/uploaded-images/${cleanUrl}`;
+  };
+  
+  const [kursevi, setKursevi] = useState<Kurs[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedKurs, setSelectedKurs] = useState<Kurs | null>(null);
   const [expandedLekcija, setExpandedLekcija] = useState<number | null>(null);
   const [showAddLekcija, setShowAddLekcija] = useState(false);
@@ -154,6 +74,128 @@ export default function CoursesPage() {
   const [previewVideo, setPreviewVideo] = useState<Video | null>(null);
   const [addLekcijaForm, setAddLekcijaForm] = useState({ naziv: "", opis: "" });
   const [addVideoForm, setAddVideoForm] = useState({ naziv: "", file: "" });
+
+  // Učitaj kurseve iz baze (token je HTTP-only cookie, automatski se šalje sa credentials: 'include')
+  useEffect(() => {
+    console.log("🔄 Učitavamo kurseve sa API-ja...");
+    const fetchKursevi = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // Pokušaj prvo sa /api/kursevi-sa-lekcijama, ako ne radi vrati se na /api/kursevi
+        let endpoint = `${API_URL}/api/kursevi-sa-lekcijama`;
+        const response = await fetch(endpoint, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // Šalje HTTP-only token cookie automatski
+        });
+        console.log("📡 API odgovor status:", response.status);
+        
+        // Ako je 403, pokušaj sa običnim /api/kursevi
+        if (response.status === 403) {
+          console.log("⚠️ Endpoint /api/kursevi-sa-lekcijama zahteva admin pristup, pokušavam sa /api/kursevi");
+          endpoint = `${API_URL}/api/kursevi`;
+          const fallbackResponse = await fetch(endpoint, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+          });
+          if (!fallbackResponse.ok) {
+            throw new Error(`Greška pri učitavanju kurseva: ${fallbackResponse.status}`);
+          }
+          const fallbackData = await fallbackResponse.json();
+          console.log("✅ Korišćen fallback /api/kursevi:", fallbackData);
+          setKursevi(fallbackData.kursevi || fallbackData || []);
+          setLoading(false);
+          return;
+        }
+        
+        if (!response.ok) {
+          throw new Error(`Greška pri učitavanju kurseva: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("✅ Primljeni kursevi iz API-ja:", data);
+        // Prikaži detaljne informacije o svakom kursu i njegovim lekcijama
+        const kurseviArray = data.kursevi || data || [];
+        if (Array.isArray(kurseviArray)) {
+          kurseviArray.forEach((k: any, idx: number) => {
+            console.log(`📚 Kurs ${idx + 1}: ${k.naziv}`);
+            console.log(`   • Lekcija: ${k.lekcije?.length || 0}`);
+            console.log(`   • Cena: ${k.cena} RSD`);
+            console.log(`   • Studenti: ${k.brojStudenata}`);
+            console.log(`   • Slika: ${k.slikaUrl || "❌ Nema slike"}`);
+            
+            // Prikaži detalje svake lekcije
+            if (k.lekcije && Array.isArray(k.lekcije)) {
+              k.lekcije.forEach((l: any, li: number) => {
+                console.log(`     Lekcija ${li + 1}: ${l.naziv} (${l.videos?.length || 0} videa)`);
+              });
+            }
+          });
+        }
+        setKursevi(kurseviArray);
+        console.log("📊 Kursevi postavljeni u state, broj:", kurseviArray.length);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Greška pri učitavanju kurseva");
+        console.error("❌ Error pri fetchanju kurseva:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchKursevi();
+  }, [API_URL]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-fade-in" style={{paddingInline:"20px"}}>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-neutral-800/60">
+          <div>
+            <p className="text-xs font-semibold text-neutral-600 uppercase tracking-widest mb-1">Upravljanje</p>
+            <h1 className="text-2xl font-bold text-white">Kursevi</h1>
+            <p className="text-sm text-neutral-500 mt-1">Učitavanje...</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-64 bg-neutral-900 border border-neutral-800 rounded-xl animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="space-y-8 animate-fade-in" style={{paddingInline:"20px"}}>
+        <div className="bg-red-900/20 border border-red-900/50 rounded-lg p-4">
+          <p className="text-red-400 text-sm font-medium">❌ {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No data state
+  if (kursevi.length === 0) {
+    return (
+      <div className="space-y-8 animate-fade-in" style={{paddingInline:"20px"}}>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-5 border-b border-neutral-800/60">
+          <div>
+            <p className="text-xs font-semibold text-neutral-600 uppercase tracking-widest mb-1">Upravljanje</p>
+            <h1 className="text-2xl font-bold text-white">Kursevi</h1>
+            <p className="text-sm text-neutral-500 mt-1">Nema dostupnih kurseva</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Course list view
   if (!selectedKurs) {
@@ -163,25 +205,38 @@ export default function CoursesPage() {
           <div>
             <p className="text-xs font-semibold text-neutral-600 uppercase tracking-widest mb-1">Upravljanje</p>
             <h1 className="text-2xl font-bold text-white">Kursevi</h1>
-            <p className="text-sm text-neutral-500 mt-1">{mockKursevi.length} aktivnih kurseva</p>
+            <p className="text-sm text-neutral-500 mt-1">{kursevi.length} aktivnih kurseva</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 stagger-children"  >
-          {mockKursevi.map((kurs) => (
+          {kursevi.map((kurs) => (
             <div
               key={kurs.id}
               onClick={() => setSelectedKurs(kurs)}
               className="group bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden hover:border-neutral-700 transition-all duration-200 cursor-pointer"
             >
-              {/* Image placeholder */}
+              {/* Course image */}
               <div className="h-36 bg-neutral-800 flex items-center justify-center relative overflow-hidden">
+                {getImageUrl(kurs.slikaUrl) ? (
+                  <img 
+                    src={getImageUrl(kurs.slikaUrl)!} 
+                    alt={kurs.naziv}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.warn(`⚠️ Greška pri učitavanju slike za ${kurs.naziv}:`, kurs.slikaUrl);
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                ) : null}
                 <div className="absolute inset-0 bg-linear-to-br from-red-900/20 to-transparent" />
-                <svg viewBox="0 0 20 20" fill="currentColor" className="w-10 h-10 text-neutral-700">
-                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-                </svg>
+                {!getImageUrl(kurs.slikaUrl) && (
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-10 h-10 text-neutral-700">
+                    <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                  </svg>
+                )}
                 <span style={{padding:"10px"}} className="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur text-[11px] font-medium text-white">
-                  {kurs.lekcije.length} lekcija
+                  {(kurs.lekcije?.length || 0)} lekcija
                 </span>
               </div>
 
@@ -192,13 +247,13 @@ export default function CoursesPage() {
                 <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{kurs.opis}</p>
                 <div className="flex items-center justify-between mt-4">
                   <span className="text-sm font-bold text-white">
-                    {kurs.cena.toLocaleString()} <span className="text-xs font-normal text-neutral-500">RSD</span>
+                    {(kurs.cena || 0).toLocaleString()} <span className="text-xs font-normal text-neutral-500">RSD</span>
                   </span>
                   <span className="flex items-center gap-1 text-xs text-neutral-500">
                     <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
                       <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                     </svg>
-                    {kurs.brojStudenata}
+                    {(kurs.brojStudenata || 0)}
                   </span>
                 </div>
               </div>
@@ -233,10 +288,10 @@ export default function CoursesPage() {
       {/* Info strip */}
       <div className="flex flex-wrap gap-4">
         {[
-          { label: "Cena", value: `${selectedKurs.cena.toLocaleString()} RSD` },
-          { label: "Studenata", value: selectedKurs.brojStudenata.toString() },
-          { label: "Lekcija", value: selectedKurs.lekcije.length.toString() },
-          { label: "Videa", value: selectedKurs.lekcije.reduce((a, l) => a + l.videos.length, 0).toString() },
+          { label: "Cena", value: `${(selectedKurs.cena || 0).toLocaleString()} RSD` },
+          { label: "Studenata", value: (selectedKurs.brojStudenata || 0).toString() },
+          { label: "Lekcija", value: (selectedKurs.lekcije?.length || 0).toString() },
+          { label: "Videa", value: (selectedKurs.lekcije?.reduce((a, l) => a + (l.videos?.length || 0), 0) || 0).toString() },
         ].map((item) => (
           <div key={item.label} className="bg-neutral-900 border border-neutral-800 rounded-lg px-5 py-4 min-w-32">
             <p className="text-[11px] text-neutral-500 uppercase tracking-wider">{item.label}</p>
@@ -260,7 +315,7 @@ export default function CoursesPage() {
           </button>
         </div>
 
-        {selectedKurs.lekcije.length === 0 ? (
+        {(selectedKurs.lekcije?.length || 0) === 0 ? (
           <div className="bg-neutral-900 border border-neutral-800 border-dashed rounded-xl p-10 text-center">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-8 h-8 text-neutral-700 mx-auto mb-2">
               <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
@@ -269,7 +324,7 @@ export default function CoursesPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {selectedKurs.lekcije.map((lekcija, li) => (
+            {(selectedKurs.lekcije || []).map((lekcija, li) => (
               <div key={lekcija.id} className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
                 {/* Lesson header */}
                 <button
@@ -286,7 +341,7 @@ export default function CoursesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-[11px] text-neutral-500">{lekcija.videos.length} videa</span>
+                    <span className="text-[11px] text-neutral-500">{(lekcija.videos?.length || 0)} videa</span>
                     <svg
                       viewBox="0 0 20 20"
                       fill="currentColor"
@@ -302,11 +357,11 @@ export default function CoursesPage() {
                 {/* Videos */}
                 {expandedLekcija === lekcija.id && (
                   <div className="border-t border-neutral-800 px-5 py-4 bg-neutral-950/50">
-                    {lekcija.videos.length === 0 ? (
+                    {(lekcija.videos?.length || 0) === 0 ? (
                       <p className="text-xs text-neutral-600 py-2">Nema videa u ovoj lekciji.</p>
                     ) : (
                       <div className="space-y-1.5">
-                        {lekcija.videos.map((v, vi) => (
+                        {(lekcija.videos || []).map((v, vi) => (
                           <div
                             key={v.id}
                             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-800/50 transition-colors group"
