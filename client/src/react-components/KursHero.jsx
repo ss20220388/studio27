@@ -2,6 +2,8 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import FloatingShapes from "./FloatingShapes";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
 export default function KursHero({ kurs }) {
 
   const ref = useRef(null);
@@ -23,7 +25,7 @@ export default function KursHero({ kurs }) {
     >
 
       <motion.img
-        src={`http://api.studio27.rs/api/uploaded-images${kurs.slikaUrl}`}
+        src={`${API_URL}/api/uploaded-images${kurs.slikaUrl}`}
         className="absolute w-full h-full object-cover"
         style={{
           scale,

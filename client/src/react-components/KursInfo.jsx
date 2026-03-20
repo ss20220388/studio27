@@ -96,7 +96,7 @@ export default function KursInfo({ kurs }) {
           >
             <div className="absolute -inset-4 bg-linear-to-br from-red-900/25 to-red-700/15 rounded-3xl blur-2xl" />
             <img
-              src={`http://api.studio27.rs/api/uploaded-images${kurs.slikaUrl}`}
+              src={`${import.meta.env.PUBLIC_API_URL || 'http://api.studio27.rs'}/api/uploaded-images${kurs.slikaUrl}`}
               className="relative rounded-2xl shadow-2xl w-full object-cover aspect-4/5"
               alt={kurs.naziv}
             />

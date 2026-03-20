@@ -2,6 +2,8 @@
 import Layout from "../layouts/Layout.astro";
 import KursComponent from "../components/KursComponents.astro";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
 interface Kurs {
     id: number;
     naziv: string;
@@ -21,13 +23,13 @@ let userData = null;
 let kursevi: Kurs[] = [];
 const token = Astro.cookies.get("refreshToken")?.value || null;
 try {
-    const data: Response = await fetch("http://localhost:8080/api/kursevi"); // SSR: server-side fetch
+    const data: Response = await fetch(`${API_URL}/api/kursevi`); // SSR: server-side fetch
 
     const kurseviRes: ResponseData = await data.json();
     kursevi = kurseviRes.kursevi;
 
     
-    const response = await fetch("http://api.studio27.rs/api/auth/me", {
+    const response = await fetch(`${API_URL}/api/auth/me`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

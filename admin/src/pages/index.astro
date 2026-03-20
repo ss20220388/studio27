@@ -2,10 +2,12 @@
 import Layout from "../layouts/Layout.astro";
 import Dashboard from "../react components/Dashboard";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
 let students = [];
 const token = Astro.cookies.get("refreshToken")?.value;
 try {
-	const sviStudentiRes = await fetch(`http://api.studio27.rs/api/students`, {
+	const sviStudentiRes = await fetch(`${API_URL}/api/students`, {
 		method: "GET",
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -17,7 +19,7 @@ try {
 }
 let prihodi = [];
 try{
-	const prihodiRes = await fetch(`http://api.studio27.rs/api/kupljeni-poslednjih-12meseci`, {
+	const prihodiRes = await fetch(`${API_URL}/api/kupljeni-poslednjih-12meseci`, {
 	method: "GET",
 	headers: {
 		Authorization: `Bearer ${token}`,
@@ -31,7 +33,7 @@ try{
 
 let kursProdatoOvajMesec = [];
 try{
-	const kursProdatoOvajMesecRes = await fetch(`http://api.studio27.rs/api/kurs-prodato-ovaj-mesec`, {
+	const kursProdatoOvajMesecRes = await fetch(`${API_URL}/api/kurs-prodato-ovaj-mesec`, {
 	method: "GET",
 	headers: {
 		Authorization: `Bearer ${token}`,
@@ -45,7 +47,7 @@ try{
 let stats = []
 
 try{
-	const statsRes = await fetch(`http://api.studio27.rs/api/admin-stats`, {
+	const statsRes = await fetch(`${API_URL}/api/admin-stats`, {
 	method: "GET",
 	headers: {
 		Authorization: `Bearer ${token}`,

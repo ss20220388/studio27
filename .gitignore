@@ -1,1 +1,22 @@
+# Environment files - nikada ne pushuj env fajlove!
+.env
+.env.local
+.env.production
+.env.*.local
+.env.*.production
+
+# Backend
 server/src/main/resources/application.properties
+server/src/main/resources/application-*.properties
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build
+target/
+node_modules/
+dist/
+.astro/

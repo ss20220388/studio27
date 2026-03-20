@@ -3,6 +3,8 @@ import Layout from "../layouts/Layout.astro";
 import UsersPage from "../react components/UsersPage";
 import type { AstroCookies } from "astro";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
+
 const cookies = Astro.cookies as AstroCookies;
 const refreshToken = cookies.get("refreshToken");
 const token = refreshToken?.value;
@@ -15,7 +17,7 @@ const authHeaders: Record<string, string> = token
 let studentsData = [];
 
 try {
-  const studentsResponse = await fetch("http://api.studio27.rs/api/students", {
+  const studentsResponse = await fetch(`${API_URL}/api/students`, {
     headers: authHeaders,
   });
 
@@ -28,7 +30,7 @@ console.log(studentsData)
 
 let kurseviData = [];
 try{
-  const kurseviResponse = await fetch("http://api.studio27.rs/api/kursevi", {
+  const kurseviResponse = await fetch(`${API_URL}/api/kursevi`, {
     headers: authHeaders,
   });
   kurseviData = kurseviResponse.ok ? await kurseviResponse.json() : [];

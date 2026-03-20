@@ -1,13 +1,14 @@
 ---
 import CourseCard from "./CourseCard.astro";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 const token = Astro.cookies.get("refreshToken")?.value;
-const userRes = await fetch("http://api.studio27.rs/api/auth/me", {
+const userRes = await fetch(`${API_URL}/api/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },
 });
 const userData = await userRes.json();
 
-const kurseviUTokuRes = await fetch(`http://api.studio27.rs/api/kursevi-u-toku/${userData.userId}`, {
+const kurseviUTokuRes = await fetch(`${API_URL}/api/kursevi-u-toku/${userData.userId}`, {
     headers: { Authorization: `Bearer ${token}` },
 });
 const kurseviUToku = await kurseviUTokuRes.json();

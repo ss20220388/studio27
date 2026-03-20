@@ -2,15 +2,16 @@
 import Layout from "../../layouts/Layout.astro";
 import KursPlayer from "../../react components/KursPlayer";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 const token = Astro.cookies.get("refreshToken")?.value || null;
 
-const response = await fetch("http://api.studio27.rs/api/auth/me", {
+const response = await fetch(`${API_URL}/api/auth/me`, {
   headers: { Authorization: `Bearer ${token}` },
 });
 const userData = await response.json();
 
 const klipIlekcijeRes = await fetch(
-  `http://api.studio27.rs/api/pohadjam-kurs-lekcije?userId=${userData.userId}&kursId=${Astro.params.id}`,
+  `${API_URL}/api/pohadjam-kurs-lekcije?userId=${userData.userId}&kursId=${Astro.params.id}`,
   { headers: { Authorization: `Bearer ${token}` } }
 );
 

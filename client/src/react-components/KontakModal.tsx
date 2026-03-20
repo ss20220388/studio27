@@ -106,7 +106,7 @@ export default function KontaktModal({ }) {
               {/* Left image — 2/5 of the grid */}
               <div className="relative lg:col-span-2 h-44 lg:h-auto overflow-hidden">
                 <img
-                  src="http://api.studio27.rs/api/uploaded-images/uploads/slikaenterijer.jpg"
+                  src={`${import.meta.env.PUBLIC_API_URL || 'http://api.studio27.rs'}/api/uploaded-images/uploads/slikaenterijer.jpg`}
                   alt="ContactUs"
                   className="w-full h-full object-cover"
                 />

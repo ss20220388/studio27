@@ -5,10 +5,12 @@ import KursInfo from "../../react-components/KursInfo.jsx";
 import BuyButton from "../../react-components/BuyButton.jsx";
 import KursHero from "../../react-components/KursHero.jsx";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
 const { id } = Astro.params;
 let kurs = null;
 try {
-  const kursRes = await fetch(`http://api.studio27.rs/api/kursevi/${id}`);
+  const kursRes = await fetch(`${API_URL}/api/kursevi/${id}`);
   kurs = await kursRes.json();
 } catch (error) {
   console.error("Error fetching kurs data:", error);
@@ -17,7 +19,7 @@ try {
 const token = Astro.cookies.get("refreshToken")?.value || null;
 let user = {}
 try{
-  const userRes = await fetch(`http://api.studio27.rs/api/auth/me`, {
+  const userRes = await fetch(`${API_URL}/api/auth/me`, {
     headers: {
       "Authorization": `Bearer ${token}`
     }

@@ -8,6 +8,8 @@ interface Kurs {
     slikaUrl: string;
 }
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
+
 const { kurs } = Astro.props as { kurs: Kurs };
 
 
@@ -19,7 +21,7 @@ const { kurs } = Astro.props as { kurs: Kurs };
     onclick={`window.location.href = '/kurs/${kurs.kursId}'`}
 >
     <img
-        src={`http://api.studio27.rs/api/uploaded-images${kurs.slikaUrl}`}
+        src={`${API_URL}/api/uploaded-images${kurs.slikaUrl}`}
         alt={kurs.naziv}
         class="w-full h-40 object-cover rounded-lg mb-4"
     />

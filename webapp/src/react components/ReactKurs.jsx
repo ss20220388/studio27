@@ -8,6 +8,7 @@ const ReactKurs = ({
     unpaid = true,
     paid = true,
 }) => {
+    const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
     const [pohadjanje, setPohadjanje] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
 
@@ -17,7 +18,7 @@ const ReactKurs = ({
                 setLoading(true);
 
                 const response = await fetch(
-                    `http://api.studio27.rs/api/pohadjam-kurs?userId=${userId}&kursId=${kurs.kursId}`,
+                    `${API_URL}/api/pohadjam-kurs?userId=${userId}&kursId=${kurs.kursId}`,
                     {
                         method: "GET",
                         headers: {
@@ -78,7 +79,7 @@ const ReactKurs = ({
                 <div
                     className="absolute inset-0 bg-cover bg-center transform group-hover:scale-110 transition duration-500"
                     style={{
-                        backgroundImage: `url('http://api.studio27.rs/api/uploaded-images${kurs.slikaUrl}')`,
+                        backgroundImage: `url('${API_URL}/api/uploaded-images${kurs.slikaUrl}')`,
                     }}
                 ></div>
 
@@ -112,7 +113,7 @@ const ReactKurs = ({
                     <div
                         className="absolute inset-0 bg-cover bg-center scale-105 blur-sm pointer-events-none"
                         style={{
-                            backgroundImage: `url(http://api.studio27.rs/api/uploaded-images${kurs.slikaUrl})`,
+                            backgroundImage: `url(${API_URL}/api/uploaded-images${kurs.slikaUrl})`,
                             zIndex: 10,
                         }}
                     />

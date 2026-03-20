@@ -1,17 +1,17 @@
 ---
 import { Image } from "astro:assets";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
+
 ---
 
 <header id="home" class="relative min-h-screen w-full overflow-hidden bg-black text-white">
 
     <!-- Background -->
     <div class="absolute inset-0 z-0 w-screen h-screen overflow-hidden">
-        <Image
-            src={"http://api.studio27.rs/api/uploaded-images/uploads/naslovna2.jpg"}
+        <img
+            src={`${API_URL}/api/uploaded-images/uploads/naslovna2.jpg`}
             alt="Interior Background"
-            width={50}
-            height={20}
             class="hero-bg bg-fixed object-cover w-screen h-screen opacity-0"
         />
         <div class="absolute inset-0 bg-black/70"></div>

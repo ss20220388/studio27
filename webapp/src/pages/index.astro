@@ -3,6 +3,9 @@ import Layout from "../layouts/Layout.astro";
 import StatsCards from "../components/StatsCards.astro";
 import ProgressChart from "../react components/ProgressChart";
 import ContinueWatching from "../components/ContinueWatching.astro";
+
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
+
 const token = Astro.cookies.get("refreshToken")?.value;
 
 let progressStats={
@@ -12,14 +15,14 @@ let progressStats={
 };
 
 
-const userRes = await fetch("http://api.studio27.rs/api/auth/me", {
+const userRes = await fetch(`${API_URL}/api/auth/me`, {
 	headers: {
 		Authorization: `Bearer ${token}`,
 	},	
 });
 const userData = await userRes.json();
 console.log(userData);
-const brojKursevaResponse = await fetch(`http://api.studio27.rs/api/broj-kurseva/${userData.userId}`,
+const brojKursevaResponse = await fetch(`${API_URL}/api/broj-kurseva/${userData.userId}`,
 	{
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -28,7 +31,7 @@ const brojKursevaResponse = await fetch(`http://api.studio27.rs/api/broj-kurseva
 );
 const brojKursevaData = await brojKursevaResponse.json();
 console.log(brojKursevaData);
-const brojOdgledanihKursevaResponse = await fetch(`http://api.studio27.rs/api/broj-odgledanih-kurseva/${userData.userId}`,
+const brojOdgledanihKursevaResponse = await fetch(`${API_URL}/api/broj-odgledanih-kurseva/${userData.userId}`,
 	{
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -38,7 +41,7 @@ const brojOdgledanihKursevaResponse = await fetch(`http://api.studio27.rs/api/br
 const brojOdgledanihKursevaData = await brojOdgledanihKursevaResponse.json();
 console.log(brojOdgledanihKursevaData);
 
-const brojUTokuKursevaResponse = await fetch(`http://api.studio27.rs/api/broj-u-toku-kurseva/${userData.userId}`,
+const brojUTokuKursevaResponse = await fetch(`${API_URL}/api/broj-u-toku-kurseva/${userData.userId}`,
 	{
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -54,7 +57,7 @@ const stats = {
 	hours: 12,
 };
 try {
-    const response = await fetch(`http://api.studio27.rs/api/progress-stats/${userData.userId}`, {
+    const response = await fetch(`${API_URL}/api/progress-stats/${userData.userId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 

@@ -4,6 +4,8 @@ import "../styles/global.css";
 import Sidebar from "../components/Sidebar.astro";
 import type { AstroCookies } from "astro";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
 const cookies = Astro.cookies as AstroCookies;
 const refreshToken = cookies.get("refreshToken");
 
@@ -16,7 +18,7 @@ const authHeaders: Record<string, string> = refreshToken?.value
 let userData: { error?: string } | Record<string, unknown> = { error: "Unauthorized" };
 
 try {
-  const response = await fetch("http://api.studio27.rs/api/auth/me", {
+  const response = await fetch(`${API_URL}/api/auth/me`, {
     headers: authHeaders,
   });
 

@@ -4,11 +4,13 @@ const { title } = Astro.props;
 import Sidebar from "../components/Sidebar2.astro";
 import { type AstroCookies } from "astro";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
+
 const cookies = Astro.cookies as AstroCookies;
 const token = cookies.get("refreshToken")?.value || null;
 let userData = {error:{}};
 try {
-    const response = await fetch("http://api.studio27.rs/api/auth/me", {
+    const response = await fetch(`${API_URL}/api/auth/me`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },

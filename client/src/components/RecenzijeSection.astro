@@ -1,4 +1,6 @@
 ---
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
 type Student = {
   ime: string;
   prezime: string;
@@ -34,7 +36,7 @@ type Recenzija = {
 let radovi: Rad[] = [];
 
 try {
-  const resRadovi = await fetch("http://api.studio27.rs/api/radovi");
+  const resRadovi = await fetch(`${API_URL}/api/radovi`);
   if (resRadovi.ok) {
     radovi = await resRadovi.json();
   }
@@ -46,7 +48,7 @@ try {
 let recenzije: Recenzija[] = [];
 
 try {
-  const resRec = await fetch("http://api.studio27.rs/api/recenzije");
+  const resRec = await fetch(`${API_URL}/api/recenzije`);
   if (resRec.ok) {
     recenzije = await resRec.json();
   }
@@ -73,7 +75,7 @@ console.log("Recenzije:", recenzijePrikaz);
           radoviPrikaz.map((rad, i) => (
             <article class="rad-card relative isolate flex flex-col justify-end overflow-hidden rounded-2xl h-[450px] group" style={`--rad-i:${i}`}>
               <img
-                src={`http://api.studio27.rs/api/uploaded-images${rad.url}`}
+                src={`${API_URL}/api/uploaded-images${rad.url}`}
                 alt={rad.naziv}
                 class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"
               />
