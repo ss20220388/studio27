@@ -55,7 +55,7 @@ export default function KursInfo({ kurs }) {
               transition={{ duration: 0.7, delay: 0.15 }}
               className="text-lg text-gray-400 leading-relaxed mb-10"
             >
-              {kurs?.opis? kurs?.opis : "Ovaj kurs je dizajniran da vam pokaže kako da iskoristite savremene AI alate i tehnologije kako biste ubrzali svoj rad, automatizovali procese i stvorili nove poslovne prilike."}
+              {kurs.opis?kurs.opis : "Ovaj kurs je dizajniran da vam pokaže kako da iskoristite savremene AI alate i tehnologije kako biste ubrzali svoj rad, automatizovali procese i stvorili nove poslovne prilike."}
             </motion.p>
 
             {/* Info cards */}
@@ -96,9 +96,9 @@ export default function KursInfo({ kurs }) {
           >
             <div className="absolute -inset-4 bg-linear-to-br from-red-900/25 to-red-700/15 rounded-3xl blur-2xl" />
             <img
-              src={`${import.meta.env.PUBLIC_API_URL || 'http://api.studio27.rs'}/api/uploaded-images${kurs?.slikaUrl}`}
+              src={`${import.meta.env.PUBLIC_API_URL || 'http://api.studio27.rs'}/api/uploaded-images${kurs.slikaUrl}`}
               className="relative rounded-2xl shadow-2xl w-full object-cover aspect-4/5"
-              alt={kurs?.naziv}
+              alt={kurs.naziv}
             />
           </motion.div>
 

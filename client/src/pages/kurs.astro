@@ -1,0 +1,60 @@
+---
+import Layout from "../layouts/Layout.astro";
+import KursComponent from "../components/KursComponents.astro";
+
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
+interface Kurs {
+    id: number;
+    naziv: string;
+    opis: string;
+    cena: number;
+    trajanje: number;
+    slikaUrl: string;
+    glavniKurs: string;
+    komentarDole: string;
+    komentarSredina: string;
+    komentarGore: string;
+}
+interface ResponseData {
+    kursevi: Kurs[];
+}
+let userData = null;
+let kursevi: Kurs[] = [];
+const token = Astro.cookies.get("refreshToken")?.value || null;
+try {
+    const data: Response = await fetch(`${API_URL}/api/kursevi`); // SSR: server-side fetch
+
+    const kurseviRes: ResponseData = await data.json();
+    kursevi = kurseviRes.kursevi;
+
+    
+    const response = await fetch(`${API_URL}/api/auth/me`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    userData = await response.json();
+} catch (error) {
+    console.error("Error fetching data:", error);
+}
+---
+
+<Layout title="Kursevi">
+    <main class="p-8">
+        <h1 class="text-3xl font-bold mb-8">Svi kursevi</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {
+                kursevi?.map((kurs) => (
+                    <KursComponent
+                        client:idle
+                        kurs={kurs}
+                        userId={userData.userId}
+                        accessToken={token}
+                    />
+                ))
+            }
+        </div>
+    </main>
+</Layout>

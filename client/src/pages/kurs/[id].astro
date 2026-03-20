@@ -15,7 +15,6 @@ try {
 } catch (error) {
   console.error("Error fetching kurs data:", error);
 }
-console.log("Fetched kurs data:", kurs);
 
 const token = Astro.cookies.get("refreshToken")?.value || null;
 let user = {}
@@ -31,13 +30,13 @@ try{
 }
 ---
 
-<Layout title={kurs?.naziv}>
+<Layout title={kurs.naziv}>
   <KursHero kurs={kurs} client:load />
 
   <BigTextSection
-    glavniTekst={kurs?.glavniKurs}
-    naslov={kurs?.naziv}
-    opis={kurs?.opis}
+    glavniTekst={kurs.glavniKurs}
+    naslov={kurs.naziv}
+    opis={kurs.opis}
     client:load
   />
 
@@ -46,6 +45,6 @@ try{
   <!-- CTA Section -->
   <section class="py-32 bg-black flex flex-col items-center gap-6">
     <p class="text-white/50 text-sm uppercase tracking-widest">Spremni?</p>
-    <BuyButton price={kurs?.cena} userPocetni={user} client:load />
+    <BuyButton price={kurs.cena} userPocetni={user} client:load />
   </section>
 </Layout>
