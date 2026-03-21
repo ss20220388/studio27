@@ -12,6 +12,7 @@ try {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
+		credentials: "include"
 	});
 	students = await sviStudentiRes.json();
 } catch (error) {
@@ -24,6 +25,7 @@ try{
 	headers: {
 		Authorization: `Bearer ${token}`,
 	},
+	credentials: "include"
 });
 	prihodi = await prihodiRes.json();
 
