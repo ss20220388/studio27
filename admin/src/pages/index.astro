@@ -15,6 +15,7 @@ try {
 		credentials: "include"
 	});
 	students = await sviStudentiRes.json();
+	console.log("Students data:", students);
 } catch (error) {
 	console.error("Error fetching student data:", error);
 }
