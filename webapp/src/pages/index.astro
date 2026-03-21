@@ -29,8 +29,9 @@ try {
 		},	
 		credentials: "include"
 	});
+	console.log(userRes);
 	userData = await userRes.json();
-	console.log(userData);
+	
 
 	const brojKursevaResponse = await fetch(`${API_URL}/api/broj-kurseva/${userData.userId}`,
 		{
