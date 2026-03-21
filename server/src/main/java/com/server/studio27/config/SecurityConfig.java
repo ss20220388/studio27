@@ -36,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register-admin").permitAll()
                         .requestMatchers("/api/auth/refresh").permitAll()
                         .requestMatchers("/api/auth/access-token").permitAll()
+                        .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers("/api/auth/**").authenticated()
                         .requestMatchers("/api/kursevi/**").permitAll()
                         .requestMatchers("/api/kursevi-sa-lekcijama").permitAll()
