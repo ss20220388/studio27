@@ -51,7 +51,7 @@ public class StudentController {
                                     where studentId = ?
                                     """;
                 System.err.println("Sql2: " + SQL2);
-                List<Map<String, Object>> kursRows = jdbcTemplate.queryForList(SQL2, ((Integer) row.get("studentId")).intValue());
+                List<Map<String, Object>> kursRows = jdbcTemplate.queryForList(SQL2, ((Long) row.get("studentId")).intValue());
                 List<Map<String, Object>> kursevi = new ArrayList<>();
                 for (Map<String, Object> kursRow : kursRows) {
                     Map<String, Object> kursMap = new HashMap<>();
