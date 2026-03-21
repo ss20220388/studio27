@@ -27,6 +27,7 @@ try {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},	
+		credentials: "include"
 	});
 	userData = await userRes.json();
 	console.log(userData);
