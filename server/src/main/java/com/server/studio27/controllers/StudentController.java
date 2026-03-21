@@ -52,7 +52,7 @@ public class StudentController {
                 List<Map<String, Object>> kursevi = new ArrayList<>();
                 for (Map<String, Object> kursRow : kursRows) {
                     Map<String, Object> kursMap = new HashMap<>();
-                    kursMap.put("kursId", ((Integer) kursRow.get("kursId")).intValue());
+                    kursMap.put("kursId", ((Long) kursRow.get("kursId")).intValue());
                     kursMap.put("naziv", (String) kursRow.get("naziv"));
                     kursevi.add(kursMap);
                 }
