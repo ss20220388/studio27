@@ -15,21 +15,38 @@ type ResponseData = {
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
 
-const res = await fetch(`${API_URL}/api/kursevi`);
-const data: ResponseData = await res.json();
-console.log(data);
+let kursevi_1: Kurs[] = [];
+let kursevi_2: Kurs[] = [];
+let userData: any = {};
 
+try {
+	const res = await fetch(`${API_URL}/api/kursevi`);
+	if (!res.ok) throw new Error(`Kursevi fetch failed: ${res.status}`);
+	const data: ResponseData = await res.json();
+	console.log(data);
+	
+	kursevi_1 = data?.kursevi?.slice(0, 4) || [];
+	kursevi_2 = data?.kursevi?.slice(4, 6) || [];
+} catch (error) {
+	console.error("Greška pri učitavanju kurseva:", error);
+	kursevi_1 = [];
+	kursevi_2 = [];
+}
 
-const token = Astro.cookies.get("refreshToken")?.value || null;
-const response = await fetch(`${API_URL}/api/auth/me`, {
-    headers: {
-        Authorization: `Bearer ${token}`,
-    },
-});
-const userData = await response.json();
-console.log(userData);
-const kursevi_1 = data?.kursevi?.slice(0, 4);
-const kursevi_2 = data?.kursevi?.slice(4, 6);
+try {
+	const token = Astro.cookies.get("refreshToken")?.value || null;
+	const response = await fetch(`${API_URL}/api/auth/me`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	if (!response.ok) throw new Error(`Auth failed: ${response.status}`);
+	userData = await response.json();
+	console.log(userData);
+} catch (error) {
+	console.error("Greška pri učitavanju user podataka:", error);
+	userData = {};
+}
 ---
 
 <section id="kursevi" class="bg-black py-28 px-6 sm:px-10 md:px-16">
