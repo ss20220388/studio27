@@ -5,6 +5,7 @@ import Sidebar from "../components/Sidebar2.astro";
 import { type AstroCookies } from "astro";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
+const CLIENT_URL = import.meta.env.PUBLIC_CLIENT_URL || "http://studio27.rs";
 
 const cookies = Astro.cookies as AstroCookies;
 const token = cookies.get("refreshToken")?.value || null;
@@ -69,7 +70,7 @@ try {
                             biste koristili aplikaciju.
                         </p>
                         <a
-                            href="http://studio27.rs"
+                            href={`${CLIENT_URL}`}
                             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-900 hover:bg-red-800 text-white text-sm font-medium transition-colors duration-200"
                         >
                             Prijavi se
