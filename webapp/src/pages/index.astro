@@ -27,13 +27,21 @@ let stats = {
 try {
 	const userRes = await fetch(`${API_URL}/api/auth/me`, {
 		headers: {
-			Authorization: `Bearer ${accessToken}`,
+			Authorization: `Bearer ${refreshToken}`,
 		},	
 		credentials: "include"
 	});
 	
+	if (!userRes.ok) {
+		throw new Error(`Auth failed: ${userRes.status} ${userRes.statusText}`);
+	}
+	
 	userData = await userRes.json();
 	console.log("userData:", userData);
+
+	if (!userData.userId) {
+		throw new Error("userId nije dostupan");
+	}
 
 	const brojKursevaResponse = await fetch(`${API_URL}/api/broj-kurseva/${userData.userId}`,
 		{
@@ -42,6 +50,11 @@ try {
 			},
 		}
 	);
+	
+	if (!brojKursevaResponse.ok) {
+		throw new Error(`brojKurseva failed: ${brojKursevaResponse.status}`);
+	}
+	
 	const brojKursevaData = await brojKursevaResponse.json();
 	console.log(brojKursevaData);
 
@@ -52,6 +65,11 @@ try {
 			},
 		}
 	);
+	
+	if (!brojOdgledanihKursevaResponse.ok) {
+		throw new Error(`brojOdgledanih failed: ${brojOdgledanihKursevaResponse.status}`);
+	}
+	
 	const brojOdgledanihKursevaData = await brojOdgledanihKursevaResponse.json();
 	console.log(brojOdgledanihKursevaData);
 
@@ -62,6 +80,11 @@ try {
 			},
 		}
 	);
+	
+	if (!brojUTokuKursevaResponse.ok) {
+		throw new Error(`brojUToku failed: ${brojUTokuKursevaResponse.status}`);
+	}
+	
 	const brojUTokuKursevaData = await brojUTokuKursevaResponse.json();
 	console.log(brojUTokuKursevaData);
 
