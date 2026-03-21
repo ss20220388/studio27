@@ -41,7 +41,7 @@ public class StudentController {
                 studentMap.put("prezime", (String) row.get("prezime"));
                 studentMap.put("brojTelefona", (String) row.get("brojTelefona"));
                 studentMap.put("deviceId", (String) row.get("deviceId"));
-                studentMap.put("active", (Integer) row.get("active"));
+                studentMap.put("active", (Long) row.get("active"));
                 String SQL2 = """
                                     Select k.kursId,k.naziv
                                     from kurs k
