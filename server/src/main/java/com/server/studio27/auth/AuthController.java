@@ -92,7 +92,7 @@ public class AuthController {
             .httpOnly(true)
             .secure(false) // Secure=true za SameSite=None
             .path("/")
-            .domain(".dev.studio27.rs")
+            .domain(".dev.27archviz.com")
             .maxAge(7 * 24 * 60 * 60) // 7 dana
             .sameSite("Lax") // dozvoljava cross-subdomain
             .build();
@@ -101,7 +101,7 @@ public class AuthController {
             .httpOnly(true)
             .secure(false) // Secure=true za SameSite=None
             .path("/")
-            .domain(".dev.studio27.rs")
+            .domain(".dev.27archviz.com")
             .maxAge( 7 * 24 * 60 * 60) // 7 dana
             .sameSite("Lax") // dozvoljava cross-subdomain
             .build();
@@ -252,7 +252,7 @@ public class AuthController {
             .httpOnly(true)
             .secure(false)
             .path("/")
-            .domain(".dev.studio27.rs")
+            .domain(".dev.27archviz.com")
             .sameSite("Lax")
             .maxAge(0)
             .build();
@@ -263,7 +263,7 @@ public class AuthController {
             .httpOnly(true)
             .secure(false)
             .path("/")
-            .domain(".dev.studio27.rs")
+            .domain(".dev.27archviz.com")
             .sameSite("Lax")
             .maxAge(0)
             .build();
