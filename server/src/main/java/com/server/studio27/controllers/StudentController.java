@@ -31,7 +31,7 @@ public class StudentController {
                     """;
 
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
-            System.out.println("SQL query executed successfully. Number of students retrieved: " + rows);
+            System.out.println("SQL query executed successfully. Number of students retrieved: " + rows.size());
 
             for (Map<String, Object> row : rows) {
                 Map<String, Object> studentMap = new HashMap<>();
