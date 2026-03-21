@@ -35,7 +35,7 @@ public class StudentController {
 
             for (Map<String, Object> row : rows) {
                 Map<String, Object> studentMap = new HashMap<>();
-                studentMap.put("studentId", ((Integer) row.get("studentId")).intValue());
+                studentMap.put("studentId", ((Long) row.get("studentId")).intValue());
                 studentMap.put("email", (String) row.get("email"));
                 studentMap.put("password", (String) row.get("password"));
                 studentMap.put("ime", (String) row.get("ime"));
@@ -55,7 +55,7 @@ public class StudentController {
                 List<Map<String, Object>> kursevi = new ArrayList<>();
                 for (Map<String, Object> kursRow : kursRows) {
                     Map<String, Object> kursMap = new HashMap<>();
-                    kursMap.put("kursId", ((Integer) kursRow.get("kursId")).intValue());
+                    kursMap.put("kursId", ((Long) kursRow.get("kursId")).intValue());
                     kursMap.put("naziv", (String) kursRow.get("naziv"));
                     kursevi.add(kursMap);
                 }
