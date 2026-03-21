@@ -6,8 +6,10 @@ import ContinueWatching from "../components/ContinueWatching.astro";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
 
-const token = Astro.cookies.get("refreshToken")?.value;
-console.log("Token:", token);
+const refreshToken = Astro.cookies.get("refreshToken")?.value;
+const accessToken = Astro.cookies.get("accessToken")?.value;
+console.log("Tokens:", { refreshToken: !!refreshToken, accessToken: !!accessToken });
+
 let progressStats={
 	zavrseno:0,
 	uToku:0,
@@ -25,7 +27,7 @@ let stats = {
 try {
 	const userRes = await fetch(`${API_URL}/api/auth/me`, {
 		headers: {
-			Authorization: `Bearer ${token}`,
+			Authorization: `Bearer ${accessToken}`,
 		},	
 		credentials: "include"
 	});
@@ -36,7 +38,7 @@ try {
 	const brojKursevaResponse = await fetch(`${API_URL}/api/broj-kurseva/${userData.userId}`,
 		{
 			headers: {
-				Authorization: `Bearer ${token}`,
+				Authorization: `Bearer ${accessToken}`,
 			},
 		}
 	);
@@ -46,7 +48,7 @@ try {
 	const brojOdgledanihKursevaResponse = await fetch(`${API_URL}/api/broj-odgledanih-kurseva/${userData.userId}`,
 		{
 			headers: {
-				Authorization: `Bearer ${token}`,
+				Authorization: `Bearer ${accessToken}`,
 			},
 		}
 	);
@@ -56,7 +58,7 @@ try {
 	const brojUTokuKursevaResponse = await fetch(`${API_URL}/api/broj-u-toku-kurseva/${userData.userId}`,
 		{
 			headers: {
-				Authorization: `Bearer ${token}`,
+				Authorization: `Bearer ${accessToken}`,
 			},
 		}
 	);
@@ -71,7 +73,7 @@ try {
 	};
 
 	const response = await fetch(`${API_URL}/api/progress-stats/${userData.userId}`, {
-		headers: token ? { Authorization: `Bearer ${token}` } : {},
+		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
 	});
 
 	if (response.ok) {
