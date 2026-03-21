@@ -90,7 +90,7 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
             .httpOnly(true)
-            .secure(false) // Secure=true za SameSite=None
+            .secure(true) // Secure=true za SameSite=None
             .path("/")
             .domain(".dev.27archviz.com")
             .maxAge(7 * 24 * 60 * 60) // 7 dana
@@ -99,7 +99,7 @@ public class AuthController {
 
         ResponseCookie cookieAccess = ResponseCookie.from("accessToken", accessToken)
             .httpOnly(true)
-            .secure(false) // Secure=true za SameSite=None
+            .secure(true) // Secure=true za SameSite=None
             .path("/")
             .domain(".dev.27archviz.com")
             .maxAge( 7 * 24 * 60 * 60) // 7 dana

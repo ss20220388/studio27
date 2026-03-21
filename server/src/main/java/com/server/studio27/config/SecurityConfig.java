@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/access-token").permitAll()
                         .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers("/api/auth/**").authenticated()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/kursevi/**").permitAll()
                         .requestMatchers("/api/kursevi-sa-lekcijama").permitAll()
                         .requestMatchers("/api/media/**").permitAll()
