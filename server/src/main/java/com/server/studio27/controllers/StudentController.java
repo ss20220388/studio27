@@ -60,11 +60,11 @@ public class StudentController {
                 students.add(studentMap);
             }
 
-            ;
             Map<String, Object> result = new HashMap<>();
             result.put("students", students);
             result.put("count", students.size());
             result.put("message", "Students retrieved successfully");
+            System.out.println("Students retrieved: " + result);
             return result;
 
         } catch (Exception e) {

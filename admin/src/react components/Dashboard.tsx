@@ -151,7 +151,7 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
           </div>
 
           <div className="h-[280px] mt-4">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart data={prihodi}>
                 <defs>
                   <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
@@ -193,7 +193,7 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
           <p className="text-xs text-neutral-500 mb-6">Ukupno prodatih pristupa</p>
 
           <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart data={kursProdato} layout="vertical" barSize={18}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#262626" horizontal={false} />
                 <XAxis
