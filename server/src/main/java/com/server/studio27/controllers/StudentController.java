@@ -43,14 +43,14 @@ public class StudentController {
                 studentMap.put("brojTelefona", (String) row.get("brojTelefona"));
                 studentMap.put("deviceId", (String) row.get("deviceId"));
                 studentMap.put("active", (Integer) row.get("active"));
-                System.err.println("Active status: " + studentMap.get("active"));
+                System.out.println("Active status: " + studentMap.get("active"));
                 String SQL2 = """
                                     Select k.kursId,k.naziv
                                     from kurs k
                                     join pohadja p on p.kursId = k.kursId
                                     where studentId = ?
                                     """;
-                System.err.println("Sql2: " + SQL2);
+                System.out.println("Sql2: " + SQL2);
                 List<Map<String, Object>> kursRows = jdbcTemplate.queryForList(SQL2, ((Long) row.get("studentId")).intValue());
                 List<Map<String, Object>> kursevi = new ArrayList<>();
                 for (Map<String, Object> kursRow : kursRows) {
@@ -62,7 +62,7 @@ public class StudentController {
                 studentMap.put("kursevi", kursevi);
                 students.add(studentMap);
             }
-            System.err.println("Students list: " + students);
+            System.out.println("Students list: " + students);
 
             Map<String, Object> result = new HashMap<>();
             result.put("students", students);

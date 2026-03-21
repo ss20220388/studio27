@@ -6,6 +6,12 @@ const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 let students = [];
 const token = Astro.cookies.get("refreshToken")?.value;
+
+console.log("=== DASHBOARD DEBUG ===");
+console.log("API_URL:", API_URL);
+console.log("Token exists:", !!token);
+console.log("========================");
+
 try {
 	const sviStudentiRes = await fetch(`${API_URL}/api/students`, {
 		method: "GET",
@@ -14,10 +20,18 @@ try {
 		},
 		credentials: "include"
 	});
-	students = await sviStudentiRes.json();
-	console.log("Students data:", students);
+	
+	if (!sviStudentiRes.ok) {
+		console.error(`Students API Error: ${sviStudentiRes.status} ${sviStudentiRes.statusText}`);
+		console.error("Response:", await sviStudentiRes.text());
+		students = [];
+	} else {
+		students = await sviStudentiRes.json();
+		console.log("Students data:", students);
+	}
 } catch (error) {
 	console.error("Error fetching student data:", error);
+	students = [];
 }
 let prihodi = [];
 try{

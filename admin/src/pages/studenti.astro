@@ -14,31 +14,53 @@ const authHeaders: Record<string, string> = token
     }
   : {};
 
-let studentsData = [];
+console.log("=== DEBUG INFO ===");
+console.log("API_URL:", API_URL);
+console.log("Token exists:", !!token);
+console.log("Auth headers:", authHeaders);
+console.log("==================");
+
+let studentsData = { students: [], count: 0, message: "" };
 
 try {
   const studentsResponse = await fetch(`${API_URL}/api/students`, {
     headers: authHeaders,
   });
 
-  studentsData = studentsResponse.ok ? await studentsResponse.json() : [];
-} catch {
-  studentsData = [];
+  if (!studentsResponse.ok) {
+    console.error(`API Error: ${studentsResponse.status} ${studentsResponse.statusText}`);
+    const errorText = await studentsResponse.text();
+    console.error("Response body:", errorText);
+    studentsData = { students: [], count: 0, message: `API Error: ${studentsResponse.status}` };
+  } else {
+    studentsData = await studentsResponse.json();
+  }
+} catch (error) {
+  console.error("Greška pri učitavanju studenata:", error);
+  studentsData = { students: [], count: 0, message: `Error: ${error}` };
 }
-console.log("Students data fetched from API:")
-console.log(studentsData)
+console.log("Students data fetched from API:");
+console.log(studentsData);
 
-let kurseviData = [];
+let kurseviData = { kursevi: [], message: "" };
 try{
   const kurseviResponse = await fetch(`${API_URL}/api/kursevi`, {
     headers: authHeaders,
   });
-  kurseviData = kurseviResponse.ok ? await kurseviResponse.json() : [];
   
-} catch{
-    console.log("Failed to fetch courses data")
+  if (!kurseviResponse.ok) {
+    console.error(`Kursevi API Error: ${kurseviResponse.status}`);
+    const errorText = await kurseviResponse.text();
+    console.error("Kursevi response body:", errorText);
+    kurseviData = { kursevi: [], message: `API Error: ${kurseviResponse.status}` };
+  } else {
+    kurseviData = await kurseviResponse.json();
+  }
+} catch (error){
+    console.error("Greška pri učitavanju kurseva:", error);
+    kurseviData = { kursevi: [], message: `Error: ${error}` };
 }
-console.log("Courses data fetched from API:")
+console.log("Courses data fetched from API:");
 console.log(kurseviData)
 
 
