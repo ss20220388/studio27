@@ -10,14 +10,15 @@ type User = {
 type DropDownMenuProps = {
     publicAppUrl: string
     publicAdminUrl: string
+    publicApiUrl: string
 }
 
-const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUrl }) => {
+const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUrl, publicApiUrl }) => {
     const [open, setOpen] = useState(false)
     const [user, setUser] = useState<User | null>(null)
 
     useEffect(() => {
-        fetch('/api/auth/me', { credentials: 'include' })
+        fetch(`${publicApiUrl}/api/auth/me`, { credentials: 'include' })
         .then(r => r.ok ? r.json() : null)
         .then(u => { if (u && !u.error) setUser(u); else setUser(null); })
         .catch(() => setUser(null));
@@ -29,7 +30,7 @@ const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUr
 
     const handleLogout = async () => {
         try {
-            await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+            await fetch(`${publicApiUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' })
         } catch (error) { /* ignore */ }
         setUser(null)
         setOpen(false)
