@@ -31,10 +31,11 @@ public class StudentController {
                     """;
 
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
+            System.out.println("Students retrieved: " + SQL);
 
             for (Map<String, Object> row : rows) {
                 Map<String, Object> studentMap = new HashMap<>();
-                studentMap.put("studentId", ((Long) row.get("studentId")).intValue());
+                studentMap.put("studentId", ((Integer) row.get("studentId")).intValue());
                 studentMap.put("email", (String) row.get("email"));
                 studentMap.put("password", (String) row.get("password"));
                 studentMap.put("ime", (String) row.get("ime"));
@@ -42,29 +43,32 @@ public class StudentController {
                 studentMap.put("brojTelefona", (String) row.get("brojTelefona"));
                 studentMap.put("deviceId", (String) row.get("deviceId"));
                 studentMap.put("active", (Integer) row.get("active"));
+                System.err.println("Active status: " + studentMap.get("active"));
                 String SQL2 = """
                                     Select k.kursId,k.naziv
                                     from kurs k
                                     join pohadja p on p.kursId = k.kursId
                                     where studentId = ?
                                     """;
-                List<Map<String, Object>> kursRows = jdbcTemplate.queryForList(SQL2, ((Long) row.get("studentId")).intValue());
+                System.err.println("Sql2: " + SQL2);
+                List<Map<String, Object>> kursRows = jdbcTemplate.queryForList(SQL2, ((Integer) row.get("studentId")).intValue());
                 List<Map<String, Object>> kursevi = new ArrayList<>();
                 for (Map<String, Object> kursRow : kursRows) {
                     Map<String, Object> kursMap = new HashMap<>();
-                    kursMap.put("kursId", ((Long) kursRow.get("kursId")).intValue());
+                    kursMap.put("kursId", ((Integer) kursRow.get("kursId")).intValue());
                     kursMap.put("naziv", (String) kursRow.get("naziv"));
                     kursevi.add(kursMap);
                 }
                 studentMap.put("kursevi", kursevi);
                 students.add(studentMap);
             }
+            System.err.println("Students list: " + students);
 
             Map<String, Object> result = new HashMap<>();
             result.put("students", students);
             result.put("count", students.size());
             result.put("message", "Students retrieved successfully");
-            System.out.println("Students retrieved: " + result);
+            
             return result;
 
         } catch (Exception e) {
