@@ -94,7 +94,7 @@ public class AuthController {
             .path("/")
             .domain(".dev.27archviz.com")
             .maxAge(7 * 24 * 60 * 60) // 7 dana
-            .sameSite("None") // dozvoljava cross-subdomain
+            .sameSite("Lax") // dozvoljava cross-subdomain
             .build();
 
         ResponseCookie cookieAccess = ResponseCookie.from("accessToken", accessToken)
@@ -103,7 +103,7 @@ public class AuthController {
             .path("/")
             .domain(".dev.27archviz.com")
             .maxAge( 7 * 24 * 60 * 60) // 7 dana
-            .sameSite("None") // dozvoljava cross-subdomain
+            .sameSite("Lax") // dozvoljava cross-subdomain
             .build();
 
         
@@ -253,7 +253,7 @@ public class AuthController {
             .secure(false)
             .path("/")
             .domain(".dev.27archviz.com")
-            .sameSite("None")
+            .sameSite("Lax")
             .maxAge(0)
             .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
@@ -264,7 +264,7 @@ public class AuthController {
             .secure(false)
             .path("/")
             .domain(".dev.27archviz.com")
-            .sameSite("None")
+            .sameSite("Lax")
             .maxAge(0)
             .build();
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
