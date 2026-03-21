@@ -8,6 +8,7 @@ import { Image } from "astro:assets";
 const CLIENT_URL = import.meta.env.PUBLIC_CLIENT_URL || "http://studio27.rs";
 const PUBLIC_APP_URL = import.meta.env.PUBLIC_APP_URL || "http://app.studio27.rs";
 const PUBLIC_ADMIN_URL = import.meta.env.PUBLIC_ADMIN_URL || "http://admin.studio27.rs";
+const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 ---
 
 <section
@@ -46,7 +47,7 @@ const PUBLIC_ADMIN_URL = import.meta.env.PUBLIC_ADMIN_URL || "http://admin.studi
       <div
         class="inline-block sm:inline lg:hidden font-bold text-white transition-colors duration-200 py-2 px-7 text-lg rounded shadow-md"
       >
-        <DropDownMenu client:load publicAppUrl={PUBLIC_APP_URL} publicAdminUrl={PUBLIC_ADMIN_URL} />
+        <DropDownMenu client:load publicAppUrl={PUBLIC_APP_URL} publicAdminUrl={PUBLIC_ADMIN_URL} publicApiUrl={PUBLIC_API_URL} />
       </div>
 
       <ul
@@ -101,7 +102,7 @@ const PUBLIC_ADMIN_URL = import.meta.env.PUBLIC_ADMIN_URL || "http://admin.studi
           <div
             class="inline-block font-bold text-white transition-colors duration-200 py-2 px-7 text-lg rounded shadow-md"
           >
-            <DropDownMenu client:load publicAppUrl={PUBLIC_APP_URL} publicAdminUrl={PUBLIC_ADMIN_URL} />
+            <DropDownMenu client:load publicAppUrl={PUBLIC_APP_URL} publicAdminUrl={PUBLIC_ADMIN_URL} publicApiUrl={PUBLIC_API_URL} />
           </div>
         </li>
       </ul>
