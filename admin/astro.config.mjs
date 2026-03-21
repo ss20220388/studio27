@@ -11,7 +11,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
     server: {
       allowedHosts: [
-        'admin.studio27.rs',"admin.dev.archviz.com"
+        'admin.studio27.rs',"admin.dev.27archviz.com"
       ],
       proxy: {
         '/api': {
