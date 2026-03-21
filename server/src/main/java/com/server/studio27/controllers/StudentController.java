@@ -35,14 +35,14 @@ public class StudentController {
 
             for (Map<String, Object> row : rows) {
                 Map<String, Object> studentMap = new HashMap<>();
-                studentMap.put("studentId", ((Long) row.get("studentId")).intValue());
+                studentMap.put("studentId", ((Number) row.get("studentId")).intValue());
                 studentMap.put("email", (String) row.get("email"));
                 studentMap.put("password", (String) row.get("password"));
                 studentMap.put("ime", (String) row.get("ime"));
                 studentMap.put("prezime", (String) row.get("prezime"));
                 studentMap.put("brojTelefona", (String) row.get("brojTelefona"));
                 studentMap.put("deviceId", (String) row.get("deviceId"));
-                studentMap.put("active", (Integer) row.get("active"));
+                studentMap.put("active", (Number) row.get("active"));
                 System.out.println("Active status: " + studentMap.get("active"));
                 String SQL2 = """
                                     Select k.kursId,k.naziv
