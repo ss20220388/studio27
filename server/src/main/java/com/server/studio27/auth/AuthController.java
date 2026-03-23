@@ -2,6 +2,7 @@ package com.server.studio27.auth;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,19 @@ import jakarta.servlet.http.HttpServletResponse;
 @RestController
 @RequestMapping("api/auth")
 public class AuthController {
+
+    @Value("${app.cookie.domain}")
+    private String cookieDomain;
+
+    @Value("${app.cookie.secure}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site}")
+    private String sameSite;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
@@ -86,28 +100,24 @@ public class AuthController {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        System.out.println("=== LOGIN DEBUG ===");
-        System.out.println("EMAIL: " + request.getEmail());
-        System.out.println("DEVICE ID: " + request.getDeviceId());
-        System.out.println("ACCESS TOKEN: " + accessToken);
-        System.out.println("REFRESH TOKEN: " + refreshToken);
+       
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(true) // Secure=true za SameSite=None
+                .secure(cookieSecure)
                 .path("/")
-                .domain(".dev.27archviz.com")
-                .maxAge(7 * 24 * 60 * 60) // 7 dana
-                .sameSite("Lax") // dozvoljava cross-subdomain
+                .domain(cookieDomain)
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite(sameSite)
                 .build();
 
         ResponseCookie cookieAccess = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
-                .secure(true) // Secure=true za SameSite=None
+                .secure(cookieSecure)
                 .path("/")
-                .domain(".dev.27archviz.com")
-                .maxAge(7 * 24 * 60 * 60) // 7 dana
-                .sameSite("Lax") // dozvoljava cross-subdomain
+                .domain(cookieDomain)
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite(sameSite)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -250,22 +260,22 @@ public class AuthController {
         // Clear refreshToken
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", null)
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/")
-                .domain(".dev.27archviz.com")
-                .sameSite("Lax")
-                .maxAge(0)
+                .domain(cookieDomain)
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite(sameSite)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         // Optionally clear accessToken and deviceId if you use them as cookies
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", null)
                 .httpOnly(true)
-                .secure(false)
+                .secure(cookieSecure)
                 .path("/")
-                .domain(".dev.27archviz.com")
-                .sameSite("Lax")
-                .maxAge(0)
+                .domain(cookieDomain)
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite(sameSite)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 

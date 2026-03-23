@@ -109,7 +109,7 @@ const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs
     </div>
   </nav>
 
-  <LoginSectionForm client:load />
+  <LoginSectionForm publicApiUrl={PUBLIC_API_URL}  client:load />
 
   <script>
     if (typeof window !== "undefined") {
