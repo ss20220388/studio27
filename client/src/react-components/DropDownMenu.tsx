@@ -55,6 +55,7 @@ const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUr
 
   
     const fullName = `${user.ime || ''} ${user.prezime || ''}`.trim() || 'Korisnik'
+    const displayName = fullName.length > 25 ? fullName.substring(0, 25) + '...' : fullName
     const initials = `${(user.ime || '')[0] || ''}${(user.prezime || '')[0] || ''}`.toUpperCase() || 'K'
 
     return (
@@ -63,7 +64,7 @@ const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUr
                 onClick={() => setOpen(!open)}
                 className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors"
             >
-                <span className="text-sm font-medium">{fullName}</span>
+                <span className="text-sm font-medium truncate max-w-[150px]">{displayName}</span>
                 <svg width="12" height="12" className={`h-3 w-3 fill-current transition-transform ${open ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048">
                     <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z" />
                 </svg>
