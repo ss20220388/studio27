@@ -1,6 +1,6 @@
 ---
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
-
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const CLIENT_URL = import.meta.env.PUBLIC_CLIENT_URL || "http://studio27.rs";
 const token = Astro.cookies.get("refreshToken")?.value || null;
 const response = await fetch(`${API_URL}/api/auth/me`, {
     headers: {
@@ -166,8 +166,8 @@ const navSections = [
     <button
       onclick={`
         async function logout() {
-          await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
-          window.location.href = 'http://studio27.rs';
+          await fetch('${API_URL}/api/auth/logout', { method: 'POST', credentials: 'include' });
+          window.location.href = '${CLIENT_URL}';
         }
         logout();
       `}
