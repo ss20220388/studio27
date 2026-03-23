@@ -26,12 +26,12 @@ export default function BigTextSection({ naslov, opis, glavniTekst }) {
       {/* Horizontal scrolling text marquee - decorative */}
       <div className="relative mb-12 overflow-hidden">
         <motion.div style={{ x: textX }} className="whitespace-nowrap">
-          <span className="text-[70px] md:text-[110px] font-black text-white/3 select-none tracking-tighter">
+          <span className="text-[70px] md:text-[110px] font-black text-white/20 select-none tracking-tighter">
             {glavniTekst} &nbsp; {glavniTekst} &nbsp; {glavniTekst} &nbsp;
           </span>
         </motion.div>
         <motion.div style={{ x: textX2 }} className="whitespace-nowrap -mt-6">
-          <span className="text-[70px] md:text-[110px] font-black text-white/3 select-none tracking-tighter">
+          <span className="text-[70px] md:text-[110px] font-black text-white/20 select-none tracking-tighter">
             STUDIO 27 &nbsp; STUDIO 27 &nbsp; STUDIO 27 &nbsp;
           </span>
         </motion.div>
