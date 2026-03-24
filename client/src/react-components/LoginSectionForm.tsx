@@ -6,18 +6,28 @@ type Props = {
     publicApiUrl: string
 }
 
-function getDeviceId(): string {
-    try {
-        const existing = localStorage.getItem('deviceId')
-        if (existing) return existing
-        const id =
-            typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-                ? crypto.randomUUID()
-                : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-        localStorage.setItem('deviceId', id)
-        return id
-    } catch {
-        return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+function getDeviceIdFromCookie(): string {
+    if (typeof document === 'undefined') return ''
+    const name = 'deviceId='
+    const decodedCookie = decodeURIComponent(document.cookie)
+    const cookieArray = decodedCookie.split(';')
+    for (let cookie of cookieArray) {
+        cookie = cookie.trim()
+        if (cookie.indexOf(name) === 0) {
+            return cookie.substring(name.length)
+        }
+    }
+    return ''
+}
+
+
+function initializeDeviceCookie(publicApiUrl: string): void {
+    const existingDeviceId = getDeviceIdFromCookie()
+    if (!existingDeviceId) {
+        fetch(`${publicApiUrl}/api/cookie/deviceId`, {
+            method: 'GET',
+            credentials: 'include'
+        }).catch(() => undefined)
     }
 }
 
@@ -47,6 +57,10 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         return () => { document.body.style.overflow = '' }
     }, [internalOpen])
 
+    useEffect(() => {
+        initializeDeviceCookie(publicApiUrl)
+    }, [publicApiUrl])
+
     const close = () => {
         setInternalOpen(false)
         setError(null)
@@ -57,7 +71,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
     const doLogin = async (email: string, password: string) => {
         setLoading(true)
         setError(null)
-        const deviceId = getDeviceId()
+        const deviceId = getDeviceIdFromCookie()
         try {
             const res = await fetch(`${publicApiUrl}/api/auth/login`, {
                 method: 'POST',
@@ -149,7 +163,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         }
     }
 
-    async function handleGoogleLogin(e:any) {
+    async function handleGoogleLogin(e: any) {
         e.preventDefault()
         try {
             window.location.href = `${publicApiUrl}/oauth2/authorization/google`
@@ -163,7 +177,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
     if (!modalActive) return null
 
     return (
-        <section  className="fixed inset-0 z-50 flex items-center justify-center">
+        <section className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/60" onClick={close}></div>
 
             <div className="relative rounded-none bg-white p-8 shadow-sm w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
@@ -259,7 +273,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                 </div>
 
                 <div className="mb-6">
-                    <button onClick={(e)=>handleGoogleLogin(e)} type="button" className="flex w-full items-center justify-center border border-gray-300 bg-white px-4 py-3 text-gray-700 transition-colors hover:bg-gray-50">
+                    <button onClick={(e) => handleGoogleLogin(e)} type="button" className="flex w-full items-center justify-center border border-gray-300 bg-white px-4 py-3 text-gray-700 transition-colors hover:bg-gray-50">
                         <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />

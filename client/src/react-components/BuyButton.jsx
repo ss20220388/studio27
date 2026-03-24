@@ -1,15 +1,16 @@
 import { set } from "astro:schema";
 import { motion } from "framer-motion";
 import React from "react";
-export default function BuyButton({ price ,userPocetni}) {
+export default function BuyButton({ price ,userPocetni,appUrl}) {
   const [nistePrijavljeni, setNistePrijavljeni] = React.useState(false);
   const [user, setUser] = React.useState({ data: null, error: null });
   function handelBut() {
     if (user.error) {
+      window.dispatchEvent(new CustomEvent('open-login'))
       setNistePrijavljeni(true);
       setTimeout(() => setNistePrijavljeni(false), 1500);
     } else {
-      window.location.href = `http://app.studio27.rs/kurs`;
+      window.location.href = `${appUrl}/kurs`;
     }
 
   }
