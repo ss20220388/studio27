@@ -40,6 +40,34 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
         return () => window.removeEventListener('open-login', handler)
     }, [])
 
+    // Provjeri URL parametere za OAuth greške
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search)
+            const errorParam = params.get('error')
+            if (errorParam) {
+                let errorMessage = ''
+                switch (errorParam) {
+                    case 'device_mismatch':
+                        errorMessage = 'Ovaj nalog je već vezan za drugi računar. Kontaktirajte admina za otključavanje.'
+                        break
+                    case 'deviceId_missing':
+                        errorMessage = 'deviceId nije dostupan. Osvežite stranicu i pokušajte ponovno.'
+                        break
+                    case 'oauth_failed':
+                        errorMessage = 'Greška pri Google prijavi'
+                        break
+                    default:
+                        errorMessage = 'Greška pri prijavi'
+                }
+                setError(errorMessage)
+                setInternalOpen(true)
+                // Obriši error parametar iz URL-a
+                window.history.replaceState({}, document.title, window.location.pathname)
+            }
+        }
+    }, [])
+
     // lock scroll when modal is open
     useEffect(() => {
         if (internalOpen) {
@@ -158,6 +186,40 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
         }
     }
 
+    const handleGoogleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
+        e.preventDefault()
+        setLoading(true)
+        setError(null)
+        try {
+            const deviceId = getDeviceId()
+            if (!deviceId) {
+                setError('deviceId nije dostupan. Osvežite stranicu i pokušajte ponovno.')
+                setLoading(false)
+                return
+            }
+
+            // Prvo spremi deviceId u cookie na serveru
+            const prepareRes = await fetch('/api/auth/prepare-oauth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ deviceId })
+            })
+
+            if (!prepareRes.ok) {
+                setError('Greška pri pripremi Google prijave')
+                setLoading(false)
+                return
+            }
+
+            // Tek onda kreni sa OAuth
+            window.location.href = '/oauth2/authorization/google'
+        } catch (e: any) {
+            setError(e?.message || 'Greška pri pokretanju Google prijave')
+            setLoading(false)
+        }
+    }
+
     /* -------- early‑return AFTER all hooks -------- */
     const isControlled = typeof isOpen === 'boolean'
     const modalActive = internalOpen || (isControlled && isOpen)
@@ -261,7 +323,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="mb-6">
-                    <button type="button" className="flex w-full items-center justify-center border border-gray-300 bg-white px-4 py-3 text-gray-700 transition-colors hover:bg-gray-50">
+                    <button onClick={handleGoogleLogin} disabled={loading} type="button" className="flex w-full items-center justify-center border border-gray-300 bg-white px-4 py-3 text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-50">
                         <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />

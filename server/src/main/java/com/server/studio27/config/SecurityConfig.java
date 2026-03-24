@@ -1,33 +1,65 @@
 package com.server.studio27.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.server.studio27.auth.JwtAuthFilter;
+import com.server.studio27.auth.JwtService;
+
+import jakarta.servlet.http.Cookie;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtAuthFilter jwtAuthFilter;
+    @Value("${app.cookie.domain:localhost}")
+    private String cookieDomain;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+    @Value("${app.cookie.secure:true}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site:Lax}")
+    private String sameSite;
+
+    @Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
+
+    private final JwtAuthFilter jwtAuthFilter;
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
+    private final JdbcTemplate jdbcTemplate;
+
+    public SecurityConfig(
+            JwtAuthFilter jwtAuthFilter,
+            JwtService jwtService,
+            UserDetailsService userDetailsService,
+            JdbcTemplate jdbcTemplate) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {}) 
+                .cors(cors -> {})
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -37,6 +69,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/refresh").permitAll()
                         .requestMatchers("/api/auth/access-token").permitAll()
                         .requestMatchers("/api/auth/me").permitAll()
+                        .requestMatchers("/api/auth/prepare-oauth").permitAll()
+                        .requestMatchers("/oauth2/authorization/google").permitAll()
                         .requestMatchers("/api/auth/**").authenticated()
                         .requestMatchers("/api/kursevi/**").permitAll()
                         .requestMatchers("/api/kursevi-sa-lekcijama").permitAll()
@@ -49,8 +83,132 @@ public class SecurityConfig {
                         .requestMatchers("/api/upload-hls-hetzner").permitAll()
                         .requestMatchers("/api/kursevi/{id}").permitAll()
                         .requestMatchers("/api/progress-chart/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
+                .oauth2Login(oauth -> oauth
+                        .successHandler((request, response, authentication) -> {
+                            System.out.println("=== GOOGLE OAUTH SUCCESS ===");
+
+                            OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
+                            String email = oauthUser.getAttribute("email");
+                            
+                            // Čitaj deviceId iz cookie-ja
+                            String deviceId = null;
+                            Cookie[] cookies = request.getCookies();
+                            if (cookies != null) {
+                                for (Cookie cookie : cookies) {
+                                    if ("oauthDeviceId".equals(cookie.getName())) {
+                                        deviceId = cookie.getValue();
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            System.out.println("Email: " + email + ", DeviceId from cookie: " + deviceId);
+
+                            // Provjeravamo deviceId
+                            if (deviceId == null || deviceId.isBlank()) {
+                                System.out.println("deviceId nije pronađen u cookie-ju");
+                                response.sendRedirect(frontendUrl + "?error=deviceId_missing");
+                                return;
+                            }
+
+                            Integer count = jdbcTemplate.queryForObject(
+                                    "SELECT COUNT(*) FROM user WHERE email = ?",
+                                    Integer.class,
+                                    email);
+
+                            // Ako korisnik već postoji, proverimo device binding
+                            if (count != null && count > 0) {
+                                String existingDeviceId = jdbcTemplate.queryForObject(
+                                        "SELECT deviceId FROM user WHERE email = ?", String.class, email);
+
+                                if (existingDeviceId != null && !existingDeviceId.isBlank()
+                                        && !existingDeviceId.equals(deviceId)) {
+                                    // Nalog je vezan za drugi uredjaj
+                                    System.out.println("Device binding violation!");
+                                    System.out.println("Existing: " + existingDeviceId + ", Attempted: " + deviceId);
+                                    response.sendRedirect(frontendUrl + "?error=device_mismatch");
+                                    return;
+                                }
+
+                                // Ako je deviceId null ili prazan, ažuriramo ga
+                                if (existingDeviceId == null || existingDeviceId.isBlank()) {
+                                    System.out.println("Updating deviceId for existing user: " + email);
+                                    jdbcTemplate.update("UPDATE user SET deviceId = ? WHERE email = ?",
+                                            deviceId, email);
+                                }
+                            } else {
+                                // Novi korisnik - kreiramo sa deviceId-om
+                                PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+                                String randomPassword = passwordEncoder.encode(java.util.UUID.randomUUID().toString());
+
+                                System.out.println("Creating new user with Google OAuth: " + email);
+                                jdbcTemplate.update(
+                                        "INSERT INTO user (email, password, deviceId) VALUES (?, ?, ?)",
+                                        email,
+                                        randomPassword,
+                                        deviceId);
+
+                                Integer userId = jdbcTemplate.queryForObject(
+                                        "SELECT userId FROM user WHERE email = ?",
+                                        Integer.class,
+                                        email);
+
+                                jdbcTemplate.update(
+                                        "INSERT INTO student (studentId, ime, prezime, brojTelefona) VALUES (?, ?, ?, ?)",
+                                        userId,
+                                        oauthUser.getAttribute("given_name"),
+                                        oauthUser.getAttribute("family_name"),
+                                        "");
+                            }
+
+                            // Učitaj user-a
+                            UserDetails user = userDetailsService.loadUserByUsername(email);
+
+                            // Generiši tokene
+                            String accessToken = jwtService.generateAccessToken(user);
+                            String refreshToken = jwtService.generateRefreshToken(user);
+
+                            // Cookie-ji
+                            ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
+                                    .httpOnly(true)
+                                    .secure(cookieSecure)
+                                    .path("/")
+                                    .domain(cookieDomain)
+                                    .maxAge(7 * 24 * 60 * 60)
+                                    .sameSite(sameSite)
+                                    .build();
+
+                            ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
+                                    .httpOnly(true)
+                                    .secure(cookieSecure)
+                                    .path("/")
+                                    .domain(cookieDomain)
+                                    .maxAge(7 * 24 * 60 * 60)
+                                    .sameSite(sameSite)
+                                    .build();
+
+                            response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+                            response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
+
+                            // OAuth deviceId cookie se briše
+                            ResponseCookie deleteCookie = ResponseCookie.from("oauthDeviceId", "")
+                                    .httpOnly(true)
+                                    .secure(cookieSecure)
+                                    .path("/")
+                                    .domain(cookieDomain)
+                                    .maxAge(0)
+                                    .sameSite(sameSite)
+                                    .build();
+                            response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+
+                            System.out.println("OAuth2 login successful!");
+                            response.sendRedirect(frontendUrl);
+                        })
+                        .failureHandler((request, response, authenticationException) -> {
+                            System.out.println("OAuth2 login failed");
+                            response.sendRedirect(frontendUrl + "?error=oauth_failed");
+                        }))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

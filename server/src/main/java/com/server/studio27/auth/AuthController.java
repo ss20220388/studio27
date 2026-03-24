@@ -2,6 +2,7 @@ package com.server.studio27.auth;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -24,10 +25,20 @@ import com.server.studio27.requests.RegisterRequest;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("api/auth")
 public class AuthController {
+    @Value("${app.cookie.domain:.dev.27archviz.com}")
+    private String cookieDomain;
+
+    @Value("${app.cookie.secure:true}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site:Lax}")
+    private String sameSite;
+
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
@@ -94,20 +105,20 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(true) // Secure=true za SameSite=None
+                .secure(cookieSecure)
                 .path("/")
-                .domain(".dev.27archviz.com")
-                .maxAge(7 * 24 * 60 * 60) // 7 dana
-                .sameSite("Lax") // dozvoljava cross-subdomain
+                .domain(cookieDomain)
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite(sameSite)
                 .build();
 
         ResponseCookie cookieAccess = ResponseCookie.from("accessToken", accessToken)
                 .httpOnly(true)
-                .secure(true) // Secure=true za SameSite=None
+                .secure(cookieSecure)
                 .path("/")
-                .domain(".dev.27archviz.com")
-                .maxAge(7 * 24 * 60 * 60) // 7 dana
-                .sameSite("Lax") // dozvoljava cross-subdomain
+                .domain(cookieDomain)
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite(sameSite)
                 .build();
 
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
@@ -116,6 +127,32 @@ public class AuthController {
         return ResponseEntity.ok(Map.of(
                 "accessToken", accessToken,
                 "message", "Uspesno ulogovan"));
+    }
+
+    @PostMapping("/prepare-oauth")
+    public ResponseEntity<?> prepareOAuth(
+            @RequestBody Map<String, String> request,
+            HttpServletResponse response) {
+        String deviceId = request.get("deviceId");
+        
+        if (deviceId == null || deviceId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "deviceId je obavezan"));
+        }
+        
+        // Spremi deviceId u cookie za OAuth flow
+        ResponseCookie deviceIdCookie = ResponseCookie.from("oauthDeviceId", deviceId)
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path("/")
+                .domain(cookieDomain)
+                .maxAge(10 * 60) // 10 minuta - dovoljno za OAuth flow
+                .sameSite(sameSite)
+                .build();
+        
+        response.addHeader(HttpHeaders.SET_COOKIE, deviceIdCookie.toString());
+        System.out.println("Saved oauthDeviceId in cookie: " + deviceId);
+        
+        return ResponseEntity.ok(Map.of("message", "deviceId spreman za OAuth"));
     }
 
     @PostMapping("/register-user")
