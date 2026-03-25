@@ -168,10 +168,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
     async function handleGoogleLogin(e: any) {
         e.preventDefault()
         try {
-            // Prvo osiguraj da deviceId postoji u localStorage/cookie
             await getDeviceId({ API_URL: publicApiUrl })
-
-            // Onda redirect na Google
             window.location.href = `${publicApiUrl}/oauth2/authorization/google`
         } catch (e: any) {
             console.error('Google login error:', e)
