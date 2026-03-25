@@ -19,7 +19,7 @@ const ErrorToastNotifier = ({ losGmailCookie }) => {
                 msg = 'Ovaj uređaj je već prijavljen drugim nalogom'
                 break
             case 'server_error':
-                msg = 'Serverska greška pri logovanja'
+                msg = 'Prijavljeni ste na drugom racunaru, molimo ulogujte se sa istog '
                 break
             case 'oauth2_failed':
                 msg = 'OAuth2 prijava je neuspešna'
