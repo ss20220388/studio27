@@ -8,7 +8,7 @@ const ReactKurs = ({
     unpaid = true,
     paid = true,
 }) => {
-    const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
+    const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
     const [pohadjanje, setPohadjanje] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
 

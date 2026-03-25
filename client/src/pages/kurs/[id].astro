@@ -6,7 +6,7 @@ import BuyButton from "../../react-components/BuyButton.jsx";
 import KursHero from "../../react-components/KursHero.jsx";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
-
+const APP_URL = import.meta.env.PUBLIC_APP_URL || "http://app.studio27.rs";
 const { id } = Astro.params;
 let kurs = null;
 try {
@@ -45,6 +45,6 @@ try{
   <!-- CTA Section -->
   <section class="py-32 bg-black flex flex-col items-center gap-6">
     <p class="text-white/50 text-sm uppercase tracking-widest">Spremni?</p>
-    <BuyButton price={kurs.cena} userPocetni={user} client:load />
+    <BuyButton price={kurs.cena} userPocetni={user} appUrl={APP_URL} client:load />
   </section>
 </Layout>

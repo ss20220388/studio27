@@ -62,6 +62,10 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         return () => { document.body.style.overflow = '' }
     }, [internalOpen])
 
+    useEffect(() => {
+        initializeDeviceCookie(publicApiUrl)
+    }, [publicApiUrl])
+
     const close = () => {
         setInternalOpen(false)
         setError(null)
