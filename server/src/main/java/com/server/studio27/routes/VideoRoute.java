@@ -12,6 +12,7 @@ import org.springframework.http.HttpRange;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -23,6 +24,9 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import com.server.studio27.controllers.HetznerAPIController;
 import com.server.studio27.models.SftpStream;
 import com.server.studio27.services.EncryptionService;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 @RequestMapping("/api/video")
@@ -39,6 +43,9 @@ public class VideoRoute {
 
     @Autowired
     private com.server.studio27.auth.CustomUserDetailsService customUserDetailsService;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @GetMapping("/generate-video-token")
     public ResponseEntity<?> generateVideoToken(@RequestParam String videoPath,
@@ -142,4 +149,20 @@ public class VideoRoute {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    @PostMapping("/dodaj-video-u-bazu")
+    public ResponseEntity<String> insertVideoInSQL(@RequestBody Map<String, Object> payload) {
+       try{ String url = (String) payload.get("url");
+        int lekcijaId = (int) payload.get("lekcijaId");
+        String SQL = """
+                    INSERT INTO video (url, lekcijaId, ukupnoTrajanje) VALUES (?, ?, null);
+                """;
+        jdbcTemplate.update(SQL, url, lekcijaId);
+        return ResponseEntity.ok("Sve je dobro proslo");
+    }
+        catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Doslo je do greske prilikom dodavanja videa u bazu");
+        }
+    }
+    
 }

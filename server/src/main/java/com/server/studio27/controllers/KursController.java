@@ -281,7 +281,7 @@ public class KursController {
                     (String) first.get("komentarDole"),
                     (String) first.get("komentarSredina"),
                     (String) first.get("komentarGore"),
-                     lekcije);
+                    lekcije);
             System.out.println("Constructed Kurs object: " + kurs.getNaziv() + " with " + lekcije.size() + " lekcije");
 
             return ResponseEntity.ok(kurs);
@@ -293,46 +293,107 @@ public class KursController {
 
     public ResponseEntity<List<Kurs>> getAllKurseviSaLekcijama() {
         List<Kurs> kursevi = new ArrayList<>();
-        String SQL = "Select kursId,k.naziv as \"Naziv kursa\",k.opis as \"Opis kursa\", cena, trajanje as \"Trajanje u danima\", slikaUrl as \"Slika kursa\",lekcijaId, l.naziv as \"Naziv  lekcije\",\nl.opis as \"Opis lekcije\", url as \"Video url\" from Kurs k\n"
-                + "left join Lekcija l using(kursId)\n"
-                + "left join Video  v using(lekcijaId)\n"
-                + "Group by kursId,lekcijaId,videoId;";
+        String SQL = """
+                SELECT
+                    k.kursId,
+                    k.naziv,
+                    k.opis,
+                    k.cena,
+                    k.trajanje,
+                    k.slikaUrl,
+                    k.glavniKurs,
+                    k.komentarDole,
+                    k.komentarSredina,
+                    k.komentarGore,
+                    l.lekcijaId,
+                    l.naziv AS nazivLekcije,
+                    l.opis AS opisLekcije
+                FROM kurs k
+                LEFT JOIN lekcija l USING(kursId)
+                ORDER BY k.kursId, l.lekcijaId
+                """;
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
         int currentKursId = -1;
         List<Lekcija> lekcije = new ArrayList<>();
+
         for (Map<String, Object> row : rows) {
             int kursId = ((Number) row.get("kursId")).intValue();
 
             if (currentKursId != kursId) {
+                // Dodaj prethodnji kurs ako postoji
+                if (currentKursId != -1) {
+                    kursevi.add(new Kurs(
+                            currentKursId,
+                            (String) row.get("naziv"),
+                            (String) row.get("opis"),
+                            ((Number) row.get("cena")).intValue(),
+                            ((Number) row.get("trajanje")).intValue(),
+                            (String) row.get("slikaUrl"),
+                            (String) row.get("glavniKurs"),
+                            (String) row.get("komentarDole"),
+                            (String) row.get("komentarSredina"),
+                            (String) row.get("komentarGore"),
+                            lekcije));
+                }
+
+                // Počni novi kurs
                 lekcije = new ArrayList<>();
-                lekcije.add(new Lekcija(
-                        ((Number) row.get("lekcijaId")).intValue(),
-                        (String) row.get("Naziv  lekcije"),
-                        (String) row.get("Opis lekcije"),
-                        (String) row.get("Video url")));
-                kursevi.add(new Kurs(
-                        kursId,
-                        (String) row.get("Naziv kursa"),
-                        (String) row.get("Opis kursa"),
-                        ((Number) row.get("cena")).intValue(),
-                        ((Number) row.get("Trajanje u danima")).intValue(),
-                        (String) row.get("Slika kursa"),
-                        (String) row.get("glavniKurs"),
-                        (String) row.get("komentarDole"),
-                        (String) row.get("komentarSredina"),
-                        (String) row.get("komentarGore"),   
-                        lekcije));
-
                 currentKursId = kursId;
-            } else {
-                lekcije.add(new Lekcija(
-                        ((Number) row.get("lekcijaId")).intValue(),
-                        (String) row.get("Naziv  lekcije"),
-                        (String) row.get("Opis lekcije"),
-                        (String) row.get("Video url")));
-            }
 
+                if (row.get("lekcijaId") != null) {
+                    String sqlVideos = "SELECT url FROM video WHERE lekcijaId = ?";
+                    int lekcijaId = ((Number) row.get("lekcijaId")).intValue();
+                    List<Map<String, Object>> videoRows = jdbcTemplate.queryForList(sqlVideos, lekcijaId);
+
+                    List<String> urls = new ArrayList<>();
+                    for (Map<String, Object> videoRow : videoRows) {
+                        urls.add((String) videoRow.get("url"));
+                    }
+                    System.out.println("Adding lekcija with ID: " + lekcijaId + " and " + urls.size() + " video URLs");
+
+                    lekcije.add(new Lekcija(
+                            lekcijaId,
+                            (String) row.get("nazivLekcije"),
+                            (String) row.get("opisLekcije"),
+                            urls));
+                }
+            } else {
+                if (row.get("lekcijaId") != null) {
+                    String sqlVideos = "SELECT url FROM video WHERE lekcijaId = ?";
+                    int lekcijaId = ((Number) row.get("lekcijaId")).intValue();
+                    List<Map<String, Object>> videoRows = jdbcTemplate.queryForList(sqlVideos, lekcijaId);
+
+                    List<String> urls = new ArrayList<>();
+                    for (Map<String, Object> videoRow : videoRows) {
+                        urls.add((String) videoRow.get("url"));
+                    }
+                    System.out.println("Adding lekcija with ID: " + lekcijaId + " and " + urls.size() + " video URLs to existing kurs ID: " + currentKursId);
+                    lekcije.add(new Lekcija(
+                            ((Number) row.get("lekcijaId")).intValue(),
+                            (String) row.get("nazivLekcije"),
+                            (String) row.get("opisLekcije"),
+                            urls));
+                }
+            }
         }
+
+        // Dodaj poslednji kurs
+        if (currentKursId != -1 && !rows.isEmpty()) {
+            Map<String, Object> lastRow = rows.get(rows.size() - 1);
+            kursevi.add(new Kurs(
+                    currentKursId,
+                    (String) lastRow.get("naziv"),
+                    (String) lastRow.get("opis"),
+                    ((Number) lastRow.get("cena")).intValue(),
+                    ((Number) lastRow.get("trajanje")).intValue(),
+                    (String) lastRow.get("slikaUrl"),
+                    (String) lastRow.get("glavniKurs"),
+                    (String) lastRow.get("komentarDole"),
+                    (String) lastRow.get("komentarSredina"),
+                    (String) lastRow.get("komentarGore"),
+                    lekcije));
+        }
+
         return ResponseEntity.ok(kursevi);
     }
 

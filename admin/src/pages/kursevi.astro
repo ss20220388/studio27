@@ -1,8 +1,9 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import CoursesPage from "../react components/CoursesPage";
+const accesToken = Astro.cookies.get("refreshToken")?.value || null;
 ---
 
 <Layout title="Kursevi">
-    <CoursesPage client:load />
+    <CoursesPage accesToken={accesToken} client:load />
 </Layout>

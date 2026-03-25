@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import VideoPlayerHLS from "./VideoPlayerHLS";
 
-const KursPlayer = ({ lekcije, token }) => {
+const KursPlayer = ({ lekcije, token,API_URL }) => {
 
     const [selectedVideo, setSelectedVideo] = useState(
         lekcije?.[0]?.klipovi?.[0] || null
@@ -84,6 +84,7 @@ const KursPlayer = ({ lekcije, token }) => {
                             <VideoPlayerHLS
                                 videoId={selectedVideo.url}
                                 videoData={selectedVideo}
+                                API_URL={API_URL}
                                 accessToken={token}
                             />
                         </div>

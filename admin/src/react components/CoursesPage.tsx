@@ -9,10 +9,10 @@ interface Video {
 }
 
 interface Lekcija {
-  id: number;
+  lekcijaId: number;
   naziv: string;
   opis: string;
-  videos: Video[];
+  videoUrls: string[];
 }
 
 interface Kurs {
@@ -47,8 +47,9 @@ const Modal = ({ open, onClose, title, children, wide = false }: {
   );
 };
 
-export default function CoursesPage() {
+export default function CoursesPage({accesToken}: {accesToken: string | null}) {
   const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+  
   
   // Helper funkcija za izgradnju URL slike
   const getImageUrl = (slikaUrl: string | undefined): string | null => {
@@ -71,9 +72,10 @@ export default function CoursesPage() {
   const [expandedLekcija, setExpandedLekcija] = useState<number | null>(null);
   const [showAddLekcija, setShowAddLekcija] = useState(false);
   const [showAddVideo, setShowAddVideo] = useState<number | null>(null);
-  const [previewVideo, setPreviewVideo] = useState<Video | null>(null);
+  const [previewVideo, setPreviewVideo] = useState<{ url: string } | null>(null);
   const [addLekcijaForm, setAddLekcijaForm] = useState({ naziv: "", opis: "" });
   const [addVideoForm, setAddVideoForm] = useState({ naziv: "", file: "" });
+  
 
   // Učitaj kurseve iz baze (token je HTTP-only cookie, automatski se šalje sa credentials: 'include')
   useEffect(() => {
@@ -82,18 +84,18 @@ export default function CoursesPage() {
       try {
         setLoading(true);
         setError(null);
-        // Pokušaj prvo sa /api/kursevi-sa-lekcijama, ako ne radi vrati se na /api/kursevi
+        console.log(`${API_URL}`)
         let endpoint = `${API_URL}/api/kursevi-sa-lekcijama`;
         const response = await fetch(endpoint, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // Šalje HTTP-only token cookie automatski
+          credentials: "include", 
         });
         console.log("📡 API odgovor status:", response.status);
         
-        // Ako je 403, pokušaj sa običnim /api/kursevi
+        
         if (response.status === 403) {
           console.log("⚠️ Endpoint /api/kursevi-sa-lekcijama zahteva admin pristup, pokušavam sa /api/kursevi");
           endpoint = `${API_URL}/api/kursevi`;
@@ -120,26 +122,11 @@ export default function CoursesPage() {
         
         const data = await response.json();
         console.log("✅ Primljeni kursevi iz API-ja:", data);
-        // Prikaži detaljne informacije o svakom kursu i njegovim lekcijama
+        console.log("🎬 Struktura lekcija:", data.kursevi?.[0]?.lekcije || data?.[0]?.lekcije);
+        console.log("📹 Struktura videa:", data.kursevi?.[0]?.lekcije?.[0]?.videoUrls || data?.[0]?.lekcije?.[0]?.videoUrls);
         const kurseviArray = data.kursevi || data || [];
-        if (Array.isArray(kurseviArray)) {
-          kurseviArray.forEach((k: any, idx: number) => {
-            console.log(`📚 Kurs ${idx + 1}: ${k.naziv}`);
-            console.log(`   • Lekcija: ${k.lekcije?.length || 0}`);
-            console.log(`   • Cena: ${k.cena} RSD`);
-            console.log(`   • Studenti: ${k.brojStudenata}`);
-            console.log(`   • Slika: ${k.slikaUrl || "❌ Nema slike"}`);
-            
-            // Prikaži detalje svake lekcije
-            if (k.lekcije && Array.isArray(k.lekcije)) {
-              k.lekcije.forEach((l: any, li: number) => {
-                console.log(`     Lekcija ${li + 1}: ${l.naziv} (${l.videos?.length || 0} videa)`);
-              });
-            }
-          });
-        }
+        
         setKursevi(kurseviArray);
-        console.log("📊 Kursevi postavljeni u state, broj:", kurseviArray.length);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Greška pri učitavanju kurseva");
         console.error("❌ Error pri fetchanju kurseva:", err);
@@ -291,7 +278,7 @@ export default function CoursesPage() {
           { label: "Cena", value: `${(selectedKurs.cena || 0).toLocaleString()} RSD` },
           { label: "Studenata", value: (selectedKurs.brojStudenata || 0).toString() },
           { label: "Lekcija", value: (selectedKurs.lekcije?.length || 0).toString() },
-          { label: "Videa", value: (selectedKurs.lekcije?.reduce((a, l) => a + (l.videos?.length || 0), 0) || 0).toString() },
+          { label: "Videa", value: (selectedKurs.lekcije?.reduce((a, l) => a + (l.videoUrls?.length || 0), 0) || 0).toString() },
         ].map((item) => (
           <div key={item.label} className="bg-neutral-900 border border-neutral-800 rounded-lg px-5 py-4 min-w-32">
             <p className="text-[11px] text-neutral-500 uppercase tracking-wider">{item.label}</p>
@@ -325,10 +312,14 @@ export default function CoursesPage() {
         ) : (
           <div className="space-y-3">
             {(selectedKurs.lekcije || []).map((lekcija, li) => (
-              <div key={lekcija.id} className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
+              <div key={lekcija.lekcijaId} className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
                 {/* Lesson header */}
                 <button
-                  onClick={() => setExpandedLekcija(expandedLekcija === lekcija.id ? null : lekcija.id)}
+                  onClick={() => {
+                    const newState = expandedLekcija === lekcija.lekcijaId ? null : lekcija.lekcijaId;
+                    console.log(`🔄 Lekcija: ${lekcija.naziv} (ID: ${lekcija.lekcijaId}) - Prethodna stanja: ${expandedLekcija}, Nova stanja: ${newState}`);
+                    setExpandedLekcija(newState);
+                  }}
                   className="w-full flex items-center justify-between px-5 py-4 hover:bg-neutral-800/30 transition-colors"
                 >
                   <div className="flex items-center gap-4">
@@ -341,12 +332,12 @@ export default function CoursesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-[11px] text-neutral-500">{(lekcija.videos?.length || 0)} videa</span>
+                    <span className="text-[11px] text-neutral-500">{(lekcija.videoUrls?.length || 0)} videa</span>
                     <svg
                       viewBox="0 0 20 20"
                       fill="currentColor"
                       className={`w-4 h-4 text-neutral-500 transition-transform duration-200 ${
-                        expandedLekcija === lekcija.id ? "rotate-180" : ""
+                        expandedLekcija === lekcija.lekcijaId ? "rotate-180" : ""
                       }`}
                     >
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -355,48 +346,36 @@ export default function CoursesPage() {
                 </button>
 
                 {/* Videos */}
-                {expandedLekcija === lekcija.id && (
-                  <div className="border-t border-neutral-800 px-5 py-4 bg-neutral-950/50">
-                    {(lekcija.videos?.length || 0) === 0 ? (
-                      <p className="text-xs text-neutral-600 py-2">Nema videa u ovoj lekciji.</p>
+                {expandedLekcija === lekcija.lekcijaId && (
+                  <div className="border-t border-neutral-800 px-5 py-4 bg-neutral-950/50 space-y-3">
+
+                    {(lekcija.videoUrls?.length || 0) === 0 ? (
+                      <p className="text-xs text-neutral-500">Nema videa za ovu lekciju. Struktura: {JSON.stringify(lekcija.videoUrls)}</p>
                     ) : (
-                      <div className="space-y-1.5">
-                        {(lekcija.videos || []).map((v, vi) => (
-                          <div
-                            key={v.id}
-                            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-800/50 transition-colors group"
+                      <div className="space-y-2">
+                        {lekcija.videoUrls?.map((videoUrl, idx) => {
+                          console.log(`  📹 Video ${idx}:`, videoUrl);
+                          return (
+                          <button
+                            key={idx}
+                            onClick={() => setPreviewVideo({ url: videoUrl })}
+                            className="w-full text-left px-3 py-2.5 text-sm text-neutral-300 bg-neutral-800 border border-neutral-700 rounded-lg hover:bg-neutral-700 hover:border-neutral-600 transition-colors flex items-center gap-2 group"
                           >
-                            <div className="w-6 h-6 rounded bg-red-900/15 flex items-center justify-center">
-                              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-red-400">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                            <span className="flex-1 text-sm text-neutral-300">{v.naziv}</span>
-                            <span className="text-[11px] text-neutral-600 font-mono">{v.trajanje}</span>
-                            <button
-                              onClick={() => setPreviewVideo(v)}
-                              className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-neutral-500 hover:text-blue-400 hover:bg-blue-900/15 transition-all"
-                              title="Pregledaj video"
-                            >
-                              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                              </svg>
-                            </button>
-                            <button className="opacity-0 group-hover:opacity-100 p-1 rounded text-neutral-500 hover:text-red-400 transition-all">
-                              <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
+                            <svg className="w-4 h-4 text-neutral-500 group-hover:text-neutral-300 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                            </svg>
+                            <span className="truncate flex-1">Video {idx + 1}</span>
+                            <span className="text-[10px] ml-auto text-neutral-500 flex-shrink-0">▶</span>
+                          </button>
+                        );
+                        })}
                       </div>
                     )}
                     <button
-                      onClick={() => setShowAddVideo(lekcija.id)}
-                      className="mt-2 flex items-center gap-1.5 text-xs text-neutral-500 hover:text-red-400 transition-colors py-1"
+                      onClick={() => setShowAddVideo(lekcija.lekcijaId)}
+                      className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-neutral-400 border border-dashed border-neutral-700 rounded-lg hover:text-white hover:border-neutral-600 transition-colors"
                     >
-                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+                      <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                       </svg>
                       Dodaj video
@@ -441,15 +420,7 @@ export default function CoursesPage() {
       {/* Add video modal */}
       <Modal open={showAddVideo !== null} onClose={() => setShowAddVideo(null)} title="Dodaj video">
         <div className="space-y-4">
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Naziv videa</label>
-            <input
-              value={addVideoForm.naziv}
-              onChange={(e) => setAddVideoForm({ ...addVideoForm, naziv: e.target.value })}
-              placeholder="Npr. Uvodni video.mp4"
-              className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 focus:ring-1 focus:ring-red-900/30 transition-all duration-200 placeholder-neutral-600"
-            />
-          </div>
+
           <div>
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Video fajl</label>
             <div className="border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center hover:border-neutral-600 transition-colors cursor-pointer">
@@ -468,21 +439,18 @@ export default function CoursesPage() {
       </Modal>
 
       {/* Video preview modal */}
-      <Modal open={!!previewVideo} onClose={() => setPreviewVideo(null)} title={previewVideo?.naziv || "Video pregled"} wide>
+      <Modal open={!!previewVideo} onClose={() => setPreviewVideo(null)} title="Video pregled" wide>
         <div className="space-y-4">
           <div className="aspect-video bg-black rounded-lg overflow-hidden">
             {previewVideo && (
               <VideoPlayerHLS
-                videoId={previewVideo.id}
-                accessToken=""
+                videoId={previewVideo.url}
+                accessToken={accesToken}
+                API_URL={API_URL}
               />
             )}
           </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-neutral-200">{previewVideo?.naziv}</p>
-              <p className="text-xs text-neutral-500 mt-0.5">Trajanje: {previewVideo?.trajanje}</p>
-            </div>
+          <div className="flex items-center justify-end gap-2">
             <button
               onClick={() => setPreviewVideo(null)}
               className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"

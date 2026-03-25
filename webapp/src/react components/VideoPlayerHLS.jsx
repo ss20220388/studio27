@@ -1,13 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import Hls from "hls.js";
 
-const VideoPlayerHLS = ({ videoId, fileName = "index.m3u8", accessToken }) => {
+const VideoPlayerHLS = ({ videoId, fileName = "index.m3u8", accessToken ,API_URL}) => {
   const videoRef = useRef();
 
   useEffect(() => {
     if (!videoRef.current) return;
 
-    const src = `/api/hls/${videoId}/${fileName}`;
+    const src = `${API_URL}/api/hls/${videoId}/${fileName}`;
 
     if (Hls.isSupported()) {
       const hls = new Hls({
@@ -32,7 +32,7 @@ const VideoPlayerHLS = ({ videoId, fileName = "index.m3u8", accessToken }) => {
         videoRef.current.play();
       });
     }
-  }, [videoId, fileName, accessToken]);
+  }, [videoId, fileName, accessToken, API_URL]);
 
   return (
     <video
