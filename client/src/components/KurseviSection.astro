@@ -23,7 +23,6 @@ try {
 	const res = await fetch(`${API_URL}/api/kursevi`);
 	if (!res.ok) throw new Error(`Kursevi fetch failed: ${res.status}`);
 	const data: ResponseData = await res.json();
-	console.log(data);
 	
 	kursevi_1 = data?.kursevi?.slice(0, 4) || [];
 	kursevi_2 = data?.kursevi?.slice(4, 6) || [];
@@ -42,7 +41,6 @@ try {
 	});
 	if (!response.ok) throw new Error(`Auth failed: ${response.status}`);
 	userData = await response.json();
-	console.log(userData);
 } catch (error) {
 	console.error("Greška pri učitavanju user podataka:", error);
 	userData = {};
