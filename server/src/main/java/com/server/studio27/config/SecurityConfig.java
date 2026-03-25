@@ -172,43 +172,40 @@ public class SecurityConfig {
                                                                                                         + deviceId);
                                                                 } else {
                                                                         // Korisnik postoji - proveri deviceId
-                                                                        try {
-                                                                                String existingDeviceId = jdbcTemplate
-                                                                                                .queryForObject(
-                                                                                                                "SELECT deviceId FROM user WHERE email = ?",
-                                                                                                                String.class,
-                                                                                                                email);
 
-                                                                                // Ako ima drugačiji deviceId - ODBIJ
-                                                                                if (existingDeviceId != null
-                                                                                                && !existingDeviceId
-                                                                                                                .equals(deviceId)) {
-                                                                                        ResponseCookie errorCookie = ResponseCookie
-                                                                                                        .from("losGmail",
-                                                                                                                        "device_mismatch")
-                                                                                                        .httpOnly(false)
-                                                                                                        .secure(cookieSecure)
-                                                                                                        .path("/")
-                                                                                                        .maxAge(10)
-                                                                                                        .sameSite(sameSite)
-                                                                                                        .domain(cookieDomain)
-                                                                                                        .build();
-                                                                                        response.addHeader(
-                                                                                                        HttpHeaders.SET_COOKIE,
-                                                                                                        errorCookie.toString());
-                                                                                        response.sendRedirect(
-                                                                                                        frontendUrl);
-                                                                                        return;
-                                                                                }
-                                                                        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
-                                                                                // deviceId je NULL - postavi novi
+                                                                        String existingDeviceId = jdbcTemplate
+                                                                                        .queryForObject(
+                                                                                                        "SELECT deviceId FROM user WHERE email = ?",
+                                                                                                        String.class,
+                                                                                                        email);
+
+                                                                        if (existingDeviceId != null
+                                                                                        && !existingDeviceId
+                                                                                                        .equals(deviceId)) {
+                                                                                ResponseCookie errorCookie = ResponseCookie
+                                                                                                .from("losGmail",
+                                                                                                                "device_mismatch")
+                                                                                                .httpOnly(false)
+                                                                                                .secure(cookieSecure)
+                                                                                                .path("/")
+                                                                                                .maxAge(10)
+                                                                                                .sameSite(sameSite)
+                                                                                                .domain(cookieDomain)
+                                                                                                .build();
+                                                                                response.addHeader(
+                                                                                                HttpHeaders.SET_COOKIE,
+                                                                                                errorCookie.toString());
+                                                                                response.sendRedirect(
+                                                                                                frontendUrl);
+                                                                                return;
+                                                                        } else {
                                                                                 jdbcTemplate.update(
                                                                                                 "UPDATE user SET deviceId = ? WHERE email = ?",
                                                                                                 deviceId, email);
                                                                         }
+
                                                                 }
 
-                                                                // Login je okej - generiši tokene
                                                                 UserDetails user = userDetailsService
                                                                                 .loadUserByUsername(email);
                                                                 String accessToken = jwtService
