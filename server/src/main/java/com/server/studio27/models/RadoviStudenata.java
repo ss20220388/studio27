@@ -3,7 +3,6 @@ package com.server.studio27.models;
 public class RadoviStudenata {
 
     private int idRad;
-    private int idStudent;
     private int idKurs;
     private int slikaId;
 
@@ -12,10 +11,9 @@ public class RadoviStudenata {
     private String prezime;   // prezime studenta
     private String url;       // url slike
 
-    public RadoviStudenata(int idRad, int idStudent, int idKurs, int slikaId,
+    public RadoviStudenata(int idRad, int idKurs, int slikaId,
                            String naziv, String ime, String prezime, String url) {
         this.idRad = idRad;
-        this.idStudent = idStudent;
         this.idKurs = idKurs;
         this.slikaId = slikaId;
         this.naziv = naziv;
@@ -27,8 +25,6 @@ public class RadoviStudenata {
     public int getIdRad() { return idRad; }
     public void setIdRad(int idRad) { this.idRad = idRad; }
 
-    public int getIdStudent() { return idStudent; }
-    public void setIdStudent(int idStudent) { this.idStudent = idStudent; }
 
     public int getIdKurs() { return idKurs; }
     public void setIdKurs(int idKurs) { this.idKurs = idKurs; }

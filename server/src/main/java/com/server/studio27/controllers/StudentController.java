@@ -31,7 +31,7 @@ public class StudentController {
                     """;
 
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
-            System.out.println("SQL query executed successfully. Number of students retrieved: " );
+            
 
             for (Map<String, Object> row : rows) {
                 Map<String, Object> studentMap = new HashMap<>();
@@ -43,14 +43,14 @@ public class StudentController {
                 studentMap.put("brojTelefona", (String) row.get("brojTelefona"));
                 studentMap.put("deviceId", (String) row.get("deviceId"));
                 studentMap.put("active", (Number) row.get("active"));
-                System.out.println("Active status: " + studentMap.get("active"));
+               
                 String SQL2 = """
                                     Select k.kursId,k.naziv
                                     from kurs k
                                     join pohadja p on p.kursId = k.kursId
                                     where studentId = ?
                                     """;
-                System.out.println("Sql2: " + SQL2);
+                
                 List<Map<String, Object>> kursRows = jdbcTemplate.queryForList(SQL2, ((Number) row.get("studentId")).intValue());
                 List<Map<String, Object>> kursevi = new ArrayList<>();
                 for (Map<String, Object> kursRow : kursRows) {
@@ -62,7 +62,7 @@ public class StudentController {
                 studentMap.put("kursevi", kursevi);
                 students.add(studentMap);
             }
-            System.out.println("Students list: " + students);
+            
 
             Map<String, Object> result = new HashMap<>();
             result.put("students", students);
@@ -131,12 +131,23 @@ public class StudentController {
         try {
             String deletePohadjaSQL = "DELETE FROM pohadja WHERE studentId = ?";
             jdbcTemplate.update(deletePohadjaSQL, studentId);
+            System.out.println("Deleted from pohadja for studentId: " + studentId);
+
+            String deleteFromRecenzije = "DELETE FROM recenzija WHERE studentId = ?";
+            jdbcTemplate.update(deleteFromRecenzije, studentId);
+
+            System.out.println("Deleted from recenzija for studentId: " + studentId);
+            String deleteFromPlatio = "DELETE FROM platio WHERE studentId = ?";
+            jdbcTemplate.update(deleteFromPlatio, studentId);
+            System.out.println("Deleted from platio for studentId: " + studentId);
 
             String deleteStudentSQL = "DELETE FROM student WHERE studentId = ?";
             jdbcTemplate.update(deleteStudentSQL, studentId);
 
+
             String deleteUserSQL = "DELETE FROM user WHERE userId = ?";
             jdbcTemplate.update(deleteUserSQL, studentId);
+           
 
             return "Student deleted successfully";
         } catch (Exception e) {
@@ -151,7 +162,7 @@ public class StudentController {
 
             String updateStudentSQL = "UPDATE student SET ime = ?, prezime = ?, brojTelefona = ? WHERE studentId = ?";
             jdbcTemplate.update(updateStudentSQL, studentData.get("ime"), studentData.get("prezime"), studentData.get("brojTelefona"), studentData.get("studentId"));
-            System.out.println("Kursevi" + studentData.get("kursevi"));
+            
             String deletePohadjaSQL = "DELETE FROM pohadja WHERE studentId = ?";
             jdbcTemplate.update(deletePohadjaSQL, studentData.get("studentId"));
             for (Integer kurs : (List<Integer>) studentData.get("kursevi")) {
