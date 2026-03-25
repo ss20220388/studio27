@@ -29,6 +29,11 @@ const data: Response = await fetch(`${API_URL}/api/kursevi`);
 
 const kurseviRes: ResponseData = await data.json();
 const kursevi = kurseviRes.kursevi;
+console.log("=== KORPA DEBUG ===");
+console.log("API_URL:", API_URL);
+console.log("Token exists:", !!token);
+console.log("User Data:", userData);
+console.log("Kursevi:", kursevi);
 ---
 
 <Layout title="Korpa">

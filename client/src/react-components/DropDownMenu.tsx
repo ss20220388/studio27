@@ -55,7 +55,8 @@ const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUr
 
   
     const fullName = `${user.ime || ''} ${user.prezime || ''}`.trim() || 'Korisnik'
-    const displayName = fullName.length > 25 ? fullName.substring(0, 25) + '...' : fullName
+    const firstTwoWords = fullName.split(' ').slice(0, 2).join(' ')
+    const displayName = firstTwoWords.length > 20 ? firstTwoWords.substring(0, 18) + '...' : firstTwoWords
     const initials = `${(user.ime || '')[0] || ''}${(user.prezime || '')[0] || ''}`.toUpperCase() || 'K'
 
     return (
