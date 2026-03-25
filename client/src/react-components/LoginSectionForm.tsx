@@ -6,32 +6,37 @@ type Props = {
     publicApiUrl: string
 }
 
-function getDeviceIdFromCookie(): string {
-    if (typeof document === 'undefined') return ''
-    const name = 'deviceId='
-    const decodedCookie = decodeURIComponent(document.cookie)
-    const cookieArray = decodedCookie.split(';')
-    for (let cookie of cookieArray) {
-        cookie = cookie.trim()
-        if (cookie.indexOf(name) === 0) {
-            return cookie.substring(name.length)
+async function getDeviceId({API_URL}: {API_URL: string}): Promise<string> {
+    try {
+        const existing = localStorage.getItem('deviceId')
+        if (existing){ 
+            fetch(`${API_URL}/api/cookies/create-cookie-by-local-storage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ deviceId: existing}),
+        }).catch(err => console.error('Cookie création error:', err))
+            return existing
         }
+
+        const id =
+            typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+                ? crypto.randomUUID()
+                : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+        localStorage.setItem('deviceId', id)
+        fetch(`${API_URL}/api/cookies/create-cookie-by-local-storage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ deviceId: id }),
+        }).catch(err => console.error('Cookie création error:', err))
+        return id
+    } catch {
+        return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
     }
-    return ''
 }
 
-
-function initializeDeviceCookie(publicApiUrl: string): void {
-    const existingDeviceId = getDeviceIdFromCookie()
-    if (!existingDeviceId) {
-        fetch(`${publicApiUrl}/api/cookie/deviceId`, {
-            method: 'GET',
-            credentials: 'include'
-        }).catch(() => undefined)
-    }
-}
-
-const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) => {
+const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl}) => {
     const [loginForm, setLoginForm] = useState(true)
     const [internalOpen, setInternalOpen] = useState(!!isOpen)
     const [loading, setLoading] = useState(false)
@@ -71,7 +76,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
     const doLogin = async (email: string, password: string) => {
         setLoading(true)
         setError(null)
-        const deviceId = getDeviceIdFromCookie()
+        const deviceId = await getDeviceId({ API_URL: publicApiUrl })
         try {
             const res = await fetch(`${publicApiUrl}/api/auth/login`, {
                 method: 'POST',
@@ -165,8 +170,10 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
 
     async function handleGoogleLogin(e: any) {
         e.preventDefault()
+        const deviceId = await getDeviceId({ API_URL: publicApiUrl })
+        console.log('Redirecting to Google OAuth with deviceId:', deviceId)
         try {
-            window.location.href = `${publicApiUrl}/oauth2/authorization/google`
+            window.location.href = `${publicApiUrl}/oauth2/authorization/google?deviceId=${deviceId}`
         } catch (e: any) {
             setError(e?.message || 'Greška pri pokretanju Google prijave')
         }

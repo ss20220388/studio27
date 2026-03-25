@@ -2,9 +2,12 @@
 import Header2 from "../components/Header2.astro";
 import Footer from "../components/Footer.astro";
 import "../styles/global.css";
+import ErrorToastNotifier from "../react-components/ErrorToastNotifier";
 
 // src/layouts/Layout.astro
 const { title } = Astro.props;
+const losGmailCookie = Astro.cookies.get('losGmail');
+console.log('Los Gmail Cookie:', losGmailCookie);
 ---
 
 <!doctype html>
@@ -29,6 +32,7 @@ const { title } = Astro.props;
       <slot />
       <Footer />
     </div>
+    <ErrorToastNotifier losGmailCookie={losGmailCookie} client:load />
 
   </body>
 </html>
