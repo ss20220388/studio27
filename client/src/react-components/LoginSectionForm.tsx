@@ -6,16 +6,16 @@ type Props = {
     publicApiUrl: string
 }
 
-async function getDeviceId({API_URL}: {API_URL: string}): Promise<string> {
+async function getDeviceId({ API_URL }: { API_URL: string }): Promise<string> {
     try {
         const existing = localStorage.getItem('deviceId')
-        if (existing){ 
+        if (existing) {
             fetch(`${API_URL}/api/cookies/create-cookie-by-local-storage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ deviceId: existing}),
-        }).catch(err => console.error('Cookie création error:', err))
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ deviceId: existing }),
+            }).catch(err => console.error('Cookie création error:', err))
             return existing
         }
 
@@ -36,7 +36,7 @@ async function getDeviceId({API_URL}: {API_URL: string}): Promise<string> {
     }
 }
 
-const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl}) => {
+const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) => {
     const [loginForm, setLoginForm] = useState(true)
     const [internalOpen, setInternalOpen] = useState(!!isOpen)
     const [loading, setLoading] = useState(false)
@@ -62,9 +62,6 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl}) => 
         return () => { document.body.style.overflow = '' }
     }, [internalOpen])
 
-    useEffect(() => {
-        initializeDeviceCookie(publicApiUrl)
-    }, [publicApiUrl])
 
     const close = () => {
         setInternalOpen(false)
@@ -170,11 +167,14 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl}) => 
 
     async function handleGoogleLogin(e: any) {
         e.preventDefault()
-        const deviceId = await getDeviceId({ API_URL: publicApiUrl })
-        console.log('Redirecting to Google OAuth with deviceId:', deviceId)
         try {
-            window.location.href = `${publicApiUrl}/oauth2/authorization/google?deviceId=${deviceId}`
+            // Prvo osiguraj da deviceId postoji u localStorage/cookie
+            await getDeviceId({ API_URL: publicApiUrl })
+
+            // Onda redirect na Google
+            window.location.href = `${publicApiUrl}/oauth2/authorization/google`
         } catch (e: any) {
+            console.error('Google login error:', e)
             setError(e?.message || 'Greška pri pokretanju Google prijave')
         }
     }
