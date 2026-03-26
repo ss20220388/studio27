@@ -7,33 +7,32 @@ type Props = {
 }
 
 async function getDeviceId({ API_URL }: { API_URL: string }): Promise<string> {
-    try {
-        const existing = localStorage.getItem('deviceId')
-        if (existing) {
-            fetch(`${API_URL}/api/cookies/create-cookie-by-local-storage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ deviceId: existing }),
-            }).catch(err => console.error('Cookie création error:', err))
-            return existing
-        }
+    const makeId = () =>
+        typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 
-        const id =
-            typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-                ? crypto.randomUUID()
-                : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    let id: string
+
+    try {
+        id = localStorage.getItem('deviceId') || makeId()
         localStorage.setItem('deviceId', id)
-        fetch(`${API_URL}/api/cookies/create-cookie-by-local-storage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ deviceId: id }),
-        }).catch(err => console.error('Cookie création error:', err))
-        return id
     } catch {
-        return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+        id = makeId()
     }
+
+    const res = await fetch(`${API_URL}/api/cookies/create-cookie-by-local-storage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ deviceId: id }),
+    })
+
+    if (!res.ok) {
+        throw new Error(`Cookie endpoint failed: ${res.status}`)
+    }
+
+    return id
 }
 
 const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) => {
