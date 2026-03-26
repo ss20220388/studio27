@@ -1,4 +1,5 @@
 ---
+
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 type Student = {
@@ -56,48 +57,55 @@ try {
   console.error("Greška pri učitavanju recenzija:", e);
 }
 
-const radoviPrikaz = radovi.slice(0, 15);
+const radoviPrikaz = radovi.slice(0, 25);
 const recenzijePrikaz = recenzije.slice(0, 6);
 
 
 ---
 
-<section id="recenzije" class="py-16 px-4 bg-black">
-  <div class="max-w-7xl mx-auto">
+<section id="recenzije" class="bg-black">
+  <div class="max-w-7xl mx-auto px-4 py-16">
     <div class="mb-32">
-      <h3 class="rec-title text-3xl font-bold text-white text-center mb-16">
+      <h3 class="rec-title text-3xl font-bold text-white/80 text-center mb-16">
         Pogledajte radove naših studenata
       </h3>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12">
-        {
-          radoviPrikaz.map((rad, i) => (
-            <article class="rad-card relative isolate flex flex-col justify-end overflow-hidden rounded-2xl h-[450px] group" style={`--rad-i:${i}`}>
-              <img
-                src={`${API_URL}/api/uploaded-images${rad.url}`}
-                alt={rad.naziv}
-                class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-110"
-              />
-              <div class="absolute inset-0 bg-linear-to-t from-black via-black/70 to-transparent" />
-              <div class="absolute inset-0 flex flex-col items-center justify-center text-white text-center space-y-2">
-                <h3 class="text-lg sm:text-xl md:text-2xl font-bold">
-                  {rad.naziv}
-                </h3>
-             
-      
-              </div>
-            </article>
-          ))
-        }
-      </div>
     </div>
+  </div>
 
-    <!-- ========================= -->
-    <!-- RECENZIJE -->
-    <!-- ========================= -->
+  <!-- Radovi - puna sirina -->
+  <div class="w-full">
+    <div class="p-0">
+    {radoviPrikaz.length === 0 ? (
+      <p class="text-center text-gray-500 text-lg">Nema dostupnih radova</p>
+    ) : (
+      <div class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-0">
+        {radoviPrikaz.map((rad, idx) => {
+          // Raznovrsne veličine za masonry efekat - veće slike
+          const heights = ['h-[28rem]', 'h-96', 'h-[26rem]', 'h-[30rem]', 'h-80', 'h-72'];
+          const height = heights[idx % heights.length];
+          return (
+          <a href="/radovi"
+            class="group cursor-pointer overflow-hidden m-0 p-0 rad-item-animate block"
+            style={`animation-delay: ${idx * 0.1}s`}
+          >
+            <img 
+              src={`${API_URL}/api/uploaded-images${rad.url}`} 
+              class={`w-full ${height} object-cover hover:scale-105 transition-transform duration-300 block`}
+              loading="lazy"
+            />
+           
+          </a>
+          );
+        })}
+      </div>
+    )}
+</div>
+  </div>
 
-    <div class="rec-subtitle text-center mb-20">\
-       <h4 class="rec-title text-3xl font-bold text-white text-center mb-16">
+  <!-- Recenzije - normalna sirina -->
+  <div class="max-w-7xl mx-auto px-4 py-16">
+    <div class="rec-subtitle text-center mb-20">
+       <h4 class="rec-title text-3xl font-bold text-white/80 text-center mb-16">
         Pogledajte recenzije naših studenata
       </h4>
 
@@ -112,22 +120,31 @@ const recenzijePrikaz = recenzije.slice(0, 6);
           Još uvek nema recenzija.
         </p>
       ) : (
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 space-y-6">
+        <div class="md:columns-2 lg:columns-3 gap-8 space-y-8">
           {recenzijePrikaz.map((recenzija, i) => {
-            const ime = recenzija.student
-              ? `${recenzija.student.ime} ${recenzija.student.prezime}`
-              : "Anonimni korisnik";
-
-            const inicijali = recenzija.student
-              ? `${recenzija.student.ime?.charAt(0) || ""}${recenzija.student.prezime?.charAt(0) || ""}`
-              : "?";
-
+            
+           
             return (
-              <div class="rec-card flex flex-col p-6 bg-gray-800 border border-gray-800 rounded-2xl shadow-lg break-inside-avoid hover:border-gray-700 transition-all duration-300" style={`--rec-i:${i}`}>
+              <div
+                class="rec-card aspect-auto p-8 border border-gray-700 bg-white/10 text-white shadow-2xl shadow-gray-900/20 break-inside-avoid hover:border-gray-600 transition-all duration-800 block"
+                style={`--rec-i:${i}`}
+              >
+                <div class="flex gap-4 mb-6">
+                  
+                  <div>
+                    
+                    {recenzija.kurs && (
+                      <p class="kurs-naziv text-sm text-white uppercase">
+                        {recenzija.kurs.naziv}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <div class="flex gap-1 mb-4">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <svg
-                      class={`w-5 h-5 ${star <= recenzija.ocena ? "text-yellow-400" : "text-gray-600"}`}
+                      class={`w-4 h-4 ${star <= recenzija.ocena ? "text-yellow-400" : "text-gray-400"}`}
                       fill="currentColor"
                       viewBox="0 0 20 20"
                     >
@@ -136,23 +153,9 @@ const recenzijePrikaz = recenzije.slice(0, 6);
                   ))}
                 </div>
 
-                <p class="text-gray-300 leading-relaxed mb-6 flex-1">
+                <p class="text-gray-200 leading-relaxed">
                   {recenzija.opis || "Bez komentara"}
                 </p>
-
-                <div class="flex items-center gap-4 pt-4 border-t border-gray-800 mt-auto">
-                  <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-black font-semibold text-sm">
-                    {inicijali}
-                  </div>
-                  <div>
-                    <h6 class="text-gray-200 font-medium text-sm">{ime}</h6>
-                    {recenzija.kurs && (
-                      <p class="text-gray-400 text-xs">
-                        {recenzija.kurs.naziv}
-                      </p>
-                    )}
-                  </div>
-                </div>
               </div>
             );
           })}
@@ -160,9 +163,12 @@ const recenzijePrikaz = recenzije.slice(0, 6);
       )
     }
   </div>
+  </div>
 </section>
 
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap');
+
   /* Section titles */
   .rec-title, .rec-subtitle {
     opacity: 0;
@@ -186,13 +192,32 @@ const recenzijePrikaz = recenzije.slice(0, 6);
     transform: scale(1);
   }
 
+  /* Rad items - staggered fade and scale animation */
+  .rad-item-animate {
+    animation: radItemFadeScale 0.6s ease-out forwards;
+    animation-play-state: paused;
+  }
+  .rad-item-animate.is-visible {
+    animation-play-state: running;
+  }
+
+  @keyframes radItemFadeScale {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
   /* Review cards - fade up stagger */
   .rec-card {
     opacity: 0;
     transform: translateY(40px);
     transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-    transition-delay: calc(var(--rec-i) * 0.07s);
-    height: 230px;
+    transition-delay: calc(var(--rec-i) * 0.08s);
   }
   .rec-card.is-visible {
     opacity: 1;
@@ -203,16 +228,23 @@ const recenzijePrikaz = recenzije.slice(0, 6);
   .rec-card.is-visible .text-yellow-400 {
     animation: starPop 0.4s ease-out backwards;
   }
-  .rec-card.is-visible .flex.gap-1 > :nth-child(1) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.07s + 0.1s); }
-  .rec-card.is-visible .flex.gap-1 > :nth-child(2) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.07s + 0.15s); }
-  .rec-card.is-visible .flex.gap-1 > :nth-child(3) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.07s + 0.2s); }
-  .rec-card.is-visible .flex.gap-1 > :nth-child(4) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.07s + 0.25s); }
-  .rec-card.is-visible .flex.gap-1 > :nth-child(5) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.07s + 0.3s); }
+  .rec-card.is-visible svg:nth-child(1) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.08s + 0.1s); }
+  .rec-card.is-visible svg:nth-child(2) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.08s + 0.15s); }
+  .rec-card.is-visible svg:nth-child(3) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.08s + 0.2s); }
+  .rec-card.is-visible svg:nth-child(4) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.08s + 0.25s); }
+  .rec-card.is-visible svg:nth-child(5) .text-yellow-400 { animation-delay: calc(var(--rec-i) * 0.08s + 0.3s); }
 
   @keyframes starPop {
     0% { transform: scale(0); opacity: 0; }
     70% { transform: scale(1.3); }
     100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Kurs naziv - Montserrat font */
+  .kurs-naziv {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
   }
 </style>
 
@@ -225,7 +257,7 @@ const recenzijePrikaz = recenzije.slice(0, 6);
     });
   }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
 
-  document.querySelectorAll('.rec-title, .rec-subtitle, .rad-card, .rec-card').forEach(el => {
+  document.querySelectorAll('.rec-title, .rec-subtitle, .rad-card, .rec-card, .rad-item-animate').forEach(el => {
     recObserver.observe(el);
   });
 </script>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://api.studio27.rs'
 
 const backdropStyle: React.CSSProperties = {
   transition: 'opacity 0.35s ease',
@@ -7,6 +8,7 @@ const backdropStyle: React.CSSProperties = {
 const panelStyle: React.CSSProperties = {
   transition: 'opacity 0.35s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
 }
+
 
 const inputBase =
   'w-full h-10 text-sm text-gray-800 placeholder-gray-400 bg-white/60 backdrop-blur-sm rounded-lg border border-gray-300 focus:border-red-900 focus:ring-1 focus:ring-red-900/30 outline-none pl-4 transition-all duration-200'
@@ -68,16 +70,43 @@ export default function KontaktModal({ }) {
 
   function handleSumit(e: React.FormEvent) {
     e.preventDefault();
-    const to = "stojanovicstefana157@gmail.com";
-    const pravaPoruka = `${poruka} \n\n Sa pozdravom, ${name}\nEmail: ${email}\nTelefon: ${telefon}\n`;
-    const gmailUrl =
-      `https://mail.google.com/mail/?view=cm&fs=1` +
-      `&to=${encodeURIComponent(to)}` +
-      `&su=${encodeURIComponent(naslov)}` +
-      `&body=${encodeURIComponent(pravaPoruka)}`;
+    
+    // Validacija
+    if (!name.trim() || !email.trim() || !telefon.trim() || !poruka.trim()) {
+      alert('Molimo popuni sve polјe');
+      return;
+    }
 
-    window.location.href = gmailUrl;
+    const ADMIN_WHATSAPP = '381612563121';
+    
+    // Konstruiši poruku za WhatsApp
+    const message = `*Nova poruka sa sajta Studio27*
 
+*Ime:* ${name}
+*Email:* ${email}
+*Telefon:* ${telefon}
+*Naslov:* ${naslov}
+
+*Poruka:*
+${poruka}`;
+
+    // Kodiraj poruku za URL
+    const encodedMessage = encodeURIComponent(message);
+
+    // Kreiraj WhatsApp link
+    const whatsappLink = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodedMessage}`;
+
+    // Otvori WhatsApp u novoj tab
+    window.open(whatsappLink, '_blank');
+
+    // Resetuj formu
+    setName('');
+    setEmail('');
+    setTelefon('');
+    setNaslov('');
+    setPoruka('');
+
+    // Zatvori modal
     handleClose();
   }
 
@@ -106,7 +135,7 @@ export default function KontaktModal({ }) {
               {/* Left image — 2/5 of the grid */}
               <div className="relative lg:col-span-2 h-44 lg:h-auto overflow-hidden">
                 <img
-                  src={`${import.meta.env.PUBLIC_API_URL || 'http://api.studio27.rs'}/api/uploaded-images/uploads/slikaenterijer.jpg`}
+                  src={`${API_URL}/api/uploaded-images/uploads/slikaenterijer.jpg`}
                   alt="ContactUs"
                   className="w-full h-full object-cover"
                 />
@@ -125,16 +154,16 @@ export default function KontaktModal({ }) {
                   <div className="w-10 h-0.5 bg-red-900 rounded-full mt-2" />
                 </div>
 
-                <form action="https://fabform.io/f/xxxxx" method="post" className="space-y-3.5" onSubmit={handleSumit}>
+                <form action="https://fabform.io/f/xxxxx" method="post" className="space-y-3.5" onSubmit={handleSumit} noValidate>
                   <div>
                     <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">Ime</label>
-                    <input value={name} onChange={(e) => setName(e.target.value)} type="text" name="name" placeholder="Vaše ime" className={inputBase} required />
+                    <input value={name} onChange={(e) => setName(e.target.value)} type="text" name="name" placeholder="Vaše ime" className={inputBase} />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
                     <div>
                       <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">Email</label>
-                      <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" name="email" placeholder="email@primer.com" className={inputBase} required />
+                      <input value={email} onChange={(e) => setEmail(e.target.value)} type="text" name="email" placeholder="email@primer.com" className={inputBase} />
                     </div>
                     <div>
                       <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">Telefon</label>
@@ -144,7 +173,7 @@ export default function KontaktModal({ }) {
 
                   <div>
                     <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-1">Naslov</label>
-                    <input value={naslov} onChange={(e) => setNaslov(e.target.value)} type="text" name="name" placeholder="Naslov poruke" className={inputBase} required />
+                    <input value={naslov} onChange={(e) => setNaslov(e.target.value)} type="text" name="naslov" placeholder="Naslov poruke" className={inputBase} />
                   </div>
                   {/* Name + Email row */}
 
@@ -160,7 +189,6 @@ export default function KontaktModal({ }) {
                       placeholder="Vaša poruka..."
                       rows={5}
                       className="w-full text-sm text-gray-800 placeholder-gray-400 bg-white/60 backdrop-blur-sm rounded-lg border border-gray-300 focus:border-red-900 focus:ring-1 focus:ring-red-900/30 outline-none p-3 transition-all duration-200 resize-none"
-                      required
                     />
                   </div>
 

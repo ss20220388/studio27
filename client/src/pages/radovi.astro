@@ -1,0 +1,258 @@
+---
+import { Image } from "astro:assets";
+import Layout from "../layouts/Layout.astro";
+
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
+let radovi: any[] = [];
+
+try {
+  const resRadovi = await fetch(`${API_URL}/api/radovi`);
+  if (resRadovi.ok) {
+    radovi = await resRadovi.json();
+  }
+} catch (e) {
+  console.error("Greška pri učitavanju radova:", e);
+}
+
+// Grupiraj radove po studentu
+const radoviByStudent: Record<string, any[]> = radovi.reduce((acc: any, rad: any) => {
+  const studentName = `${rad.ime} ${rad.prezime}`;
+  if (!acc[studentName]) {
+    acc[studentName] = [];
+  }
+  acc[studentName].push(rad);
+  return acc;
+}, {});
+
+const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
+---
+
+<Layout title="Radovi naših studenata">
+  <section class="bg-black min-h-screen relative overflow-hidden">
+    <!-- Animated background with images - repeating pattern -->
+    <div class="animated-bg-container">
+      {radovi.length > 0 && (
+        <>
+          <div class="animated-images-line">
+            {radovi.map((rad: any) => (
+              <div class="inline-block flex-shrink-0">
+                <img 
+                  src={`${API_URL}/api/uploaded-images${rad.url}`}
+                  alt="rad"
+                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+            {radovi.map((rad: any) => (
+              <div class="inline-block flex-shrink-0">
+                <img 
+                  src={`${API_URL}/api/uploaded-images${rad.url}`}
+                  alt="rad"
+                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div class="animated-images-line" style="animation-delay: -3s;">
+            {radovi.map((rad: any) => (
+              <div class="inline-block flex-shrink-0">
+                <img 
+                  src={`${API_URL}/api/uploaded-images${rad.url}`}
+                  alt="rad"
+                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+            {radovi.map((rad: any) => (
+              <div class="inline-block flex-shrink-0">
+                <img 
+                  src={`${API_URL}/api/uploaded-images${rad.url}`}
+                  alt="rad"
+                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div class="animated-images-line" style="animation-delay: -6s;">
+            {radovi.map((rad: any) => (
+              <div class="inline-block flex-shrink-0">
+                <img 
+                  src={`${API_URL}/api/uploaded-images${rad.url}`}
+                  alt="rad"
+                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+            {radovi.map((rad: any) => (
+              <div class="inline-block flex-shrink-0">
+                <img 
+                  src={`${API_URL}/api/uploaded-images${rad.url}`}
+                  alt="rad"
+                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div class="animated-images-line" style="animation-delay: -9s;">
+            {radovi.map((rad: any) => (
+              <div class="inline-block flex-shrink-0">
+                <img 
+                  src={`${API_URL}/api/uploaded-images${rad.url}`}
+                  alt="rad"
+                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+            {radovi.map((rad: any) => (
+              <div class="inline-block flex-shrink-0">
+                <img 
+                  src={`${API_URL}/api/uploaded-images${rad.url}`}
+                  alt="rad"
+                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+    <div class="max-w-7xl mx-auto px-4 py-16 relative z-10">
+      <!-- Back button -->
+      <a href="/" class="text-white/60 hover:text-white transition-colors inline-block mb-12">
+        ← Nazad na početnu
+      </a>
+
+      {studentGroups.length === 0 ? (
+        <p class="text-center text-gray-500 text-lg py-20">Nema dostupnih radova</p>
+      ) : (
+        <div class="space-y-24">
+          {studentGroups.map(([studentName, works]) => {
+            const firstWork = (works as any[])[0];
+            return (
+              <div class="student-work-section">
+                <!-- Student info section -->
+                <div class="mb-16 pb-12 border-b border-gray-700">
+                  <h1 class="text-6xl md:text-7xl font-bold text-white mb-8">
+                    {studentName}
+                  </h1>
+                  
+                  <p class="text-gray-400 text-lg leading-relaxed max-w-3xl mb-6">
+                    Rad koji prikazuje vešine i znanje koje je student stekao tokom kursa. Svaki projekat predstavlja praktičnu primenu naučenih tehnika i kreativan pristup 3D modelovanju i vizualizaciji.
+                  </p>
+
+                  
+
+                  {firstWork?.kurs && (
+                    <div class="flex items-center gap-3">
+                      <span class="text-red-500 font-semibold">Course</span>
+                      <span class="text-white font-bold text-lg">
+                        {firstWork.kurs.naziv}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <!-- Works gallery -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 overflow-x-auto pb-4">
+                  {works.map((work: any, idx: number) => (
+                    <div 
+                      class="rad-item-gallery overflow-hidden"
+                      style={`animation-delay: ${idx * 0.1}s`}
+                    >
+                      <Image
+                        src={`${API_URL}/api/uploaded-images${work.url}`} 
+                        class="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        alt="radovi"
+                        width={500}
+                        height={500}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <!-- Course name below gallery -->
+                {firstWork?.idKurs && (
+                  <p class="kurs-naziv text-sm text-gray-400 uppercase mt-6">
+                    {firstWork?.naziv || "Rad"}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  </section>
+</Layout>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap');
+
+  /* Gallery items animation */
+  .rad-item-gallery {
+    opacity: 0;
+    animation: galleryFadeIn 0.6s ease-out forwards;
+  }
+
+  @keyframes galleryFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Kurs naziv - Montserrat font */
+  .kurs-naziv {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  /* Animated background container */
+  .animated-bg-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    background-color: transparent;
+  }
+
+  /* Animated images line */
+  .animated-images-line {
+    display: flex;
+    gap: 0;
+    width: 200%;
+    animation: scroll 20s linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+</style>
