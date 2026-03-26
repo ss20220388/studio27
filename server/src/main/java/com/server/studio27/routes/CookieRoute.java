@@ -36,7 +36,7 @@ public class CookieRoute {
                 .secure(cookieSecure)
                 .path("/")
                 .domain(cookieDomain)
-                .maxAge(7 * 24 * 60 * 60)
+                .maxAge( 60*60)
                 .sameSite(sameSite)
                 .build();
                 
