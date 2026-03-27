@@ -4,13 +4,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.server.studio27.controllers.KursController;
 import com.server.studio27.models.Kurs;
+
 
 
 
@@ -62,4 +67,33 @@ public class KursRoute {
         return kursController.getProgressChartStats(studentId);
     }
 
+    @PostMapping("/dodaj-kurs")
+    public ResponseEntity<Map<String, Object>> dodajKurs(@RequestBody Map<String, Object> kursData) {
+        return kursController.dodajKurs(kursData);
+    }
+    
+    @DeleteMapping("/obrisi-kurs/{id}")
+    public ResponseEntity<Map<String, Object>> brisiKurs(@PathVariable int id) {
+        return kursController.brisiKurs(id);
+    }    
+    @PostMapping("/dodaj-lekciju/{kursId}")
+    public ResponseEntity<Map<String, Object>> dodajLekciju(@PathVariable int kursId, @RequestBody Map<String, Object> lekcijaData) {
+        return kursController.dodajLekciju(kursId, lekcijaData);
+    }
+    
+    @PutMapping("/promeni-kurs/{id}")
+    public ResponseEntity<Map<String, Object>> promeniKurs(@PathVariable int id, @RequestBody Map<String, Object> kursData) {
+        return kursController.promeniKurs(id, kursData);
+    }
+    
+    @DeleteMapping("/obrisi-lekciju/{kursId}/{lekcijaId}")
+    public ResponseEntity<Map<String, Object>> brisiLekciju(@PathVariable int kursId, @PathVariable int lekcijaId) {
+        return kursController.brisiLekciju(kursId, lekcijaId);
+    }
+    
+    @PostMapping("/obrisi-video/{lekcijaId}")
+    public ResponseEntity<Map<String, Object>> brisiVideo(@PathVariable int lekcijaId, @RequestBody Map<String, String> payload) {
+        String videoUrl = payload.get("url");
+        return kursController.brisiVideoByUrl(lekcijaId, videoUrl);
+    }
 }

@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,8 +26,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import com.server.studio27.controllers.HetznerAPIController;
 import com.server.studio27.models.SftpStream;
 import com.server.studio27.services.EncryptionService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 
 @RestController
@@ -154,7 +154,7 @@ public class VideoRoute {
        try{ String url = (String) payload.get("url");
         int lekcijaId = (int) payload.get("lekcijaId");
         String SQL = """
-                    INSERT INTO video (url, lekcijaId, ukupnoTrajanje) VALUES (?, ?, null);
+                    INSERT INTO video (url, lekcijaId) VALUES (?, ?);
                 """;
         jdbcTemplate.update(SQL, url, lekcijaId);
         return ResponseEntity.ok("Sve je dobro proslo");

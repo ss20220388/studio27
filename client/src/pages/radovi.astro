@@ -37,7 +37,7 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
           <div class="animated-images-line">
             {radovi.map((rad: any) => (
               <div class="inline-block flex-shrink-0">
-                <img 
+                <img
                   src={`${API_URL}/api/uploaded-images${rad.url}`}
                   alt="rad"
                   class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"

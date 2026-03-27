@@ -12,7 +12,7 @@ export default function KontaktForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const ADMIN_WHATSAPP = '381604024010';
+  const ADMIN_WHATSAPP = '381612563121';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -86,7 +86,7 @@ ${formData.poruka}`;
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full">
+    <form onSubmit={handleSubmit} noValidate className="w-full">
       <h2 className="text-red-900 font-manrope text-4xl font-semibold leading-10 mb-11">
         Send Us A Message
       </h2>
@@ -104,17 +104,15 @@ ${formData.poruka}`;
         onChange={handleChange}
         className="w-full h-12 text-gray-600 placeholder-gray-400 shadow-sm bg-transparent text-lg font-normal leading-7 rounded-full border border-gray-200 focus:outline-none focus:border-red-500 pl-4 mb-10"
         placeholder="Name"
-        required
       />
 
       <input
-        type="email"
+        type="text"
         name="email"
         value={formData.email}
         onChange={handleChange}
         className="w-full h-12 text-gray-600 placeholder-gray-400 shadow-sm bg-transparent text-lg font-normal leading-7 rounded-full border border-gray-200 focus:outline-none focus:border-red-500 pl-4 mb-10"
         placeholder="Email"
-        required
       />
 
       <input
@@ -124,7 +122,6 @@ ${formData.poruka}`;
         onChange={handleChange}
         className="w-full h-12 text-gray-600 placeholder-gray-400 shadow-sm bg-transparent text-lg font-normal leading-7 rounded-full border border-gray-200 focus:outline-none focus:border-red-500 pl-4 mb-10"
         placeholder="Phone"
-        required
       />
 
       <div className="mb-10">
@@ -189,7 +186,6 @@ ${formData.poruka}`;
         onChange={handleChange}
         className="w-full h-32 text-gray-600 placeholder-gray-400 bg-transparent text-lg shadow-sm font-normal leading-7 rounded-xl border border-gray-200 focus:outline-none focus:border-red-500 p-4 mb-10 resize-none"
         placeholder="Message"
-        required
       ></textarea>
 
       <button

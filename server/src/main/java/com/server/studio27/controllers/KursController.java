@@ -314,6 +314,7 @@ public class KursController {
                 """;
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
         int currentKursId = -1;
+        Map<String, Object> currentKursRow = null;
         List<Lekcija> lekcije = new ArrayList<>();
 
         for (Map<String, Object> row : rows) {
@@ -321,24 +322,25 @@ public class KursController {
 
             if (currentKursId != kursId) {
                 // Dodaj prethodnji kurs ako postoji
-                if (currentKursId != -1) {
+                if (currentKursId != -1 && currentKursRow != null) {
                     kursevi.add(new Kurs(
                             currentKursId,
-                            (String) row.get("naziv"),
-                            (String) row.get("opis"),
-                            ((Number) row.get("cena")).intValue(),
-                            ((Number) row.get("trajanje")).intValue(),
-                            (String) row.get("slikaUrl"),
-                            (String) row.get("glavniKurs"),
-                            (String) row.get("komentarDole"),
-                            (String) row.get("komentarSredina"),
-                            (String) row.get("komentarGore"),
+                            (String) currentKursRow.get("naziv"),
+                            (String) currentKursRow.get("opis"),
+                            ((Number) currentKursRow.get("cena")).intValue(),
+                            ((Number) currentKursRow.get("trajanje")).intValue(),
+                            (String) currentKursRow.get("slikaUrl"),
+                            (String) currentKursRow.get("glavniKurs"),
+                            (String) currentKursRow.get("komentarDole"),
+                            (String) currentKursRow.get("komentarSredina"),
+                            (String) currentKursRow.get("komentarGore"),
                             lekcije));
                 }
 
                 // Počni novi kurs
                 lekcije = new ArrayList<>();
                 currentKursId = kursId;
+                currentKursRow = row;
 
                 if (row.get("lekcijaId") != null) {
                     String sqlVideos = "SELECT url FROM video WHERE lekcijaId = ?";
@@ -369,7 +371,7 @@ public class KursController {
                     }
                     System.out.println("Adding lekcija with ID: " + lekcijaId + " and " + urls.size() + " video URLs to existing kurs ID: " + currentKursId);
                     lekcije.add(new Lekcija(
-                            ((Number) row.get("lekcijaId")).intValue(),
+                            lekcijaId,
                             (String) row.get("nazivLekcije"),
                             (String) row.get("opisLekcije"),
                             urls));
@@ -378,19 +380,18 @@ public class KursController {
         }
 
         // Dodaj poslednji kurs
-        if (currentKursId != -1 && !rows.isEmpty()) {
-            Map<String, Object> lastRow = rows.get(rows.size() - 1);
+        if (currentKursId != -1 && currentKursRow != null) {
             kursevi.add(new Kurs(
                     currentKursId,
-                    (String) lastRow.get("naziv"),
-                    (String) lastRow.get("opis"),
-                    ((Number) lastRow.get("cena")).intValue(),
-                    ((Number) lastRow.get("trajanje")).intValue(),
-                    (String) lastRow.get("slikaUrl"),
-                    (String) lastRow.get("glavniKurs"),
-                    (String) lastRow.get("komentarDole"),
-                    (String) lastRow.get("komentarSredina"),
-                    (String) lastRow.get("komentarGore"),
+                    (String) currentKursRow.get("naziv"),
+                    (String) currentKursRow.get("opis"),
+                    ((Number) currentKursRow.get("cena")).intValue(),
+                    ((Number) currentKursRow.get("trajanje")).intValue(),
+                    (String) currentKursRow.get("slikaUrl"),
+                    (String) currentKursRow.get("glavniKurs"),
+                    (String) currentKursRow.get("komentarDole"),
+                    (String) currentKursRow.get("komentarSredina"),
+                    (String) currentKursRow.get("komentarGore"),
                     lekcije));
         }
 
@@ -412,6 +413,171 @@ public class KursController {
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("data", null);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    public ResponseEntity<Map<String, Object>> dodajKurs(Map<String, Object> kursData) {
+        try {
+            String SQL = "INSERT INTO kurs (naziv, opis, cena, trajanje, slikaUrl, glavniKurs, komentarDole, komentarSredina, komentarGore) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            jdbcTemplate.update(SQL,
+                    kursData.get("naziv"),
+                    kursData.get("opis"),
+                    kursData.get("cena"),
+                    kursData.get("trajanje"),
+                    kursData.get("slikaUrl"),
+                    kursData.get("glavniKurs"),
+                    kursData.get("komentarDole"),
+                    kursData.get("komentarSredina"),
+                    kursData.get("komentarGore")
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Kurs uspešno dodat.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    public ResponseEntity<Map<String, Object>> brisiKurs(int kursId) {
+        try {
+            String SQLRecenzija = "DELETE FROM recenzija WHERE kursId = ?";
+            jdbcTemplate.update(SQLRecenzija, kursId);
+
+            String SQLStudentLekcija = "DELETE FROM student_lekcija WHERE lekcijaId IN (SELECT lekcijaId FROM lekcija WHERE kursId = ?)";
+            jdbcTemplate.update(SQLStudentLekcija, kursId);
+
+            String SQLPlatio = "DELETE FROM platio WHERE kursId = ?";
+            jdbcTemplate.update(SQLPlatio, kursId);
+
+            String SQLPohadja = "DELETE FROM pohadja WHERE kursId = ?";
+            jdbcTemplate.update(SQLPohadja, kursId);
+
+            String SQLVideo = "DELETE FROM video WHERE lekcijaId IN (SELECT lekcijaId FROM lekcija WHERE kursId = ?)";
+            jdbcTemplate.update(SQLVideo, kursId);
+            
+            String SQLLekcije = "DELETE FROM lekcija WHERE kursId = ?";
+            jdbcTemplate.update(SQLLekcije, kursId);
+            
+            String SQL = "DELETE FROM kurs WHERE kursId = ?";
+            int rowsAffected = jdbcTemplate.update(SQL, kursId);
+            
+            Map<String, Object> response = new HashMap<>();
+            if (rowsAffected > 0) {
+                response.put("message", "Kurs uspešno obrisan.");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("error", "Kurs nije pronađen.");
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    public ResponseEntity<Map<String, Object>> dodajLekciju(int kursId, Map<String, Object> lekcijaData) {
+        try {
+            String SQL = "INSERT INTO lekcija (kursId, naziv, opis) VALUES (?, ?, ?)";
+            
+            jdbcTemplate.update(SQL,
+                    kursId,
+                    lekcijaData.get("naziv"),
+                    lekcijaData.get("opis")
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Lekcija uspešno dodata.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    public ResponseEntity<Map<String, Object>> promeniKurs(int kursId, Map<String, Object> kursData) {
+        try {
+            String SQL = "UPDATE kurs SET naziv=?, opis=?, cena=?, trajanje=?, slikaUrl=?, glavniKurs=?, komentarDole=?, komentarSredina=?, komentarGore=? WHERE kursId=?";
+            
+            int rowsAffected = jdbcTemplate.update(SQL,
+                    kursData.get("naziv"),
+                    kursData.get("opis"),
+                    kursData.get("cena"),
+                    kursData.get("trajanje"),
+                    kursData.get("slikaUrl"),
+                    kursData.get("glavniKurs"),
+                    kursData.get("komentarDole"),
+                    kursData.get("komentarSredina"),
+                    kursData.get("komentarGore"),
+                    kursId
+            );
+
+            Map<String, Object> response = new HashMap<>();
+            if (rowsAffected > 0) {
+                response.put("message", "Kurs uspešno ažuriran.");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("error", "Kurs nije pronađen.");
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    public ResponseEntity<Map<String, Object>> brisiLekciju(int kursId, int lekcijaId) {
+        try {
+            // Prvo brisanje evidencije pohadjanja lekcije
+            String SQLStudentLekcija = "DELETE FROM student_lekcija WHERE lekcijaId = ?";
+            jdbcTemplate.update(SQLStudentLekcija, lekcijaId);
+
+            // Zatim brisanje svih videa koji pripadaju toj lekciji
+            String deleteVideosSQL = "DELETE FROM video WHERE lekcijaId = ?";
+            jdbcTemplate.update(deleteVideosSQL, lekcijaId);
+            
+            // Zatim brisanje same lekcije uz proveru kursId-a zbog sigurnosti
+            String SQL = "DELETE FROM lekcija WHERE lekcijaId = ? AND kursId = ?";
+            int rowsAffected = jdbcTemplate.update(SQL, lekcijaId, kursId);
+            
+            Map<String, Object> response = new HashMap<>();
+            if (rowsAffected > 0) {
+                response.put("message", "Lekcija i njeni videi su uspešno obrisani.");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("error", "Lekcija nije pronađena ili ne pripada navedenom kursu.");
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+    
+    public ResponseEntity<Map<String, Object>> brisiVideoByUrl(int lekcijaId, String videoUrl) {
+        try {
+            String SQL = "DELETE FROM video WHERE url = ? AND lekcijaId = ?";
+            int rowsAffected = jdbcTemplate.update(SQL, videoUrl, lekcijaId);
+            
+            Map<String, Object> response = new HashMap<>();
+            if (rowsAffected > 0) {
+                response.put("message", "Video uspešno obrisan.");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("error", "Video nije pronađen ili ne pripada navedenoj lekciji.");
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
             response.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }

@@ -14,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,13 +37,23 @@ public class FileRoute {
     @Autowired
     private VideoHlsService videoHlsService;
 
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
     @PostMapping("/upload-hls-hetzner")
-    public ResponseEntity<Map<String, Object>> uploadVideo(@RequestParam("file") MultipartFile file) throws Exception {
+    public ResponseEntity<Map<String, Object>> uploadVideo(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("lekcijaId") int lekcijaId) throws Exception {
         try {
             String videoId = videoHlsService.convertToHlsAndUpload(file);
+            
+            String SQL = "INSERT INTO video (url, lekcijaId) VALUES (?, ?);";
+            jdbcTemplate.update(SQL, videoId, lekcijaId);
+
             Map<String, Object> response = new HashMap<>();
-            response.put("message", "Video uspešno konvertovan i postavljen!");
+            response.put("message", "Video uspešno konvertovan, postavljen i sacuvan u bazi!");
             response.put("videoId", videoId);
+            System.out.println("Video ID: " + videoId);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
