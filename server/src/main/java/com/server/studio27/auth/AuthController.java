@@ -188,7 +188,8 @@ public class AuthController {
                     SELECT
                         u.userId, u.email,
                         COALESCE(a.ime, s.ime) AS ime,
-                        COALESCE(a.prezime, s.prezime) AS prezime
+                        COALESCE(a.prezime, s.prezime) AS prezime,
+                        s.brojTelefona
                     FROM user u
                     LEFT JOIN admin a ON u.userId = a.adminId
                     LEFT JOIN student s ON u.userId = s.studentId
@@ -202,6 +203,7 @@ public class AuthController {
                 "email", row.get("email"),
                 "ime", row.get("ime") != null ? row.get("ime") : "",
                 "prezime", row.get("prezime") != null ? row.get("prezime") : "",
+                "brojTelefona", row.get("brojTelefona") != null ? row.get("brojTelefona") : "",
                 "role", role));
     }
 
