@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -205,6 +206,117 @@ public class AuthController {
                 "prezime", row.get("prezime") != null ? row.get("prezime") : "",
                 "brojTelefona", row.get("brojTelefona") != null ? row.get("brojTelefona") : "",
                 "role", role));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<?> updateProfile(
+            Authentication authentication,
+            @RequestBody Map<String, String> request) {
+        if (authentication == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Niste prijavljeni"));
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String email = userDetails.getUsername();
+
+        String ime = request.get("ime");
+        String prezime = request.get("prezime");
+        String brojTelefona = request.get("brojTelefona");
+
+        if (ime == null || ime.isBlank() || prezime == null || prezime.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Ime i prezime su obavezni"));
+        }
+
+        try {
+            // Prvo dohvati userId
+            Integer userId = jdbcTemplate.queryForObject(
+                    "SELECT userId FROM user WHERE email = ?", Integer.class, email);
+
+            if (userId == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Korisnik nije pronađen"));
+            }
+
+            // Provjeri da li je admin ili student
+            Integer adminId = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM admin WHERE adminId = ?", Integer.class, userId);
+
+            if (adminId > 0) {
+                // Ažuriraj admin
+                jdbcTemplate.update(
+                        "UPDATE admin SET ime = ?, prezime = ? WHERE adminId = ?",
+                        ime, prezime, userId);
+            } else {
+                // Ažuriraj student
+                jdbcTemplate.update(
+                        "UPDATE student SET ime = ?, prezime = ?, brojTelefona = ? WHERE studentId = ?",
+                        ime, prezime, brojTelefona, userId);
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Profil uspešno ažuriran"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Greška pri ažuriranju profila"));
+        }
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            Authentication authentication,
+            @RequestBody Map<String, String> request) {
+        if (authentication == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Niste prijavljeni"));
+        }
+
+        String oldPassword = request.get("oldPassword");
+        String newPassword = request.get("newPassword");
+        String confirmPassword = request.get("confirmPassword");
+
+        if (oldPassword == null || oldPassword.isBlank() ||
+            newPassword == null || newPassword.isBlank() ||
+            confirmPassword == null || confirmPassword.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Sva polja su obavezna"));
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Nove lozinke se ne podudaraju"));
+        }
+
+        if (newPassword.length() < 6) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Lozinka mora imati najmanje 6 karaktera"));
+        }
+
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        String email = userDetails.getUsername();
+
+        try {
+            // Dohvati trenutnu lozinku iz baze
+            String currentHashedPassword = jdbcTemplate.queryForObject(
+                    "SELECT password FROM user WHERE email = ?", String.class, email);
+
+            if (currentHashedPassword == null) {
+                return ResponseEntity.status(404).body(Map.of("error", "Korisnik nije pronađen"));
+            }
+
+            // Validira da li je stara lozinka ispravna
+            if (!passwordEncoder.matches(oldPassword, currentHashedPassword)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Stara lozinka nije tačna"));
+            }
+
+            // Heširuj novu lozinku
+            String hashedNewPassword = passwordEncoder.encode(newPassword);
+
+            // Ažuriraj lozinku u bazi
+            jdbcTemplate.update(
+                    "UPDATE user SET password = ? WHERE email = ?",
+                    hashedNewPassword, email);
+
+            return ResponseEntity.ok(Map.of("message", "Lozinka uspešno promenjena"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Greška pri promeni lozinke"));
+        }
     }
 
     @PostMapping("/refresh")

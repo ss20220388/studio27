@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import PaymentsTab from "../SettingsTabs/PaymentsTab";
 import ProfileTab from "../SettingsTabs/ProfileTab";
-import SubscriptionTab from "../SettingsTabs/SubscriptionTab";
-import CardTab from "../SettingsTabs/CardTab";
 import TermsTab from "../SettingsTabs/TermsTab";
 
 export default function SettingsCard() {
@@ -11,8 +9,6 @@ export default function SettingsCard() {
   const tabs = [
     { id: "placanja", label: "Plaćanja" },
     { id: "licni", label: "Lični podaci" },
-    { id: "pretplata", label: "Pretplata" },
-    { id: "kartica", label: "Kartica" },
     { id: "pravila", label: "Pravila" },
   ];
 
@@ -36,8 +32,6 @@ export default function SettingsCard() {
       <div className="p-5 sm:p-6">
         {tab === "placanja" && <PaymentsTab />}
         {tab === "licni" && <ProfileTab />}
-        {tab === "pretplata" && <SubscriptionTab />}
-        {tab === "kartica" && <CardTab />}
         {tab === "pravila" && <TermsTab />}
       </div>
     </div>

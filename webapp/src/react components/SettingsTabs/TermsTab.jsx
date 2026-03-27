@@ -24,12 +24,6 @@ export default function TermsTab() {
           style={{ display: "none" }}
           onChange={handleFileChange}
         />
-        <button
-          className="bg-red-900 text-white rounded-lg px-4 py-2 hover:bg-red-800 transition-colors text-sm font-medium w-full sm:w-auto"
-          onClick={() => fileInput.current.click()}
-        >
-          Postavi PDF pravila
-        </button>
         {pdfUrl && <span className="text-xs text-emerald-400">PDF učitan</span>}
       </div>
       {pdfUrl ? (

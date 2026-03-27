@@ -6,12 +6,25 @@ public class Platio {
     private int kursId;
     private Date datumPlacanja;
     private int cenaPlacanja;
+    private String kursNaziv;
+    private String status;
+
+    public Platio(int studentId, int kursId, Date datumPlacanja, int cenaPlacanja, String kursNaziv, String status) {
+        this.studentId = studentId;
+        this.kursId = kursId;
+        this.datumPlacanja = datumPlacanja;
+        this.cenaPlacanja = cenaPlacanja;
+        this.kursNaziv = kursNaziv;
+        this.status = status;
+    }   
 
     public Platio(int studentId, int kursId, Date datumPlacanja, int cenaPlacanja) {
         this.studentId = studentId;
         this.kursId = kursId;
         this.datumPlacanja = datumPlacanja;
         this.cenaPlacanja = cenaPlacanja;
+        this.kursNaziv = "";
+        this.status = "Plaćeno";
     }   
 
     public int getStudentId() {
@@ -37,6 +50,18 @@ public class Platio {
     }
     public void setCenaPlacanja(int cenaPlacanja) {
         this.cenaPlacanja = cenaPlacanja;
+    }
+    public String getKursNaziv() {
+        return kursNaziv;
+    }
+    public void setKursNaziv(String kursNaziv) {
+        this.kursNaziv = kursNaziv;
+    }
+    public String getStatus() {
+        return status;
+    }
+    public void setStatus(String status) {
+        this.status = status;
     }
     
 }

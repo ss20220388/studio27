@@ -7,8 +7,10 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
+import com.server.studio27.models.Platio;
 import com.server.studio27.models.Student;
 
 @Service
@@ -82,6 +84,33 @@ public class PlatioController {
             return ResponseEntity.status(500).body(Map.of("error", "Greška prilikom dohvatanja podataka"));
         }
 
+    }
+
+    public List<Platio> getStudentPayments(Integer studentId) {
+        List<Platio> platanja = new ArrayList<>();
+        String SQL = """
+                SELECT p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, k.naziv, 'Plaćeno' as status
+                FROM platio p
+                JOIN kurs k ON p.kursId = k.kursId
+                WHERE p.studentId = ?
+                ORDER BY p.datumPlacanja DESC
+                """;
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL, studentId);
+
+        for (Map<String, Object> row : rows) {
+            Platio platio = new Platio(
+                    ((Number) row.get("studentId")).intValue(),
+                    ((Number) row.get("kursId")).intValue(),
+                    (java.sql.Date) row.get("datumPlacanja"),
+                    ((Number) row.get("cenaPlacanja")).intValue(),
+                    (String) row.get("naziv"),
+                    (String) row.get("status")
+            );
+            platanja.add(platio);
+        }
+
+        return platanja;
     }
 
 }
