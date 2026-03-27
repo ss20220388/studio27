@@ -34,8 +34,12 @@ public class VideoHlsService {
         Path tempVideo = tempDir.resolve("input.mp4");
         Files.write(tempVideo, file.getBytes());
 
+        // Dinamičko detektovanje OS-a kako bi radilo i na Windowsu i na Linuxu
+        String os = System.getProperty("os.name").toLowerCase();
+        String ffmpegCommand = os.contains("win") ? "C:\\ffmpeg\\bin\\ffmpeg.exe" : "ffmpeg";
+
         ProcessBuilder builder = new ProcessBuilder(
-                "C:\\ffmpeg\\bin\\ffmpeg.exe",
+                ffmpegCommand,
                 "-i", tempVideo.toAbsolutePath().toString(),
                 "-codec", "copy",
                 "-start_number", "0",
