@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 export default function ProfileTab() {
   const [user, setUser] = useState({ ime: "", prezime: "", email: "", brojTelefona: "" });
   const [loading, setLoading] = useState(true);
@@ -13,7 +13,7 @@ export default function ProfileTab() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("http://api.studio27.rs/api/auth/me", {
+        const response = await fetch(`${API_URL}/api/auth/me`, {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
@@ -42,7 +42,7 @@ export default function ProfileTab() {
     setMessage("");
 
     try {
-      const response = await fetch("http://api.studio27.rs/api/auth/me", {
+      const response = await fetch(`${API_URL}/api/auth/me`, {
         method: "PUT",
         credentials: "include",
         headers: {
@@ -98,7 +98,7 @@ export default function ProfileTab() {
     }
 
     try {
-      const response = await fetch("http://api.studio27.rs/api/auth/change-password", {
+      const response = await fetch(`${API_URL}/api/auth/change-password`, {
         method: "PUT",
         credentials: "include",
         headers: {

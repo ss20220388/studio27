@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 export default function PaymentsTab() {
   const [payments, setPayments] = useState([]);
@@ -7,7 +8,7 @@ export default function PaymentsTab() {
   useEffect(() => {
     const fetchPayments = async () => {
       try {
-        const response = await fetch("http://api.studio27.rs/api/my-payments", {
+        const response = await fetch(`${API_URL}/api/my-payments`, {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
