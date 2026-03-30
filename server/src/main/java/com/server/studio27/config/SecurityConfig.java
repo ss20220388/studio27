@@ -65,6 +65,7 @@ public class SecurityConfig {
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers("/api/auth/login").permitAll()
+                                                .requestMatchers("/api/auth/logout").permitAll()
                                                 .requestMatchers("/api/auth/register-user").permitAll()
                                                 .requestMatchers("/api/auth/register-admin").permitAll()
                                                 .requestMatchers("/api/auth/refresh").permitAll()

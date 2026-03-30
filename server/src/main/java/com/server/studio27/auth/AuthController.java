@@ -93,7 +93,8 @@ public class AuthController {
         System.out.println("Existing DeviceId from DB: " + existingDeviceId);
 
         if (existingDeviceId != null && !existingDeviceId.isBlank()
-                && !existingDeviceId.equals(request.getDeviceId()) && user.getAuthorities().iterator().next().getAuthority().equals("STUDENT")) {
+                && !existingDeviceId.equals(request.getDeviceId())
+                && user.getAuthorities().iterator().next().getAuthority().equals("STUDENT")) {
             System.out.println("Device ID mismatch for STUDENT. Rejecting login.");
             return ResponseEntity.status(403).body(Map.of("error",
                     "Vec ste ulogovani na drugom racunaru. Kontaktirajte admina za otkljucavanje."));
@@ -115,7 +116,8 @@ public class AuthController {
         String refreshToken = jwtService.generateRefreshToken(user);
 
         System.out.println("Building cookies...");
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+        ResponseCookie refreshCookie = ResponseCookie
+                .from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .path("/")
@@ -124,7 +126,8 @@ public class AuthController {
                 .sameSite(sameSite)
                 .build();
 
-        ResponseCookie cookieAccess = ResponseCookie.from("accessToken", accessToken)
+        ResponseCookie accessCookie = ResponseCookie
+                .from("accessToken", accessToken)
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .path("/")
@@ -133,9 +136,10 @@ public class AuthController {
                 .sameSite(sameSite)
                 .build();
 
-        System.out.println("Adding cookies to response...");
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-        response.addHeader(HttpHeaders.SET_COOKIE, cookieAccess.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE,
+                refreshCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE,
+                accessCookie.toString());
 
         System.out.println("--- LOGIN REQUEST COMPLETED SUCCESSFULLY ---");
         return ResponseEntity.ok(Map.of(
@@ -289,8 +293,8 @@ public class AuthController {
         String confirmPassword = request.get("confirmPassword");
 
         if (oldPassword == null || oldPassword.isBlank() ||
-            newPassword == null || newPassword.isBlank() ||
-            confirmPassword == null || confirmPassword.isBlank()) {
+                newPassword == null || newPassword.isBlank() ||
+                confirmPassword == null || confirmPassword.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Sva polja su obavezna"));
         }
 
@@ -388,25 +392,33 @@ public class AuthController {
     public ResponseEntity<?> logout(HttpServletResponse response) {
 
         // Clear refreshToken
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", null)
+        ResponseCookie.ResponseCookieBuilder refreshCookieBuilder = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .path("/")
-                .domain(cookieDomain)
-                .maxAge(7 * 24 * 60 * 60)
-                .sameSite(sameSite)
-                .build();
+                .maxAge(0);
+        if (sameSite != null && !sameSite.isBlank()) {
+            refreshCookieBuilder.sameSite(sameSite);
+        }
+        if (cookieDomain != null && !cookieDomain.isBlank()) {
+            refreshCookieBuilder.domain(cookieDomain);
+        }
+        ResponseCookie refreshCookie = refreshCookieBuilder.build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
         // Optionally clear accessToken and deviceId if you use them as cookies
-        ResponseCookie accessCookie = ResponseCookie.from("accessToken", null)
+        ResponseCookie.ResponseCookieBuilder accessCookieBuilder = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .path("/")
-                .domain(cookieDomain)
-                .maxAge(7 * 24 * 60 * 60)
-                .sameSite(sameSite)
-                .build();
+                .maxAge(0);
+        if (sameSite != null && !sameSite.isBlank()) {
+            accessCookieBuilder.sameSite(sameSite);
+        }
+        if (cookieDomain != null && !cookieDomain.isBlank()) {
+            accessCookieBuilder.domain(cookieDomain);
+        }
+        ResponseCookie accessCookie = accessCookieBuilder.build();
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
         return ResponseEntity.ok(Map.of("message", "Uspesno odjavljen"));
