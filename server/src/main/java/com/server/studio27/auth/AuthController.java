@@ -67,41 +67,54 @@ public class AuthController {
             @RequestBody LoginRequest request,
             HttpServletResponse response) {
 
+        System.out.println("--- LOGIN REQUEST STARTED ---");
+        System.out.println("Email: " + request.getEmail());
+        System.out.println("DeviceId: " + request.getDeviceId());
 
         try {
+            System.out.println("Attempting authentication...");
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getEmail(),
                             request.getPassword()));
+            System.out.println("Authentication successful!");
         } catch (Exception e) {
+            System.out.println("Authentication failed: " + e.getMessage());
             return ResponseEntity.status(401).body(Map.of("error", "Pogresan email ili lozinka"));
         }
 
+        System.out.println("Loading user details...");
         UserDetails user = userDetailsService.loadUserByUsername(request.getEmail());
+        System.out.println("User details loaded for: " + user.getUsername());
 
+        System.out.println("Executing db query to check existing device id...");
         String existingDeviceId = jdbcTemplate.queryForObject(
                 "SELECT deviceId FROM user WHERE email = ?", String.class, request.getEmail());
+        System.out.println("Existing DeviceId from DB: " + existingDeviceId);
 
         if (existingDeviceId != null && !existingDeviceId.isBlank()
                 && !existingDeviceId.equals(request.getDeviceId()) && user.getAuthorities().iterator().next().getAuthority().equals("STUDENT")) {
+            System.out.println("Device ID mismatch for STUDENT. Rejecting login.");
             return ResponseEntity.status(403).body(Map.of("error",
                     "Vec ste ulogovani na drugom racunaru. Kontaktirajte admina za otkljucavanje."));
         }
 
         if (existingDeviceId == null || existingDeviceId.isBlank()) {
+            System.out.println("No existing device ID found/blank, updating device ID in DB...");
             jdbcTemplate.update("UPDATE user SET deviceId = ? WHERE email = ?",
                     request.getDeviceId(), request.getEmail());
         }
 
+        System.out.println("Updating login provider...");
         jdbcTemplate.update(
                 "UPDATE user SET loginProvider = 'EMAIL' WHERE email = ? AND loginProvider IS NULL",
                 request.getEmail());
 
+        System.out.println("Generating tokens...");
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-       
-
+        System.out.println("Building cookies...");
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(cookieSecure)
@@ -120,9 +133,11 @@ public class AuthController {
                 .sameSite(sameSite)
                 .build();
 
+        System.out.println("Adding cookies to response...");
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, cookieAccess.toString());
 
+        System.out.println("--- LOGIN REQUEST COMPLETED SUCCESSFULLY ---");
         return ResponseEntity.ok(Map.of(
                 "accessToken", accessToken,
                 "message", "Uspesno ulogovan"));
