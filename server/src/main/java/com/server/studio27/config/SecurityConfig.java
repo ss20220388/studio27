@@ -75,7 +75,6 @@ public class SecurityConfig {
                                                 .requestMatchers("/oauth2/authorization/google").permitAll()
                                                 .requestMatchers("/oauth2/**").permitAll()
                                                 .requestMatchers("/login/oauth2/**").permitAll()
-
                                                 .requestMatchers("/api/auth/**").authenticated()
                                                 .requestMatchers("/api/kursevi/**").permitAll()
                                                 .requestMatchers("/api/kursevi-sa-lekcijama").permitAll()
@@ -205,6 +204,11 @@ public class SecurityConfig {
                                                                         }
 
                                                                 }
+
+                                                                // Ažuriraj loginProvider na GOOGLE za ovog korisnika
+                                                                jdbcTemplate.update(
+                                                                                "UPDATE user SET loginProvider = 'GOOGLE' WHERE email = ?",
+                                                                                email);
 
                                                                 UserDetails user = userDetailsService
                                                                                 .loadUserByUsername(email);

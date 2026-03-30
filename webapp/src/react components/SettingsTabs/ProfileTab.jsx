@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 export default function ProfileTab() {
-  const [user, setUser] = useState({ ime: "", prezime: "", email: "", brojTelefona: "" });
+  const [user, setUser] = useState({ ime: "", prezime: "", email: "", brojTelefona: "", loginProvider: "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -179,45 +179,54 @@ export default function ProfileTab() {
         )}
       </form>
       <div className="border-t border-neutral-800 pt-6">
-        <h3 className="text-sm font-semibold text-white mb-3">Promena lozinke</h3>
-        <form className="space-y-3" onSubmit={handleChangePassword}>
-          <input 
-            type="password" 
-            className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 focus:ring-1 focus:ring-red-900/30 transition-all placeholder-neutral-600" 
-            placeholder="Stara lozinka" 
-            value={password.old} 
-            onChange={e => setPassword(p => ({ ...p, old: e.target.value }))} 
-            required 
-          />
-          <input 
-            type="password" 
-            className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 focus:ring-1 focus:ring-red-900/30 transition-all placeholder-neutral-600" 
-            placeholder="Nova lozinka" 
-            value={password.new} 
-            onChange={e => setPassword(p => ({ ...p, new: e.target.value }))} 
-            required 
-          />
-          <input 
-            type="password" 
-            className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 focus:ring-1 focus:ring-red-900/30 transition-all placeholder-neutral-600" 
-            placeholder="Potvrdi novu lozinku" 
-            value={password.confirm} 
-            onChange={e => setPassword(p => ({ ...p, confirm: e.target.value }))} 
-            required 
-          />
-          <button 
-            type="submit" 
-            disabled={passwordSaving}
-            className="w-full px-4 py-2 rounded-lg bg-red-900 hover:bg-red-800 disabled:bg-red-900/50 text-white text-sm font-medium transition-colors"
-          >
-            {passwordSaving ? "Čuvanje..." : "Promeni lozinku"}
-          </button>
-          {passwordMessage && (
-            <div className={`text-xs ${passwordMessage.startsWith("✓") ? "text-emerald-400 bg-emerald-900/20 border border-emerald-800/30" : "text-red-400 bg-red-900/20 border border-red-800/30"} rounded p-2`}>
-              {passwordMessage}
-            </div>
-          )}
-        </form>
+        {user.loginProvider === "EMAIL" ? (
+          <>
+            <h3 className="text-sm font-semibold text-white mb-3">Promena lozinke</h3>
+            <form className="space-y-3" onSubmit={handleChangePassword}>
+              <input 
+                type="password" 
+                className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 focus:ring-1 focus:ring-red-900/30 transition-all placeholder-neutral-600" 
+                placeholder="Stara lozinka" 
+                value={password.old} 
+                onChange={e => setPassword(p => ({ ...p, old: e.target.value }))} 
+                required 
+              />
+              <input 
+                type="password" 
+                className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 focus:ring-1 focus:ring-red-900/30 transition-all placeholder-neutral-600" 
+                placeholder="Nova lozinka" 
+                value={password.new} 
+                onChange={e => setPassword(p => ({ ...p, new: e.target.value }))} 
+                required 
+              />
+              <input 
+                type="password" 
+                className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 focus:ring-1 focus:ring-red-900/30 transition-all placeholder-neutral-600" 
+                placeholder="Potvrdi novu lozinku" 
+                value={password.confirm} 
+                onChange={e => setPassword(p => ({ ...p, confirm: e.target.value }))} 
+                required 
+              />
+              <button 
+                type="submit" 
+                disabled={passwordSaving}
+                className="w-full px-4 py-2 rounded-lg bg-red-900 hover:bg-red-800 disabled:bg-red-900/50 text-white text-sm font-medium transition-colors"
+              >
+                {passwordSaving ? "Čuvanje..." : "Promeni lozinku"}
+              </button>
+              {passwordMessage && (
+                <div className={`text-xs ${passwordMessage.startsWith("✓") ? "text-emerald-400 bg-emerald-900/20 border border-emerald-800/30" : "text-red-400 bg-red-900/20 border border-red-800/30"} rounded p-2`}>
+                  {passwordMessage}
+                </div>
+              )}
+            </form>
+          </>
+        ) : user.loginProvider === "GOOGLE" ? (
+          <div className="bg-blue-900/20 border border-blue-800/30 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-blue-300 mb-2">Google nalog</h3>
+            <p className="text-xs text-blue-200">Lozinka se ne može promeniti za Google naloge. Promenite lozinku na vašem Google nalogu ako je potrebno.</p>
+          </div>
+        ) : null}
       </div>
     
     </div>

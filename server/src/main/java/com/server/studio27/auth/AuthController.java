@@ -98,6 +98,11 @@ public class AuthController {
                     request.getDeviceId(), request.getEmail());
         }
 
+        // Ažuriraj loginProvider na EMAIL ako nije već setovano
+        jdbcTemplate.update(
+                "UPDATE user SET loginProvider = 'EMAIL' WHERE email = ? AND loginProvider IS NULL",
+                request.getEmail());
+
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
@@ -187,7 +192,7 @@ public class AuthController {
 
         String SQL = """
                     SELECT
-                        u.userId, u.email,
+                        u.userId, u.email, u.loginProvider,
                         COALESCE(a.ime, s.ime) AS ime,
                         COALESCE(a.prezime, s.prezime) AS prezime,
                         s.brojTelefona
@@ -198,6 +203,7 @@ public class AuthController {
                 """;
 
         Map<String, Object> row = jdbcTemplate.queryForMap(SQL, email);
+        String loginProvider = row.get("loginProvider") != null ? row.get("loginProvider").toString() : "EMAIL";
 
         return ResponseEntity.ok(Map.of(
                 "userId", row.get("userId"),
@@ -205,7 +211,8 @@ public class AuthController {
                 "ime", row.get("ime") != null ? row.get("ime") : "",
                 "prezime", row.get("prezime") != null ? row.get("prezime") : "",
                 "brojTelefona", row.get("brojTelefona") != null ? row.get("brojTelefona") : "",
-                "role", role));
+                "role", role,
+                "loginProvider", loginProvider));
     }
 
     @PutMapping("/me")
