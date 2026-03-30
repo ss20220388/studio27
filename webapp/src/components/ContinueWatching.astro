@@ -2,29 +2,103 @@
 import CourseCard from "./CourseCard.astro";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
-const token = Astro.cookies.get("refreshToken")?.value;
-const userRes = await fetch(`${API_URL}/api/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-});
-const userData = await userRes.json();
 
-const kurseviUTokuRes = await fetch(`${API_URL}/api/kursevi-u-toku/${userData.userId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-});
-const kurseviUToku = await kurseviUTokuRes.json();
+const refreshToken = Astro.cookies.get("refreshToken")?.value;
+const accessToken = Astro.cookies.get("accessToken")?.value;
+
+let userData: any = { userId: null };
+let kurseviUToku: any[] = [];
+
+try {
+	const userRes = await fetch(`${API_URL}/api/auth/me`, {
+		headers: {
+			Authorization: `Bearer ${refreshToken}`,
+		},
+		credentials: "include",
+	});
+
+	if (!userRes.ok) {
+		throw new Error(`Auth failed: ${userRes.status} ${userRes.statusText}`);
+	}
+
+	userData = await userRes.json();
+
+	if (!userData.userId) {
+		throw new Error("userId nije dostupan");
+	}
+} catch (e) {
+	console.error("Greška pri auth/me u ContinueWatching:", e);
+}
+
+if (userData.userId) {
+	try {
+		const [procentiResponse, metaResponse] = await Promise.all([
+			fetch(`${API_URL}/api/progres/svi-procenti-kurseva?userId=${userData.userId}`, {
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			}),
+			fetch(`${API_URL}/api/kursevi-u-toku/${userData.userId}`, {
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+				},
+			}),
+		]);
+
+		let procenti: any[] = [];
+		let metaKursevi: any[] = [];
+
+		if (procentiResponse.ok) {
+			procenti = await procentiResponse.json();
+		} else {
+			console.log("Greška pri dohvatanju procenata kurseva");
+		}
+
+		if (metaResponse.ok) {
+			metaKursevi = await metaResponse.json();
+		} else {
+			console.log("Greška pri dohvatanju metapodataka kurseva u toku");
+		}
+
+		const procentiUToku = procenti
+			.filter((kurs: any) => Number(kurs.procenatKursa) > 0 && Number(kurs.procenatKursa) < 100)
+			.sort((a: any, b: any) => Number(b.procenatKursa) - Number(a.procenatKursa));
+
+		kurseviUToku = procentiUToku.map((progressKurs: any) => {
+			const meta = metaKursevi.find((k: any) => Number(k.kursId) === Number(progressKurs.kursId));
+
+			return {
+				kursId: progressKurs.kursId,
+				progress: Math.round(Number(progressKurs.procenatKursa) || 0),
+				naziv: meta?.naziv || progressKurs.naziv || `Kurs #${progressKurs.kursId}`,
+				slikaUrl: meta?.slikaUrl || "/placeholder-course.jpg",
+			};
+		});
+	} catch (error) {
+		console.error("Greška pri učitavanju ContinueWatching:", error);
+	}
+}
 ---
 
 <div>
-    <h2 class="text-base font-semibold text-white mb-4">Nastavi gde si stao</h2>
+	<h2 class="text-base font-semibold text-white mb-4">Nastavi gde si stao</h2>
 
-    <div class="grid md:grid-cols-2 gap-4 pb-8">
-        {kurseviUToku.map((kurs: any) => (
-            <CourseCard
-                title={kurs.naziv}
-                progress={kurs.progress}
-                slikaUrl={kurs.slikaUrl}
-                kursId={kurs.kursId}
-            />
-        ))}
-    </div>
+	{
+		kurseviUToku.length > 0 ? (
+			<div class="grid md:grid-cols-2 gap-4 pb-8">
+				{kurseviUToku.map((kurs: any) => (
+					<CourseCard
+						title={kurs.naziv}
+						progress={kurs.progress}
+						slikaUrl={kurs.slikaUrl}
+						kursId={kurs.kursId}
+					/>
+				))}
+			</div>
+		) : (
+			<div class="rounded-xl border border-neutral-800 bg-neutral-900 p-6 text-sm text-neutral-400">
+				Trenutno nema kurseva u toku.
+			</div>
+		)
+	}
 </div>

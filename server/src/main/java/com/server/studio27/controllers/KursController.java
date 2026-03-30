@@ -35,7 +35,12 @@ public class KursController {
 
     public ResponseEntity<Map<String, Object>> getBrojSvihKursevi(int studentId) {
         try {
-            String SQL = "Select count(*) as brojKurseva from kurs k join platio p on k.kursId=p.kursId where p.studentId=?";
+            String SQL = """
+                        SELECT COUNT(*) AS brojKurseva
+                        FROM kurs k
+                        JOIN pohadja p ON k.kursId = p.kursId
+                        WHERE p.studentId = ?
+                    """;
 
             Map<String, Object> result = jdbcTemplate.queryForMap(SQL, studentId);
             System.out.println("Query result: " + result);
@@ -52,94 +57,6 @@ public class KursController {
         }
     }
 
-    public ResponseEntity<Map<String, Object>> getBrojOdgledanihKursevi(int studentId) {
-        try {
-            String SQL = "SELECT COUNT(*) as brojOdgledanihKurseva FROM kurs k Join pohadja p On k.kursId=p.kursId where p.studentId=? and (SELECT COUNT(*) FROM LEKCIJA l where l.kursId=k.kursId)=(select count(*) from student_lekcija sl join lekcija l on sl.lekcijaId=l.lekcijaId where sl.studentId=p.studentId and l.kursId=k.kursId);";
-
-            Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("brojOdgledanihKurseva", broj != null ? broj : 0);
-            response.put("message", "Broj kurseva uspešno preuzet");
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("brojOdgledanihKurseva", null);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    public ResponseEntity<Map<String, Object>> getBrojUTokuKursevi1(int studentId) {
-        try {
-            String SQL = "SELECT COUNT(*) as brojKursevaUToku FROM kurs k Join pohadja p On k.kursId=p.kursId where p.studentId=? and (SELECT COUNT(*) FROM student_lekcija sl join lekcija l on sl.lekcijaId=l.lekcijaId where sl.studentId=p.studentId and l.kursId=k.kursId)=(select count(*) from lekcija l where l.kursId=k.kursId);";
-            Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("brojUTokuKurseva", broj != null ? broj : 0);
-            response.put("message", "Broj kurseva uspešno preuzet");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("brojUTokuKurseva", null);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    public ResponseEntity<Map<String, Object>> getProgressChartStats(int studentId) {
-        try {
-            String SQL = """
-                        SELECT
-                            (SELECT COUNT(*) FROM kurs) AS ukupno,
-                            SUM(CASE WHEN odgledano_lekcija = ukupno_lekcija AND ukupno_lekcija > 0 THEN 1 ELSE 0 END) AS zavrseno,
-                            SUM(CASE WHEN odgledano_lekcija > 0 AND odgledano_lekcija < ukupno_lekcija THEN 1 ELSE 0 END) AS uToku,
-                            (SELECT COUNT(*) FROM kurs)
-                                - SUM(CASE WHEN odgledano_lekcija = ukupno_lekcija AND ukupno_lekcija > 0 THEN 1 ELSE 0 END)
-                                - SUM(CASE WHEN odgledano_lekcija > 0 AND odgledano_lekcija < ukupno_lekcija THEN 1 ELSE 0 END)
-                            AS nijePoceto
-                        FROM (
-                            SELECT
-                                k.kursId,
-                                COUNT(DISTINCT l.lekcijaId) AS ukupno_lekcija,
-                                COUNT(DISTINCT sl.lekcijaId) AS odgledano_lekcija
-                            FROM kurs k
-                            JOIN platio p ON k.kursId = p.kursId
-                            LEFT JOIN lekcija l ON l.kursId = k.kursId
-                            LEFT JOIN student_lekcija sl
-                                ON sl.lekcijaId = l.lekcijaId
-                                AND sl.studentId = p.studentId
-                            WHERE p.studentId = ?
-                            GROUP BY k.kursId
-                        ) stats;
-                    """;
-
-            Map<String, Object> result = jdbcTemplate.queryForMap(SQL, studentId);
-
-            int zavrseno = ((Number) result.get("zavrseno")).intValue();
-            int uToku = ((Number) result.get("uToku")).intValue();
-            int nijePoceto = ((Number) result.get("nijePoceto")).intValue();
-            int ukupno = ((Number) result.get("ukupno")).intValue();
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("zavrseno", zavrseno);
-            response.put("uToku", uToku);
-            response.put("nijePoceto", nijePoceto);
-            response.put("ukupno", ukupno);
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("zavrseno", 0);
-            response.put("uToku", 0);
-            response.put("nijePoceto", 0);
-            response.put("ukupno", 0);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
     public ResponseEntity<List<Map<String, Object>>> getKurseviUToku(int studentId) {
         try {
             String SQL = """
@@ -147,38 +64,81 @@ public class KursController {
                             k.kursId,
                             k.naziv,
                             k.slikaUrl,
-                            COUNT(DISTINCT l.lekcijaId) AS ukupno_lekcija,
-                            COUNT(DISTINCT sl.lekcijaId) AS odgledano_lekcija
+                            COALESCE(AVG(procenti.procenat_lekcije), 0) AS progress
                         FROM kurs k
-                        JOIN platio p ON k.kursId = p.kursId
-                        LEFT JOIN lekcija l ON l.kursId = k.kursId
-                        LEFT JOIN student_lekcija sl
-                            ON sl.lekcijaId = l.lekcijaId
-                            AND sl.studentId = p.studentId
-                        WHERE p.studentId = ?
+                        JOIN lekcija l ON l.kursId = k.kursId
+                        JOIN (
+                            SELECT
+                                l2.lekcijaId,
+                                l2.kursId,
+                                COALESCE(SUM(COALESCE(o.procenat, 0)) / COUNT(v.videoId), 0) AS procenat_lekcije
+                            FROM lekcija l2
+                            JOIN video v ON v.lekcijaId = l2.lekcijaId
+                            LEFT JOIN odgledao o
+                              ON v.url COLLATE utf8mb4_general_ci = o.videoUrl COLLATE utf8mb4_general_ci
+                             AND o.userId = ?
+                            GROUP BY l2.lekcijaId, l2.kursId
+                        ) procenti ON procenti.lekcijaId = l.lekcijaId
+                        WHERE k.kursId IN (
+                            SELECT DISTINCT k2.kursId
+                            FROM kurs k2
+                            JOIN lekcija l3 ON l3.kursId = k2.kursId
+                            JOIN video v3 ON v3.lekcijaId = l3.lekcijaId
+                            JOIN odgledao o3
+                              ON v3.url COLLATE utf8mb4_general_ci = o3.videoUrl COLLATE utf8mb4_general_ci
+                            WHERE o3.userId = ?
+                              AND o3.procenat > 0
+                              AND k2.kursId NOT IN (
+                                  SELECT zavrseni.kursId
+                                  FROM (
+                                      SELECT l5.kursId
+                                      FROM lekcija l5
+                                      JOIN (
+                                          SELECT v5.lekcijaId
+                                          FROM video v5
+                                          JOIN odgledao o5
+                                            ON v5.url COLLATE utf8mb4_general_ci = o5.videoUrl COLLATE utf8mb4_general_ci
+                                          WHERE o5.userId = ?
+                                            AND o5.procenat > 85
+                                          GROUP BY v5.lekcijaId
+                                          HAVING COUNT(DISTINCT v5.videoId) = (
+                                              SELECT COUNT(*)
+                                              FROM video v6
+                                              WHERE v6.lekcijaId = v5.lekcijaId
+                                          )
+                                      ) zavrsene_lekcije ON zavrsene_lekcije.lekcijaId = l5.lekcijaId
+                                      GROUP BY l5.kursId
+                                      HAVING COUNT(DISTINCT l5.lekcijaId) = (
+                                          SELECT COUNT(*)
+                                          FROM lekcija l6
+                                          WHERE l6.kursId = l5.kursId
+                                      )
+                                  ) zavrseni
+                              )
+                        )
                         GROUP BY k.kursId, k.naziv, k.slikaUrl
-                        HAVING COUNT(DISTINCT sl.lekcijaId) > 0
-                            AND COUNT(DISTINCT sl.lekcijaId) < COUNT(DISTINCT l.lekcijaId)
+                        ORDER BY k.kursId
                     """;
 
-            List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL, studentId);
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL, studentId, studentId, studentId);
 
             List<Map<String, Object>> result = new ArrayList<>();
             for (Map<String, Object> row : rows) {
-                int ukupno = ((Number) row.get("ukupno_lekcija")).intValue();
-                int odgledano = ((Number) row.get("odgledano_lekcija")).intValue();
-                int progress = ukupno > 0 ? (odgledano * 100 / ukupno) : 0;
+                double progress = row.get("progress") != null
+                        ? ((Number) row.get("progress")).doubleValue()
+                        : 0.0;
 
                 Map<String, Object> kurs = new HashMap<>();
                 kurs.put("kursId", ((Number) row.get("kursId")).intValue());
                 kurs.put("naziv", row.get("naziv"));
                 kurs.put("slikaUrl", row.get("slikaUrl"));
-                kurs.put("progress", progress);
+                kurs.put("progress", Math.round(progress));
                 result.add(kurs);
             }
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }
@@ -369,7 +329,8 @@ public class KursController {
                     for (Map<String, Object> videoRow : videoRows) {
                         urls.add((String) videoRow.get("url"));
                     }
-                    System.out.println("Adding lekcija with ID: " + lekcijaId + " and " + urls.size() + " video URLs to existing kurs ID: " + currentKursId);
+                    System.out.println("Adding lekcija with ID: " + lekcijaId + " and " + urls.size()
+                            + " video URLs to existing kurs ID: " + currentKursId);
                     lekcije.add(new Lekcija(
                             lekcijaId,
                             (String) row.get("nazivLekcije"),
@@ -421,7 +382,7 @@ public class KursController {
     public ResponseEntity<Map<String, Object>> dodajKurs(Map<String, Object> kursData) {
         try {
             String SQL = "INSERT INTO kurs (naziv, opis, cena, trajanje, slikaUrl, glavniKurs, komentarDole, komentarSredina, komentarGore) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            
+
             jdbcTemplate.update(SQL,
                     kursData.get("naziv"),
                     kursData.get("opis"),
@@ -431,8 +392,7 @@ public class KursController {
                     kursData.get("glavniKurs"),
                     kursData.get("komentarDole"),
                     kursData.get("komentarSredina"),
-                    kursData.get("komentarGore")
-            );
+                    kursData.get("komentarGore"));
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Kurs uspešno dodat.");
@@ -460,13 +420,13 @@ public class KursController {
 
             String SQLVideo = "DELETE FROM video WHERE lekcijaId IN (SELECT lekcijaId FROM lekcija WHERE kursId = ?)";
             jdbcTemplate.update(SQLVideo, kursId);
-            
+
             String SQLLekcije = "DELETE FROM lekcija WHERE kursId = ?";
             jdbcTemplate.update(SQLLekcije, kursId);
-            
+
             String SQL = "DELETE FROM kurs WHERE kursId = ?";
             int rowsAffected = jdbcTemplate.update(SQL, kursId);
-            
+
             Map<String, Object> response = new HashMap<>();
             if (rowsAffected > 0) {
                 response.put("message", "Kurs uspešno obrisan.");
@@ -485,12 +445,11 @@ public class KursController {
     public ResponseEntity<Map<String, Object>> dodajLekciju(int kursId, Map<String, Object> lekcijaData) {
         try {
             String SQL = "INSERT INTO lekcija (kursId, naziv, opis) VALUES (?, ?, ?)";
-            
+
             jdbcTemplate.update(SQL,
                     kursId,
                     lekcijaData.get("naziv"),
-                    lekcijaData.get("opis")
-            );
+                    lekcijaData.get("opis"));
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Lekcija uspešno dodata.");
@@ -501,11 +460,11 @@ public class KursController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     public ResponseEntity<Map<String, Object>> promeniKurs(int kursId, Map<String, Object> kursData) {
         try {
             String SQL = "UPDATE kurs SET naziv=?, opis=?, cena=?, trajanje=?, slikaUrl=?, glavniKurs=?, komentarDole=?, komentarSredina=?, komentarGore=? WHERE kursId=?";
-            
+
             int rowsAffected = jdbcTemplate.update(SQL,
                     kursData.get("naziv"),
                     kursData.get("opis"),
@@ -516,8 +475,7 @@ public class KursController {
                     kursData.get("komentarDole"),
                     kursData.get("komentarSredina"),
                     kursData.get("komentarGore"),
-                    kursId
-            );
+                    kursId);
 
             Map<String, Object> response = new HashMap<>();
             if (rowsAffected > 0) {
@@ -533,7 +491,7 @@ public class KursController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     public ResponseEntity<Map<String, Object>> brisiLekciju(int kursId, int lekcijaId) {
         try {
             // Prvo brisanje evidencije pohadjanja lekcije
@@ -543,11 +501,11 @@ public class KursController {
             // Zatim brisanje svih videa koji pripadaju toj lekciji
             String deleteVideosSQL = "DELETE FROM video WHERE lekcijaId = ?";
             jdbcTemplate.update(deleteVideosSQL, lekcijaId);
-            
+
             // Zatim brisanje same lekcije uz proveru kursId-a zbog sigurnosti
             String SQL = "DELETE FROM lekcija WHERE lekcijaId = ? AND kursId = ?";
             int rowsAffected = jdbcTemplate.update(SQL, lekcijaId, kursId);
-            
+
             Map<String, Object> response = new HashMap<>();
             if (rowsAffected > 0) {
                 response.put("message", "Lekcija i njeni videi su uspešno obrisani.");
@@ -562,12 +520,12 @@ public class KursController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-    
+
     public ResponseEntity<Map<String, Object>> brisiVideoByUrl(int lekcijaId, String videoUrl) {
         try {
             String SQL = "DELETE FROM video WHERE url = ? AND lekcijaId = ?";
             int rowsAffected = jdbcTemplate.update(SQL, videoUrl, lekcijaId);
-            
+
             Map<String, Object> response = new HashMap<>();
             if (rowsAffected > 0) {
                 response.put("message", "Video uspešno obrisan.");

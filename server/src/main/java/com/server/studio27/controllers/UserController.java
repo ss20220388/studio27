@@ -75,6 +75,12 @@ public class UserController {
         return "Uredjaj otkljucan za " + email;
 
     }
+    public Integer getBrojSatiGledanja(Integer userId) {
+        String SQL = "SELECT COALESCE(SUM(vremeGledanja), 0) FROM odgledao WHERE userId = ?";
+        Integer totalSeconds = jdbcTemplate.queryForObject(SQL, Integer.class, userId);
+        return totalSeconds != null ? totalSeconds / 60 : 0;
+    }
+    
 
     public User getUserById(Integer userId) {
         String SQL = "SELECT\r\n" + //

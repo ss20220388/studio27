@@ -67,10 +67,6 @@ public class AuthController {
             @RequestBody LoginRequest request,
             HttpServletResponse response) {
 
-        // deviceId je obavezan
-        if (request.getDeviceId() == null || request.getDeviceId().isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "deviceId je obavezan"));
-        }
 
         try {
             authenticationManager.authenticate(
@@ -87,8 +83,7 @@ public class AuthController {
                 "SELECT deviceId FROM user WHERE email = ?", String.class, request.getEmail());
 
         if (existingDeviceId != null && !existingDeviceId.isBlank()
-                && !existingDeviceId.equals(request.getDeviceId())) {
-            // Nalog je vezan za drugi uredjaj
+                && !existingDeviceId.equals(request.getDeviceId()) && user.getAuthorities().iterator().next().getAuthority().equals("STUDENT")) {
             return ResponseEntity.status(403).body(Map.of("error",
                     "Vec ste ulogovani na drugom racunaru. Kontaktirajte admina za otkljucavanje."));
         }
@@ -98,7 +93,6 @@ public class AuthController {
                     request.getDeviceId(), request.getEmail());
         }
 
-        // Ažuriraj loginProvider na EMAIL ako nije već setovano
         jdbcTemplate.update(
                 "UPDATE user SET loginProvider = 'EMAIL' WHERE email = ? AND loginProvider IS NULL",
                 request.getEmail());

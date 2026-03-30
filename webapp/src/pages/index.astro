@@ -4,106 +4,109 @@ import StatsCards from "../components/StatsCards.astro";
 import ProgressChart from "../react components/ProgressChart";
 import ContinueWatching from "../components/ContinueWatching.astro";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://app.studio27.rs";
 
 const refreshToken = Astro.cookies.get("refreshToken")?.value;
 const accessToken = Astro.cookies.get("accessToken")?.value;
-console.log("Tokens:", { refreshToken: !!refreshToken, accessToken: !!accessToken });
 
-let progressStats={
-	zavrseno:0,
-	uToku:0,
-	nijePoceto:0,
+let progressStats = {
+	zavrseno: 0,
+	uToku: 0,
+	nijePoceto: 0,
 };
 
 let userData: any = { userId: null };
+
 let stats = {
 	totalCourses: 0,
 	finished: 0,
 	inProgress: 0,
-	hours: 12,
+	hours: 0,
 };
 
 try {
 	const userRes = await fetch(`${API_URL}/api/auth/me`, {
 		headers: {
 			Authorization: `Bearer ${refreshToken}`,
-		},	
-		credentials: "include"
+		},
+		credentials: "include",
 	});
-	
+
 	if (!userRes.ok) {
 		throw new Error(`Auth failed: ${userRes.status} ${userRes.statusText}`);
 	}
-	
+
 	userData = await userRes.json();
-	console.log("userData:", userData);
 
 	if (!userData.userId) {
 		throw new Error("userId nije dostupan");
 	}
+} catch (e) {
+	console.error("Greška pri auth/me:", e);
+}
 
-	const brojKursevaResponse = await fetch(`${API_URL}/api/broj-kurseva/${userData.userId}`,
-		{
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-			},
+if (userData.userId) {
+	try {
+		const [brojKursevaResponse, brojZavrsenihKursevaResponse, brojUTokuKursevaResponse, brojSatiGledanjaResponse] =
+			await Promise.all([
+				fetch(`${API_URL}/api/broj-kurseva/${userData.userId}`, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}),
+				fetch(`${API_URL}/api/progres/broj-zavrsenih-kurseva?userId=${userData.userId}`, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}),
+				fetch(`${API_URL}/api/progres/broj-kurseva-u-toku?userId=${userData.userId}`, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}),
+				fetch(`${API_URL}/api/broj-odgledanih-sati/${userData.userId}`, {
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
+				}),
+			]);
+
+		if (brojKursevaResponse.ok) {
+			const brojKursevaData = await brojKursevaResponse.json();
+			stats.totalCourses = brojKursevaData.brojKurseva || 0;
+		} else {
+			console.log("Greška pri dohvatanju broja kurseva");
 		}
-	);
-	
-	if (!brojKursevaResponse.ok) {
-		throw new Error(`brojKurseva failed: ${brojKursevaResponse.status}`);
-	}
-	
-	const brojKursevaData = await brojKursevaResponse.json();
-	console.log(brojKursevaData);
 
-	const brojOdgledanihKursevaResponse = await fetch(`${API_URL}/api/broj-odgledanih-kurseva/${userData.userId}`,
-		{
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-			},
+		if (brojZavrsenihKursevaResponse.ok) {
+			const brojZavrsenihKursevaData = await brojZavrsenihKursevaResponse.json();
+			stats.finished = brojZavrsenihKursevaData.brojZavrsenihKurseva || 0;
+		} else {
+			console.log("Greška pri dohvatanju broja završenih kurseva");
 		}
-	);
-	
-	if (!brojOdgledanihKursevaResponse.ok) {
-		throw new Error(`brojOdgledanih failed: ${brojOdgledanihKursevaResponse.status}`);
-	}
-	
-	const brojOdgledanihKursevaData = await brojOdgledanihKursevaResponse.json();
-	console.log(brojOdgledanihKursevaData);
 
-	const brojUTokuKursevaResponse = await fetch(`${API_URL}/api/broj-u-toku-kurseva/${userData.userId}`,
-		{
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-			},
+		if (brojUTokuKursevaResponse.ok) {
+			const brojUTokuKursevaData = await brojUTokuKursevaResponse.json();
+			stats.inProgress = brojUTokuKursevaData.brojKursevaUToku || 0;
+		} else {
+			console.log("Greška pri dohvatanju broja kurseva u toku");
 		}
-	);
-	
-	if (!brojUTokuKursevaResponse.ok) {
-		throw new Error(`brojUToku failed: ${brojUTokuKursevaResponse.status}`);
+
+		if (brojSatiGledanjaResponse.ok) {
+			const brojSatiGledanjaData = await brojSatiGledanjaResponse.json();
+			stats.hours = brojSatiGledanjaData.brojSati || 0;
+		} else {
+			console.log("Greška pri dohvatanju broja sati");
+		}
+
+		progressStats = {
+			zavrseno: stats.finished,
+			uToku: stats.inProgress,
+			nijePoceto: Math.max(stats.totalCourses - stats.finished - stats.inProgress, 0),
+		};
+	} catch (error) {
+		console.error("Greška pri učitavanju statistike:", error);
 	}
-	
-	const brojUTokuKursevaData = await brojUTokuKursevaResponse.json();
-	console.log(brojUTokuKursevaData);
-
-	stats = {
-		totalCourses: brojKursevaData.brojKurseva || 0,
-		finished: brojOdgledanihKursevaData.brojOdgledanihKurseva || 0,
-		inProgress: brojUTokuKursevaData.brojUTokuKurseva || 0,
-		hours: 12,
-	};
-
-	const response = await fetch(`${API_URL}/api/progress-stats/${userData.userId}`, {
-		headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-	});
-
-	if (response.ok) {
-		progressStats = await response.json();
-	}
-} catch (error) {
-	console.error("Greška pri učitavanju podataka:", error);
 }
 ---
 
@@ -121,7 +124,13 @@ try {
 				<h2 class="text-base font-semibold text-white">Statistika učenja</h2>
 				<span class="text-xs text-neutral-500">pregled kurseva</span>
 			</div>
-			<ProgressChart client:only="react" zavrseno={progressStats.zavrseno} uToku={progressStats.uToku} nijePoceto={progressStats.nijePoceto} />
+
+			<ProgressChart
+				client:only="react"
+				zavrseno={progressStats.zavrseno}
+				uToku={progressStats.uToku}
+				nijePoceto={progressStats.nijePoceto}
+			/>
 		</div>
 
 		<ContinueWatching />

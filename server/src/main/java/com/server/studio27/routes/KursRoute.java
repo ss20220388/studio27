@@ -44,10 +44,7 @@ public class KursRoute {
     public ResponseEntity<Map<String, Object>> getBrojSvihKurseva(@PathVariable int studentId) {
         return kursController.getBrojSvihKursevi(studentId);
     }
-    @GetMapping("/broj-odgledanih-kurseva/{studentId}")
-    public ResponseEntity<Map<String, Object>> getBrojOdgledanihKurseva(@PathVariable int studentId) {
-        return kursController.getBrojOdgledanihKursevi(studentId);
-    }
+   
      @GetMapping("/broj-u-toku-kurseva/{studentId}")
     public ResponseEntity<Map<String, Object>> getBrojUTokuKurseva(@PathVariable int studentId) {
         return kursController.getBrojUTokuKursevi(studentId);
@@ -62,10 +59,7 @@ public class KursRoute {
         return kursController.getKurseviUToku(studentId);
     }
 
-    @GetMapping("/progress-stats/{studentId}")
-    public ResponseEntity<Map<String, Object>> getProgressChartStats(@PathVariable int studentId) {
-        return kursController.getProgressChartStats(studentId);
-    }
+   
 
     @PostMapping("/dodaj-kurs")
     public ResponseEntity<Map<String, Object>> dodajKurs(@RequestBody Map<String, Object> kursData) {
