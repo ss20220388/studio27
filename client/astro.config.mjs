@@ -13,7 +13,7 @@ export default defineConfig({
             allowedHosts: ['studio27.rs','dev.27archviz.com'],
             proxy: {
                 '/api': {
-                    target: 'http://localhost:8080',
+                    target: 'https://api.dev.27archviz.com',
                     changeOrigin: true,
                     secure: false
                 }

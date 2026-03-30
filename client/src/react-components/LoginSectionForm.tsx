@@ -88,8 +88,9 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
             }
             if (!json) { setError('Server je vratio neispravan odgovor'); return }
             if (json.accessToken) {
-                const me = await fetch('/api/auth/me', {
+                const me = await fetch(`${publicApiUrl}/api/auth/me`, {
                     headers: { 'Authorization': `Bearer ${json.accessToken}` },
+                    credentials: 'include',
                 })
                 if (me.ok) {
                     const user = await me.json()
