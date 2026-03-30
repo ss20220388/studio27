@@ -74,18 +74,10 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         setError(null)
 
         try {
-            console.log("===== LOGIN START =====")
-
-            console.log("publicApiUrl:", publicApiUrl)
-
             const deviceId = await getDeviceId({ API_URL: publicApiUrl })
-            console.log("deviceId:", deviceId)
 
             const url = `${publicApiUrl}/api/auth/login`
             const payload = { email, password, deviceId }
-
-            console.log("LOGIN URL:", url)
-            console.log("LOGIN PAYLOAD:", payload)
 
             const res = await fetch(url, {
                 method: 'POST',
@@ -93,75 +85,54 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                 body: JSON.stringify(payload),
             })
 
-            console.log("LOGIN STATUS:", res.status)
-
             const text = await res.text()
-            console.log("LOGIN RAW RESPONSE:", text)
 
             let json: any = null
             try {
                 json = JSON.parse(text)
             } catch (err) {
-                console.warn("JSON parse failed:", err)
+                // ignore
             }
 
-            console.log("LOGIN PARSED JSON:", json)
-
             if (!res.ok) {
-                console.error("LOGIN FAILED:", res.status, json)
                 setError(json?.error || `Greška pri prijavi (${res.status})`)
                 return
             }
 
             if (!json) {
-                console.error("NO JSON RETURNED")
                 setError('Server je vratio neispravan odgovor')
                 return
             }
 
             if (json.accessToken) {
-                console.log("ACCESS TOKEN:", json.accessToken)
-
                 const meUrl = `${publicApiUrl}/api/auth/me`
-                console.log("ME URL:", meUrl)
 
                 const me = await fetch(meUrl, {
                     headers: { 'Authorization': `Bearer ${json.accessToken}` },
                     credentials: 'include',
                 })
 
-                console.log("ME STATUS:", me.status)
-
                 const meText = await me.text()
-                console.log("ME RAW RESPONSE:", meText)
 
                 let meJson: any = null
                 try {
                     meJson = JSON.parse(meText)
                 } catch (err) {
-                    console.warn("ME JSON parse failed:", err)
+                    // ignore
                 }
-
-                console.log("ME PARSED:", meJson)
 
                 if (me.ok && meJson) {
                     window.dispatchEvent(
                         new CustomEvent('user-logged-in', { detail: meJson })
                     )
-                } else {
-                    console.warn("ME REQUEST FAILED")
                 }
 
                 close()
-            } else {
-                console.warn("NO ACCESS TOKEN IN RESPONSE")
             }
 
         } catch (e: any) {
-            console.error("FETCH ERROR FULL:", e)
             setError(e?.message || 'Greška pri komunikaciji sa serverom')
         } finally {
-            console.log("===== LOGIN END =====")
             setLoading(false)
         }
     }
