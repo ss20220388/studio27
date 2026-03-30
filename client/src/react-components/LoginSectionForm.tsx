@@ -77,7 +77,6 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
             const res = await fetch(`${publicApiUrl}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
                 body: JSON.stringify({ email, password, deviceId }),
             })
             const text = await res.text()
