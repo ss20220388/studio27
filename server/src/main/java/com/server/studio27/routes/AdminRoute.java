@@ -24,10 +24,10 @@ public class AdminRoute {
     @Autowired
     private AdminController adminController;
 
-    private List<Admin> admins;
+    private List<Map<String, Object>> admins;
     
     @GetMapping("/admins")
-    public List<Admin> getAdmins() {
+    public List<Map<String, Object>> getAdmins() {
         admins = adminController.getAdmins();
         return admins;
     }

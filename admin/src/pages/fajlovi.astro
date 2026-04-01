@@ -1,0 +1,14 @@
+---
+import Layout from "../layouts/Layout.astro";
+import FajloviPage from "../react components/FajloviPage";
+import type { AstroCookies } from "astro";
+
+const cookies = Astro.cookies as AstroCookies;
+const refreshToken = cookies.get("refreshToken");
+const token = refreshToken?.value;
+
+---
+
+<Layout title="Skladište fajlova">
+  <FajloviPage token={token ? token : ""} client:load />
+</Layout>

@@ -12,13 +12,16 @@ const navSections = [
     label: "Upravljanje",
     items: [
       { href: "/studenti", label: "Korisnici", icon: "users" },
+      { href: "/administratori", label: "Administratori", icon: "shield" },
+      { href: "/uplatnice", label: "Uplatnice", icon: "receipt" },
       { href: "/kursevi", label: "Kursevi", icon: "book" },
     ],
   },
   {
     label: "Sistem",
     items: [
-      { href: "/sadrzaj", label: "Sadržaj", icon: "edit" },
+      { href: "/fajlovi", label: "Skladište", icon: "folder" },
+      { href: "/pravila", label: "Pravila", icon: "document" },
       { href: "/podesavanja", label: "Podešavanja", icon: "settings" },
     ],
   },
@@ -125,6 +128,16 @@ const navSections = [
                       <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                     </svg>
                   )}
+                  {item.icon === "shield" && (
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
+                      <path fill-rule="evenodd" d="M10 1.944a11.955 11.955 0 01-6.993 3.657A1 1 0 002 6.59v3.085c0 4.148 4.298 7.374 8 9.07 3.702-1.696 8-4.922 8-9.07V6.59a1 1 0 00-1.007-.988A11.956 11.956 0 0110 1.944zm0 2.227a9.96 9.96 0 005.993 2.765v2.739h-6v-5.504zM10 6.936v5.5H4v-2.74A9.96 9.96 0 0010 4.17v2.766z" clip-rule="evenodd" />
+                    </svg>
+                  )}
+                  {item.icon === "receipt" && (
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
+                      <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v14.47l-2.455-1.964a1 1 0 00-1.09 0l-2.455 1.964-2.455-1.964a1 1 0 00-1.09 0L6.455 18.47 4 16.47V4zm4 3a1 1 0 000 2h4a1 1 0 100-2H8zm-1 4.5a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z" clip-rule="evenodd" />
+                    </svg>
+                  )}
                   {item.icon === "users" && (
                     <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
                       <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
@@ -138,6 +151,16 @@ const navSections = [
                   {item.icon === "edit" && (
                     <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
                       <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                    </svg>
+                  )}
+                  {item.icon === "document" && (
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
+                      <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
+                    </svg>
+                  )}
+                  {item.icon === "folder" && (
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
+                      <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
                     </svg>
                   )}
                   {item.icon === "settings" && (

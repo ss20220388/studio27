@@ -1,0 +1,37 @@
+---
+import Layout from "../layouts/Layout.astro";
+import AdminsPage from "../react components/AdminsPage";
+import type { AstroCookies } from "astro";
+
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
+const cookies = Astro.cookies as AstroCookies;
+const refreshToken = cookies.get("refreshToken");
+const token = refreshToken?.value;
+const authHeaders: Record<string, string> = token
+  ? {
+      Authorization: `Bearer ${token}`,
+    }
+  : {};
+
+let adminsData: any[] = [];
+
+try {
+  const adminsResponse = await fetch(`${API_URL}/api/admins`, {
+    headers: authHeaders,
+  });
+
+  if (!adminsResponse.ok) {
+    console.error(`API Error: ${adminsResponse.status} ${adminsResponse.statusText}`);
+  } else {
+    adminsData = await adminsResponse.json();
+  }
+} catch (error) {
+  console.error("Greška pri učitavanju administratora:", error);
+}
+
+---
+
+<Layout title="Administratori">
+  <AdminsPage admins={adminsData} token={token ? token : ""} client:load />
+</Layout>
