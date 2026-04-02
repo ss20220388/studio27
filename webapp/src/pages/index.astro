@@ -102,7 +102,7 @@ if (userData.userId) {
 		progressStats = {
 			zavrseno: stats.finished,
 			uToku: stats.inProgress,
-			nijePoceto: Math.max(stats.totalCourses - stats.finished - stats.inProgress, 0),
+			nijePoceto: stats.totalCourses,
 		};
 	} catch (error) {
 		console.error("Greška pri učitavanju statistike:", error);

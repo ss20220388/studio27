@@ -87,4 +87,14 @@ public class AdminController {
         }
     }
 
+    public String deleteAdmin(String id) {
+        String SQL = "DELETE FROM admin WHERE adminId = ?";
+
+        jdbcTemplate.update(SQL, id);
+
+        String SQL1 = "DELETE FROM user WHERE userId = ?";
+        jdbcTemplate.update(SQL1, id);
+        return "Admin deleted successfully";
+    }
+
 }

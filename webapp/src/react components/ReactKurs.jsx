@@ -130,7 +130,7 @@ const ReactKurs = ({
                         </p>
                         {/* dugme sada radi */}
                         <div className="w-full max-w-[220px]">
-                            <BuyCourseModal naziv={kurs.naziv} cena={kurs.cena} />
+                            <BuyCourseModal API_URL={API_URL} token={accessToken} kursId={kurs.kursId} naziv={kurs.naziv} cena={kurs.cena} />
                         </div>
                     </div>
                 </div>

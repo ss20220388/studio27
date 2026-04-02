@@ -1,6 +1,7 @@
 package com.server.studio27.controllers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -55,6 +56,7 @@ public class PlatioController {
                         SELECT DATE_FORMAT(datumPlacanja, '%Y-%m') AS mesec,
                                SUM(cenaPlacanja) AS zarada
                         FROM platio
+                        where status='P'
                         GROUP BY mesec
                     ),
                     korisnici AS (
@@ -105,12 +107,146 @@ public class PlatioController {
                     (java.sql.Date) row.get("datumPlacanja"),
                     ((Number) row.get("cenaPlacanja")).intValue(),
                     (String) row.get("naziv"),
-                    (String) row.get("status")
-            );
+                    (String) row.get("status"));
             platanja.add(platio);
         }
 
         return platanja;
+    }
+
+    public ResponseEntity<Map<String, Object>> getSveUplate() {
+        try {
+            String SQL = """
+                    Select p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, k.naziv,p.status,p.tip,p.url,ime,prezime,email
+                    FROM platio p
+                    JOIN kurs k ON p.kursId = k.kursId
+                    join student s ON p.studentId = s.studentId
+                    join user u ON s.studentId = u.userId
+                    where status='P'
+                    """;
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
+            List<Map<String, Object>> platanja = new ArrayList<>();
+            for (Map<String, Object> row : rows) {
+                Map<String, Object> platio = new HashMap<>();
+                platio.put("studentId", ((Number) row.get("studentId")).intValue());
+                platio.put("kursId", ((Number) row.get("kursId")).intValue());
+                platio.put("datumPlacanja", (java.sql.Date) row.get("datumPlacanja"));
+                platio.put("cenaPlacanja", ((Number) row.get("cenaPlacanja")).intValue());
+                platio.put("nazivKursa", (String) row.get("naziv"));
+                platio.put("ime", (String) row.get("ime"));
+                platio.put("prezime", (String) row.get("prezime"));
+                platio.put("email", (String) row.get("email"));
+                platio.put("status", (String) row.get("status"));
+                platio.put("tip", (String) row.get("tip"));
+                platio.put("url", (String) row.get("url"));
+                platanja.add(platio);
+            }
+            return ResponseEntity.ok(Map.of("data",platanja));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Greška prilikom dohvatanja podataka"));
+        }
+    }
+
+    public ResponseEntity<Map<String, Object>> getSveOdbijene() {
+        try {
+            String SQL = """
+                    Select p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, k.naziv,p.status,p.tip,p.url,ime,prezime,email
+                    FROM platio p
+                    JOIN kurs k ON p.kursId = k.kursId
+                    join student s ON p.studentId = s.studentId
+                    join user u ON s.studentId = u.userId
+                    WHERE p.status = 'O'
+                    """;
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
+            List<Map<String, Object>> platanja = new ArrayList<>();
+            for (Map<String, Object> row : rows) {
+                Map<String, Object> platio = new HashMap<>();
+                platio.put("studentId", ((Number) row.get("studentId")).intValue());
+                platio.put("kursId", ((Number) row.get("kursId")).intValue());
+                platio.put("datumPlacanja", (java.sql.Date) row.get("datumPlacanja"));
+                platio.put("cenaPlacanja", ((Number) row.get("cenaPlacanja")).intValue());
+                platio.put("nazivKursa", (String) row.get("naziv"));
+                platio.put("status", (String) row.get("status"));
+                platio.put("tip", (String) row.get("tip"));
+                platio.put("url", (String) row.get("url"));
+                platio.put("ime", (String) row.get("ime"));
+                platio.put("prezime", (String) row.get("prezime"));
+                platio.put("email", (String) row.get("email"));
+                platanja.add(platio);
+            }
+            return ResponseEntity.ok(Map.of("data",platanja));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Greška prilikom dohvatanja podataka"));
+        }
+    }
+
+    public ResponseEntity<Map<String,Object>> getSveUpriremi(){
+        try {
+            String SQL = """
+                    Select p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, k.naziv,p.status,p.tip,p.url,ime,prezime,email
+                    FROM platio p
+                    JOIN kurs k ON p.kursId = k.kursId
+                    join student s ON p.studentId = s.studentId
+                    join user u ON s.studentId = u.userId
+                    WHERE p.status = 'C'
+                    """;
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
+            List<Map<String, Object>> platanja = new ArrayList<>();
+            for (Map<String, Object> row : rows) {
+                Map<String, Object> platio = new HashMap<>();
+                platio.put("studentId", ((Number) row.get("studentId")).intValue());
+                platio.put("kursId", ((Number) row.get("kursId")).intValue());
+                platio.put("datumPlacanja", (java.sql.Date) row.get("datumPlacanja"));
+                platio.put("cenaPlacanja", ((Number) row.get("cenaPlacanja")).intValue());
+                platio.put("nazivKursa", (String) row.get("naziv"));
+                platio.put("status", (String) row.get("status"));
+                platio.put("tip", (String) row.get("tip"));
+                platio.put("url", (String) row.get("url"));
+                platio.put("ime", (String) row.get("ime"));
+                platio.put("prezime", (String) row.get("prezime"));
+                platio.put("email", (String) row.get("email"));
+
+                platanja.add(platio);
+            }
+            return ResponseEntity.ok(Map.of("data",platanja));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Greška prilikom dohvatanja podataka"));
+        }
+    }
+
+    public ResponseEntity<Map<String, Object>> updatePaymentStatus(Integer studentId, Integer kursId, String newStatus) {
+        try {
+            String SQL = "UPDATE platio SET status = ? WHERE studentId = ? AND kursId = ?";
+            int rowsAffected = jdbcTemplate.update(SQL, newStatus, studentId, kursId);
+
+            if (rowsAffected > 0) {
+                return ResponseEntity.ok(Map.of("message", "Status plaćanja uspešno ažuriran"));
+            } else {
+                return ResponseEntity.status(404).body(Map.of("error", "Plaćanje nije pronađeno"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Greška prilikom ažuriranja statusa plaćanja"));
+        }
+    }
+    public ResponseEntity<Map<String,Object>> addNewPayment(Integer studentId,Integer kursId,String datumPlacanja,Integer cenaPlacanja,String status,String tip,String url){
+        try {
+            String SQL = "INSERT INTO platio (studentId, kursId, datumPlacanja, cenaPlacanja, status, tip, url) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            int rowsAffected = jdbcTemplate.update(SQL, studentId, kursId, datumPlacanja, cenaPlacanja, status, tip, url);
+
+            if (rowsAffected > 0) {
+                return ResponseEntity.ok(Map.of("message", "Novo plaćanje uspešno dodato"));
+            } else {
+                return ResponseEntity.status(400).body(Map.of("error", "Nije moguće dodati novo plaćanje"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Greška prilikom dodavanja novog plaćanja"));
+        }
+
     }
 
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { SharedModal } from "./SharedModal";
 
 interface PravilaPageProps {
   token: string;
@@ -13,7 +14,20 @@ export default function PravilaPage({ token }: PravilaPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "info" | "error" | "confirm";
+    onConfirm?: () => void;
+  }>({ isOpen: false, title: "", message: "", type: "info" });
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const showModal = (title: string, message: string, type: "info" | "error" | "confirm" = "info", onConfirm?: () => void) => {
+    setModalConfig({ isOpen: true, title, message, type, onConfirm });
+  };
+  const closeModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
 
   useEffect(() => {
     fetchPravila();
@@ -49,7 +63,7 @@ export default function PravilaPage({ token }: PravilaPageProps) {
 
     const file = files[0];
     if (file.type !== "application/pdf") {
-      alert("Izabrani fajl mora biti u PDF formatu!");
+      showModal("Greška", "Izabrani fajl mora biti u PDF formatu!", "error");
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
@@ -73,11 +87,11 @@ export default function PravilaPage({ token }: PravilaPageProps) {
         throw new Error("Neuspešno postavljanje fajla na server.");
       }
 
-      alert("Pravilo (PDF) je uspešno postavljeno!");
+      showModal("Uspeh", "Pravilo (PDF) je uspešno postavljeno!");
       fetchPravila(); // Osveži listu PDF fajlova nakon uspešnog kreiranja
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "Došlo je do greške prilikom dodavanja pravila.");
+      showModal("Greška", err.message || "Došlo je do greške prilikom dodavanja pravila.", "error");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -88,6 +102,38 @@ export default function PravilaPage({ token }: PravilaPageProps) {
     const filePath = `${FOLDER_PATH}/${itemName.split("/").pop()}`;
     const url = `${API_URL}/api/media?remoteFilePath=${encodeURIComponent(filePath)}`;
     window.open(url, "_blank");
+  };
+
+  const confirmDelete = (itemName: string) => {
+    showModal(
+      "Brisanje pravila",
+      `Da li ste sigurni da želite obrisati pravilo ${itemName}?`,
+      "confirm",
+      () => deletePdf(itemName)
+    );
+  };
+
+  const deletePdf = async (itemName: string) => {
+    try {
+      const filePath = `${FOLDER_PATH}/${itemName}`;
+      
+      const res = await fetch(`${API_URL}/api/delete-file?remoteFilePath=${encodeURIComponent(filePath)}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to delete file (status: ${res.status})`);
+      }
+
+      showModal("Uspešno", "Pravilo je uspešno obrisano!");
+      fetchPravila(); // Refresh the list
+    } catch (err: any) {
+      console.error(err);
+      showModal("Greška", err.message || "Došlo je do greške prilikom brisanja pravila.", "error");
+    }
   };
 
   return (
@@ -172,22 +218,70 @@ export default function PravilaPage({ token }: PravilaPageProps) {
                     </span>
                   </div>
                   
-                  <button
-                    onClick={() => openPdf(fileName)}
-                    className="ml-3 shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-neutral-500 bg-neutral-900 hover:text-white border border-neutral-700 hover:bg-neutral-700 cursor-pointer transition-colors shadow-sm"
-                    title="Pogledaj / Preuzmi"
-                  >
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                      <path d="M10 12a1 1 0 001-1V5a1 1 0 10-2 0v6a1 1 0 001 1z" />
-                      <path fillRule="evenodd" d="M14.293 8.293A1 1 0 0115 9v6a2 2 0 01-2 2H7a2 2 0 01-2-2V9a1 1 0 011-1h1.5a1 1 0 010 2H7v6h6V10h-1.5a1 1 0 01-.707-1.707L10.5 6.586a1 1 0 011.414 0l2.379 1.707z" clipRule="evenodd" />
-                    </svg>
-                  </button>
+                  <div className="flex items-center ml-3 gap-2">
+                    <button
+                      onClick={() => openPdf(fileName)}
+                      className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-neutral-500 bg-neutral-900 hover:text-white border border-neutral-700 hover:bg-neutral-700 cursor-pointer transition-colors shadow-sm"
+                      title="Pogledaj / Preuzmi"
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                        <path d="M10 12a1 1 0 001-1V5a1 1 0 10-2 0v6a1 1 0 001 1z" />
+                        <path fillRule="evenodd" d="M14.293 8.293A1 1 0 0115 9v6a2 2 0 01-2 2H7a2 2 0 01-2-2V9a1 1 0 011-1h1.5a1 1 0 010 2H7v6h6V10h-1.5a1 1 0 01-.707-1.707L10.5 6.586a1 1 0 011.414 0l2.379 1.707z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => confirmDelete(fileName)}
+                      className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-red-500/70 bg-neutral-900 hover:text-red-500 border border-neutral-700 hover:bg-red-950/30 hover:border-red-900/50 cursor-pointer transition-colors shadow-sm"
+                      title="Obriši"
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                        <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5zM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4zM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               );
             })}
           </div>
         )}
       </div>
+
+      <SharedModal
+        open={modalConfig.isOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+      >
+        <div className="text-neutral-300 mb-6">
+          {modalConfig.message}
+        </div>
+        <div className="flex justify-end gap-3">
+          {modalConfig.type === "confirm" && (
+            <button
+              onClick={closeModal}
+              className="px-4 py-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 font-medium transition-colors"
+            >
+              Odustani
+            </button>
+          )}
+          <button
+            onClick={() => {
+              if (modalConfig.type === "confirm" && modalConfig.onConfirm) {
+                modalConfig.onConfirm();
+              }
+              closeModal();
+            }}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              modalConfig.type === "error"
+                ? "bg-red-600 hover:bg-red-500 text-white"
+                : modalConfig.type === "confirm"
+                ? "bg-red-600 hover:bg-red-500 text-white"
+                : "bg-blue-600 hover:bg-blue-500 text-white"
+            }`}
+          >
+            {modalConfig.type === "confirm" ? "Siguran sam, obriši" : "U redu"}
+          </button>
+        </div>
+      </SharedModal>
     </div>
   );
 }

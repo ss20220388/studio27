@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 
 interface FajloviPageProps {
   token: string;
+  API_URL: string;
 }
 
 const isVideo = (path: string) => /\.(mp4|webm|mkv|m3u8)$/i.test(path);
@@ -82,8 +83,8 @@ const FileModal = ({
   );
 };
 
-export default function FajloviPage({ token }: FajloviPageProps) {
-  const API_URL = "http://api.studio27.rs";
+export default function FajloviPage({ token,API_URL }: FajloviPageProps) {
+
   
   const [currentPath, setCurrentPath] = useState("/");
   const [items, setItems] = useState<string[]>([]);

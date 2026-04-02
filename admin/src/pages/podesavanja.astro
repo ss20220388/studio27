@@ -1,8 +1,11 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import SettingsPage from "../react components/SettingsPage";
+const token = Astro.cookies.get("refreshToken")?.value || null;
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const CLIENT_URL = import.meta.env.PUBLIC_CLIENT_URL || "http://studio27.rs";
 ---
 
 <Layout title="Podešavanja">
-    <SettingsPage client:load />
+    <SettingsPage clientUrl={CLIENT_URL} token={token} apiUrl={API_URL} client:load />
 </Layout>

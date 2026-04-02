@@ -16,10 +16,10 @@ const authHeaders: Record<string, string> = token
 
 let uplatniceData: any[] = [];
 let odobrenaPlacanjaData: any[] = [];
+let odbijenaPlacanjaData: any[] = [];
 
 try {
-  // Prvi poziv: Neodobrene uplatnice
-  const response = await fetch(`${API_URL}/api/uplatnice-na-cekanju`, {
+  const response = await fetch(`${API_URL}/api/sve-u-pripremi`, {
     headers: authHeaders,
   });
 
@@ -33,9 +33,7 @@ try {
 }
 
 try {
-  // Drugi poziv: Odobrena plaćanja (kartice + potvrdjene uplatnice)
-  // Prilagodite putanju kako god želite da se zove na back-endu
-  const responseOdobrena = await fetch(`${API_URL}/api/odobrena-placanja`, {
+  const responseOdobrena = await fetch(`${API_URL}/api/sve-uplate`, {
     headers: authHeaders,
   });
 
@@ -48,13 +46,29 @@ try {
   console.error("Greška pri učitavanju odobrenih plaćanja:", error);
 }
 
+try {
+  const responseOdbijena = await fetch(`${API_URL}/api/sve-odbijene`, {
+    headers: authHeaders,
+  });
+
+  if (!responseOdbijena.ok) {
+    console.error(`API Error (odbijena): ${responseOdbijena.status} ${responseOdbijena.statusText}`);
+  } else {
+    odbijenaPlacanjaData = await responseOdbijena.json();
+  }
+} catch (error) {
+  console.error("Greška pri učitavanju odbijenih plaćanja:", error);
+}
+
 ---
 
 <Layout title="Uplatnice i Plaćanja">
   <UplatnicePage 
     uplatnice={uplatniceData} 
     odobrenaPlacanja={odobrenaPlacanjaData} 
+    odbijenaPlacanja={odbijenaPlacanjaData}
     token={token ? token : ""} 
+    API_URL={API_URL}
     client:load 
   />
 </Layout>
