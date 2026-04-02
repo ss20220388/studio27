@@ -18,21 +18,24 @@ public class AdminController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    public List<Admin> getAdmins() {
-        List<Admin> admins = new ArrayList<>();
+    public List<Map<String, Object>> getAdmins() {
+        List<Map<String, Object>> admins = new ArrayList<>();
 
-        String SQL = "SELECT * FROM admin";
+        String SQL = "SELECT * FROM admin join user u on admin.adminId = u.userId";
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
+        
+
 
         for (Map<String, Object> row : rows) {
-            admins.add(new Admin(
-                    ((Number) row.get("adminId")).intValue(),
-                    (String) row.get("email"),
-                    (String) row.get("password"),
-                    (String) row.get("ime"),
-                    (String) row.get("prezime"),
-                    "ADMIN"));
+            Map<String, Object> response = new HashMap();
+            response.put("userId", row.get("adminId"));
+            response.put("email", row.get("email"));
+            response.put("password", row.get("password"));
+            response.put("ime", row.get("ime"));
+            response.put("prezime", row.get("prezime"));
+            response.put("deviceId", row.get("deviceId"));
+            admins.add(response);
         }
 
         return admins;
@@ -82,6 +85,16 @@ public class AdminController {
             Map<String, Object> response = Map.of("error", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    public String deleteAdmin(String id) {
+        String SQL = "DELETE FROM admin WHERE adminId = ?";
+
+        jdbcTemplate.update(SQL, id);
+
+        String SQL1 = "DELETE FROM user WHERE userId = ?";
+        jdbcTemplate.update(SQL1, id);
+        return "Admin deleted successfully";
     }
 
 }

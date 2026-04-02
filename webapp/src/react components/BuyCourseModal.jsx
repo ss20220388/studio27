@@ -5,7 +5,7 @@ import CardPaymentForm from "./CardPaymentForm.jsx";
 import UplatnicaForm from "./UplatnicaForm.jsx";
 import Success from "./Success.jsx";
 
-export default function BuyCourseModal({ naziv, cena }) {
+export default function BuyCourseModal({ naziv, cena,kursId ,API_URL, token}) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [method, setMethod] = useState("");
@@ -101,7 +101,10 @@ export default function BuyCourseModal({ naziv, cena }) {
                 onSuccess={handleSuccess}
                 naziv={naziv}
                 cena={cena}
+                kursId = {kursId}
                 onBack={handleBack}
+                API_URL={API_URL}
+                token={token}
               />
             )}
             {step === 2 && method === "uplatnica" && (
@@ -110,6 +113,9 @@ export default function BuyCourseModal({ naziv, cena }) {
                 naziv={naziv}
                 cena={cena}
                 onBack={handleBack}
+                kursId={kursId}
+                API_URL={API_URL}
+                token={token}
               />
             )}
             {step === 3 && <Success naziv={naziv} onBack={handleBack} />}
