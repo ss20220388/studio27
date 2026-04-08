@@ -179,15 +179,14 @@ public class StudentController {
             return "Error updating student: " + e.getMessage();
         }
     }
-    public List<Map<String,Object>> getStudentMails(){
+    public List<String> getStudentMails(){
         try {
             String SQL = "SELECT email FROM user u JOIN student s ON u.userId = s.studentId";
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
-            List<Map<String,Object>> emails = new ArrayList<>();
+            List<String> emails = new ArrayList<>();
             for(Map<String,Object> row : rows){
-                Map<String,Object> emailMap = new HashMap<>();
-                emailMap.put("email", (String) row.get("email"));
-                emails.add(emailMap);
+                List<String> emailMap = new ArrayList<>();
+                emails.add((String) row.get("email"));
             }
             return emails;
         } catch (Exception e) {

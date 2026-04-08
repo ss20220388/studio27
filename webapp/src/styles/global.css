@@ -8,6 +8,9 @@
 ::-webkit-scrollbar {
   width: 6px;
 }
+body{
+  overflow-y:hidden;
+}
 
 ::-webkit-scrollbar-track {
   background: #0a0a0a;
