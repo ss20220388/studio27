@@ -72,6 +72,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/auth/access-token").permitAll()
                                                 .requestMatchers("/api/auth/me").permitAll()
                                                 .requestMatchers("/api/auth/oauth2").permitAll()
+                                                .requestMatchers("/api/auth/send-otp").permitAll()
+                                                .requestMatchers("/api/auth/verify-otp-and-reset").permitAll()
                                                 .requestMatchers("/login/**").permitAll()
                                                 .requestMatchers("/oauth2/authorization/google").permitAll()
                                                 .requestMatchers("/oauth2/**").permitAll()
