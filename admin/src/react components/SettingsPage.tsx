@@ -44,8 +44,10 @@ export default function SettingsPage({ token, apiUrl,clientUrl }: { token: strin
         console.error("Ne mogu da dobijem email adrese korisnika.");
         return;
       }
+    
       const mailsData = await mailsResponse.json();
-       emailList = mailsData.mails || [];
+      console.log("Email adrese korisnika:", mailsData);
+       emailList = mailsData || [];
     }catch(error){
       console.error("Greška pri slanju email-a.");
     }
