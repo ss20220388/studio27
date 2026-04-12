@@ -14,12 +14,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.mail.internet.MimeMessage;
 
+
+
 @RestController
 @RequestMapping("/api")
 public class SendMail {
 
     @Autowired
     private JavaMailSender mailSender;
+
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -130,6 +135,28 @@ public class SendMail {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body("Greška pri slanju svima: " + e.getMessage());
+        }
+    }
+    @PostMapping("/send-code-to-mail")
+    public ResponseEntity<String> sendCodeToMail(@RequestBody MailRequest request) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            
+            Integer kod = (int) (Math.random() * 900000 + 100000);
+            String SQLInsert = "INSERT INTO provera (email, kod) VALUES (?, ?)";
+            jdbcTemplate.update(SQLInsert, request.to, kod);
+
+            helper.setFrom(fromEmail);
+            helper.setTo(request.to);
+            helper.setSubject("Studio 27 - Vaš kod za resetovanje lozinke");
+            helper.setText(buildHtmlEmail("Kod za resetovanje lozinke","Molimo koristite ovaj kod za resetovanje lozinke:",kod.toString()), true);
+
+            mailSender.send(message);
+            return ResponseEntity.ok("Kod uspešno poslat korisniku: " + request.to);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Greška pri slanju koda: " + e.getMessage());
         }
     }
 

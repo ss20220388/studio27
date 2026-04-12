@@ -68,21 +68,24 @@ public class PlatioRoute {
         String email = userDetails.getUsername();
 
         try {
-            Integer studentId = jdbcTemplate.queryForObject(
+            // Query za pronalaženje studentId-a
+            List<Integer> studentIds = jdbcTemplate.queryForList(
                     "SELECT studentId FROM student WHERE studentId IN (SELECT userId FROM user WHERE email = ?)",
                     Integer.class,
                     email);
 
-            if (studentId == null) {
-                return ResponseEntity.status(404).body(Map.of("error", "Korisnik nije student"));
+            // Ako nema rezultata, vraćamo praznu listu
+            if (studentIds == null || studentIds.isEmpty()) {
+                return ResponseEntity.ok(List.of());
             }
 
+            Integer studentId = studentIds.get(0);
             List<Platio> payments = platioController.getStudentPayments(studentId);
             return ResponseEntity.ok(payments);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("error", "Greška prilikom dohvatanja plaćanja"));
+            return ResponseEntity.status(500).body(Map.of("error", "Greška prilikom dohvatanja plaćanja: " + e.getMessage()));
         }
     }
 

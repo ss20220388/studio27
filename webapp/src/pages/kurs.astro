@@ -37,7 +37,13 @@ const userData = await response.json();
       <p class="text-sm text-neutral-500 mt-1">Pregledajte sve dostupne kurseve</p>
     </div>
 
-    <div class="grid h-screen overflow-y-hidden md:grid-cols-2 xl:grid-cols-3 gap-4 stagger-children">
+    <div class="bg-red-900/20 border border-red-800/40 rounded-lg p-4 mb-6">
+      <p class="inline-block bg-red-900/40 text-white text-sm font-semibold px-4 py-2 rounded-full">
+        ℹ️ Klikni na kurs da vidiš detalje i kupi
+      </p>
+    </div>
+
+    <div class="grid h-screen md:grid-cols-2 xl:grid-cols-3 gap-4 stagger-children">
       {kursevi?.map((kurs) => (
         <ReactKurs client:idle kurs={kurs} userId={userData.userId} accessToken={token} />
       ))}

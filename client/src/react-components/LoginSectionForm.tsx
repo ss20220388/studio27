@@ -41,6 +41,15 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
+    const [showForgotPassword, setShowForgotPassword] = useState(false)
+    const [forgotStep, setForgotStep] = useState<'email' | 'otp-reset'>('email')
+    const [forgotEmail, setForgotEmail] = useState('')
+    const [otpCode, setOtpCode] = useState('')
+    const [newPassword, setNewPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [forgotLoading, setForgotLoading] = useState(false)
+    const [registerErrors, setRegisterErrors] = useState<{ [key: string]: string }>({})
+    const [termsAccepted, setTermsAccepted] = useState(false)
 
     useEffect(() => {
         if (typeof isOpen === 'boolean') setInternalOpen(isOpen)
@@ -188,12 +197,43 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
             const ime = (document.getElementById('regFirstName') as HTMLInputElement)?.value?.trim() || ''
             const prezime = (document.getElementById('regLastName') as HTMLInputElement)?.value?.trim() || ''
             const brojTelefona = (document.getElementById('regPhone') as HTMLInputElement)?.value?.trim() || undefined
+            const confirmPasswordEl = (document.getElementById('confirmPassword') as HTMLInputElement)?.value || ''
 
-            if (!ime || !prezime) {
-                setError('Unesite ime i prezime')
+            // Validacija
+            const errors: { [key: string]: string } = {}
+
+            if (!ime || ime.length < 2) errors.ime = 'Ime mora biti najmanje 2 karaktera'
+            if (!prezime || prezime.length < 2) errors.prezime = 'Prezime mora biti najmanje 2 karaktera'
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+            if (!email || !emailRegex.test(email)) errors.email = 'Unesite validnu e-poštu'
+
+            if (!password || password.length < 8) errors.password = 'Lozinka mora biti najmanje 8 karaktera'
+            else if (!/[A-Z]/.test(password)) errors.password = 'Lozinka mora sadržavati jedno veliko slovo'
+            else if (!/[0-9]/.test(password)) errors.password = 'Lozinka mora sadržavati jedan broj'
+
+            if (password !== confirmPasswordEl) errors.confirmPassword = 'Lozinke se ne poklapaju'
+            
+            if (!termsAccepted) errors.terms = 'Morate prihvatiti uslove korišćenja'
+
+            if (Object.keys(errors).length > 0) {
+                setRegisterErrors(errors)
+                setError(Object.values(errors)[0])
                 return
             }
+
+            setRegisterErrors({})
             await doRegister({ email, password, ime, prezime, brojTelefona })
+        }
+    }
+
+    const handleOpenTerms = () => {
+        try {
+            const filePath = `/pravila/Analiticka - formule.pdf`
+            const url = `${publicApiUrl}/api/media?remoteFilePath=${encodeURIComponent(filePath)}`
+            window.open(url, '_blank')
+        } catch (err) {
+            console.error('Greška pri otvaranju dokumenta:', err)
         }
     }
 
@@ -208,9 +248,227 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         }
     }
 
+    const handleSendOtp = async (e: React.FormEvent) => {
+        e.preventDefault()
+        
+        if (!forgotEmail || !forgotEmail.includes('@')) {
+            setError('Unesite validan email')
+            return
+        }
+
+        setForgotLoading(true)
+        setError(null)
+        setSuccess(null)
+
+        try {
+            const res = await fetch(`${publicApiUrl}/api/send-code-to-mail`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ to: forgotEmail }),
+            })
+
+            setSuccess('Verifikacijski kod je poslat na vašu email adresu!')
+            setForgotStep('otp-reset')
+            setOtpCode('')
+            setNewPassword('')
+            setConfirmPassword('')
+        } catch (e: any) {
+            console.error(e)
+            setError('Greška pri komunikaciji sa serverom')
+        } finally {
+            setForgotLoading(false)
+        }
+    }
+
+    const handleVerifyOtpAndReset = async (e: React.FormEvent) => {
+        e.preventDefault()
+
+        if (!otpCode || otpCode.length !== 6) {
+            setError('Kod mora biti 6 znamenki')
+            return
+        }
+        if (!newPassword || newPassword.length < 6) {
+            setError('Lozinka mora biti najmanje 6 karaktera')
+            return
+        }
+        if (newPassword !== confirmPassword) {
+            setError('Lozinke se ne poklapaju')
+            return
+        }
+
+        setForgotLoading(true)
+        setError(null)
+        setSuccess(null)
+
+        try {
+            const res = await fetch(`${publicApiUrl}/api/auth/zaboravljena-lozinka`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email: forgotEmail,
+                    kod: otpCode,
+                    password: newPassword
+                }),
+            })
+
+            
+
+            setSuccess('Lozinka uspešno resetovana!')
+            setTimeout(() => {
+                setShowForgotPassword(false)
+                setForgotStep('email')
+                setForgotEmail('')
+                setOtpCode('')
+                setNewPassword('')
+                setConfirmPassword('')
+                setError(null)
+                setSuccess(null)
+            }, 3000)
+        } catch (e: any) {
+            setError(e?.message || 'Greška pri komunikaciji sa serverom')
+        } finally {
+            setForgotLoading(false)
+        }
+    }
+
     const isControlled = typeof isOpen === 'boolean'
     const modalActive = internalOpen || (isControlled && isOpen)
     if (!modalActive) return null
+
+    // Forgot Password Modal
+    if (showForgotPassword) {
+        return (
+            <section className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/60" onClick={() => { setShowForgotPassword(false); setError(null); setForgotStep('email') }}></div>
+
+                <div className="relative rounded-none bg-white p-8 shadow-sm w-full max-w-md mx-4">
+                    <button onClick={() => { setShowForgotPassword(false); setError(null); setForgotStep('email') }} className="absolute right-3 top-3 text-gray-500 hover:text-black" aria-label="Zatvori">
+                        ✕
+                    </button>
+
+                    {forgotStep === 'email' ? (
+                        <>
+                            <div className="mb-8 text-center">
+                                <div className="mb-4 flex justify-center">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-500">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <h2 className="mb-2 text-2xl font-bold text-black">Resetuj lozinku</h2>
+                                <p className="text-sm text-gray-600">Unesite vašu email adresu i poslaćemo vam verifikacijski kod</p>
+                            </div>
+
+                            {error && <p className="mb-4 text-sm text-red-600 text-center">{error}</p>}
+                            {success && <p className="mb-4 text-sm text-green-600 text-center">{success}</p>}
+
+                            <form onSubmit={handleSendOtp} className="space-y-6">
+                                <div>
+                                    <label htmlFor="forgotEmail" className="mb-2 block text-sm font-medium text-gray-700">E-pošta</label>
+                                    <input
+                                        type="email"
+                                        id="forgotEmail"
+                                        value={forgotEmail}
+                                        onChange={(e) => setForgotEmail(e.target.value)}
+                                        className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none"
+                                        placeholder="petar.petrovic@example.com"
+                                        autoFocus
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={forgotLoading}
+                                    className="w-full bg-black px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+                                >
+                                    {forgotLoading ? 'Slanje...' : 'Pošalji kod'}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => { setShowForgotPassword(false); setError(null); setForgotStep('email') }}
+                                    className="w-full border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                                >
+                                    Vrati se na prijavu
+                                </button>
+                            </form>
+                        </>
+                    ) : (
+                        <>
+                            <div className="mb-8 text-center">
+                                <div className="mb-4 flex justify-center">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-500">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </div>
+                                <h2 className="mb-2 text-2xl font-bold text-black">Potvrdi kod</h2>
+                                <p className="text-sm text-gray-600">Unesite kod koji je poslat na {forgotEmail}</p>
+                            </div>
+
+                            {error && <p className="mb-4 text-sm text-red-600 text-center">{error}</p>}
+                            {success && <p className="mb-4 text-sm text-green-600 text-center">{success}</p>}
+
+                            <form onSubmit={handleVerifyOtpAndReset} className="space-y-6">
+                                <div>
+                                    <label htmlFor="otpCode" className="mb-2 block text-sm font-medium text-gray-700">Verifikacijski kod (6 znamenki)</label>
+                                    <input
+                                        type="text"
+                                        id="otpCode"
+                                        inputMode="numeric"
+                                        value={otpCode}
+                                        onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                        maxLength={6}
+                                        className="w-full border border-gray-300 bg-white px-4 py-3 text-center text-2xl font-bold tracking-widest text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none"
+                                        placeholder="000000"
+                                        autoFocus
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="newPassword" className="mb-2 block text-sm font-medium text-gray-700">Nova lozinka</label>
+                                    <input
+                                        type="password"
+                                        id="newPassword"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none"
+                                        placeholder="Najmanje 6 karaktera"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-gray-700">Potvrdi lozinku</label>
+                                    <input
+                                        type="password"
+                                        id="confirmPassword"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none"
+                                        placeholder="Ponovi lozinku"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={forgotLoading}
+                                    className="w-full bg-black px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+                                >
+                                    {forgotLoading ? 'Procesiranje...' : 'Potvrdi i resetuj lozinku'}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setForgotStep('email')}
+                                    className="w-full border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                                >
+                                    ← Nazad
+                                </button>
+                            </form>
+                        </>
+                    )}
+                </div>
+            </section>
+        )
+    }
 
     return (
         <section className="fixed inset-0 z-50 flex items-center justify-center">
@@ -246,11 +504,13 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label htmlFor="regFirstName" className="mb-2 block text-sm font-medium text-gray-700">Ime</label>
-                                    <input type="text" id="regFirstName" name="firstName" className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none" placeholder="Petar" required />
+                                    <input type="text" id="regFirstName" name="firstName" className={`w-full border px-4 py-3 bg-white text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.ime ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}`} placeholder="Petar" required />
+                                    {registerErrors.ime && <p className="mt-1 text-xs text-red-600">{registerErrors.ime}</p>}
                                 </div>
                                 <div>
                                     <label htmlFor="regLastName" className="mb-2 block text-sm font-medium text-gray-700">Prezime</label>
-                                    <input type="text" id="regLastName" name="lastName" className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none" placeholder="Petrovic" required />
+                                    <input type="text" id="regLastName" name="lastName" className={`w-full border px-4 py-3 bg-white text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.prezime ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}`} placeholder="Petrovic" required />
+                                    {registerErrors.prezime && <p className="mt-1 text-xs text-red-600">{registerErrors.prezime}</p>}
                                 </div>
                             </div>
 
@@ -263,35 +523,57 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
 
                     <div>
                         <label htmlFor="loginEmail" className="mb-2 block text-sm font-medium text-gray-700">E-pošta</label>
-                        <input type="email" id="loginEmail" name="email" className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none" placeholder="petar.petrovic@example.com" required />
+                        <input type="email" id="loginEmail" name="email" className={`w-full border px-4 py-3 bg-white text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.email && !loginForm ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}`} placeholder="petar.petrovic@example.com" required />
+                        {registerErrors.email && !loginForm && <p className="mt-1 text-xs text-red-600">{registerErrors.email}</p>}
                     </div>
 
                     <div>
                         <div className="mb-2 flex items-center justify-between">
                             <label htmlFor="loginPassword" className="block text-sm font-medium text-gray-700">Lozinka</label>
-                            {loginForm
-                                ? <a href="#" className="text-sm text-gray-600 transition-colors hover:text-black">Zaboravio si lozinku?</a>
-                                : <p className="text-xs text-gray-500">Barem 8 karaktera</p>
-                            }
+                            {loginForm && (
+                                <button 
+                                    type="button" 
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        
+                                        setShowForgotPassword(true)
+                                        setError(null)
+                                        setSuccess(null)
+                                        setForgotStep('email')
+                                    }} 
+                                    className="text-sm text-gray-600 transition-colors hover:text-black"
+                                >
+                                    Zaboravio si lozinku?
+                                </button>
+                            )}
+                            {!loginForm && (
+                                <p className="text-xs text-gray-500">Min 8 karaktera, 1 veliko slovo, 1 broj</p>
+                            )}
                         </div>
-                        <input type="password" id="loginPassword" name="password" className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none" placeholder="Unesite lozinku" required />
+                        <input type="password" id="loginPassword" name="password" className={`w-full border px-4 py-3 bg-white text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.password && !loginForm ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}`} placeholder="Unesite lozinku" required />
+                        {registerErrors.password && !loginForm && <p className="mt-1 text-xs text-red-600">{registerErrors.password}</p>}
                     </div>
 
                     {!loginForm && (
                         <div>
                             <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-gray-700">Potvrdi lozinku</label>
-                            <input type="password" id="confirmPassword" name="confirmPassword" className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none" placeholder="Potvrdite lozinku" required />
+                            <input type="password" id="confirmPassword" name="confirmPassword" className={`w-full border px-4 py-3 bg-white text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}`} placeholder="Potvrdite lozinku" required />
+                            {registerErrors.confirmPassword && <p className="mt-1 text-xs text-red-600">{registerErrors.confirmPassword}</p>}
                         </div>
                     )}
 
                     {!loginForm && (
-                        <div className="flex items-start">
-                            <input type="checkbox" id="terms" name="terms" className="mt-1 h-4 w-4 rounded border-gray-300 text-black focus:ring-black" required />
-                            <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                                Saglasan/na sam sa <a href="#" className="text-black underline hover:no-underline">Uslovima korišćenja</a> i <a href="#" className="text-black underline hover:no-underline">Politikom privatnosti</a>
+                        <div className="flex items-start gap-3">
+                            <input type="checkbox" id="terms" name="terms" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className={`mt-1 h-4 w-4 rounded border-gray-300 text-black focus:ring-black cursor-pointer ${registerErrors.terms ? 'border-red-500' : ''}`} required />
+                            <label htmlFor="terms" className="block text-sm text-gray-700">
+                                Saglasan/na sam sa{' '}
+                                <button type="button" onClick={(e) => { e.preventDefault(); handleOpenTerms() }} className="text-black underline hover:no-underline font-medium transition-colors hover:text-gray-700">
+                                    Uslovima korišćenja
+                                </button>
                             </label>
                         </div>
                     )}
+                    {registerErrors.terms && <p className="text-xs text-red-600">{registerErrors.terms}</p>}
 
                     <button
                         type="submit"
@@ -323,7 +605,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                 <div className="text-center">
                     <p className="text-sm text-gray-600">
                         {loginForm ? 'Još uvek nemaš nalog? ' : 'Već imaš nalog? '}
-                        <button onClick={() => { setLoginForm(!loginForm); setError(null); setSuccess(null) }} className="font-medium text-black transition-colors hover:text-gray-700">
+                        <button onClick={() => { setLoginForm(!loginForm); setError(null); setSuccess(null); setRegisterErrors({}); setTermsAccepted(false) }} className="font-medium text-black transition-colors hover:text-gray-700">
                             {loginForm ? 'Registruj se' : 'Uloguj se'}
                         </button>
                     </p>

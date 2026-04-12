@@ -72,6 +72,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/auth/access-token").permitAll()
                                                 .requestMatchers("/api/auth/me").permitAll()
                                                 .requestMatchers("/api/auth/oauth2").permitAll()
+                                                .requestMatchers("/api/auth/zaboravljena-lozinka").permitAll()
+                                                .requestMatchers("/api/auth/verify-otp-and-reset").permitAll()
                                                 .requestMatchers("/login/**").permitAll()
                                                 .requestMatchers("/oauth2/authorization/google").permitAll()
                                                 .requestMatchers("/oauth2/**").permitAll()
@@ -89,7 +91,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/kursevi/{id}").permitAll()
                                                 .requestMatchers("/api/progress-chart/**").permitAll()
                                                 .requestMatchers("/api/cookies/create-cookie-by-local-storage").permitAll()
-
+                                                .requestMatchers("/api/send-code-to-mail").permitAll()
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth -> oauth
                                                 .successHandler((request, response, authentication) -> {

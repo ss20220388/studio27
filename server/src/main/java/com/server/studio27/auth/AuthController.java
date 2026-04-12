@@ -16,9 +16,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.server.studio27.requests.LoginRequest;
 import com.server.studio27.requests.RegisterAdminRequest;
@@ -48,6 +50,10 @@ public class AuthController {
     private final UserDetailsService userDetailsService;
     private final JdbcTemplate jdbcTemplate;
     private final PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private PasswordResetService passwordResetService;
+
 
     public AuthController(
             AuthenticationManager authenticationManager,
@@ -336,6 +342,43 @@ public class AuthController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("error", "Greška pri promeni lozinke"));
+        }
+    }
+
+    @PostMapping("/zaboravljena-lozinka")
+    public ResponseEntity<?> zaboravljenaLozinka(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email je obavezan"));
+        }
+
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM user WHERE email = ?", Integer.class, email);
+            if (count == null || count == 0) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Korisnik sa ovim email-om ne postoji"));
+            }
+            String SQLProvera = "Select count(*) from provera where email = ? and kod = ? ";
+            Integer proveraCount = jdbcTemplate.queryForObject(SQLProvera, Integer.class, email, request.get("kod"));
+
+            if (proveraCount == null || proveraCount == 0) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Nevalidan reset token"));
+            }
+
+            String hashedNewPassword = passwordEncoder.encode(request.get("password"));
+            String SQL="""
+                    Update user 
+                    set password = ?
+                    where email = ?
+                    """;
+
+            jdbcTemplate.update(SQL, hashedNewPassword, email);
+            String SQLDelete = "DELETE FROM provera WHERE email = ?";
+            jdbcTemplate.update(SQLDelete, email);
+            return ResponseEntity.ok(Map.of("message", "Lozinka uspešno resetovana"));
+        }catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Greška pri generisanju reset tokena"));
         }
     }
 
