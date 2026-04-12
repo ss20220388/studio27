@@ -48,6 +48,8 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [forgotLoading, setForgotLoading] = useState(false)
+    const [registerErrors, setRegisterErrors] = useState<{ [key: string]: string }>({})
+    const [termsAccepted, setTermsAccepted] = useState(false)
 
     useEffect(() => {
         if (typeof isOpen === 'boolean') setInternalOpen(isOpen)
@@ -195,12 +197,43 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
             const ime = (document.getElementById('regFirstName') as HTMLInputElement)?.value?.trim() || ''
             const prezime = (document.getElementById('regLastName') as HTMLInputElement)?.value?.trim() || ''
             const brojTelefona = (document.getElementById('regPhone') as HTMLInputElement)?.value?.trim() || undefined
+            const confirmPasswordEl = (document.getElementById('confirmPassword') as HTMLInputElement)?.value || ''
 
-            if (!ime || !prezime) {
-                setError('Unesite ime i prezime')
+            // Validacija
+            const errors: { [key: string]: string } = {}
+
+            if (!ime || ime.length < 2) errors.ime = 'Ime mora biti najmanje 2 karaktera'
+            if (!prezime || prezime.length < 2) errors.prezime = 'Prezime mora biti najmanje 2 karaktera'
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+            if (!email || !emailRegex.test(email)) errors.email = 'Unesite validnu e-poštu'
+
+            if (!password || password.length < 8) errors.password = 'Lozinka mora biti najmanje 8 karaktera'
+            else if (!/[A-Z]/.test(password)) errors.password = 'Lozinka mora sadržavati jedno veliko slovo'
+            else if (!/[0-9]/.test(password)) errors.password = 'Lozinka mora sadržavati jedan broj'
+
+            if (password !== confirmPasswordEl) errors.confirmPassword = 'Lozinke se ne poklapaju'
+            
+            if (!termsAccepted) errors.terms = 'Morate prihvatiti uslove korišćenja'
+
+            if (Object.keys(errors).length > 0) {
+                setRegisterErrors(errors)
+                setError(Object.values(errors)[0])
                 return
             }
+
+            setRegisterErrors({})
             await doRegister({ email, password, ime, prezime, brojTelefona })
+        }
+    }
+
+    const handleOpenTerms = () => {
+        try {
+            const filePath = `/pravila/Analiticka - formule.pdf`
+            const url = `${publicApiUrl}/api/media?remoteFilePath=${encodeURIComponent(filePath)}`
+            window.open(url, '_blank')
+        } catch (err) {
+            console.error('Greška pri otvaranju dokumenta:', err)
         }
     }
 
@@ -228,18 +261,11 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         setSuccess(null)
 
         try {
-            const res = await fetch(`${publicApiUrl}/api/auth/send-otp`, {
+            const res = await fetch(`${publicApiUrl}/api/send-code-to-mail`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: forgotEmail }),
+                body: JSON.stringify({ to: forgotEmail }),
             })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                setError(data?.message || 'Greška pri slanju koda')
-                return
-            }
 
             setSuccess('Verifikacijski kod je poslat na vašu email adresu!')
             setForgotStep('otp-reset')
@@ -247,7 +273,8 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
             setNewPassword('')
             setConfirmPassword('')
         } catch (e: any) {
-            setError(e?.message || 'Greška pri komunikaciji sa serverom')
+            console.error(e)
+            setError('Greška pri komunikaciji sa serverom')
         } finally {
             setForgotLoading(false)
         }
@@ -274,23 +301,17 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         setSuccess(null)
 
         try {
-            const res = await fetch(`${publicApiUrl}/api/auth/verify-otp-and-reset`, {
+            const res = await fetch(`${publicApiUrl}/api/auth/zaboravljena-lozinka`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email: forgotEmail,
-                    otp: otpCode,
-                    newPassword,
-                    confirmPassword
+                    kod: otpCode,
+                    password: newPassword
                 }),
             })
 
-            const data = await res.json()
-
-            if (!res.ok) {
-                setError(data?.message || 'Greška pri resetovanju lozinke')
-                return
-            }
+            
 
             setSuccess('Lozinka uspešno resetovana!')
             setTimeout(() => {
@@ -483,11 +504,13 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label htmlFor="regFirstName" className="mb-2 block text-sm font-medium text-gray-700">Ime</label>
-                                    <input type="text" id="regFirstName" name="firstName" className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none" placeholder="Petar" required />
+                                    <input type="text" id="regFirstName" name="firstName" className={`w-full border px-4 py-3 bg-white text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.ime ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}`} placeholder="Petar" required />
+                                    {registerErrors.ime && <p className="mt-1 text-xs text-red-600">{registerErrors.ime}</p>}
                                 </div>
                                 <div>
                                     <label htmlFor="regLastName" className="mb-2 block text-sm font-medium text-gray-700">Prezime</label>
-                                    <input type="text" id="regLastName" name="lastName" className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none" placeholder="Petrovic" required />
+                                    <input type="text" id="regLastName" name="lastName" className={`w-full border px-4 py-3 bg-white text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.prezime ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}`} placeholder="Petrovic" required />
+                                    {registerErrors.prezime && <p className="mt-1 text-xs text-red-600">{registerErrors.prezime}</p>}
                                 </div>
                             </div>
 
@@ -500,7 +523,8 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
 
                     <div>
                         <label htmlFor="loginEmail" className="mb-2 block text-sm font-medium text-gray-700">E-pošta</label>
-                        <input type="email" id="loginEmail" name="email" className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none" placeholder="petar.petrovic@example.com" required />
+                        <input type="email" id="loginEmail" name="email" className={`w-full border px-4 py-3 bg-white text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.email && !loginForm ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}`} placeholder="petar.petrovic@example.com" required />
+                        {registerErrors.email && !loginForm && <p className="mt-1 text-xs text-red-600">{registerErrors.email}</p>}
                     </div>
 
                     <div>
@@ -511,13 +535,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                     type="button" 
                                     onClick={(e) => {
                                         e.preventDefault()
-                                        const emailEl = document.getElementById('loginEmail') as HTMLInputElement
-                                        const email = emailEl?.value?.trim() || ''
-                                        if (!email) {
-                                            setError('Unesite email')
-                                            return
-                                        }
-                                        setForgotEmail(email)
+                                        
                                         setShowForgotPassword(true)
                                         setError(null)
                                         setSuccess(null)
@@ -529,27 +547,33 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                 </button>
                             )}
                             {!loginForm && (
-                                <p className="text-xs text-gray-500">Barem 8 karaktera</p>
+                                <p className="text-xs text-gray-500">Min 8 karaktera, 1 veliko slovo, 1 broj</p>
                             )}
                         </div>
-                        <input type="password" id="loginPassword" name="password" className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none" placeholder="Unesite lozinku" required />
+                        <input type="password" id="loginPassword" name="password" className={`w-full border px-4 py-3 bg-white text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.password && !loginForm ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}`} placeholder="Unesite lozinku" required />
+                        {registerErrors.password && !loginForm && <p className="mt-1 text-xs text-red-600">{registerErrors.password}</p>}
                     </div>
 
                     {!loginForm && (
                         <div>
                             <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-gray-700">Potvrdi lozinku</label>
-                            <input type="password" id="confirmPassword" name="confirmPassword" className="w-full border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none" placeholder="Potvrdite lozinku" required />
+                            <input type="password" id="confirmPassword" name="confirmPassword" className={`w-full border px-4 py-3 bg-white text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}`} placeholder="Potvrdite lozinku" required />
+                            {registerErrors.confirmPassword && <p className="mt-1 text-xs text-red-600">{registerErrors.confirmPassword}</p>}
                         </div>
                     )}
 
                     {!loginForm && (
-                        <div className="flex items-start">
-                            <input type="checkbox" id="terms" name="terms" className="mt-1 h-4 w-4 rounded border-gray-300 text-black focus:ring-black" required />
-                            <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-                                Saglasan/na sam sa <a href="#" className="text-black underline hover:no-underline">Uslovima korišćenja</a> i <a href="#" className="text-black underline hover:no-underline">Politikom privatnosti</a>
+                        <div className="flex items-start gap-3">
+                            <input type="checkbox" id="terms" name="terms" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className={`mt-1 h-4 w-4 rounded border-gray-300 text-black focus:ring-black cursor-pointer ${registerErrors.terms ? 'border-red-500' : ''}`} required />
+                            <label htmlFor="terms" className="block text-sm text-gray-700">
+                                Saglasan/na sam sa{' '}
+                                <button type="button" onClick={(e) => { e.preventDefault(); handleOpenTerms() }} className="text-black underline hover:no-underline font-medium transition-colors hover:text-gray-700">
+                                    Uslovima korišćenja
+                                </button>
                             </label>
                         </div>
                     )}
+                    {registerErrors.terms && <p className="text-xs text-red-600">{registerErrors.terms}</p>}
 
                     <button
                         type="submit"
@@ -581,7 +605,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                 <div className="text-center">
                     <p className="text-sm text-gray-600">
                         {loginForm ? 'Još uvek nemaš nalog? ' : 'Već imaš nalog? '}
-                        <button onClick={() => { setLoginForm(!loginForm); setError(null); setSuccess(null) }} className="font-medium text-black transition-colors hover:text-gray-700">
+                        <button onClick={() => { setLoginForm(!loginForm); setError(null); setSuccess(null); setRegisterErrors({}); setTermsAccepted(false) }} className="font-medium text-black transition-colors hover:text-gray-700">
                             {loginForm ? 'Registruj se' : 'Uloguj se'}
                         </button>
                     </p>

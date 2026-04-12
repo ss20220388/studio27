@@ -5,7 +5,9 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,10 +26,10 @@ public class AdminRoute {
     @Autowired
     private AdminController adminController;
 
-    private List<Admin> admins;
+    private List<Map<String, Object>> admins;
     
     @GetMapping("/admins")
-    public List<Admin> getAdmins() {
+    public List<Map<String, Object>> getAdmins() {
         admins = adminController.getAdmins();
         return admins;
     }
@@ -44,6 +46,12 @@ public class AdminRoute {
    public ResponseEntity<Map<String,Object>> getAdminStats() {
        return adminController.getAdminStats();
    }
-   
-   
+   @DeleteMapping("/admin-delete/{id}")
+   public String deleteAdmin(@PathVariable String id) {
+       try {
+           return adminController.deleteAdmin(id);
+       } catch (Exception e) {
+           return "Error deleting admin: " + e.getMessage();
+       }
+   }
 }

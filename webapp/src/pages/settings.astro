@@ -1,6 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import SettingsCard from "../react components/SettingsTabs/SettingsCard";
+const token = Astro.cookies.get("refreshToken")?.value || null;
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 ---
 <Layout title="Podešavanja">
   <div class="space-y-6 animate-fade-in">
@@ -9,7 +11,7 @@ import SettingsCard from "../react components/SettingsTabs/SettingsCard";
       <p class="text-sm text-neutral-500 mt-1">Upravljajte svojim nalogom i podešavanjima</p>
     </div>
     <div class="w-full max-w-3xl">
-      <SettingsCard client:visible />
+      <SettingsCard token={token} client:visible />
     </div>
   </div>
 </Layout>

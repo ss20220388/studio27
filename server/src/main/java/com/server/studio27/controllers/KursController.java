@@ -168,6 +168,7 @@ public class KursController {
                             FROM lekcija l
                             WHERE l.kursId = k.kursId
                           );
+                          and p.status = 'P'
                     """;
 
             Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
@@ -363,7 +364,7 @@ public class KursController {
         try {
             String SQL = """
                     Select kurs.naziv,
-                    (Select count(*) from  platio p where p.kursId = kurs.kursId and p.datumPlacanja like DATE_FORMAT(CURDATE(), '%Y-%m%')) as "prodato"
+                    (Select count(*) from  platio p where p.kursId = kurs.kursId and p.datumPlacanja like DATE_FORMAT(CURDATE(), '%Y-%m%') and p.status = 'P' ) as "prodato"
                     from kurs
                     """;
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);

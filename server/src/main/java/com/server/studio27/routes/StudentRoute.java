@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.server.studio27.controllers.StudentController;
+
+
 @RestController
 @RequestMapping("/api")
 
@@ -35,6 +37,11 @@ public class StudentRoute {
     @GetMapping("/students")
     public Map<String, Object> getStudents() {
         return studentController.getStudents();
+    }
+
+    @GetMapping("/student-mails")
+    public List<String> getStudentMails() {
+        return studentController.getStudentMails();
     }
 
     @PostMapping("/dodaj-studenta")
@@ -89,6 +96,4 @@ public class StudentRoute {
         
         return studentController.editStudentAsAdmin(studentData);
     }
-    
-
 }

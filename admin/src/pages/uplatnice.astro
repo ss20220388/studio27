@@ -1,0 +1,74 @@
+---
+import Layout from "../layouts/Layout.astro";
+import UplatnicePage from "../react components/UplatnicePage";
+import type { AstroCookies } from "astro";
+
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
+const cookies = Astro.cookies as AstroCookies;
+const refreshToken = cookies.get("refreshToken");
+const token = refreshToken?.value;
+const authHeaders: Record<string, string> = token
+  ? {
+      Authorization: `Bearer ${token}`,
+    }
+  : {};
+
+let uplatniceData: any[] = [];
+let odobrenaPlacanjaData: any[] = [];
+let odbijenaPlacanjaData: any[] = [];
+
+try {
+  const response = await fetch(`${API_URL}/api/sve-u-pripremi`, {
+    headers: authHeaders,
+  });
+
+  if (!response.ok) {
+    console.error(`API Error (čekanje): ${response.status} ${response.statusText}`);
+  } else {
+    uplatniceData = await response.json();
+  }
+} catch (error) {
+  console.error("Greška pri učitavanju uplatnica na čekanju:", error);
+}
+
+try {
+  const responseOdobrena = await fetch(`${API_URL}/api/sve-uplate`, {
+    headers: authHeaders,
+  });
+
+  if (!responseOdobrena.ok) {
+    console.error(`API Error (odobrena): ${responseOdobrena.status} ${responseOdobrena.statusText}`);
+  } else {
+    odobrenaPlacanjaData = await responseOdobrena.json();
+  }
+} catch (error) {
+  console.error("Greška pri učitavanju odobrenih plaćanja:", error);
+}
+
+try {
+  const responseOdbijena = await fetch(`${API_URL}/api/sve-odbijene`, {
+    headers: authHeaders,
+  });
+
+  if (!responseOdbijena.ok) {
+    console.error(`API Error (odbijena): ${responseOdbijena.status} ${responseOdbijena.statusText}`);
+  } else {
+    odbijenaPlacanjaData = await responseOdbijena.json();
+  }
+} catch (error) {
+  console.error("Greška pri učitavanju odbijenih plaćanja:", error);
+}
+
+---
+
+<Layout title="Uplatnice i Plaćanja">
+  <UplatnicePage 
+    uplatnice={uplatniceData} 
+    odobrenaPlacanja={odobrenaPlacanjaData} 
+    odbijenaPlacanja={odbijenaPlacanjaData}
+    token={token ? token : ""} 
+    API_URL={API_URL}
+    client:load 
+  />
+</Layout>

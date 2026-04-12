@@ -54,14 +54,6 @@ public class AuthController {
     @Autowired
     private PasswordResetService passwordResetService;
 
-    @Autowired
-    private EmailService emailService;
-
-    @Autowired
-    private OtpService otpService;
-
-    @Autowired
-    private SmsService smsService;
 
     public AuthController(
             AuthenticationManager authenticationManager,
@@ -353,6 +345,43 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/zaboravljena-lozinka")
+    public ResponseEntity<?> zaboravljenaLozinka(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email je obavezan"));
+        }
+
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM user WHERE email = ?", Integer.class, email);
+            if (count == null || count == 0) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Korisnik sa ovim email-om ne postoji"));
+            }
+            String SQLProvera = "Select count(*) from provera where email = ? and kod = ? ";
+            Integer proveraCount = jdbcTemplate.queryForObject(SQLProvera, Integer.class, email, request.get("kod"));
+
+            if (proveraCount == null || proveraCount == 0) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Nevalidan reset token"));
+            }
+
+            String hashedNewPassword = passwordEncoder.encode(request.get("password"));
+            String SQL="""
+                    Update user 
+                    set password = ?
+                    where email = ?
+                    """;
+
+            jdbcTemplate.update(SQL, hashedNewPassword, email);
+            String SQLDelete = "DELETE FROM provera WHERE email = ?";
+            jdbcTemplate.update(SQLDelete, email);
+            return ResponseEntity.ok(Map.of("message", "Lozinka uspešno resetovana"));
+        }catch(Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Greška pri generisanju reset tokena"));
+        }
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(jakarta.servlet.http.HttpServletRequest request) {
 
@@ -436,145 +465,6 @@ public class AuthController {
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
 
         return ResponseEntity.ok(Map.of("message", "Uspesno odjavljen"));
-    }
-
-    @PostMapping("/send-otp")
-    public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
-
-        System.out.println("\n🔐 === /send-otp ENDPOINT CALLED ===");
-        System.out.println("   Email: " + email);
-
-        if (email == null || email.isBlank()) {
-            System.out.println("   ❌ Email is blank");
-            return ResponseEntity.badRequest().body(Map.of("error", "Email je obavezan"));
-        }
-
-        try {
-            // Provera da li korisnik postoji
-            System.out.println("   ℹ️  Checking if user exists in database...");
-            Integer count = jdbcTemplate.queryForObject(
-                    "SELECT COUNT(*) FROM user WHERE email = ?", Integer.class, email);
-
-            if (count == null || count == 0) {
-                // Iz sigurnosnih razloga, ne otkrivamo da li email postoji
-                System.out.println("   ℹ️  User not found - returning success for security");
-                return ResponseEntity.ok(Map.of("message", "Ako email postoji, bićete primili kod na SMS"));
-            }
-
-            System.out.println("   ✓ User found, fetching phone number...");
-            
-            // Pronađi broj telefona iz student tabele
-            String phoneNumber = null;
-            try {
-                phoneNumber = jdbcTemplate.queryForObject(
-                    "SELECT brojTelefona FROM student WHERE studentId = (SELECT userId FROM user WHERE email = ?)",
-                    String.class,
-                    email);
-            } catch (Exception e) {
-                System.out.println("   ⚠️  Phone number not found for user");
-            }
-            
-            if (phoneNumber == null || phoneNumber.isBlank()) {
-                System.out.println("   ⚠️  User has no phone number registered");
-                System.out.println("🔐 === END /send-otp ===\n");
-                return ResponseEntity.ok(Map.of("message", "Ako email postoji, bićete primili kod na SMS"));
-            }
-            
-            System.out.println("   ✓ Phone number found: " + phoneNumber);
-
-            System.out.println("   ℹ️  Generating OTP...");
-            // Generiši OTP kod
-            String otp = otpService.generateOtp(email);
-            System.out.println("   ✓ OTP generated: " + otp);
-
-            // Pošalji OTP na SMS
-            System.out.println("   ℹ️  Calling SmsService.sendOtpSms()...");
-            smsService.sendOtpSms(phoneNumber, otp);
-            System.out.println("   ✓ SmsService call completed");
-
-            System.out.println("   ✅ /send-otp completed successfully");
-            System.out.println("🔐 === END /send-otp ===\n");
-            return ResponseEntity.ok(Map.of("message", "Verifikacijski kod je poslat na vašu SMS poruku"));
-
-        } catch (Exception e) {
-            System.err.println("   ❌ EXCEPTION in /send-otp:");
-            System.err.println("   Exception type: " + e.getClass().getName());
-            System.err.println("   Message: " + e.getMessage());
-            e.printStackTrace();
-            System.err.println("🔐 === ERROR /send-otp ===\n");
-            return ResponseEntity.ok(Map.of("message", "Verifikacijski kod je poslat na vašu SMS poruku"));
-        }
-    }
-
-    @PostMapping("/verify-otp-and-reset")
-    public ResponseEntity<?> verifyOtpAndReset(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
-        String otp = request.get("otp");
-        String newPassword = request.get("newPassword");
-        String confirmPassword = request.get("confirmPassword");
-
-        if (email == null || email.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Email je obavezan"));
-        }
-
-        if (otp == null || otp.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Verifikacijski kod je obavezan"));
-        }
-
-        if (newPassword == null || newPassword.isBlank() || confirmPassword == null || confirmPassword.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Lozinka je obavezna"));
-        }
-
-        if (!newPassword.equals(confirmPassword)) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Lozinke se ne podudaraju"));
-        }
-
-        if (newPassword.length() < 6) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Lozinka mora imati najmanje 6 karaktera"));
-        }
-
-        try {
-            // Verifikuj OTP kod
-            if (!otpService.verifyOtp(email, otp)) {
-                return ResponseEntity.status(400).body(Map.of("error", "Verifikacijski kod je netačan ili je istekao"));
-            }
-
-            // Heširuj novu lozinku
-            String hashedPassword = passwordEncoder.encode(newPassword);
-
-            // Ažuriraj lozinku u bazi
-            int updated = jdbcTemplate.update(
-                    "UPDATE user SET password = ? WHERE email = ?",
-                    hashedPassword, email);
-
-            if (updated == 0) {
-                return ResponseEntity.status(400).body(Map.of("error", "Korisnik nije pronađen"));
-            }
-
-            System.out.println("✓ Password reset successful for: " + email);
-            return ResponseEntity.ok(Map.of("message", "Lozinka uspešno resetovana"));
-
-        } catch (Exception e) {
-            System.err.println("Error in verify-otp-and-reset: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("error", "Greška pri resetovanju lozinke"));
-        }
-    }
-
-    // DEBUG ENDPOINT - Prikazuje sve SMS logove (samo za testiranje)
-    @GetMapping("/sms-debug")
-    public ResponseEntity<?> getSmsLogs() {
-        System.out.println("\n🔍 === SMS DEBUG ENDPOINT ===");
-        System.out.println("   Retrieving all SMS logs...");
-        
-        var logs = smsService.getAllSmsLogs();
-        System.out.println("   Total SMS logs: " + logs.size());
-        
-        return ResponseEntity.ok(Map.of(
-            "totalSms", logs.size(),
-            "smsLogs", logs
-        ));
     }
 
 }

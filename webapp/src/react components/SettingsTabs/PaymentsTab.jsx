@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
-export default function PaymentsTab() {
+export default function PaymentsTab({ token }) {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -12,6 +12,7 @@ export default function PaymentsTab() {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
           },
         });
 

@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PaymentsTab from "../SettingsTabs/PaymentsTab";
 import ProfileTab from "../SettingsTabs/ProfileTab";
 import TermsTab from "../SettingsTabs/TermsTab";
 
-export default function SettingsCard() {
+export default function SettingsCard({ token }) {
+  const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
   const [tab, setTab] = useState("placanja");
+
+
+
 
   const tabs = [
     { id: "placanja", label: "Plaćanja" },
@@ -30,9 +34,9 @@ export default function SettingsCard() {
         ))}
       </div>
       <div className="p-5 sm:p-6">
-        {tab === "placanja" && <PaymentsTab />}
-        {tab === "licni" && <ProfileTab />}
-        {tab === "pravila" && <TermsTab />}
+        {tab === "placanja" && <PaymentsTab token={token} />}
+        {tab === "licni" && <ProfileTab token={token} />}
+        {tab === "pravila" && <TermsTab token={token} />}
       </div>
     </div>
   );
