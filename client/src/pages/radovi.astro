@@ -31,100 +31,35 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
 <Layout title="Radovi naših studenata">
   <section class="bg-black min-h-screen relative overflow-hidden">
     <!-- Animated background with images - repeating pattern -->
-    <div class="animated-bg-container">
+    <div class="animated-bg-container h-screen flex flex-col">
       {radovi.length > 0 && (
         <>
-          <div class="animated-images-line">
-            {radovi.map((rad: any) => (
-              <div class="inline-block flex-shrink-0">
-                <img
-                  src={`${API_URL}/api/uploaded-images${rad.url}`}
-                  alt="rad"
-                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
-                  loading="lazy"
-                />
-              </div>
-            ))}
-            {radovi.map((rad: any) => (
-              <div class="inline-block flex-shrink-0">
-                <img 
-                  src={`${API_URL}/api/uploaded-images${rad.url}`}
-                  alt="rad"
-                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
-                  loading="lazy"
-                />
-              </div>
-            ))}
-          </div>
-
-          <div class="animated-images-line" style="animation-delay: -3s;">
-            {radovi.map((rad: any) => (
-              <div class="inline-block flex-shrink-0">
-                <img 
-                  src={`${API_URL}/api/uploaded-images${rad.url}`}
-                  alt="rad"
-                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
-                  loading="lazy"
-                />
-              </div>
-            ))}
-            {radovi.map((rad: any) => (
-              <div class="inline-block flex-shrink-0">
-                <img 
-                  src={`${API_URL}/api/uploaded-images${rad.url}`}
-                  alt="rad"
-                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
-                  loading="lazy"
-                />
-              </div>
-            ))}
-          </div>
-
-          <div class="animated-images-line" style="animation-delay: -6s;">
-            {radovi.map((rad: any) => (
-              <div class="inline-block flex-shrink-0">
-                <img 
-                  src={`${API_URL}/api/uploaded-images${rad.url}`}
-                  alt="rad"
-                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
-                  loading="lazy"
-                />
-              </div>
-            ))}
-            {radovi.map((rad: any) => (
-              <div class="inline-block flex-shrink-0">
-                <img 
-                  src={`${API_URL}/api/uploaded-images${rad.url}`}
-                  alt="rad"
-                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
-                  loading="lazy"
-                />
-              </div>
-            ))}
-          </div>
-
-          <div class="animated-images-line" style="animation-delay: -9s;">
-            {radovi.map((rad: any) => (
-              <div class="inline-block flex-shrink-0">
-                <img 
-                  src={`${API_URL}/api/uploaded-images${rad.url}`}
-                  alt="rad"
-                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
-                  loading="lazy"
-                />
-              </div>
-            ))}
-            {radovi.map((rad: any) => (
-              <div class="inline-block flex-shrink-0">
-                <img 
-                  src={`${API_URL}/api/uploaded-images${rad.url}`}
-                  alt="rad"
-                  class="h-48 w-48 object-cover opacity-20 hover:opacity-40 transition-opacity"
-                  loading="lazy"
-                />
-              </div>
-            ))}
-          </div>
+          {[0, 3, 6, 9, 12].map((delay) => (
+            <div class="animated-images-line flex-1 h-[20vh]" style={`animation-delay: -${delay}s;`}>
+              {/* Prva polovina slika - ponavljamo vise puta da bi sigurno pokrili sirinu ekrana */}
+              {Array(5).fill(0).map(() => radovi.map((rad: any) => (
+                <div class="inline-block flex-shrink-0 h-[20vh]">
+                  <img
+                    src={`${API_URL}/api/uploaded-images${rad.url}`}
+                    alt="rad"
+                    class="h-[20vh] w-[20vh] object-cover opacity-20 hover:opacity-40 transition-opacity"
+                    loading="lazy"
+                  />
+                </div>
+              )))}
+              {/* Druga polovina - 100% ista kao prva, cime se stvara iluzija beskonacnog skrola na 50% */}
+              {Array(5).fill(0).map(() => radovi.map((rad: any) => (
+                <div class="inline-block flex-shrink-0 h-[20vh]">
+                  <img 
+                    src={`${API_URL}/api/uploaded-images${rad.url}`}
+                    alt="rad"
+                    class="h-[20vh] w-[20vh] object-cover opacity-20 hover:opacity-40 transition-opacity"
+                    loading="lazy"
+                  />
+                </div>
+              )))}
+            </div>
+          ))}
         </>
       )}
     </div>
@@ -326,8 +261,8 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
   .animated-images-line {
     display: flex;
     gap: 0;
-    width: 200%;
-    animation: scroll 20s linear infinite;
+    width: max-content;
+    animation: scroll 150s linear infinite;
     will-change: transform;
   }
 

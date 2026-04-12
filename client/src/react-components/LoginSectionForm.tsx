@@ -50,7 +50,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
     const [forgotLoading, setForgotLoading] = useState(false)
     const [registerErrors, setRegisterErrors] = useState<{ [key: string]: string }>({})
     const [termsAccepted, setTermsAccepted] = useState(false)
-
+    const [proveraKoda, setProveraKoda] = useState(false)
     useEffect(() => {
         if (typeof isOpen === 'boolean') setInternalOpen(isOpen)
     }, [isOpen])
@@ -157,6 +157,8 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         setLoading(true)
         setError(null)
         setSuccess(null)
+        setProveraKoda(false)
+        setOtpCode('')
         try {
             const res = await fetch(`${publicApiUrl}/api/auth/register-user`, {
                 method: 'POST',
@@ -213,8 +215,10 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
             else if (!/[0-9]/.test(password)) errors.password = 'Lozinka mora sadržavati jedan broj'
 
             if (password !== confirmPasswordEl) errors.confirmPassword = 'Lozinke se ne poklapaju'
-            
+
             if (!termsAccepted) errors.terms = 'Morate prihvatiti uslove korišćenja'
+
+            if (!proveraKoda) errors.provera = 'Morate proći proveru koda'
 
             if (Object.keys(errors).length > 0) {
                 setRegisterErrors(errors)
@@ -250,7 +254,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
 
     const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault()
-        
+
         if (!forgotEmail || !forgotEmail.includes('@')) {
             setError('Unesite validan email')
             return
@@ -265,6 +269,55 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ to: forgotEmail }),
+            })
+
+            setSuccess('Verifikacijski kod je poslat na vašu email adresu!')
+            setForgotStep('otp-reset')
+            setOtpCode('')
+            setNewPassword('')
+            setConfirmPassword('')
+        } catch (e: any) {
+            console.error(e)
+            setError('Greška pri komunikaciji sa serverom')
+        } finally {
+            setForgotLoading(false)
+        }
+    }
+    const handleProveraKoda = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!otpCode || otpCode.length !== 6) {
+            setError('Kod mora biti 6 znamenki')
+            return
+        }
+        const emailEl = document.getElementById('loginEmail') as HTMLInputElement | null
+        const email = emailEl?.value?.trim() || ''
+        const res = await fetch(`${publicApiUrl}/api/auth/provera-koda`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ kod: otpCode,email:email }),
+        })
+        const data = await res.json()
+        setProveraKoda(data)
+    }
+    const handleSendOtpReg = async (e: React.FormEvent) => {
+        e.preventDefault()
+        const emailEl = document.getElementById('loginEmail') as HTMLInputElement | null
+        const email = emailEl?.value?.trim() || ''
+
+        if (!email || !email.includes('@')) {
+            setError('Unesite validan email')
+            return
+        }
+
+        setForgotLoading(true)
+        setError(null)
+        setSuccess(null)
+
+        try {
+            const res = await fetch(`${publicApiUrl}/api/send-code-to-mail`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ to: email }),
             })
 
             setSuccess('Verifikacijski kod je poslat na vašu email adresu!')
@@ -311,7 +364,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                 }),
             })
 
-            
+
 
             setSuccess('Lozinka uspešno resetovana!')
             setTimeout(() => {
@@ -523,24 +576,78 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
 
                     <div>
                         <label htmlFor="loginEmail" className="mb-2 block text-sm font-medium text-gray-700">E-pošta</label>
-                        <input type="email" id="loginEmail" name="email" className={`w-full border px-4 py-3 bg-white text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.email && !loginForm ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}`} placeholder="petar.petrovic@example.com" required />
+                        <div className="relative">
+                            <input 
+                                type="email" 
+                                id="loginEmail" 
+                                name="email" 
+                                readOnly={!loginForm && proveraKoda}
+                                className={`w-full border px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.email && !loginForm ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'} ${!loginForm && proveraKoda ? 'bg-gray-50' : 'bg-white'}`} 
+                                placeholder="petar.petrovic@example.com" 
+                                required 
+                            />
+                            {!loginForm && !proveraKoda && (
+                                <button
+                                    type="button"
+                                    onClick={handleSendOtpReg}
+                                    disabled={forgotLoading}
+                                    className="absolute right-2 top-2 bottom-2 bg-gray-100 px-4 text-xs font-medium text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                                > 
+                                    {forgotLoading ? 'Slanje...' : 'Pošalji kod'}
+                                </button>
+                            )}
+                        </div>
                         {registerErrors.email && !loginForm && <p className="mt-1 text-xs text-red-600">{registerErrors.email}</p>}
+
+                        {!loginForm && (
+                            <div className="mt-3">
+                                {!proveraKoda ? (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            id="otpCode"
+                                            inputMode="numeric"
+                                            value={otpCode}
+                                            onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                            maxLength={6}
+                                            className="w-full border border-gray-300 bg-white px-4 py-2 text-center text-lg font-bold tracking-widest text-gray-900 focus:border-transparent focus:ring-2 focus:ring-black focus:outline-none placeholder-gray-300"
+                                            placeholder="------"
+                                        />
+                                        <button
+                                            type="button" 
+                                            onClick={handleProveraKoda}
+                                            disabled={otpCode.length !== 6}
+                                            className="shrink-0 bg-black px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+                                        >
+                                            Potvrdi
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center gap-2 rounded border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700">
+                                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                        </svg>
+                                        E-pošta je verifikovana
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div>
                         <div className="mb-2 flex items-center justify-between">
                             <label htmlFor="loginPassword" className="block text-sm font-medium text-gray-700">Lozinka</label>
                             {loginForm && (
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onClick={(e) => {
                                         e.preventDefault()
-                                        
+
                                         setShowForgotPassword(true)
                                         setError(null)
                                         setSuccess(null)
                                         setForgotStep('email')
-                                    }} 
+                                    }}
                                     className="text-sm text-gray-600 transition-colors hover:text-black"
                                 >
                                     Zaboravio si lozinku?

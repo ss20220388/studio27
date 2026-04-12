@@ -1,0 +1,94 @@
+---
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
+// Slike izvučene iz baze (koje si priložio) koje prelepo izgledaju na punom ekranu
+const slike = [
+  "/uploads/milicaindjic (1).jpg",
+  "/uploads/milapantelic (4).jpg",
+  "/uploads/marijav1.png",
+  "/uploads/kesnijakrivokapic4.png",
+  "/uploads/katarinabjegovic2.png",
+  "/uploads/joka4.png",
+  "/uploads/janajakovljevic (2).jpg"
+];
+---
+
+<section class="relative w-full h-screen overflow-hidden bg-black flex items-center justify-center">
+  <!-- Slike sa Ken Burns i Fade animacijom -->
+  {slike.map((slika, idx) => (
+    <div 
+      class="absolute inset-0 w-full h-full opacity-0 slika-slide"
+      style={`animation-delay: ${idx * 6}s; z-index: 1;`}
+    >
+      <!-- Premium tamni overlay (gradijent + opacity) -->
+      <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/60 z-10"></div>
+      
+      <img 
+        src={`${API_URL}/api/uploaded-images${slika}`} 
+        alt="Premium render studenta" 
+        class="w-full h-full object-cover scale-110 slika-zoom"
+        loading="lazy"
+      />
+    </div>
+  ))}
+
+  <!-- Premium okvir oko ivica ekrana -->
+  <div class="absolute inset-0 z-20 pointer-events-none border-[1px] border-white/10 m-4 rounded-2xl mix-blend-overlay hidden md:block"></div>
+
+  <!-- Centralni tekst preko slike -->
+  <div class="relative z-30 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
+    <!-- Ekskluzivna Značkica -->
+    <span class="px-6 py-2 rounded-full bg-black/30 backdrop-blur-md border border-white/20 text-white text-xs md:text-sm font-semibold tracking-[0.2em] uppercase mb-8 shadow-2xl inline-block hover:bg-white/10 transition-colors cursor-default">
+      Ekskluzivna Galerija
+    </span>
+    
+    <h2 class="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 tracking-tighter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]" style="font-family: 'Montserrat', sans-serif;">
+      Impresivni Detalji
+    </h2>
+    
+    <p class="text-lg md:text-2xl text-gray-200 drop-shadow-[0_5px_10px_rgba(0,0,0,0.5)] font-light max-w-3xl mx-auto mb-12">
+      Pogledajte najbolje 3D radove naših polaznika na celom ekranu. Sva moć i fotorealističnost tehnike leži u ovim neverovatnim detaljima.
+    </p>
+    
+    <!-- Moderno animirano dugme -->
+    <a href="/radovi" class="group relative px-8 py-4 bg-red-600 text-white font-bold rounded-lg transition-all duration-300 hover:bg-red-700 overflow-hidden shadow-[0_0_30px_rgba(220,38,38,0.3)] hover:shadow-[0_0_40px_rgba(220,38,38,0.5)] hover:-translate-y-1">
+      <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmerBtn_1.5s_infinite]"></div>
+      <span class="relative flex items-center gap-3 tracking-wide">
+        OTKRIJ SVE RADOVE
+        <svg class="w-6 h-6 group-hover:translate-x-1.5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+        </svg>
+      </span>
+    </a>
+  </div>
+</section>
+
+<style>
+  /* 7 slika * 6 sekundi po slici = 42 sekunde ukupnog trajanja ciklusa */
+  .slika-slide {
+    animation: fadeSlide 42s infinite;
+  }
+  
+  /* Ken Burns spori zoom in efekat ka vizualnoj dubini */
+  .slika-zoom {
+    animation: zoomSlide 42s linear infinite;
+    transform-origin: center center;
+  }
+
+  @keyframes fadeSlide {
+    0% { opacity: 0; }
+    4% { opacity: 1; z-index: 2; }    /* Na 1.68s je skroz vidljivo */
+    14% { opacity: 1; z-index: 2; }   /* Do 5.88s ostaje potpuno vidljivo */
+    18% { opacity: 0; z-index: 1; }   /* Do 7.56s bledi */
+    100% { opacity: 0; z-index: 1; }
+  }
+
+  @keyframes zoomSlide {
+    0% { transform: scale(1.05); }
+    100% { transform: scale(1.3); }
+  }
+
+  @keyframes shimmerBtn {
+    100% { transform: translateX(100%); }
+  }
+</style>

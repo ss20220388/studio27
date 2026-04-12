@@ -2,6 +2,7 @@ package com.server.studio27.auth;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -16,11 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.server.studio27.requests.LoginRequest;
 import com.server.studio27.requests.RegisterAdminRequest;
@@ -381,6 +380,22 @@ public class AuthController {
             return ResponseEntity.status(500).body(Map.of("error", "Greška pri generisanju reset tokena"));
         }
     }
+
+    @PostMapping("/provera-koda")
+    public Boolean proveraKoda(@RequestBody Map<String, Object> request) {
+        String email = (String) request.get("email");
+        String kod = (String) request.get("kod");
+        if (email == null || email.isBlank() || kod == null || kod.isBlank()) {
+            return false;
+        }
+        String SQL = "SELECT COUNT(*) FROM provera WHERE email = ? AND kod = ?";
+        Integer count = jdbcTemplate.queryForObject(SQL, Integer.class, email, kod);
+        if (count != null && count > 0) {
+            return true;
+        }
+        return false;
+    }
+    
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refresh(jakarta.servlet.http.HttpServletRequest request) {

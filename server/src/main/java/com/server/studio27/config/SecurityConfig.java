@@ -73,6 +73,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/auth/me").permitAll()
                                                 .requestMatchers("/api/auth/oauth2").permitAll()
                                                 .requestMatchers("/api/auth/zaboravljena-lozinka").permitAll()
+                                                .requestMatchers("/api/auth/provera-koda").permitAll()
                                                 .requestMatchers("/api/auth/verify-otp-and-reset").permitAll()
                                                 .requestMatchers("/login/**").permitAll()
                                                 .requestMatchers("/oauth2/authorization/google").permitAll()
