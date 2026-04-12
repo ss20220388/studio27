@@ -27,7 +27,7 @@ public class RadoviController {
                 rs.ime AS ime,
                 rs.prezime AS prezime,
                 ss.url AS url
-            FROM radoviStudenata rs
+            FROM radovistudenata rs
             LEFT JOIN kurs k ON rs.kursId = k.kursId
             LEFT JOIN slika ss ON ss.slikaId = rs.slikaId
         """;
