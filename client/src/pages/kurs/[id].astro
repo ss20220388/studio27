@@ -30,7 +30,11 @@ try{
 }
 ---
 
-<Layout title={kurs.naziv}>
+<Layout 
+  title={`${kurs.naziv} - Studio 27`}
+  description={kurs.opis}
+  image={kurs.slikaUrl} 
+>
   <KursHero kurs={kurs} client:load />
 
   <BigTextSection

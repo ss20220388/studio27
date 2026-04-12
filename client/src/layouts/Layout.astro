@@ -5,7 +5,20 @@ import "../styles/global.css";
 import ErrorToastNotifier from "../react-components/ErrorToastNotifier";
 
 // src/layouts/Layout.astro
-const { title } = Astro.props;
+export interface Props {
+    title: string;
+    description?: string;
+    image?: string;
+    canonicalURL?: string | URL;
+}
+
+const { 
+    title, 
+    description = "Studio 27 archviz kursevi, naučite arhitektonsku vizualizaciju.", 
+    image = "/images/default-seo-image.png", // Postavi neku podrazumevanu sliku u public/images folder
+    canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url.origin)
+} = Astro.props;
+
 const losGmailCookie = Astro.cookies.get('losGmail');
 console.log('Los Gmail Cookie:', losGmailCookie);
 ---
@@ -15,9 +28,28 @@ console.log('Los Gmail Cookie:', losGmailCookie);
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        
+        <!-- Osnovni SEO meta tagovi -->
         <title>{title}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+        <meta name="title" content={title} />
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonicalURL} />
 
+        <!-- Open Graph / Facebook (za deljenje na mrežama) -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalURL} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={new URL(image, Astro.site || Astro.url.origin)} />
+
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={canonicalURL} />
+        <meta property="twitter:title" content={title} />
+        <meta property="twitter:description" content={description} />
+        <meta property="twitter:image" content={new URL(image, Astro.site || Astro.url.origin)} />
+
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
     </head>
     <body class="relative">
 

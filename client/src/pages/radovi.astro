@@ -28,7 +28,10 @@ const radoviByStudent: Record<string, any[]> = radovi.reduce((acc: any, rad: any
 const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
 ---
 
-<Layout title="Radovi naših studenata">
+<Layout 
+  title="Radovi naših studenata | Studio 27"
+  description="Pogledajte fascinantne radove studenata Studio 27 akademije iz oblasti 3D arhitektonske vizualizacije."
+>
   <section class="bg-black min-h-screen relative overflow-hidden">
     <!-- Animated background with images - repeating pattern -->
     <div class="animated-bg-container h-screen flex flex-col">
