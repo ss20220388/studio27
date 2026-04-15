@@ -61,6 +61,7 @@ public class AdminController {
                         Select count(*) as kupovine
                         from platio
                         where datumPlacanja like DATE_FORMAT(CURDATE(), '%Y-%m%')
+                        and status = 'P'
                     """;
             Integer kupovineOvogMeseca = jdbcTemplate.queryForObject(SQLKupovineOvogMeseca, Integer.class);
             response.put("kupovineOvogMeseca", kupovineOvogMeseca != null ? kupovineOvogMeseca : 0);
@@ -69,6 +70,7 @@ public class AdminController {
                         Select sum(cenaPlacanja) as prihodi
                         from platio
                         where datumPlacanja like DATE_FORMAT(CURDATE(), '%Y-%m%')
+                        and status = 'P'
                 """;
             Integer prihodiOvogMeseca = jdbcTemplate.queryForObject(SQLPrihodiOvogMeseca, Integer.class);
             response.put("prihodiOvogMeseca", prihodiOvogMeseca != null ? prihodiOvogMeseca : 0);

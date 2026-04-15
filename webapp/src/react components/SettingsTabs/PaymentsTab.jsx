@@ -32,12 +32,14 @@ export default function PaymentsTab({ token }) {
     fetchPayments();
   }, []);
 
+ 
+
   if (loading) {
     return <div className="text-neutral-400">Učitavanje...</div>;
   }
 
   const formatCurrency = (amount) => {
-    return `${amount.toLocaleString("sr-RS")} RSD`;
+    return `${amount.toLocaleString("sr-RS")} $`;
   };
 
   const formatDate = (dateString) => {
@@ -70,9 +72,21 @@ export default function PaymentsTab({ token }) {
                   <td className="px-4 py-3 text-neutral-400">{formatDate(p.datumPlacanja)}</td>
                   <td className="px-4 py-3 text-neutral-300">{formatCurrency(p.cenaPlacanja)}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-900/20 text-emerald-400 border border-emerald-800/30">
-                      {p.status}
-                    </span>
+                    {p.status === "Placeno" && (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-900/20 text-emerald-400 border border-emerald-800/30">
+                        {p.status}
+                      </span>
+                    )}
+                    {p.status === "Odbijeno" && (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-900/20 text-red-400 border border-red-800/30">
+                        {p.status}
+                      </span>
+                    )}
+                    {p.status === "Na cekanju" && (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-yellow-900/20 text-yellow-400 border border-yellow-800/30">
+                        {p.status}
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))

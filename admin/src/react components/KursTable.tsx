@@ -27,11 +27,10 @@ const KursTable = (props: Props) => {
             try {
                 const response = await fetch("/api/kursevi-sa-lekcijama")
                 const data = await response.json();
-                console.log(data);
                 setKursevi(data);
             }
             catch (error) {
-                console.log("Error fetching kursevi:", error);
+                console.error("Error fetching kursevi:", error);
             }
         }
         fetchKursevi();

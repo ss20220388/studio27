@@ -91,7 +91,13 @@ public class PlatioController {
     public List<Platio> getStudentPayments(Integer studentId) {
         List<Platio> platanja = new ArrayList<>();
         String SQL = """
-                SELECT p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, k.naziv, 'Plaćeno' as status
+                SELECT p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, k.naziv,
+        case
+            when p.status ='P' then 'Placeno'
+            when p.status = 'O' then 'Odbijeno'
+            when p.status = 'C' then 'Na cekanju'
+            else 'Neodredjeno'
+        end as status
                 FROM platio p
                 JOIN kurs k ON p.kursId = k.kursId
                 WHERE p.studentId = ?

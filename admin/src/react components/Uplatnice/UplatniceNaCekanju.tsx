@@ -25,7 +25,7 @@ interface UplatniceNaCekanjuProps {
   API_URL: string;
 }
 
-export default function UplatniceNaCekanju({ uplatnice, token, setSelectedImage,API_URL }: UplatniceNaCekanjuProps) {
+export default function UplatniceNaCekanju({ uplatnice, token, setSelectedImage, API_URL }: UplatniceNaCekanjuProps) {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const [modalState, setModalState] = useState<{
@@ -88,22 +88,59 @@ export default function UplatniceNaCekanju({ uplatnice, token, setSelectedImage,
       });
 
       if (!response.ok) {
-        setModalState({ 
-          isOpen: true, 
-          actionTip: "GRESKA", 
+        setModalState({
+          isOpen: true,
+          actionTip: "GRESKA",
           studentId: null,
           kursId: null,
           poruka: `Došlo je do greške prilikom ${isPrihvati ? "odobravanja" : "odbijanja"}.`
         });
         return;
       }
-      
+
+      if (isPrihvati) {
+        await fetch(`${API_URL}/api/novi-korisnik`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({
+            studentId: modalState.studentId,
+            kursId: modalState.kursId,
+          })
+        });
+        await fetch(`${API_URL}/api/send-positive-mail-to-client`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({
+            to: list.find(u => u.studentId === modalState.studentId)?.email || "",
+            subText: list.find(u => u.kursId === modalState.kursId)?.kursNaziv || list.find(u => u.kursId === modalState.kursId)?.nazivKursa || "",
+          })
+        });
+      } else {
+        await fetch(`${API_URL}/api/send-negative-mail-to-client`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({
+            to: list.find(u => u.studentId === modalState.studentId)?.email || "",
+            subText: list.find(u => u.kursId === modalState.kursId)?.kursNaziv || list.find(u => u.kursId === modalState.kursId)?.nazivKursa || "",
+          })
+        });
+      }
+
       window.location.reload();
     } catch (error) {
       console.error(`Greška prilikom ${isPrihvati ? "odobravanja" : "odbijanja"}:`, error);
-      setModalState({ 
-        isOpen: true, 
-        actionTip: "GRESKA", 
+      setModalState({
+        isOpen: true,
+        actionTip: "GRESKA",
         studentId: null,
         kursId: null,
         poruka: "Došlo je do mrežne greške."
@@ -260,15 +297,14 @@ export default function UplatniceNaCekanju({ uplatnice, token, setSelectedImage,
       {modalState.isOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity">
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl max-w-md w-full p-6 shadow-2xl animate-fade-in">
-            <h3 className={`text-lg font-bold mb-2 ${
-              modalState.actionTip === "PRIHVATI" ? "text-emerald-500" :
-              modalState.actionTip === "ODBIJ" ? "text-red-500" : "text-amber-500"
-            }`}>
+            <h3 className={`text-lg font-bold mb-2 ${modalState.actionTip === "PRIHVATI" ? "text-emerald-500" :
+                modalState.actionTip === "ODBIJ" ? "text-red-500" : "text-amber-500"
+              }`}>
               {modalState.actionTip === "PRIHVATI" && "Odobravanje uplate"}
               {modalState.actionTip === "ODBIJ" && "Odbijanje uplate"}
               {modalState.actionTip === "GRESKA" && "Sistemska Poruka"}
             </h3>
-            
+
             <p className="text-neutral-300 text-sm mb-6">
               {modalState.actionTip === "PRIHVATI" && "Da li ste sigurni da želite da odobrite ovu uplatu?"}
               {modalState.actionTip === "ODBIJ" && "Da li ste sigurni da želite da odbijete ovu uplatu?"}
@@ -286,13 +322,12 @@ export default function UplatniceNaCekanju({ uplatnice, token, setSelectedImage,
               )}
               <button
                 onClick={potvrdiAkciju}
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
-                  modalState.actionTip === "PRIHVATI" ? "bg-emerald-600 hover:bg-emerald-500 text-white" :
-                  modalState.actionTip === "ODBIJ" ? "bg-red-600 hover:bg-red-500 text-white" :
-                  "bg-amber-600 hover:bg-amber-500 text-white"
-                }`}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${modalState.actionTip === "PRIHVATI" ? "bg-emerald-600 hover:bg-emerald-500 text-white" :
+                    modalState.actionTip === "ODBIJ" ? "bg-red-600 hover:bg-red-500 text-white" :
+                      "bg-amber-600 hover:bg-amber-500 text-white"
+                  }`}
               >
-                  {modalState.actionTip === "GRESKA" ? "U redu" : "Potvrdi"}
+                {modalState.actionTip === "GRESKA" ? "U redu" : "Potvrdi"}
               </button>
             </div>
           </div>

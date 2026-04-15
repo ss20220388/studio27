@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import BuyCourseModal from "./BuyCourseModal";
 
 const KursDetaljiModal = ({
@@ -16,6 +17,8 @@ const KursDetaljiModal = ({
         if (isOpen) {
             // Zabranjujemo skrolovanje pozadine kad je modal otvoren
             document.body.style.overflow = 'hidden';
+            const mainContainer = document.querySelector('main');
+            if (mainContainer) mainContainer.style.overflow = 'hidden';
 
             async function fetchRecenzije() {
                 try {
@@ -34,18 +37,23 @@ const KursDetaljiModal = ({
             }
             fetchRecenzije();
         } else {
-            document.body.style.overflow = 'auto';
+            document.body.style.overflow = '';
+            const mainContainer = document.querySelector('main');
+            if (mainContainer) mainContainer.style.overflow = '';
         }
 
         // Čišćenje kad se komponenta unmount-uje
         return () => {
-            document.body.style.overflow = 'auto';
+            document.body.style.overflow = '';
+            const mainContainer = document.querySelector('main');
+            if (mainContainer) mainContainer.style.overflow = '';
         };
     }, [isOpen, API_URL, kurs.kursId]);
 
     if (!isOpen) return null;
 
-    return (
+    // Koristimo createPortal da renderujemo modal izvan hijerarhije gde transform/overflow klase kvare fixed pozicioniranje
+    return createPortal(
         <div 
             className="fixed inset-0 z-[120] flex items-center justify-center p-0 sm:p-6 bg-black/90 backdrop-blur-md animate-in fade-in"
             onClick={(e) => {
@@ -59,7 +67,7 @@ const KursDetaljiModal = ({
             >
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 bg-neutral-900/80 hover:bg-red-900/80 text-white w-10 h-10 flex items-center justify-center rounded-full transition-all z-50 backdrop-blur-sm border border-neutral-700 hover:border-red-800 shadow-xl"
+                    className="absolute cursor-pointer top-4 right-4 bg-neutral-900/80 hover:bg-red-900/80 text-white w-10 h-10 flex items-center justify-center rounded-full transition-all z-50 backdrop-blur-sm border border-neutral-700 hover:border-red-800 shadow-xl"
                 >
                     ✕
                 </button>
@@ -67,7 +75,7 @@ const KursDetaljiModal = ({
                 {/* Desktop slika */}
                 <div className="w-full md:w-[45%] h-64 md:h-auto relative hidden md:block flex-none">
                     <img src={`${API_URL}/api/uploaded-images${kurs.slikaUrl}`} alt={kurs.naziv} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-neutral-900 via-neutral-900/70 to-transparent"></div>
+                    <div className="absolute inset-0 bg-linear-to-t md:bg-linear-to-r from-neutral-900 via-neutral-900/70 to-transparent"></div>
                     
                     <div className="absolute bottom-10 left-10 right-10">
                         <h1 className="text-3xl xl:text-4xl font-extrabold text-white mb-2 leading-tight drop-shadow-lg">{kurs.naziv}</h1>
@@ -101,31 +109,18 @@ const KursDetaljiModal = ({
                         {kurs.opis}
                     </div>
 
-                    {loadingKomentari ? (
-                        <div className="animate-pulse space-y-4 mt-4">
-                            <div className="h-4 bg-neutral-800 rounded w-1/4"></div>
-                            <div className="h-16 bg-neutral-800 rounded w-full"></div>
-                        </div>
-                    ) : komentari.length > 0 ? (
+                   
                         <div className="mt-4 mb-10">
-                            <h3 className="text-lg font-semibold text-neutral-200 mb-4 pb-2 border-b border-neutral-800 flex items-center gap-2">
-                                <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.898 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                                Utisci polaznika
-                            </h3>
                             <div className="space-y-3">
-                                {komentari.map((komentar, i) => (
-                                    <div key={i} className="bg-neutral-800/40 p-4 rounded-xl border border-neutral-800">
-                                        <div className="text-red-400 font-medium text-sm mb-1">{komentar.imeIPrezime}</div>
-                                        <div className="text-neutral-400 text-sm italic">"{komentar.tekst}"</div>
-                                    </div>
-                                ))}
+                                <div className="bg-neutral-800/40 p-4 rounded-xl border border-neutral-800">
+                                    <div className="text-red-400 font-medium text-sm mb-1">{kurs.komentarGore}</div>
+                                    <div className="text-neutral-300 text-sm mb-2">{kurs.komentarSredina}</div>
+                                    <div className="text-neutral-400 text-sm italic">"{kurs.komentarDole}"</div>
+
+                                </div>
                             </div>
                         </div>
-                    ) : (
-                        <div className="mt-4 mb-4 text-sm italic text-neutral-500 flex items-center gap-2">
-                             ~ Za ovaj kurs trenutno nema prikazanih recenzija.
-                        </div>
-                    )}
+                    
                     
                     <div className="mt-auto pt-8"></div>
 
@@ -147,7 +142,8 @@ const KursDetaljiModal = ({
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

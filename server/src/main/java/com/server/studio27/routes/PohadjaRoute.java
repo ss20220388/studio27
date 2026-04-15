@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.server.studio27.controllers.PohadjaController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 @RequestMapping("/api")
@@ -36,5 +39,15 @@ public class PohadjaRoute {
             @RequestParam Integer kursId) {
         return pohadjaController.pohadjaKursILekcije(userId, kursId);
     }
+
+    @PostMapping("/novi-korisnik")
+    public String dodajKorisnikaUKurs(@RequestBody Map<String, Object> request) {
+        String studentId = request.get("studentId").toString();
+        String kursId = request.get("kursId").toString();
+        pohadjaController.dodajKorisnikaUKurs(Integer.parseInt(studentId), Integer.parseInt(kursId));
+        
+        return "Uspesno ste dodat korisnik na kurs"; 
+    }
+    
 
 }

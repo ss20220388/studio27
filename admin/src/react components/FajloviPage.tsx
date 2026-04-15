@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface FajloviPageProps {
   token: string;
@@ -23,12 +24,35 @@ const FileModal = ({
   fileName: string;
   type: "video" | "image" | "unknown" | null;
 }) => {
-  if (!open || !fileUrl) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [open]);
+
+  if (!open || !fileUrl || !mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
       onClick={onClose}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100%",
+        height: "100%"
+      }}
     >
       <div
         className="relative w-full max-w-5xl flex flex-col items-center justify-center bg-neutral-900 rounded-xl border border-neutral-800 p-4"
@@ -79,7 +103,8 @@ const FileModal = ({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export const ImageModal = ({
   open,
@@ -9,12 +10,35 @@ export const ImageModal = ({
   onClose: () => void;
   imageUrl: string | null;
 }) => {
-  if (!open || !imageUrl) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [open]);
+
+  if (!open || !imageUrl || !mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
       onClick={onClose}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100%",
+        height: "100%"
+      }}
     >
       <div
         className="relative max-w-4xl max-h-[90vh] flex flex-col items-center justify-center"
@@ -35,6 +59,7 @@ export const ImageModal = ({
           className="max-w-full max-h-[85vh] object-contain rounded-xl border border-neutral-700 shadow-2xl"
         />
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

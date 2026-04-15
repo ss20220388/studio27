@@ -98,7 +98,7 @@ export default function CourseList({
               <div className="mt-auto pt-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-white">
-                    {(kurs.cena || 0).toLocaleString()} <span className="text-xs font-normal text-neutral-500">RSD</span>
+                    {(kurs.cena || 0).toLocaleString()} <span className="text-xs font-normal text-neutral-500">$</span>
                   </span>
                   <span className="text-xs text-neutral-400">
                     {kurs.trajanje ? `${kurs.trajanje} dana` : ''}
