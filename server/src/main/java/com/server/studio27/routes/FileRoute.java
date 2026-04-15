@@ -29,7 +29,7 @@ import com.server.studio27.services.VideoHlsService;
 @RestController
 @RequestMapping("/api")
 public class FileRoute {
-    private final String UPLOAD_DIR = "/uploads/";
+    private final String UPLOAD_DIR = "/assets/uploads/";
 
     @Autowired
     private HetznerAPIController hetznerapiService;
