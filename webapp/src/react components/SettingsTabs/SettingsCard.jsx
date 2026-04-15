@@ -22,7 +22,7 @@ export default function SettingsCard({ token }) {
         {tabs.map((t) => (
           <button
             key={t.id}
-            className={`flex-1 min-w-[100px] px-4 py-3 text-xs font-medium transition-colors whitespace-nowrap ${
+            className={`flex-1 min-w-[100px] cursor-pointer px-4 py-3 text-xs font-medium transition-colors whitespace-nowrap ${
               tab === t.id
                 ? "text-red-400 border-b-2 border-red-900 bg-neutral-800/30"
                 : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/20"

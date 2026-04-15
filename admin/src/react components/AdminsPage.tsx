@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface Admin {
   userId: number;
@@ -53,15 +54,29 @@ const Modal = ({
   title: string;
   children: React.ReactNode;
 }) => {
-  if (!open) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [open]);
+
+  if (!open || !mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-lg shadow-2xl"
+        className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-lg shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
         style={{ animation: "fadeIn 0.25s ease-out" }}
       >
@@ -76,7 +91,8 @@ const Modal = ({
         </div>
         <div className="p-5">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

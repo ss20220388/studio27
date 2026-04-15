@@ -25,7 +25,6 @@ export default function UplatnicaForm({ onSuccess, naziv, cena, kursId, onBack, 
         },
       });
       const meData = await meRes.json();
-      console.log("Me data:", meData);
       const response = await fetch(`${API_URL}/api/upload-hetzner`, {
         method: "POST",
         headers: {
@@ -55,7 +54,7 @@ export default function UplatnicaForm({ onSuccess, naziv, cena, kursId, onBack, 
       });
 
       if (!dodajPlacanjeRes.ok) {
-        throw new Error("Došlo je do greške prilikom evidentiranja uplate.");
+        throw new Error("Došlo je do greške, verovatno ste vec platili ovaj kurs, ako mislite da nije tako kontaktirajte nas.");
       }
 
       setSuccessMessage("Vaša uplata je evidentirana, sliku vaše uplatnice ćemo sačuvati i kontaktiraćemo vas ukoliko nešto ne valja.");

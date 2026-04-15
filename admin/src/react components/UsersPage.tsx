@@ -1,5 +1,6 @@
 import { set } from "astro:schema";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 interface User {
   id: number;
@@ -77,15 +78,38 @@ const Modal = ({
   title: string;
   children: React.ReactNode;
 }) => {
-  if (!open) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [open]);
+
+  if (!open || !mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
       onClick={onClose}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100%",
+        height: "100%"
+      }}
     >
       <div
-        className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-lg shadow-2xl"
+        className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-lg shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
         style={{ animation: "fadeIn 0.25s ease-out" }}
       >
@@ -100,7 +124,8 @@ const Modal = ({
         </div>
         <div className="p-5">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -177,7 +202,7 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
       window.location.reload();
     }
     catch (error) {
-      console.log("Greška prilikom dodavanja korisnika:", error);
+      console.error("Greška prilikom dodavanja korisnika:", error);
     }
 
   }
@@ -197,7 +222,7 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
       window.location.reload();
     }
     catch (error) {
-      console.log("Greška prilikom brisanja korisnika:", error);
+      console.error("Greška prilikom brisanja korisnika:", error);
     }
   }
 
@@ -216,7 +241,7 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
       setDeviceUser(null);
       window.location.reload();
     } catch (error) {
-      console.log("Greška prilikom uklanjanja Device ID-a:", error);
+      console.error("Greška prilikom uklanjanja Device ID-a:", error);
     }
   }
 
@@ -241,7 +266,7 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
       setEditUser(null);
       window.location.reload();
     } catch (error) {
-      console.log("Greška prilikom uređivanja korisnika:", error);
+      console.error("Greška prilikom uređivanja korisnika:", error);
     }
   }
 

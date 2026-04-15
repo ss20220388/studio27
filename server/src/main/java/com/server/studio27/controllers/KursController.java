@@ -364,7 +364,7 @@ public class KursController {
         try {
             String SQL = """
                     Select kurs.naziv,
-                    (Select count(*) from  platio p where p.kursId = kurs.kursId and p.datumPlacanja like DATE_FORMAT(CURDATE(), '%Y-%m%') and p.status = 'P' ) as "prodato"
+                    (Select count(*) from  platio p where p.kursId = kurs.kursId  and p.datumPlacanja like DATE_FORMAT(CURDATE(), '%Y-%m%') and p.status = 'P' ) as "prodato"
                     from kurs
                     """;
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);

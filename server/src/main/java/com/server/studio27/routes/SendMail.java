@@ -189,4 +189,54 @@ public class SendMail {
             return ResponseEntity.internalServerError().body("Greška pri slanju računa: " + e.getMessage());
         }
     }
+    @PostMapping("/send-positive-mail-to-client")
+    public String sendPositiveMail(@RequestBody MailRequest request) {
+        String email = request.to;
+        String subject = "Obaveštenje nas agent je prihvatio vasu uplatnicu i mozete poceti sa ucenjem zeljenog kursa!";
+        String subText = "Kurs sa nazivom " + request.subText + " je sada aktivan na vašem nalogu.";
+        String body = "Obaveštavamo vas da je naš agent prihvatio vašu uplatnicu i da možete početi sa učenjem željenog kursa! Hvala vam na poverenju i želimo vam uspešno učenje!";
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            
+            helper.setFrom(fromEmail);
+            helper.setTo(email);
+            helper.setSubject(subject);
+            helper.setText(buildHtmlEmail(subject, subText, body), true);
+
+            mailSender.send(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Greška pri slanju: " + e.getMessage();
+        }
+    
+        
+        return "Email uspešno poslat korisniku: " + email;
+    }
+    @PostMapping("/send-negative-mail-to-client")
+    public String sendNegativeMail(@RequestBody MailRequest request) {
+        String email = request.to;
+        String subject = "Obaveštenje nas agent je odbio vasu uplatnicu!";
+        String subText = "Kurs sa nazivom " + request.subText + " nije odobren.";
+        String body = "Obaveštavamo vas da je naš agent odbio vašu uplatnicu. Molimo Vas da kontaktirate naš tim za više informacija.";
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            
+            helper.setFrom(fromEmail);
+            helper.setTo(email);
+            helper.setSubject(subject);
+            helper.setText(buildHtmlEmail(subject, subText, body), true);
+
+            mailSender.send(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Greška pri slanju: " + e.getMessage();
+        }
+    
+        
+        return "Email uspešno poslat korisniku: " + email;
+    }
+    
 }

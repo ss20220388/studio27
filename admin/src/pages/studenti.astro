@@ -14,12 +14,6 @@ const authHeaders: Record<string, string> = token
     }
   : {};
 
-console.log("=== DEBUG INFO ===");
-console.log("API_URL:", API_URL);
-console.log("Token exists:", !!token);
-console.log("Auth headers:", authHeaders);
-console.log("==================");
-
 let studentsData = { students: [], count: 0, message: "" };
 
 try {
@@ -39,8 +33,6 @@ try {
   console.error("Greška pri učitavanju studenata:", error);
   studentsData = { students: [], count: 0, message: `Error: ${error}` };
 }
-console.log("Students data fetched from API:");
-console.log(studentsData);
 
 let kurseviData = { kursevi: [], message: "" };
 try{
@@ -60,8 +52,6 @@ try{
     console.error("Greška pri učitavanju kurseva:", error);
     kurseviData = { kursevi: [], message: `Error: ${error}` };
 }
-console.log("Courses data fetched from API:");
-console.log(kurseviData)
 
 
 

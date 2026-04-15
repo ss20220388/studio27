@@ -20,11 +20,7 @@ const ContactFormWebapp: React.FC<Props> = ({ publicApiUrl }) => {
     const [submitted, setSubmitted] = useState(false)
 
     useEffect(() => {
-        console.log('ContactForm mounted, publicApiUrl:', publicApiUrl)
-        
-        // Preuzmi korisnikove podatke
         const authUrl = `${publicApiUrl}/api/auth/me`
-        console.log('Fetching from:', authUrl)
         
         fetch(authUrl, { 
             credentials: 'include',
@@ -33,30 +29,18 @@ const ContactFormWebapp: React.FC<Props> = ({ publicApiUrl }) => {
             }
         })
             .then(r => {
-                console.log('Auth response status:', r.status, r.statusText)
-                console.log('Response headers:', {
-                    'content-type': r.headers.get('content-type'),
-                    'content-length': r.headers.get('content-length')
-                })
                 return r.json().catch(() => null)
             })
             .then(u => {
-                console.log('Parsed user data:', u)
-                console.log('User data keys:', u ? Object.keys(u) : 'null')
-                console.log('brojTelefona value:', u?.brojTelefona)
-                console.log('telefon value:', u?.telefon)
                 if (u && typeof u === 'object' && !u.error) {
-                    console.log('User set successfully')
                     setUser(u)
-                    // Ako korisnik ima broj, postavi ga
-                    // Pokušaj i brojTelefona i telefon, jer može biti bilo koji ključ
                     const phoneNumber = u.brojTelefona || u.telefon || u.phone || ''
-                    console.log('Final phone number to set:', phoneNumber)
+                   
                     if (phoneNumber) {
                         setTelefon(phoneNumber)
                     }
                 } else {
-                    console.log('User is null or has error')
+                    
                     setUser(null)
                 }
             })
@@ -65,7 +49,7 @@ const ContactFormWebapp: React.FC<Props> = ({ publicApiUrl }) => {
                 setUser(null)
             })
             .finally(() => {
-                console.log('Auth fetch completed')
+                
                 setLoading(false)
             })
     }, [publicApiUrl])

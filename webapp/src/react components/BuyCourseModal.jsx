@@ -35,7 +35,7 @@ export default function BuyCourseModal({ naziv, cena,kursId ,API_URL, token}) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full z-50 bg-red-900 hover:bg-red-800 text-white py-3 rounded-xl font-semibold transition"
+        className="w-full z-50 bg-red-900 hover:bg-red-800 cursor-pointer text-white py-3 rounded-xl font-semibold transition"
       >
         Kupi kurs
       </button>
@@ -64,7 +64,7 @@ export default function BuyCourseModal({ naziv, cena,kursId ,API_URL, token}) {
           >
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 cursor-pointer"
               style={{ zIndex: 100001 }}
             >
               ✕

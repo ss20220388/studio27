@@ -178,6 +178,15 @@ public class PohadjaController {
       }
    }
 
+   public void dodajKorisnikaUKurs(Integer studentId, Integer kursId) {
+      try {
+         String SQL = "INSERT INTO pohadja (studentId, kursId) VALUES (?, ?)";
+         jdbcTemplate.update(SQL, studentId, kursId);
+      } catch (Exception e) {
+         System.out.println("Error adding user to course: " + e.getMessage());
+      }
+   }
+
    public ResponseEntity<Map<Integer, Map<String, Object>>> LekcijeVideo() {
       try {
          String Sql = "Select l.lekcijaId, l.kursId, l.naziv, l.opis, v.videoId, v.url " +
