@@ -6,7 +6,7 @@ interface PravilaPageProps {
 }
 
 export default function PravilaPage({ token }: PravilaPageProps) {
-  const API_URL = "http://api.studio27.rs";
+  const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
   const FOLDER_PATH = "/pravila";
 
   const [items, setItems] = useState<string[]>([]);
