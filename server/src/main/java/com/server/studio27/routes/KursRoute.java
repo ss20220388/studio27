@@ -68,8 +68,10 @@ public class KursRoute {
     
     @DeleteMapping("/obrisi-kurs/{id}")
     public ResponseEntity<Map<String, Object>> brisiKurs(@PathVariable int id) {
+        System.out.println("Brisanje kursa sa ID: " + id);
         return kursController.brisiKurs(id);
-    }    
+    }
+
     @PostMapping("/dodaj-lekciju/{kursId}")
     public ResponseEntity<Map<String, Object>> dodajLekciju(@PathVariable int kursId, @RequestBody Map<String, Object> lekcijaData) {
         return kursController.dodajLekciju(kursId, lekcijaData);

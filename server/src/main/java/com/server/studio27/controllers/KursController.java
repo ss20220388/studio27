@@ -406,12 +406,11 @@ public class KursController {
     }
 
     public ResponseEntity<Map<String, Object>> brisiKurs(int kursId) {
+
         try {
+            System.err.println("Brisanje kursa sa ID: " + kursId);
             String SQLRecenzija = "DELETE FROM recenzija WHERE kursId = ?";
             jdbcTemplate.update(SQLRecenzija, kursId);
-
-            String SQLStudentLekcija = "DELETE FROM student_lekcija WHERE lekcijaId IN (SELECT lekcijaId FROM lekcija WHERE kursId = ?)";
-            jdbcTemplate.update(SQLStudentLekcija, kursId);
 
             String SQLPlatio = "DELETE FROM platio WHERE kursId = ?";
             jdbcTemplate.update(SQLPlatio, kursId);
