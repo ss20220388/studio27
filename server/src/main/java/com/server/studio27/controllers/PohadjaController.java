@@ -103,7 +103,7 @@ public class PohadjaController {
       try {
          User user = UserController.getUserById(userId);
          Map<String, Object> response = new HashMap<>();
-         ResponseEntity<Map<Integer, Map<String, Object>>> lekcijeResponse = LekcijeVideo();
+         ResponseEntity<Map<Integer, Map<String, Object>>> lekcijeResponse = LekcijeVideo(userId, kursId);
          Map<Integer, Map<String, Object>> lekcije = lekcijeResponse.getBody();
          if (lekcije == null) {
             response.put("pohadja", false);
@@ -122,8 +122,8 @@ public class PohadjaController {
                   response.put("kurs", result);
                   List<Map<String, Object>> kursLekcije = new java.util.ArrayList<>();
                   for (Map<String, Object> lekcija : lekcije.values()) {
-                      Number kursIdNum = (Number) lekcija.get("kursId");
-                      Integer kursidLekcija = kursIdNum.intValue();
+                     Number kursIdNum = (Number) lekcija.get("kursId");
+                     Integer kursidLekcija = kursIdNum.intValue();
                      if (kursidLekcija.equals(kursId)) {
                         Map<String, Object> lekcijaData = new HashMap<>();
                         lekcijaData.put("lekcijaId", lekcija.get("lekcijaId"));
@@ -187,14 +187,29 @@ public class PohadjaController {
       }
    }
 
-   public ResponseEntity<Map<Integer, Map<String, Object>>> LekcijeVideo() {
-      try {
-         String Sql = "Select l.lekcijaId, l.kursId, l.naziv, l.opis, v.videoId, v.url " +
-               "from lekcija l " +
-               "left join video v on l.lekcijaId = v.lekcijaId " +
-               "order by l.lekcijaId";
+   public ResponseEntity<Map<Integer, Map<String, Object>>> LekcijeVideo(Integer userId, Integer kursId) {
+      try{String Sql=
+         """
+               SELECT l.lekcijaId,
+                  l.kursId,
+                  l.naziv,
+                  l.opis,
+                  v.videoId,
+                  v.url,
+                  CASE
+                     WHEN o.procenat > 0 THEN o.procenat
+                     ELSE 0
+                  END AS procenat
+            FROM lekcija l
+            LEFT JOIN video v
+               ON l.lekcijaId = v.lekcijaId
+            LEFT JOIN odgledao o
+               ON v.url = o.videoUrl
+               AND o.userId = ?   
+            WHERE l.kursId = ?
+            ORDER BY l.lekcijaId, v.videoId""";
 
-         List<Map<String, Object>> result = jdbcTemplate.queryForList(Sql);
+         List<Map<String, Object>> result = jdbcTemplate.queryForList(Sql, userId, kursId);
          Map<Integer, Map<String, Object>> lekcijaMap = new HashMap<>();
 
          for (Map<String, Object> entry : result) {
@@ -217,9 +232,10 @@ public class PohadjaController {
             if (entry.get("videoId") != null) {
                Map<String, Object> video = new HashMap<>();
                video.put("videoId", entry.get("videoId"));
+               video.put("procenat", entry.get("procenat") != null ? entry.get("procenat") : 0);
                video.put("url", entry.get("url"));
 
-               ((List<Map<String, Object>>) lekcija.get("klipovi")).add(video);
+              ((List<Map<String, Object>>) lekcija.get("klipovi")).add(video);
             }
          }
 
@@ -227,11 +243,7 @@ public class PohadjaController {
 
       } catch (Exception e) {
          Map<String, Object> response = new HashMap<>();
-         response.put("error", e.getMessage());
-         Map<Integer, Map<String, Object>> emptyResponse = new HashMap<>();
-         emptyResponse.put(-1, response);
-         return ResponseEntity.ok(emptyResponse);
-      }
+         response.put("error",e.getMessage());Map<Integer,Map<String,Object>>emptyResponse=new HashMap<>();emptyResponse.put(-1,response);return ResponseEntity.ok(emptyResponse);}
    }
 
 }
