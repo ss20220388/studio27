@@ -126,7 +126,7 @@ ${poruka}`;
             {/* Close button */}
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-red-900 hover:border-red-800 text-gray-300 hover:text-white transition-all duration-300 text-xl leading-none"
+              className="absolute top-4 right-4 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/10 hover:bg-red-900 hover:border-red-800 text-gray-300 hover:text-white transition-all duration-300 text-xl leading-none cursor-pointer"
             >
               &times;
             </button>
@@ -201,7 +201,7 @@ ${poruka}`;
                   {/* Submit */}
                   <button
                     type="submit"
-                    className="w-full h-12 mt-4 text-white text-sm font-bold tracking-widest uppercase rounded-lg bg-linear-to-r from-red-900 to-red-800 hover:from-red-800 hover:to-red-700 active:scale-[0.98] shadow-[0_8px_20px_-8px_rgba(153,27,27,0.5)] transition-all duration-300 flex items-center justify-center gap-2 group"
+                    className="w-full h-12 mt-4 text-white text-sm font-bold tracking-widest uppercase rounded-lg bg-linear-to-r from-red-900 to-red-800 hover:from-red-800 hover:to-red-700 active:scale-[0.98] shadow-[0_8px_20px_-8px_rgba(153,27,27,0.5)] transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer"
                   >
                     <span>Pošalji poruku</span>
                     <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
