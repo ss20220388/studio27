@@ -7,7 +7,7 @@ const KursPlayer = ({ lekcije, token,API_URL }) => {
         lekcije?.[0]?.klipovi?.[0] || null
     );
 
-    const [openLesson, setOpenLesson] = useState(null);
+    const [openLesson, setOpenLesson] = useState(lekcije?.[0]?.lekcijaId || null);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -47,22 +47,33 @@ const KursPlayer = ({ lekcije, token,API_URL }) => {
                                         <button
                                             key={klip.videoId}
                                             onClick={() => setSelectedVideo(klip)}
-                                            className={`group flex items-center justify-between w-full px-3 py-2 rounded-lg transition-all duration-200 text-xs
+                                            className={`group cursor-pointer flex flex-col w-full px-3 py-2 rounded-lg transition-all duration-200 text-xs
                                             ${selectedVideo?.videoId === klip.videoId
                                                     ? "bg-red-900 text-white"
                                                     : "hover:bg-neutral-800 text-neutral-400"
                                                 }`}
                                         >
-                                            <span className="flex items-center gap-2">
-                                                <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                                Video {klip.videoId}
-                                            </span>
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className="flex items-center gap-2">
+                                                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 shrink-0">
+                                                        <path
+                                                            fillRule="evenodd"
+                                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                                                            clipRule="evenodd"
+                                                        />
+                                                    </svg>
+                                                    <span className="truncate">Video {klip.videoId}</span>
+                                                </span>
+                                                <span className="text-[10px] opacity-70 ml-2 shrink-0">{klip.procenat}%</span>
+                                            </div>
+                                            
+                                            {/* Progress bar tracker */}
+                                            <div className="w-full bg-black/40 h-1.5 mt-2 rounded-full overflow-hidden">
+                                                <div 
+                                                    className={`h-full transition-all duration-500 ${selectedVideo?.videoId === klip.videoId ? "bg-white" : "bg-red-600"}`}
+                                                    style={{ width: `${klip.procenat}%` }}
+                                                ></div>
+                                            </div>
                                         </button>
                                     ))}
 
