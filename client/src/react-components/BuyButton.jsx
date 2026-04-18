@@ -66,21 +66,7 @@ export default function BuyButton({ price ,userPocetni,appUrl}) {
           </svg>
         </span>
       </motion.button>
-      {nistePrijavljeni && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.3 }}
-          className="fixed top-0 flex justify-center items-center flex-col bottom-0 left-0 right-0 mt-16 bg-black/80 text-white px-4 py-2 rounded shadow-lg"
-        >
-          <div className="bg-black px-4 py-8 shadow-lg shadow-grey-500/50 rounded-lg shadow-2xl mb-4" transition={{ duration: 1, ease: "easeInOut" }} >
-            <h3>Morate biti prijavljeni</h3>
-            <p>Morate biti prijavljeni da kupite kurs.</p>
-          </div>
-
-        </motion.div>
-      )}
+      
     </>
   );
 }
