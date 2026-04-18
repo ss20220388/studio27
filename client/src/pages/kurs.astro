@@ -28,7 +28,6 @@ try {
     const kurseviRes: ResponseData = await data.json();
     kursevi = kurseviRes.kursevi;
 
-    
     const response = await fetch(`${API_URL}/api/auth/me`, {
         headers: {
             Authorization: `Bearer ${token}`,
@@ -40,9 +39,34 @@ try {
 }
 ---
 
-<Layout 
+<Layout
     title="Svi Kursevi | Studio 27"
     description="Pregledajte ponudu kurseva arhitektonske vizualizacije i 3D modelovanja Studio 27 akademije. Izaberite pravi kurs za sebe."
+    canonicalURL="https://studio27.rs/3ds-max-kurs"
+    breadcrumbs={[
+        { name: "Kursevi", url: "https://studio27.rs/kursevi" },
+        { name: "3ds Max kurs", url: "https://studio27.rs/3ds-max-kurs" },
+    ]}
+    course={{
+        name: "3ds Max kurs",
+        description:
+            "Online kurs 3ds Max, Corona Render i arhitektonske vizualizacije za početnike i napredne.",
+        url: "https://studio27.rs/3ds-max-kurs",
+    }}
+    faq={[
+        {
+            question: "Da li je kurs namenjen početnicima?",
+            answer: "Da, kurs je prilagođen početnicima i objašnjen korak po korak.",
+        },
+        {
+            question: "Da li se kurs prati online?",
+            answer: "Da, kurs možete pratiti online svojim tempom.",
+        },
+        {
+            question: "Šta ću naučiti na kursu?",
+            answer: "Naučićete 3ds Max, Corona Render, osnove arhitektonske vizualizacije i obradu finalnih rendera.",
+        },
+    ]}
 >
     <main class="p-8">
         <h1 class="text-3xl font-bold mb-8">Svi kursevi</h1>
