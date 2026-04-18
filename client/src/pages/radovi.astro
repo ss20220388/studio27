@@ -67,66 +67,88 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
       )}
     </div>
     <div class="max-w-7xl mx-auto px-4 py-16 relative z-10">
-      <!-- Back button -->
-      <a href="/" class="text-white/60 hover:text-white transition-colors inline-block mb-12">
-        ← Nazad na početnu
-      </a>
-
       {studentGroups.length === 0 ? (
         <p class="text-center text-gray-500 text-lg py-20">Nema dostupnih radova</p>
       ) : (
         <div class="space-y-24">
-          {studentGroups.map(([studentName, works]) => {
+          {studentGroups.map(([studentName, works], index) => {
             const firstWork = (works as any[])[0];
+            const isEven = index % 2 === 0;
             return (
               <div class="student-work-section">
-                <!-- Student info section -->
-                <div class="mb-16 pb-12 border-b border-gray-700">
-                  <h1 class="text-6xl md:text-7xl font-bold text-white mb-8">
-                    {studentName}
-                  </h1>
-                  
-                  <p class="text-gray-400 text-lg leading-relaxed max-w-3xl mb-6">
-                    Rad koji prikazuje vešine i znanje koje je student stekao tokom kursa. Svaki projekat predstavlja praktičnu primenu naučenih tehnika i kreativan pristup 3D modelovanju i vizualizaciji.
-                  </p>
+                <!-- Student info section with featured image -->
+                <div class={`grid grid-cols-1 md:grid-cols-3 gap-12 mb-16 pb-12 border-b border-gray-700 items-start ${!isEven ? 'md:grid-flow-col-dense' : ''}`}>
+                  <!-- Left side - Text info -->
+                  <div class={`md:col-span-1 ${!isEven ? 'md:col-start-3' : ''}`}>
+                    <h1 class="text-6xl md:text-7xl font-bold text-white mb-6">
+                      {studentName}
+                    </h1>
 
-                  
+                    <div class="space-y-4 mb-8 mt-6 pb-8 border-b border-gray-700">
+                      <p class="text-base text-gray-400 leading-relaxed font-light kurs-naziv">
+                        Projekat razvijen kroz Studio27 program – dokaz posvećenosti i napretka.
+                      </p>
+                      <p class="text-base text-gray-400 leading-relaxed font-light kurs-naziv">
+                        Kreiran tokom kursa kao rezultat kontinuiranog rada i usavršavanja.
+                      </p>
+                      <p class="text-base text-gray-400 leading-relaxed font-light kurs-naziv">
+                        Vizija pretvorena u projekat kroz Studio27 iskustvo.
+                      </p>
+                    </div>
 
-                  {firstWork?.kurs && (
-                    <div class="flex items-center gap-3">
-                      <span class="text-red-500 font-semibold">Course</span>
-                      <span class="text-white font-bold text-lg">
-                        {firstWork.kurs.naziv}
-                      </span>
+                    {firstWork?.idKurs && (
+                      <p class="kurs-naziv text-xl text-red-900 uppercase mb-4 tracking-wider">
+                        {firstWork?.naziv || "Rad"}
+                      </p>
+                    )}
+
+                    {firstWork?.kurs && (
+                      <div class="flex flex-col gap-2 mt-16">
+                        <span class="text-red-500 font-semibold text-xs uppercase tracking-widest">Course</span>
+                        <span class="text-white font-bold text-2xl kurs-naziv">
+                          {firstWork.kurs.naziv}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <!-- Right side - Featured image -->
+                  {firstWork && (
+                    <div class={`md:col-span-2 ${!isEven ? 'md:col-start-1 md:row-start-1' : ''}`}>
+                      <Image
+                        src={`${API_URL}/api/uploaded-images${firstWork.url}`}
+                        class="w-full h-[32rem] object-cover rounded-3xl hover:scale-105 transition-transform duration-300 shadow-lg"
+                        loading="lazy"
+                        alt="featured work"
+                        width={500}
+                        height={500}
+                      />
                     </div>
                   )}
                 </div>
 
                 <!-- Works gallery -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 overflow-x-auto pb-4">
-                  {works.map((work: any, idx: number) => (
+                  {works.map((work: any, idx: number) => {
+                    // Preskoči prvu sliku jer je već prikazana kao featured image
+                    if (idx === 0) return null;
+                    return (
                     <div 
                       class="rad-item-gallery overflow-hidden"
                       style={`animation-delay: ${idx * 0.1}s`}
                     >
                       <Image
                         src={`${API_URL}/api/uploaded-images${work.url}`} 
-                        class="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                        class="w-full aspect-square object-cover hover:scale-105 transition-transform duration-300 rounded-lg"
                         loading="lazy"
                         alt="radovi"
                         width={500}
                         height={500}
                       />
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
-
-                <!-- Course name below gallery -->
-                {firstWork?.idKurs && (
-                  <p class="kurs-naziv text-sm text-gray-400 uppercase mt-6">
-                    {firstWork?.naziv || "Rad"}
-                  </p>
-                )}
               </div>
             );
           })}
@@ -275,6 +297,19 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
     pointer-events: none;
     overflow: hidden;
     background-color: transparent;
+    filter: brightness(0.3);
+  }
+  
+  .animated-bg-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1;
+    pointer-events: none;
   }
 
   /* Animated images line */
