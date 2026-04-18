@@ -31,6 +31,7 @@ export default function KursHero({ kurs }) {
           scale,
           filter: useTransform(imgBrightness, (v) => `brightness(${v})`),
         }}
+        alt="slika kursa koji se prikazuje"
       />
 
       <div className="absolute inset-0 bg-linear-to-b from-black/40 via-black/60 to-black" />
