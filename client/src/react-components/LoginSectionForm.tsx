@@ -241,6 +241,16 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         }
     }
 
+    const handleOpenPrivacyPolicy = () => {
+        try {
+            const filePath = `/pravila/Privacy-Policy.pdf`
+            const url = `${publicApiUrl}/api/media?remoteFilePath=${encodeURIComponent(filePath)}`
+            window.open(url, '_blank')
+        } catch (err) {
+            console.error('Greška pri otvaranju dokumenta:', err)
+        }
+    }
+
     async function handleGoogleLogin(e: any) {
         e.preventDefault()
         try {
@@ -395,7 +405,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                 <div className="absolute inset-0 bg-black/60" onClick={() => { setShowForgotPassword(false); setError(null); setForgotStep('email') }}></div>
 
                 <div className="relative rounded-none bg-white p-8 shadow-sm w-full max-w-md mx-4">
-                    <button onClick={() => { setShowForgotPassword(false); setError(null); setForgotStep('email') }} className="absolute right-3 top-3 text-gray-500 hover:text-black" aria-label="Zatvori">
+                    <button onClick={() => { setShowForgotPassword(false); setError(null); setForgotStep('email') }} className="absolute right-3 top-3 text-gray-500 hover:text-black cursor-pointer" aria-label="Zatvori">
                         ✕
                     </button>
 
@@ -431,7 +441,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                 <button
                                     type="submit"
                                     disabled={forgotLoading}
-                                    className="w-full bg-black px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+                                    className="w-full bg-black px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50 cursor-pointer"
                                 >
                                     {forgotLoading ? 'Slanje...' : 'Pošalji kod'}
                                 </button>
@@ -439,7 +449,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                 <button
                                     type="button"
                                     onClick={() => { setShowForgotPassword(false); setError(null); setForgotStep('email') }}
-                                    className="w-full border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                                    className="w-full border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
                                 >
                                     Vrati se na prijavu
                                 </button>
@@ -503,7 +513,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                 <button
                                     type="submit"
                                     disabled={forgotLoading}
-                                    className="w-full bg-black px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+                                    className="w-full bg-black px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50 cursor-pointer"
                                 >
                                     {forgotLoading ? 'Procesiranje...' : 'Potvrdi i resetuj lozinku'}
                                 </button>
@@ -511,7 +521,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                 <button
                                     type="button"
                                     onClick={() => setForgotStep('email')}
-                                    className="w-full border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                                    className="w-full border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer"
                                 >
                                     ← Nazad
                                 </button>
@@ -528,7 +538,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
             <div className="absolute inset-0 bg-black/60" onClick={close}></div>
 
             <div className="relative rounded-none bg-white p-8 shadow-sm w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-                <button onClick={close} className="absolute right-3 top-3 text-gray-500 hover:text-black" aria-label="Zatvori">
+                <button onClick={close} className="absolute right-3 top-3 text-gray-500 hover:text-black cursor-pointer"  aria-label="Zatvori">
                     ✕
                 </button>
 
@@ -591,7 +601,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                     type="button"
                                     onClick={handleSendOtpReg}
                                     disabled={forgotLoading}
-                                    className="absolute right-2 top-2 bottom-2 bg-gray-100 px-4 text-xs font-medium text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                                    className="absolute right-2 top-2 bottom-2 bg-gray-100 px-4 text-xs font-medium text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors disabled:opacity-50 cursor-pointer"
                                 > 
                                     {forgotLoading ? 'Slanje...' : 'Pošalji kod'}
                                 </button>
@@ -617,7 +627,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                             type="button" 
                                             onClick={handleProveraKoda}
                                             disabled={otpCode.length !== 6}
-                                            className="shrink-0 bg-black px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+                                            className="shrink-0 bg-black px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50 cursor-pointer"
                                         >
                                             Potvrdi
                                         </button>
@@ -648,7 +658,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                         setSuccess(null)
                                         setForgotStep('email')
                                     }}
-                                    className="text-sm text-gray-600 transition-colors hover:text-black"
+                                    className="text-sm text-gray-600 transition-colors hover:text-black cursor-pointer"
                                 >
                                     Zaboravio si lozinku?
                                 </button>
@@ -674,7 +684,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                             <input type="checkbox" id="terms" name="terms" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className={`mt-1 h-4 w-4 rounded border-gray-300 text-black focus:ring-black cursor-pointer ${registerErrors.terms ? 'border-red-500' : ''}`} required />
                             <label htmlFor="terms" className="block text-sm text-gray-700">
                                 Saglasan/na sam sa{' '}
-                                <button type="button" onClick={(e) => { e.preventDefault(); handleOpenTerms() }} className="text-black underline hover:no-underline font-medium transition-colors hover:text-gray-700">
+                                <button type="button" onClick={(e) => { e.preventDefault(); handleOpenTerms() }} className="text-black underline hover:no-underline font-medium transition-colors hover:text-gray-700 cursor-pointer">
                                     Uslovima korišćenja
                                 </button>
                             </label>
@@ -685,7 +695,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-black px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50"
+                        className="w-full bg-black px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50 cursor-pointer"
                     >
                         {loading ? 'Učitavanje...' : (loginForm ? 'Uloguj se' : 'Registruj se')}
                     </button>
@@ -698,8 +708,8 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                 </div>
 
                 <div className="mb-6">
-                    <button onClick={(e) => handleGoogleLogin(e)} type="button" className="flex w-full items-center justify-center border border-gray-300 bg-white px-4 py-3 text-gray-700 transition-colors hover:bg-gray-50">
-                        <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                    <button onClick={(e) => handleGoogleLogin(e)} type="button" className="flex w-full items-center justify-center border border-gray-300 bg-white px-4 py-3 text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer">
+                        <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24"  fill="currentColor">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -709,10 +719,10 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                     </button>
                 </div>
 
-                <div className="text-center">
-                    <p className="text-sm text-gray-600">
+                <div className="text-center cursor-pointer">
+                    <p className="text-sm text-gray-600 cursor-pointer">
                         {loginForm ? 'Još uvek nemaš nalog? ' : 'Već imaš nalog? '}
-                        <button onClick={() => { setLoginForm(!loginForm); setError(null); setSuccess(null); setRegisterErrors({}); setTermsAccepted(false) }} className="font-medium text-black transition-colors hover:text-gray-700">
+                        <button onClick={() => { setLoginForm(!loginForm); setError(null); setSuccess(null); setRegisterErrors({}); setTermsAccepted(false) }} className="font-medium text-black transition-colors hover:text-gray-700 cursor-pointer">
                             {loginForm ? 'Registruj se' : 'Uloguj se'}
                         </button>
                     </p>

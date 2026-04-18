@@ -1,10 +1,11 @@
 ---
-import MasterCard from "../assets/mastercard.svg"
-import Visa from "../assets/visa1.svg"
+import MasterCard from "../assets/mastercard.svg";
+import Visa from "../assets/visa1.svg";
+const API_URL = import.meta.env.PUBLIC_API_URL || 'http://api.studio27.rs';
 ---
 
 <footer class="bg-black text-white py-12 px-8 md:px-16">
-    <div  class="max-w-7xl mx-auto">
+    <div class="max-w-7xl mx-auto">
         <!-- Main Footer Content -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <!-- Company Info -->
@@ -21,8 +22,8 @@ import Visa from "../assets/visa1.svg"
                     Telefon
                 </p>
                 <a
-                    href="tel:+380950811390"
-                    class="text-sm hover:text-gray-300 transition-colors"
+                    href="tel:+381665934314"
+                    class="text-sm hover:text-gray-500 transition-colors"
                 >
                     +381 66 5934 314
                 </a>
@@ -34,7 +35,7 @@ import Visa from "../assets/visa1.svg"
                 </p>
                 <a
                     href="mailto:studio27.vizz@gmail.com"
-                    class="text-sm hover:text-gray-300 transition-colors"
+                    class="text-sm hover:text-gray-500 transition-colors"
                 >
                     studio27.vizz@gmail.com
                 </a>
@@ -43,14 +44,19 @@ import Visa from "../assets/visa1.svg"
             <!-- Legal Links -->
             <div class="md:col-span-1">
                 <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">
-                    Public Offer
+                    Public offer 
                 </p>
-                <a
-                    href="#privacy"
-                    class="text-sm hover:text-gray-300 transition-colors block"
-                >
-                    Privacy Policy
-                </a>
+                <div class="space-y-2">
+                    <div>
+                        <button
+                            type="button"
+                            class="text-gray-300 hover:no-underline font-medium transition-colors hover:text-gray-500 cursor-pointer"
+                            id="openTermsBtn"
+                        >
+                            Privacy Policy
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Payment & Social -->
@@ -65,8 +71,10 @@ import Visa from "../assets/visa1.svg"
 
                 <!-- Social Icons -->
                 <div class="flex items-center space-x-6 text-gray-400">
-                
-                    <a href="https://www.instagram.com/studio27.visualization?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="hover:text-white transition-colors">
+                    <a
+                        href="https://www.instagram.com/studio27.visualization?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                        class="hover:text-white transition-colors"
+                    >
                         <svg
                             class="w-5 h-5"
                             fill="currentColor"
@@ -90,3 +98,34 @@ import Visa from "../assets/visa1.svg"
         </div>
     </div>
 </footer>
+
+<script define:vars={{ API_URL }}>
+    const openTermsBtn = document.getElementById('openTermsBtn');
+    const openPrivacyBtn = document.getElementById('openPrivacyBtn');
+
+    if (openTermsBtn) {
+        openTermsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            try {
+                const filePath = `/pravila/Analiticka - formule.pdf`;
+                const url = `${API_URL}/api/media?remoteFilePath=${encodeURIComponent(filePath)}`;
+                window.open(url, '_blank');
+            } catch (err) {
+                console.error('Greška pri otvaranju dokumenta:', err);
+            }
+        });
+    }
+
+    if (openPrivacyBtn) {
+        openPrivacyBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            try {
+                const filePath = `/pravila/Privacy-Policy.pdf`;
+                const url = `${API_URL}/api/media?remoteFilePath=${encodeURIComponent(filePath)}`;
+                window.open(url, '_blank');
+            } catch (err) {
+                console.error('Greška pri otvaranju dokumenta:', err);
+            }
+        });
+    }
+</script>

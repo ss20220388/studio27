@@ -56,7 +56,7 @@ try {
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
 
     {kursevi_1.map((kurs, i) => (
-      <div class="kurs-card relative h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group" style={`--card-i:${i}`}>
+      <div class="kurs-card relative h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group rounded-2xl" style={`--card-i:${i}`}>
 
         <!-- Image -->
         <div
@@ -72,19 +72,19 @@ try {
 
            <!-- Top -->
         <!-- Gornji tekst -->
-    <div class="space-y-10">
-      <h2 class="text-xl font-extrabold leading-snug">
+    <div class="space-y-4">
+      <h2 class="text-xl font-extrabold leading-snug h-16 flex items-start">
         {kurs.naziv}
       </h2>
-        <p class="text-base font-bold space-y-3">
+        <p class="text-base font-bold h-12 flex items-start">
         {kurs.glavniKurs}
       </p>
 
-      <p class="text-sm opacity-90 space-y-2 font-bold">
+      <p class="text-sm opacity-90 font-bold h-16 flex items-start">
         {kurs.komentarGore}
       </p>
 
-        <p class="text-base space-y-10 font-bold">
+        <p class="text-base font-bold h-20 flex items-start">
         {kurs.komentarSredina}
       </p>
 
@@ -99,7 +99,7 @@ try {
       </p>
 
       <div class="flex w-full justify-end" > 
-        <a href={`/kurs/${kurs.kursId}`} class="bg-red-900 hover:bg-red-800 px-4 py-2 text-sm  font-semibold">
+        <a href={`/kurs/${kurs.kursId}`} class="bg-red-900 hover:bg-red-800 px-4 py-2 text-sm  font-semibold rounded-lg">
         Detaljnije
       </a>
       </div>
@@ -116,7 +116,7 @@ try {
    <div class="flex flex-col md:flex-row flex-wrap justify-center items-center mt-3 gap-8 max-w-7xl mx-auto">
 
     {kursevi_2.map((kurs, i) => (
-      <div class="kurs-card relative md:max-w-[300px] h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group" style={`--card-i:${i + 4}`}>
+      <div class="kurs-card relative md:max-w-[300px] h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group rounded-2xl" style={`--card-i:${i + 4}`}>
 
         <!-- Image -->
         <div
@@ -132,19 +132,19 @@ try {
 
         <!-- Top -->
         <!-- Gornji tekst -->
-    <div class="space-y-10">
-      <h2 class="text-xl font-extrabold leading-snug">
+    <div class="space-y-4">
+      <h2 class="text-xl font-extrabold leading-snug h-16 flex items-start">
         {kurs.naziv}
       </h2>
-        <p class="text-base font-bold space-y-3">
+        <p class="text-base font-bold h-12 flex items-start">
         {kurs.glavniKurs}
       </p>
 
-      <p class="text-sm opacity-90 space-y-2 font-bold">
+      <p class="text-sm opacity-90 font-bold h-16 flex items-start">
         {kurs.komentarGore}
       </p>
 
-        <p class="text-base space-y-10 font-bold">
+        <p class="text-base font-bold h-20 flex items-start">
         {kurs.komentarSredina}
       </p>
 
@@ -159,7 +159,7 @@ try {
       </p>
 
       <div class="flex w-full justify-end" > 
-        <a href={`/kurs/${kurs.kursId}`} class="bg-red-900 hover:bg-red-800 px-4 py-2 text-sm  font-semibold">
+        <a href={`/kurs/${kurs.kursId}`} class="bg-red-900 hover:bg-red-800 px-4 py-2 text-sm  font-semibold rounded-lg">
         Detaljnije
       </a>
       </div>
@@ -177,17 +177,6 @@ try {
 
     <!-- LEVA STRANA -->
     <div class="space-y-8">
-
-      <div class="faq-item" style="--faq-i:0">
-        <h3 class="font-bold text-lg mb-3">
-          Koja oprema i programi su mi potrebni?
-        </h3>
-        <p class="text-gray-300 leading-relaxed">
-          Za praćenje kursa potreban je računar sa minimum Intel i7 / Ryzen 7 procesorom i 16GB RAM memorije (preporučeno 32GB za brži rad).
-          Radi se u programima 3ds Max i Corona Renderer.
-        </p>
-      </div>
-
       <div class="faq-item" style="--faq-i:1">
         <h3 class="font-bold text-lg mb-3">
           Da li je kurs za početnike?
@@ -205,12 +194,13 @@ try {
         <p class="text-gray-300 leading-relaxed">
           Kurs je online i sastoji se od snimljenih lekcija koje možeš gledati svojim tempom.
           Uz video lekcije dobijaš i dodatne materijale, fajlove za vežbu i konkretne projekte.
+          Možete se odlučiti i za kurs uživo sa predavačem.
         </p>
       </div>
 
       <div class="faq-item" style="--faq-i:3">
         <h3 class="font-bold text-lg mb-3">
-          Da li imam vremensko ograničenje za završetak kursa?
+          Da li imam vremensko ograničenje kod snimljenih lekcija za završetak kursa?
         </h3>
         <p class="text-gray-300 leading-relaxed">
           Ne. Kurs prolaziš svojim tempom, bez pritiska i rokova.

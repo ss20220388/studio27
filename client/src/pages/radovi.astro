@@ -45,7 +45,7 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
                   <img
                     src={`${API_URL}/api/uploaded-images${rad.url}`}
                     alt="rad"
-                    class="h-[20vh] w-[20vh] object-cover opacity-20 hover:opacity-40 transition-opacity"
+                    class="h-[20vh] w-[20vh] object-cover opacity-40 hover:opacity-70 transition-opacity"
                     loading="lazy"
                   />
                 </div>
@@ -56,7 +56,7 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
                   <img 
                     src={`${API_URL}/api/uploaded-images${rad.url}`}
                     alt="rad"
-                    class="h-[20vh] w-[20vh] object-cover opacity-20 hover:opacity-40 transition-opacity"
+                    class="h-[20vh] w-[20vh] object-cover opacity-40 hover:opacity-70 transition-opacity"
                     loading="lazy"
                   />
                 </div>
@@ -139,15 +139,32 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap');
 
-  /* Gallery items animation - PREMIUM */
+  /* Masonry items animation */
+  .rad-item-animate {
+    opacity: 0;
+    animation: itemFadeIn 0.6s ease-out forwards;
+  }
+
+  @keyframes itemFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Gallery items animation */
   .rad-item-gallery {
     opacity: 0;
     animation: galleryFadeIn 0.6s ease-out forwards;
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
-    background: linear-gradient(135deg, rgba(255,0,0,0.05) 0%, rgba(255,0,0,0.02) 100%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
   }
 
   /* Glow effect na hover */
@@ -161,7 +178,7 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 0, 0, 0.4),
+      rgba(255, 255, 255, 0.4),
       transparent
     );
     transition: left 0.5s ease-in-out;
@@ -184,8 +201,8 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
     background: conic-gradient(
       from 0deg,
       transparent 0deg,
-      rgba(255, 0, 0, 0.5) 90deg,
-      rgba(255, 0, 0, 0.2) 180deg,
+      rgba(255, 255, 255, 0.5) 90deg,
+      rgba(255, 255, 255, 0.2) 180deg,
       transparent 270deg
     );
     opacity: 0;
@@ -209,21 +226,21 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
   /* Image hover effect */
   .rad-item-gallery:hover img {
     animation: imagePulse 0.6s ease-in-out;
-    filter: brightness(1.1) drop-shadow(0 0 20px rgba(255, 0, 0, 0.6));
+    filter: brightness(1.1) drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
   }
 
   @keyframes imagePulse {
     0% {
       transform: scale(1);
-      filter: brightness(1) drop-shadow(0 0 0px rgba(255, 0, 0, 0));
+      filter: brightness(1) drop-shadow(0 0 0px rgba(255, 255, 255, 0));
     }
     50% {
       transform: scale(1.03);
-      filter: brightness(1.2) drop-shadow(0 0 15px rgba(255, 0, 0, 0.8));
+      filter: brightness(1.2) drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
     }
     100% {
       transform: scale(1.05);
-      filter: brightness(1.1) drop-shadow(0 0 20px rgba(255, 0, 0, 0.6));
+      filter: brightness(1.1) drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
     }
   }
 

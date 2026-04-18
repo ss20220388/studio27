@@ -60,7 +60,7 @@ const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUr
         return (
             <button
                 onClick={() => window.dispatchEvent(new CustomEvent('open-login'))}
-                className="inline-block no-underline hover:text-gray-400"
+                className="inline-block no-underline hover:text-gray-400 cursor-pointer"
                 aria-label="Uloguj se"
             >
                 <svg className="fill-current  hover:text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -81,7 +81,7 @@ const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUr
         <div className="relative">
             <button
                 onClick={() => setOpen(!open)}
-                className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors"
+                className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors cursor-pointer"
             >
                 <span className="text-sm font-medium truncate max-w-[150px]">{displayName}</span>
                 <svg width="12" height="12" className={`h-3 w-3 fill-current transition-transform ${open ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048">
