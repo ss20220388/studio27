@@ -8,22 +8,47 @@ import RecenzijeSection from "../components/RecenzijeSection.astro";
 import VelikeSlikeSection from "../components/VelikeSlikeSection.astro";
 
 import Hero from "../components/Hero.astro";
-
 ---
 
-<Layout 
-	title="Studio 27 | Naučite Arhitektonsku Vizualizaciju"
-	description="Dobrodošli u Studio 27 akademiju! Nudimo kurseve iz arhitektonske vizualizacije koji će podići vaše 3D veštine na viši nivo."
+<Layout
+	title="3ds Max Kurs Srbija | Online kurs arhitektonske vizualizacije | Studio 27"
+	description="Nauči 3ds Max, Corona Render i Photoshop kroz praktičan online kurs arhitektonske vizualizacije u Srbiji."
+	canonicalURL="https://studio27.rs/3ds-max-kurs"
+	breadcrumbs={[
+		{ name: "Kursevi", url: "https://studio27.rs/kursevi" },
+		{ name: "3ds Max kurs", url: "https://studio27.rs/3ds-max-kurs" },
+	]}
+	course={{
+		name: "3ds Max kurs",
+		description:
+			"Online kurs 3ds Max, Corona Render i arhitektonske vizualizacije za početnike i napredne.",
+		url: "https://studio27.rs/3ds-max-kurs",
+	}}
+	faq={[
+		{
+			question: "Da li je kurs namenjen početnicima?",
+			answer: "Da, kurs je prilagođen početnicima i objašnjen korak po korak.",
+		},
+		{
+			question: "Da li se kurs prati online?",
+			answer: "Da, kurs možete pratiti online svojim tempom.",
+		},
+		{
+			question: "Šta ću naučiti na kursu?",
+			answer: "Naučićete 3ds Max, Corona Render, osnove arhitektonske vizualizacije i obradu finalnih rendera.",
+		},
+	]}
 >
-	<h1 class="hidden">Dobrodošli u Studio 27 - Kursevi Arhitektonske Vizualizacije</h1>
-	<Hero/>
+	<h1 class="hidden">
+		Dobrodošli u Studio 27 - Kursevi Arhitektonske Vizualizacije
+	</h1>
+	<Hero />
 	<KurseviSection />
 	<TreningSection />
 	<SectionLearningCurve />
 
 	<VelikeSlikeSection />
 	<RecenzijeSection />
-	
+
 	<ONamaSection />
-	
 </Layout>
