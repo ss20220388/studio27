@@ -21,7 +21,7 @@ public class KursController {
 
     public ResponseEntity<Map<String, Object>> getAllKursevi() {
         try {
-            String SQL = "Select * from kurs";
+            String SQL = "Select * from kurs ORDER BY redosled ASC";
             List<Map<String, Object>> result = jdbcTemplate.queryForList(SQL);
             Map<String, Object> response = Map.of("kursevi", result);
             return ResponseEntity.ok(response);
@@ -40,6 +40,7 @@ public class KursController {
                         FROM kurs k
                         JOIN pohadja p ON k.kursId = p.kursId
                         WHERE p.studentId = ?
+                        ORDER BY k.redosled ASC
                     """;
 
             Map<String, Object> result = jdbcTemplate.queryForMap(SQL, studentId);
@@ -117,7 +118,7 @@ public class KursController {
                               )
                         )
                         GROUP BY k.kursId, k.naziv, k.slikaUrl
-                        ORDER BY k.kursId
+                        ORDER BY k.redosled 
                     """;
 
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL, studentId, studentId, studentId);
@@ -168,7 +169,10 @@ public class KursController {
                             FROM lekcija l
                             WHERE l.kursId = k.kursId
                           );
+                          
                           and p.status = 'P'
+                          
+                          
                     """;
 
             Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
@@ -207,6 +211,7 @@ public class KursController {
                     FROM kurs k
                     LEFT JOIN lekcija l USING(kursId)
                      WHERE k.kursId = ?
+                     
                     """;
             System.out.println("Executing SQL: " + SQL + " with id: " + id);
 
@@ -271,7 +276,7 @@ public class KursController {
                     l.opis AS opisLekcije
                 FROM kurs k
                 LEFT JOIN lekcija l USING(kursId)
-                ORDER BY k.kursId, l.lekcijaId
+                ORDER BY k.redosled, l.lekcijaId
                 """;
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
         int currentKursId = -1;
@@ -366,6 +371,7 @@ public class KursController {
                     Select kurs.naziv,
                     (Select count(*) from  platio p where p.kursId = kurs.kursId  and p.datumPlacanja like DATE_FORMAT(CURDATE(), '%Y-%m%') and p.status = 'P' ) as "prodato"
                     from kurs
+                    ORDER BY kurs.redosled
                     """;
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
             Map<String, Object> response = new HashMap<>();
