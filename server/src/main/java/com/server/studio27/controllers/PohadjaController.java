@@ -32,7 +32,8 @@ public class PohadjaController {
                      " from kurs\r\n" + //
                      " left join pohadja using(kursId)\r\n" + //
                      " left join student using(studentId)\r\n" + //
-                     " where studentId = ?";
+                     " where studentId = ?\r\n" + //
+                     " ORDER BY kurs.redosled ASC";
                List<Map<String, Object>> result = jdbcTemplate.queryForList(SQL, userId);
                Map<String, Object> response = new HashMap<>();
                response.put("kursevi", result);
@@ -40,7 +41,7 @@ public class PohadjaController {
             }
             case "ADMIN" -> {
                System.out.println("Admin access - fetching all courses");
-               String SQL = "Select * from kurs";
+               String SQL = "Select * from kurs ORDER BY redosled ASC";
                List<Map<String, Object>> result = jdbcTemplate.queryForList(SQL);
                Map<String, Object> response = new HashMap<>();
                response.put("kursevi", result);
