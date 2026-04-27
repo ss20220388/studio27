@@ -79,14 +79,11 @@ const recenzijePrikaz = recenzije.slice(0, 6);
     {radoviPrikaz.length === 0 ? (
       <p class="text-center text-gray-500 text-lg">Nema dostupnih radova</p>
     ) : (
-      <div class="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-0">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-0">
         {radoviPrikaz.map((rad, idx) => {
-          // Raznovrsne veličine za masonry efekat - veće slike
-          const heights = ['h-[28rem]', 'h-96', 'h-[26rem]', 'h-[30rem]', 'h-80', 'h-72'];
-          const height = heights[idx % heights.length];
           return (
           <a href="/radovi"
-            class="group cursor-pointer overflow-hidden m-0 p-0 rad-item-animate block relative"
+            class="group cursor-pointer overflow-hidden m-0 p-0 rad-item-animate block relative aspect-square w-full"
             style={`animation-delay: ${idx * 0.1}s`}
           >
             <!-- Overlay glow on hover -->
@@ -94,7 +91,7 @@ const recenzijePrikaz = recenzije.slice(0, 6);
             
             <img 
               src={`${API_URL}/api/uploaded-images${rad.url}`} 
-              class={`w-full ${height} object-cover group-hover:scale-110 transition-transform duration-500 block`}
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 block"
               loading="lazy"
               alt="Slika rada"
             />
