@@ -17,7 +17,7 @@ export default defineConfig({
       ],
       proxy: {
         '/api': {
-          target: 'http://localhost:8080',
+          target: 'http://api.27archviz.com',
           changeOrigin: true,
           secure: false
         }
