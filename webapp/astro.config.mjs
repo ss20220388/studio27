@@ -16,12 +16,12 @@ export default defineConfig({
          'app.studio27.rs','app.dev.27archviz.com',"app.27archviz.com","https://app.27archviz.com","http://app.27archviz.com"
       ],
       proxy: {
-        '/api': {
-          target: 'http://localhost:8080',
-          changeOrigin: true,
-          secure: false
-        }
-      }
+                '/api': {
+                    target: 'https://api.27archviz.com',
+                    changeOrigin: true,
+                    secure: false
+                }
+            }
     }
   }
 });

@@ -13,7 +13,7 @@ export default defineConfig({
             allowedHosts: ['27archviz.com',"api.27archviz.com","admin.27archviz.com"],
             proxy: {
                 '/api': {
-                    target: 'https://api.dev.27archviz.com',
+                    target: 'https://api.27archviz.com',
                     changeOrigin: true,
                     secure: false
                 }
