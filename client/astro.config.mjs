@@ -10,7 +10,7 @@ export default defineConfig({
     vite: {
         plugins: [tailwindcss()],
         server: {
-            allowedHosts: ['studio27.rs','27archviz.com',"api.27archviz.com","admin.27archviz.com"],
+            allowedHosts: ['27archviz.com',"api.27archviz.com","admin.27archviz.com"],
             proxy: {
                 '/api': {
                     target: 'https://api.dev.27archviz.com',
