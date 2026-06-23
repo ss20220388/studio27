@@ -23,7 +23,10 @@ public class CorsConfig implements WebMvcConfigurer {
                         "http://admin.dev.27archviz.com",
                         "https://dev.27archviz.com",
                         "https://app.dev.27archviz.com",
-                        "https://admin.dev.27archviz.com"
+                        "https://admin.dev.27archviz.com",
+                        "https://27archviz.com",
+                        "https://app.27archviz.com",
+                        "https://admin.27archviz.com"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
