@@ -21,16 +21,22 @@ let userData: any = {};
 
 try {
 	const res = await fetch(`${API_URL}/api/kursevi`);
+  console.log("Fetching kursevi from:", `${API_URL}/api/kursevi`);
 	if (!res.ok) throw new Error(`Kursevi fetch failed: ${res.status}`);
 	const data: ResponseData = await res.json();
+
+  console.log("Received data:", data);
 	
 	kursevi_1 = data?.kursevi?.slice(0, 4) || [];
 	kursevi_2 = data?.kursevi?.slice(4, 6) || [];
+
+  console.log("Kursevi učitani:", kursevi_1, kursevi_2);
 } catch (error) {
 	console.error("Greška pri učitavanju kurseva:", error);
 	kursevi_1 = [];
 	kursevi_2 = [];
 }
+
 
 try {
 	const token = Astro.cookies.get("refreshToken")?.value || null;
