@@ -15,7 +15,7 @@ export const SharedModal = ({ open, onClose, title, children, wide = false }: {
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-800">
           <h3 className="text-base font-semibold text-white">{title}</h3>
-          <button onClick={onClose} className="w-7 h-7 rounded-md flex items-center justify-center text-neutral-500 hover:bg-neutral-800 hover:text-white transition-colors">×</button>
+          <button onClick={onClose} className="w-7 cursor-pointer h-7 rounded-md flex items-center justify-center text-neutral-500 hover:bg-neutral-800 hover:text-white transition-colors">×</button>
         </div>
         <div className="p-5 max-h-[70vh] overflow-y-auto">{children}</div>
       </div>

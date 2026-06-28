@@ -80,7 +80,6 @@ public class SecurityConfig {
                                                 .requestMatchers("/oauth2/**").permitAll()
                                                 .requestMatchers("/login/oauth2/**").permitAll()
                                                 .requestMatchers("/api/auth/**").authenticated()
-                                                .requestMatchers("/api/kursevi/**").permitAll()
                                                 .requestMatchers("/api/kursevi-sa-lekcijama").permitAll()
                                                 .requestMatchers("/api/media/**").permitAll()
                                                 .requestMatchers("/api/recenzije").permitAll()
@@ -103,7 +102,6 @@ public class SecurityConfig {
                                                                                 .getPrincipal();
                                                                 String email = oauthUser.getAttribute("email");
 
-                                                                // Čitaj deviceId iz cookie-ja
                                                                 String deviceId = null;
                                                                 jakarta.servlet.http.Cookie[] cookies = request
                                                                                 .getCookies();
@@ -119,7 +117,6 @@ public class SecurityConfig {
                                                                 System.out.println(
                                                                                 "Device ID from cookie: " + deviceId);
 
-                                                                // Ako nema deviceId - odbij
                                                                 if (deviceId == null || deviceId.isEmpty()) {
                                                                         ResponseCookie errorCookie = ResponseCookie
                                                                                         .from("losGmail",

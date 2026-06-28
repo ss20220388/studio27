@@ -4,15 +4,46 @@ import Hls from "hls.js";
 const VideoPlayerHLS = ({ videoId, fileName = "index.m3u8", accessToken ,API_URL}) => {
   const videoRef = useRef();
 
+  const resolveSource = (value) => {
+    if (!value) return "";
+
+    const trimmedValue = String(value).trim();
+    if (!trimmedValue) return "";
+
+    if (/^https?:\/\//i.test(trimmedValue) || trimmedValue.startsWith("/")) {
+      if (trimmedValue.includes("/api/hls/") || trimmedValue.includes("/hls/")) {
+        if (trimmedValue.endsWith(".m3u8")) {
+          return trimmedValue;
+        }
+
+        const apiMatch = trimmedValue.match(/\/api\/hls\/([^/?#]+)/i);
+        if (apiMatch && apiMatch[1]) {
+          return `${API_URL}/api/hls/${apiMatch[1]}/${fileName}`;
+        }
+
+        const hlsMatch = trimmedValue.match(/\/hls\/([^/?#]+)/i);
+        if (hlsMatch && hlsMatch[1]) {
+          return `${API_URL}/api/hls/${hlsMatch[1]}/${fileName}`;
+        }
+      }
+
+      return trimmedValue;
+    }
+
+    return `${API_URL}/api/hls/${trimmedValue}/${fileName}`;
+  };
+
   useEffect(() => {
     if (!videoRef.current) return;
 
-    const src = `${API_URL}/api/hls/${videoId}/${fileName}`;
+    const src = resolveSource(videoId);
 
     if (Hls.isSupported()) {
       const hls = new Hls({
         xhrSetup: function (xhr, url) {
-          xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+          if (accessToken) {
+            xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+          }
         },
       });
 

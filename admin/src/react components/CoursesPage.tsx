@@ -52,8 +52,6 @@ export default function CoursesPage({accesToken}: {accesToken: string | null}) {
   const [showAddVideo, setShowAddVideo] = useState<number | null>(null);
   const [previewVideo, setPreviewVideo] = useState<{ url: string } | null>(null);
   const [addLekcijaForm, setAddLekcijaForm] = useState({ naziv: "", opis: "" });
-
-  // Stanja za Modale kursa (Dodavanje, Izmena, Brisanje)
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [showEditCourse, setShowEditCourse] = useState(false);
   const [showDeleteCourse, setShowDeleteCourse] = useState(false);
