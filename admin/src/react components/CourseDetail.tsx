@@ -50,116 +50,53 @@ export default function CourseDetail({
 }: any) {
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [videoInputMode, setVideoInputMode] = useState<"upload" | "url">("upload");
-  const [videoUrlInput, setVideoUrlInput] = useState("");
-
-  const closeVideoModal = () => {
-    setShowAddVideo(null);
-    setVideoFile(null);
-    setVideoUrlInput("");
-    setVideoInputMode("upload");
-  };
-
-  const getVideoFolderPath = (videoReference?: string) => {
-    if (!videoReference) return "";
-
-    const trimmedReference = videoReference.trim();
-    if (!trimmedReference) return "";
-
-    const apiMatch = trimmedReference.match(/\/api\/hls\/([^/?#]+)/i);
-    if (apiMatch?.[1]) return apiMatch[1];
-
-    const hlsMatch = trimmedReference.match(/\/hls\/([^/?#]+)/i);
-    if (hlsMatch?.[1]) return hlsMatch[1];
-
-    return trimmedReference;
-  };
+  const [mode, setModeAddVideo] = useState<'upload' | 'url'>('upload');
 
   const handleVideoUpload = async () => {
-    if (showAddVideo === null) return;
-
-    if (videoInputMode === "upload" && !videoFile) return;
-    if (videoInputMode === "url" && !videoUrlInput.trim()) return;
+    if (!videoFile || showAddVideo === null) return;
     
     setUploadingVideo(true);
     try {
-      if (videoInputMode === "upload") {
-        // Upload video na Hetzner i dodavanje u bazu
-        const formData = new FormData();
-        formData.append("file", videoFile as File);
-        formData.append("lekcijaId", showAddVideo.toString());
-        
-        const uploadHeaders: any = {};
-        if (accesToken) uploadHeaders["Authorization"] = `Bearer ${accesToken}`;
-        
-        const uploadRes = await fetch(`${API_URL}/api/upload-hls-hetzner`, {
-          method: "POST",
-          headers: uploadHeaders,
-          body: formData
-        });
-        
-        if (!uploadRes.ok) throw new Error("Greška pri uploadu videa ili dodavanju u bazu");
-        
-        const uploadData = await uploadRes.json();
-        const uploadedVideoId = uploadData.videoId;
-        if (!uploadedVideoId) throw new Error("Upload je uspeo, ali nije vraćen ID videa");
-        console.log("Video uspešno uploadovan i sacuvan u bazi, ID:", uploadedVideoId);
+      // 1. Upload video na Hetzner i dodavanje u bazu
+      const formData = new FormData();
+      formData.append("file", videoFile);
+      formData.append("lekcijaId", showAddVideo.toString());
+      
+      const uploadHeaders: any = {};
+      if (accesToken) uploadHeaders["Authorization"] = `Bearer ${accesToken}`;
+      
+      const uploadRes = await fetch(`${API_URL}/api/upload-hls-hetzner`, {
+        method: "POST",
+        headers: uploadHeaders,
+        body: formData
+      });
+      
+      if (!uploadRes.ok) throw new Error("Greška pri uploadu videa ili dodavanju u bazu");
+      
+      const uploadData = await uploadRes.json();
+      const videoId = uploadData.videoId; // Ovo je vraćen folder name / ID na hetzneru
+      console.log("Video uspešno uploadovan i sacuvan u bazi, ID:", videoId);
 
-        const updatedKurs = {
-          ...selectedKurs,
-          lekcije: selectedKurs.lekcije.map((l: any) => {
-            if (l.lekcijaId === showAddVideo) {
-              return {
-                ...l,
-                videoUrls: [...(l.videoUrls || []), uploadedVideoId]
-              };
-            }
-            return l;
-          })
-        };
-
-        setSelectedKurs(updatedKurs);
-      } else {
-        const videoReference = videoUrlInput.trim();
-        const addVideoHeaders: any = {
-          "Content-Type": "application/json"
-        };
-        if (accesToken) addVideoHeaders["Authorization"] = `Bearer ${accesToken}`;
-
-        const addVideoResponse = await fetch(`${API_URL}/api/dodaj-video-u-bazu`, {
-          method: "POST",
-          headers: addVideoHeaders,
-          body: JSON.stringify({
-            lekcijaId: showAddVideo,
-            url: videoReference
-          })
-        });
-
-        if (!addVideoResponse.ok) {
-          throw new Error("Greška pri dodavanju URL videa u bazu");
-        }
-
-        const updatedKurs = {
-          ...selectedKurs,
-          lekcije: selectedKurs.lekcije.map((l: any) => {
-            if (l.lekcijaId === showAddVideo) {
-              return {
-                ...l,
-                videoUrls: [...(l.videoUrls || []), videoReference]
-              };
-            }
-            return l;
-          })
-        };
-
-        setSelectedKurs(updatedKurs);
-      }
-
-      closeVideoModal();
+      // 2. Osvežavanje UI-ja (dodaj video selektovanoj lekciji)
+      const updatedKurs = {
+        ...selectedKurs,
+        lekcije: selectedKurs.lekcije.map((l: any) => {
+          if (l.lekcijaId === showAddVideo) {
+            return {
+              ...l,
+              videoUrls: [...(l.videoUrls || []), videoId]
+            };
+          }
+          return l;
+        })
+      };
+      setSelectedKurs(updatedKurs);
+      setShowAddVideo(null);
+      setVideoFile(null);
 
     } catch (e) {
       console.error(e);
-      alert("Došlo je do greške prilikom dodavanja videa.");
+      alert("Došlo je do greške prilikom uploada videa.");
     } finally {
       setUploadingVideo(false);
     }
@@ -207,8 +144,7 @@ export default function CourseDetail({
         
         // 2. Obrisi sa hetznera posto brisemo i iz baze!
         if(deleteConfirmation.url) {
-          const folderPath = getVideoFolderPath(deleteConfirmation.url);
-          await fetch(`${API_URL}/api/delete-folder?remoteFolderPath=${encodeURIComponent(folderPath)}`, {
+           await fetch(`${API_URL}/api/delete-folder?remoteFolderPath=${deleteConfirmation.url}`, {
             method: 'DELETE',
             headers: {
               ...(accesToken ? { 'Authorization': `Bearer ${accesToken}` } : {})
@@ -498,97 +434,46 @@ export default function CourseDetail({
         </div>
       </SharedModal>
 
-      <SharedModal open={showAddVideo !== null} onClose={closeVideoModal} title="Dodaj video">
+      <SharedModal open={showAddVideo !== null} onClose={() => setShowAddVideo(null)} title="Dodaj video">
         <div className="space-y-4">
           <div>
-            <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Način dodavanja</label>
-            <div className="relative  grid grid-cols-2 rounded-lg border border-neutral-800 bg-neutral-950 p-1">
-              <span
-                className={`absolute  inset-y-1 w-1/2 rounded-md bg-red-900/80 transition-transform duration-200 ${videoInputMode === "upload" ? "translate-x-0" : "translate-x-full"}`}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setVideoInputMode("upload");
-                  setVideoUrlInput("");
-                }}
-                className={`relative cursor-pointer z-10 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${videoInputMode === "upload" ? "text-white" : "text-neutral-500"}`}
-              >
-                Upload fajl
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setVideoInputMode("url");
-                  setVideoFile(null);
-                }}
-                className={`relative cursor-pointer z-10 rounded-md px-3 py-2 text-xs font-semibold transition-colors ${videoInputMode === "url" ? "text-white" : "text-neutral-500"}`}
-              >
-                URL sa servera
-              </button>
-            </div>
-          </div>
-
-          {videoInputMode === "upload" ? (
-            <div>
-              <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Video fajl</label>
-              <div className="relative border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center hover:border-neutral-600 transition-colors cursor-pointer">
-                <input
-                  type="file"
-                  accept="video/mp4,video/quicktime"
-                  onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  disabled={uploadingVideo}
-                />
-                <svg viewBox="0 0 20 20" fill="currentColor" className={`w-8 h-8 mx-auto mb-2 ${videoFile ? 'text-green-500' : 'text-neutral-600'}`}>
-                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                </svg>
-                {videoFile ? (
-                  <>
-                    <p className="text-xs text-white font-medium truncate max-w-50 mx-auto">{videoFile.name}</p>
-                    <p className="text-[10px] text-green-500 mt-1">Spremno za slanje ({(videoFile.size / (1024 * 1024)).toFixed(2)} MB)</p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-xs text-neutral-500">Kliknite ili prevucite video fajl ovde</p>
-                    <p className="text-[10px] text-neutral-600 mt-1">MP4, MOV do 2GB</p>
-                  </>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div>
-              <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">URL videa sa servera</label>
+            <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Video fajl</label>
+            <div className="relative border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center hover:border-neutral-600 transition-colors cursor-pointer">
               <input
-                value={videoUrlInput}
-                onChange={(e) => setVideoUrlInput(e.target.value)}
-                placeholder="Npr. abc123 ili /api/hls/abc123/index.m3u8"
-                className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+                type="file"
+                accept="video/mp4,video/quicktime"
+                onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                disabled={uploadingVideo}
               />
-              <p className="text-[10px] text-neutral-500 mt-1.5">
-                Ako je video već dodat na server, nalepite njegov HLS URL ili folder ID.
-              </p>
+              <svg viewBox="0 0 20 20" fill="currentColor" className={`w-8 h-8 mx-auto mb-2 ${videoFile ? 'text-green-500' : 'text-neutral-600'}`}>
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+              {videoFile ? (
+                <>
+                  <p className="text-xs text-white font-medium truncate max-w-[200px] mx-auto">{videoFile.name}</p>
+                  <p className="text-[10px] text-green-500 mt-1">Spremno za slanje ({(videoFile.size / (1024 * 1024)).toFixed(2)} MB)</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-neutral-500">Kliknite ili prevucite video fajl ovde</p>
+                  <p className="text-[10px] text-neutral-600 mt-1">MP4, MOV do 2GB</p>
+                </>
+              )}
             </div>
-          )}
-
-          <div className="rounded-lg border border-neutral-800 bg-neutral-950/70 px-3 py-2 text-[11px] text-neutral-500">
-            {videoInputMode === "upload"
-              ? "Ova opcija uploaduje novi video i upisuje njegov server ID u lekciju."
-              : "Ova opcija samo upisuje postojeći server URL u lekciju, bez novog uploada."}
           </div>
-
           <div className="flex justify-end gap-2 pt-2">
-            <button disabled={uploadingVideo} onClick={closeVideoModal} className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors disabled:opacity-50">Otkaži</button>
-            <button onClick={handleVideoUpload} disabled={uploadingVideo || (videoInputMode === "upload" ? !videoFile : !videoUrlInput.trim())} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button disabled={uploadingVideo} onClick={() => { setShowAddVideo(null); setVideoFile(null); }} className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors disabled:opacity-50">Otkaži</button>
+            <button onClick={handleVideoUpload} disabled={!videoFile || uploadingVideo} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed">
               {uploadingVideo ? (
                 <>
                   <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Sačuvavanje...
+                  Uploading...
                 </>
-              ) : videoInputMode === "upload" ? 'Upload' : 'Sačuvaj URL'}
+              ) : 'Upload'}
             </button>
           </div>
         </div>
