@@ -12,6 +12,7 @@ interface Kurs {
     id: number;
     naziv: string;
     opis: string;
+    sadrzaj: string | null;
     cena: number;
     slikaUrl: string;
     lekcije: Lekcija[];

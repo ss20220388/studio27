@@ -31,12 +31,14 @@ export default function CourseModals({
   accesToken
 }: CourseModalsProps) {
 
+  const textAreaClass = "w-full px-3 py-2 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600 resize-y min-h-10";
+
   // Add Form State
-  const [addForm, setAddForm] = useState({ naziv: "", opis: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
+  const [addForm, setAddForm] = useState({ naziv: "", opis: "", sadrzaj: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
   const [addFile, setAddFile] = useState<File | null>(null);
   
   // Edit Form State
-  const [editForm, setEditForm] = useState({ naziv: "", opis: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
+  const [editForm, setEditForm] = useState({ naziv: "", opis: "", sadrzaj: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
   const [editFile, setEditFile] = useState<File | null>(null);
 
   useEffect(() => {
@@ -44,6 +46,7 @@ export default function CourseModals({
       setEditForm({
         naziv: selectedKurs.naziv || "",
         opis: selectedKurs.opis || "",
+        sadrzaj: selectedKurs.sadrzaj || "",
         cena: selectedKurs.cena?.toString() || "",
         trajanje: selectedKurs.trajanje?.toString() || "",
         glavniKurs: selectedKurs.glavniKurs || "",
@@ -83,6 +86,7 @@ export default function CourseModals({
         body: JSON.stringify({
           naziv: addForm.naziv,
           opis: addForm.opis,
+          sadrzaj: addForm.sadrzaj,
           cena: parseFloat(addForm.cena) || 0,
           trajanje: parseInt(addForm.trajanje) || 0,
           slikaUrl: finalSlikaUrl,
@@ -94,7 +98,7 @@ export default function CourseModals({
       });
       if (response.ok) {
         setShowAddModal(false);
-        setAddForm({ naziv: "", opis: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
+        setAddForm({ naziv: "", opis: "", sadrzaj: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
         setAddFile(null);
         if (onRefresh) onRefresh();
       } else {
@@ -135,6 +139,7 @@ export default function CourseModals({
         body: JSON.stringify({
           naziv: editForm.naziv,
           opis: editForm.opis,
+          sadrzaj: editForm.sadrzaj,
           cena: parseFloat(editForm.cena) || 0,
           trajanje: parseInt(editForm.trajanje) || 0,
           slikaUrl: finalSlikaUrl,
@@ -153,6 +158,7 @@ export default function CourseModals({
             ...selectedKurs,
             naziv: editForm.naziv,
             opis: editForm.opis,
+            sadrzaj: editForm.sadrzaj,
             cena: parseFloat(editForm.cena) || 0,
             trajanje: parseInt(editForm.trajanje) || 0,
             slikaUrl: finalSlikaUrl,
@@ -198,11 +204,12 @@ export default function CourseModals({
         <div className="space-y-4">
           <div>
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Naziv kursa</label>
-            <input
+            <textarea
               value={addForm.naziv}
               onChange={(e) => setAddForm({...addForm, naziv: e.target.value})}
               placeholder="Npr. React napredni kurs"
-              className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+              rows={2}
+              className={textAreaClass}
             />
           </div>
           <div>
@@ -211,8 +218,18 @@ export default function CourseModals({
               value={addForm.opis}
               onChange={(e) => setAddForm({...addForm, opis: e.target.value})}
               placeholder="Opis kursa..."
-              rows={3}
-              className="w-full px-3 py-2 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600 resize-none"
+              rows={4}
+              className={textAreaClass}
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Sadržaj kursa</label>
+            <textarea
+              value={addForm.sadrzaj}
+              onChange={(e) => setAddForm({...addForm, sadrzaj: e.target.value})}
+              placeholder="Upišite sadržaj kursa kako treba da se prikaže na stranici"
+              rows={8}
+              className={textAreaClass}
             />
           </div>
           <div className="flex gap-4">
@@ -239,39 +256,43 @@ export default function CourseModals({
           </div>
           <div>
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Glavni kurs (preporučuje se)</label>
-            <input
+            <textarea
               value={addForm.glavniKurs}
               onChange={(e) => setAddForm({...addForm, glavniKurs: e.target.value})}
               placeholder="Npr. 3Ds Max + Corona Render"
-              className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+              rows={2}
+              className={textAreaClass}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar gore</label>
-              <input
+              <textarea
                 value={addForm.komentarGore}
                 onChange={(e) => setAddForm({...addForm, komentarGore: e.target.value})}
                 placeholder="Gornji naslov/komentar"
-                className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+                rows={3}
+                className={textAreaClass}
               />
             </div>
             <div>
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar sredina</label>
-              <input
+              <textarea
                 value={addForm.komentarSredina}
                 onChange={(e) => setAddForm({...addForm, komentarSredina: e.target.value})}
                 placeholder="Srednji opis"
-                className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+                rows={3}
+                className={textAreaClass}
               />
             </div>
             <div>
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar dole</label>
-              <input
+              <textarea
                 value={addForm.komentarDole}
                 onChange={(e) => setAddForm({...addForm, komentarDole: e.target.value})}
                 placeholder="Donji opis/tagovi"
-                className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+                rows={3}
+                className={textAreaClass}
               />
             </div>
           </div>
@@ -296,10 +317,11 @@ export default function CourseModals({
           <div>
             <p className="text-xs text-neutral-400 mb-2">Trenutno se menja: <span className="text-white font-bold">{selectedKurs?.naziv}</span></p>
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Novi naziv</label>
-            <input
+            <textarea
               value={editForm.naziv}
               onChange={(e) => setEditForm({...editForm, naziv: e.target.value})}
-              className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+              rows={2}
+              className={textAreaClass}
             />
           </div>
           <div>
@@ -307,8 +329,18 @@ export default function CourseModals({
             <textarea
               value={editForm.opis}
               onChange={(e) => setEditForm({...editForm, opis: e.target.value})}
-              rows={3}
-              className="w-full px-3 py-2 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600 resize-none"
+              rows={4}
+              className={textAreaClass}
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Sadržaj kursa</label>
+            <textarea
+              value={editForm.sadrzaj}
+              onChange={(e) => setEditForm({...editForm, sadrzaj: e.target.value})}
+              rows={8}
+              className={textAreaClass}
+              placeholder="Sadržaj kursa..."
             />
           </div>
           <div className="flex gap-4">
@@ -333,35 +365,39 @@ export default function CourseModals({
           </div>
           <div>
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Glavni kurs (preporučuje se)</label>
-            <input
+            <textarea
               value={editForm.glavniKurs}
               onChange={(e) => setEditForm({...editForm, glavniKurs: e.target.value})}
-              className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+              rows={2}
+              className={textAreaClass}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar gore</label>
-              <input
+              <textarea
                 value={editForm.komentarGore}
                 onChange={(e) => setEditForm({...editForm, komentarGore: e.target.value})}
-                className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+                rows={3}
+                className={textAreaClass}
               />
             </div>
             <div>
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar sredina</label>
-              <input
+              <textarea
                 value={editForm.komentarSredina}
                 onChange={(e) => setEditForm({...editForm, komentarSredina: e.target.value})}
-                className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+                rows={3}
+                className={textAreaClass}
               />
             </div>
             <div>
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar dole</label>
-              <input
+              <textarea
                 value={editForm.komentarDole}
                 onChange={(e) => setEditForm({...editForm, komentarDole: e.target.value})}
-                className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+                rows={3}
+                className={textAreaClass}
               />
             </div>
           </div>

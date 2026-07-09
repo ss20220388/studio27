@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.server.studio27.models.Kurs;
@@ -198,6 +199,7 @@ public class KursController {
                      k.kursId,
                      k.naziv,
                     k.opis,
+                    k.sadrzaj,
                     k.cena,
                     k.glavniKurs,
                     k.komentarDole,
@@ -243,6 +245,7 @@ public class KursController {
                     ((Number) first.get("cena")).intValue(),
                     ((Number) first.get("trajanje")).intValue(),
                     (String) first.get("slikaUrl"),
+                    (String) first.get("sadrzaj"),
                     (String) first.get("glavniKurs"),
                     (String) first.get("komentarDole"),
                     (String) first.get("komentarSredina"),
@@ -264,6 +267,7 @@ public class KursController {
                     k.kursId,
                     k.naziv,
                     k.opis,
+                    k.sadrzaj,
                     k.cena,
                     k.trajanje,
                     k.slikaUrl,
@@ -296,6 +300,7 @@ public class KursController {
                             ((Number) currentKursRow.get("cena")).intValue(),
                             ((Number) currentKursRow.get("trajanje")).intValue(),
                             (String) currentKursRow.get("slikaUrl"),
+                            (String) currentKursRow.get("sadrzaj"),
                             (String) currentKursRow.get("glavniKurs"),
                             (String) currentKursRow.get("komentarDole"),
                             (String) currentKursRow.get("komentarSredina"),
@@ -355,6 +360,7 @@ public class KursController {
                     ((Number) currentKursRow.get("cena")).intValue(),
                     ((Number) currentKursRow.get("trajanje")).intValue(),
                     (String) currentKursRow.get("slikaUrl"),
+                    (String) currentKursRow.get("sadrzaj"),
                     (String) currentKursRow.get("glavniKurs"),
                     (String) currentKursRow.get("komentarDole"),
                     (String) currentKursRow.get("komentarSredina"),
@@ -388,11 +394,12 @@ public class KursController {
 
     public ResponseEntity<Map<String, Object>> dodajKurs(Map<String, Object> kursData) {
         try {
-            String SQL = "INSERT INTO kurs (naziv, opis, cena, trajanje, slikaUrl, glavniKurs, komentarDole, komentarSredina, komentarGore) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String SQL = "INSERT INTO kurs (naziv, opis, sadrzaj, cena, trajanje, slikaUrl, glavniKurs, komentarDole, komentarSredina, komentarGore) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
             jdbcTemplate.update(SQL,
                     kursData.get("naziv"),
                     kursData.get("opis"),
+                    kursData.get("sadrzaj"),
                     kursData.get("cena"),
                     kursData.get("trajanje"),
                     kursData.get("slikaUrl"),
@@ -469,11 +476,12 @@ public class KursController {
 
     public ResponseEntity<Map<String, Object>> promeniKurs(int kursId, Map<String, Object> kursData) {
         try {
-            String SQL = "UPDATE kurs SET naziv=?, opis=?, cena=?, trajanje=?, slikaUrl=?, glavniKurs=?, komentarDole=?, komentarSredina=?, komentarGore=? WHERE kursId=?";
+            String SQL = "UPDATE kurs SET naziv=?, opis=?, sadrzaj=?, cena=?, trajanje=?, slikaUrl=?, glavniKurs=?, komentarDole=?, komentarSredina=?, komentarGore=? WHERE kursId=?";
 
             int rowsAffected = jdbcTemplate.update(SQL,
                     kursData.get("naziv"),
                     kursData.get("opis"),
+                    kursData.get("sadrzaj"),
                     kursData.get("cena"),
                     kursData.get("trajanje"),
                     kursData.get("slikaUrl"),
@@ -498,15 +506,16 @@ public class KursController {
         }
     }
 
+    @Transactional
     public ResponseEntity<Map<String, Object>> brisiLekciju(int kursId, int lekcijaId) {
         try {
             // Prvo brisanje evidencije pohadjanja lekcije
             String SQLStudentLekcija = "DELETE FROM student_lekcija WHERE lekcijaId = ?";
-            jdbcTemplate.update(SQLStudentLekcija, lekcijaId);
+            int studentRows = jdbcTemplate.update(SQLStudentLekcija, lekcijaId);
 
             // Zatim brisanje svih videa koji pripadaju toj lekciji
             String deleteVideosSQL = "DELETE FROM video WHERE lekcijaId = ?";
-            jdbcTemplate.update(deleteVideosSQL, lekcijaId);
+            int videoRows = jdbcTemplate.update(deleteVideosSQL, lekcijaId);
 
             // Zatim brisanje same lekcije uz proveru kursId-a zbog sigurnosti
             String SQL = "DELETE FROM lekcija WHERE lekcijaId = ? AND kursId = ?";
@@ -515,6 +524,8 @@ public class KursController {
             Map<String, Object> response = new HashMap<>();
             if (rowsAffected > 0) {
                 response.put("message", "Lekcija i njeni videi su uspešno obrisani.");
+                response.put("deletedStudentLekcijaRows", studentRows);
+                response.put("deletedVideoRows", videoRows);
                 return ResponseEntity.ok(response);
             } else {
                 response.put("error", "Lekcija nije pronađena ili ne pripada navedenom kursu.");

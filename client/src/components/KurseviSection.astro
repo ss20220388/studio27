@@ -55,14 +55,14 @@ try {
 
 <section id="kursevi" class="bg-black py-28 px-6 sm:px-10 md:px-16">
 
-  <h2 class="anim-fade-up text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white text-center font-extrabold leading-tight mb-16">
+  <h2 class="anim-fade-up text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white text-center font-extrabold leading-tight mb-16">
     NAŠI KURSEVI
   </h2>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
 
     {kursevi_1.map((kurs, i) => (
-      <div class="kurs-card relative h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group rounded-2xl" style={`--card-i:${i}`}>
+      <div class="kurs-card relative h-105 sm:h-112.5 md:h-125 overflow-hidden shadow-xl group rounded-2xl" style={`--card-i:${i}`}>
 
         <!-- Image -->
         <div
@@ -79,18 +79,18 @@ try {
            <!-- Top -->
         <!-- Gornji tekst -->
     <div class="space-y-4">
-      <h2 class="text-xl font-extrabold leading-snug h-16 flex items-start">
+      <h2 class="text-lg font-extrabold leading-snug h-16 flex items-start">
         {kurs.naziv}
       </h2>
-        <p class="text-base font-bold h-12 flex items-start">
+        <p class="text-sm font-bold h-12 flex items-start">
         {kurs.glavniKurs}
       </p>
 
-      <p class="text-sm opacity-90 font-bold h-16 flex items-start">
+      <p class="text-xs opacity-90 font-bold h-16 flex items-start">
         {kurs.komentarGore}
       </p>
 
-        <p class="text-base font-bold h-20 flex items-start">
+        <p class="text-sm font-bold h-20 flex items-start">
         {kurs.komentarSredina}
       </p>
 
@@ -100,13 +100,13 @@ try {
           <!-- Button -->
          <!-- Donji deo -->
     <div class="space-y-3">
-      <p class="text-xs font-extrabold  text-xl tracking-wide">
+      <p class="text-sm font-extrabold tracking-wide">
         {kurs.komentarDole}
       </p>
 
       <div class="flex w-full justify-end" > 
         <a href={`/kurs/${kurs.kursId}`} class="bg-red-900 hover:bg-red-800 px-4 py-2 text-sm  font-semibold rounded-lg">
-        Detaljnije
+        Saznaj više
       </a>
       </div>
     </div>
@@ -122,7 +122,7 @@ try {
    <div class="flex flex-col md:flex-row flex-wrap justify-center items-center mt-3 gap-8 max-w-7xl mx-auto">
 
     {kursevi_2.map((kurs, i) => (
-      <div class="kurs-card relative md:max-w-[300px] h-[420px] sm:h-[450px] md:h-[500px] overflow-hidden shadow-xl group rounded-2xl" style={`--card-i:${i + 4}`}>
+      <div class="kurs-card relative md:max-w-75 h-105 sm:h-112.5 md:h-125 overflow-hidden shadow-xl group rounded-2xl" style={`--card-i:${i + 4}`}>
 
         <!-- Image -->
         <div
@@ -139,18 +139,18 @@ try {
         <!-- Top -->
         <!-- Gornji tekst -->
     <div class="space-y-4">
-      <h2 class="text-xl font-extrabold leading-snug h-16 flex items-start">
+      <h2 class="text-lg font-extrabold leading-snug h-16 flex items-start">
         {kurs.naziv}
       </h2>
-        <p class="text-base font-bold h-12 flex items-start">
+        <p class="text-sm font-bold h-12 flex items-start">
         {kurs.glavniKurs}
       </p>
 
-      <p class="text-sm opacity-90 font-bold h-16 flex items-start">
+      <p class="text-xs opacity-90 font-bold h-16 flex items-start">
         {kurs.komentarGore}
       </p>
 
-        <p class="text-base font-bold h-20 flex items-start">
+        <p class="text-sm font-bold h-20 flex items-start">
         {kurs.komentarSredina}
       </p>
 
@@ -160,13 +160,13 @@ try {
           <!-- Button -->
          <!-- Donji deo -->
     <div class="space-y-3">
-      <p class="text-xs font-extrabold  text-xl tracking-wide">
+      <p class="text-sm font-extrabold tracking-wide">
         {kurs.komentarDole}
       </p>
 
       <div class="flex w-full justify-end" > 
         <a href={`/kurs/${kurs.kursId}`} class="bg-red-900 hover:bg-red-800 px-4 py-2 text-sm  font-semibold rounded-lg">
-        Detaljnije
+        Saznaj više
       </a>
       </div>
     </div>
@@ -258,8 +258,8 @@ try {
     </div>
 
   </div>
-
 </div>
+
 </section>
 
 <style>

@@ -14,6 +14,7 @@ interface Kurs {
   komentarGore: string | null;
   komentarSredina: string | null;
   komentarDole: string | null;
+  sadrzaj: string | null;
   lekcije: Lekcija[];
 }
 interface Video {

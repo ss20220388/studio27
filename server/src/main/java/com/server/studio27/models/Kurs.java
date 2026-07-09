@@ -7,6 +7,7 @@ public class Kurs {
     private int cena;
     private int trajanje;
     private String slikaUrl;
+    private String sadrzaj;
     private List<Lekcija> lekcije;
     private String glavniKurs;
     private String komentarDole;
@@ -28,6 +29,11 @@ public class Kurs {
         this.komentarDole = komentarDole;
         this.komentarSredina = komentarSredina;
         this.komentarGore = komentarGore;
+    }
+
+    public Kurs(int id, String naziv, String opis, int cena, int trajanje, String slikaUrl, String sadrzaj, String glavniKurs, String komentarDole, String komentarSredina, String komentarGore) {
+        this(id, naziv, opis, cena, trajanje, slikaUrl, glavniKurs, komentarDole, komentarSredina, komentarGore);
+        this.sadrzaj = sadrzaj;
     }
 
     public Kurs(int id, String naziv, String opis, int cena) {
@@ -56,6 +62,11 @@ public class Kurs {
         this.komentarDole = komentarDole;
         this.komentarSredina = komentarSredina;
         this.komentarGore = komentarGore;
+    }
+
+    public Kurs(int id, String naziv, String opis, int cena, int trajanje, String slikaUrl, String sadrzaj, String glavniKurs, String komentarDole, String komentarSredina, String komentarGore, List<Lekcija> lekcije) {
+        this(id, naziv, opis, cena, trajanje, slikaUrl, glavniKurs, komentarDole, komentarSredina, komentarGore, lekcije);
+        this.sadrzaj = sadrzaj;
     }
 
     public int getId() {
@@ -99,6 +110,12 @@ public class Kurs {
     }
     public void setSlikaUrl(String slikaUrl) {
         this.slikaUrl = slikaUrl;
+    }
+    public String getSadrzaj() {
+        return sadrzaj;
+    }
+    public void setSadrzaj(String sadrzaj) {
+        this.sadrzaj = sadrzaj;
     }
     public List<Lekcija> getLekcije() {
         return lekcije;
