@@ -510,7 +510,7 @@ public class KursController {
     public ResponseEntity<Map<String, Object>> brisiLekciju(int kursId, int lekcijaId) {
         try {
             // Prvo brisanje evidencije pohadjanja lekcije
-            String SQLStudentLekcija = "DELETE FROM student_lekcija WHERE lekcijaId = ?";
+            String SQLStudentLekcija = "DELETE FROM video WHERE lekcijaId = ?";
             int studentRows = jdbcTemplate.update(SQLStudentLekcija, lekcijaId);
 
             // Zatim brisanje svih videa koji pripadaju toj lekciji
