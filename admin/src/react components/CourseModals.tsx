@@ -36,7 +36,7 @@ export default function CourseModals({
   // Add Form State
   const [addForm, setAddForm] = useState({ naziv: "", opis: "", sadrzaj: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
   const [addFile, setAddFile] = useState<File | null>(null);
-  
+  const [addSporedneSlike, setAddSporedneSlike] = useState<FileList | null>(null);
   // Edit Form State
   const [editForm, setEditForm] = useState({ naziv: "", opis: "", sadrzaj: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
   const [editFile, setEditFile] = useState<File | null>(null);
@@ -407,6 +407,16 @@ export default function CourseModals({
               type="file"
               accept="image/*"
               onChange={(e) => setEditFile(e.target.files?.[0] || null)}
+              className="w-full text-sm text-neutral-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-neutral-300 hover:file:bg-neutral-700 hover:file:cursor-pointer transition-all border border-neutral-700 rounded-lg bg-neutral-900"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Sporedne slike (opciono)</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setAddSporedneSlike(e.target.files || null)}
               className="w-full text-sm text-neutral-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-neutral-300 hover:file:bg-neutral-700 hover:file:cursor-pointer transition-all border border-neutral-700 rounded-lg bg-neutral-900"
             />
           </div>
