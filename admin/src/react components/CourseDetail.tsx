@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import VideoPlayerHLS from "./VideoPlayerHLS";
 import { SharedModal } from "./SharedModal";
 
@@ -52,28 +52,51 @@ export default function CourseDetail({
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [mode, setModeAddVideo] = useState<'upload' | 'url'>('upload');
+  const [trenutneSporedneSlike, setTrenutneSporedneSlike] = useState<any[]>([]);
+  useEffect(() => {
+    async function fetchSporedneSlike() {
+      if (selectedKurs) {
+        try {
+          const response = await fetch(`${API_URL}/api/kursslika/${selectedKurs.id}`, {
+            headers: {
+              "Authorization": `Bearer ${accesToken}`
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setTrenutneSporedneSlike(data.kursSlika || []);
+          } else {
+            console.error("Greška pri dohvatanju sporednih slika");
+          }
+        } catch (error) {
+          console.error("Greška pri dohvatanju sporednih slika", error);
+        }
+      }
+    }
+    fetchSporedneSlike();
+  }, [showAddVideo]);
 
   const handleVideoUpload = async () => {
     if (!videoFile || showAddVideo === null) return;
-    
+
     setUploadingVideo(true);
     try {
       // 1. Upload video na Hetzner i dodavanje u bazu
       const formData = new FormData();
       formData.append("file", videoFile);
       formData.append("lekcijaId", showAddVideo.toString());
-      
+
       const uploadHeaders: any = {};
       if (accesToken) uploadHeaders["Authorization"] = `Bearer ${accesToken}`;
-      
+
       const uploadRes = await fetch(`${API_URL}/api/upload-hls-hetzner`, {
         method: "POST",
         headers: uploadHeaders,
         body: formData
       });
-      
+
       if (!uploadRes.ok) throw new Error("Greška pri uploadu videa ili dodavanju u bazu");
-      
+
       const uploadData = await uploadRes.json();
       const videoId = uploadData.videoId; // Ovo je vraćen folder name / ID na hetzneru
       console.log("Video uspešno uploadovan i sacuvan u bazi, ID:", videoId);
@@ -120,10 +143,10 @@ export default function CourseDetail({
             ...(accesToken ? { 'Authorization': `Bearer ${accesToken}` } : {})
           }
         });
-        
+
         // Dodatni korak: ako lekcija zadrzi videe mi brisemo celu lekciju 
         // ali bi mozda trebalo i sa storage. Sada samo osvezavamo UI.
-        
+
         if (response.ok) {
           const updatedKurs = {
             ...selectedKurs,
@@ -142,17 +165,17 @@ export default function CourseDetail({
           },
           body: JSON.stringify({ url: deleteConfirmation.url })
         });
-        
+
         // 2. Obrisi sa hetznera posto brisemo i iz baze!
-        if(deleteConfirmation.url) {
-           await fetch(`${API_URL}/api/delete-folder?remoteFolderPath=${deleteConfirmation.url}`, {
+        if (deleteConfirmation.url) {
+          await fetch(`${API_URL}/api/delete-folder?remoteFolderPath=${deleteConfirmation.url}`, {
             method: 'DELETE',
             headers: {
               ...(accesToken ? { 'Authorization': `Bearer ${accesToken}` } : {})
             }
           });
         }
-        
+
         if (response.ok) {
           const updatedKurs = {
             ...selectedKurs,
@@ -192,7 +215,7 @@ export default function CourseDetail({
           videoUrls: []
         })
       });
-      
+
       if (response.ok) {
         // Optimistički update ili ponovno učitavanje
         const data = await response.json();
@@ -201,11 +224,11 @@ export default function CourseDetail({
         const lekcijaId = data.lekcijaId || Date.now();
         const updatedKurs = {
           ...selectedKurs,
-          lekcije: [...(selectedKurs.lekcije || []), { 
-            lekcijaId: lekcijaId, 
-            naziv: addLekcijaForm.naziv, 
-            opis: addLekcijaForm.opis, 
-            videoUrls: [] 
+          lekcije: [...(selectedKurs.lekcije || []), {
+            lekcijaId: lekcijaId,
+            naziv: addLekcijaForm.naziv,
+            opis: addLekcijaForm.opis,
+            videoUrls: []
           }]
         };
         setSelectedKurs(updatedKurs);
@@ -220,8 +243,9 @@ export default function CourseDetail({
   };
 
   return (
-    <div className="space-y-8 animate-fade-in" style={{paddingInline:"20px"}}>
+    <div className="space-y-8 animate-fade-in" style={{ paddingInline: "20px" }}>
       {/* Back + header */}
+
       <div className="flex items-center gap-4 pb-5 border-b border-neutral-800/60">
         <button
           onClick={() => { setSelectedKurs(null); setExpandedLekcija(null); }}
@@ -259,6 +283,35 @@ export default function CourseDetail({
       </div>
 
       {/* Info strip */}
+      <label className="bg-neutral-900 border border-neutral-800 rounded-lg px-5 py-4 flex flex-col"> Sporedne Slike </label>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
+        
+        {trenutneSporedneSlike.map((slika, index) => (
+          <div
+            key={index}
+            className="group relative bg-zinc-900 border border-red-900 rounded-xl overflow-hidden shadow-lg hover:border-red-500 hover:shadow-red-500/20 transition-all duration-300"
+          >
+            <label className="absolute top-2 left-2 bg-black/60 backdrop-blur px-2 py-0.5 rounded-md text-[11px] font-medium text-white">
+              Sporedna slika {index + 1}
+            </label>
+            <img
+              src={`${API_URL}/api/uploaded-images/${slika.url}`}
+              alt={`Sporedna slika ${index + 1}`}
+              className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+
+            <button
+              type="button"
+              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold opacity-0 group-hover:opacity-100 transition"
+              onClick={() => {
+                // ovde kasnije obrisi sliku
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
 
       <div className="flex flex-wrap gap-4">
         {[
@@ -339,9 +392,8 @@ export default function CourseDetail({
                     <svg
                       viewBox="0 0 20 20"
                       fill="currentColor"
-                      className={`w-4 h-4 text-neutral-500 transition-transform duration-200 ${
-                        expandedLekcija === lekcija.lekcijaId ? "rotate-180" : ""
-                      }`}
+                      className={`w-4 h-4 text-neutral-500 transition-transform duration-200 ${expandedLekcija === lekcija.lekcijaId ? "rotate-180" : ""
+                        }`}
                     >
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
@@ -503,9 +555,9 @@ export default function CourseDetail({
       </SharedModal>
 
       {/* Brisanje modala umesto alert-a */}
-      <SharedModal 
-        open={deleteConfirmation.isOpen} 
-        onClose={() => setDeleteConfirmation({ isOpen: false, type: null, id: null, name: '' })} 
+      <SharedModal
+        open={deleteConfirmation.isOpen}
+        onClose={() => setDeleteConfirmation({ isOpen: false, type: null, id: null, name: '' })}
         title={`Obriši ${deleteConfirmation.type === 'lekcija' ? 'lekciju' : 'video'}`}
       >
         <div className="space-y-4">
@@ -513,13 +565,13 @@ export default function CourseDetail({
             Da li ste sigurni da želite da obrišete <span className="font-semibold text-white">{deleteConfirmation.name}</span>? Ova akcija je nepovratna.
           </p>
           <div className="flex justify-end gap-2 pt-4">
-            <button 
-              onClick={() => setDeleteConfirmation({ isOpen: false, type: null, id: null, name: '' })} 
+            <button
+              onClick={() => setDeleteConfirmation({ isOpen: false, type: null, id: null, name: '' })}
               className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
             >
               Odustani
             </button>
-            <button 
+            <button
               onClick={handleDeleteConfirm}
               className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20"
             >

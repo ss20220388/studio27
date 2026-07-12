@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { SharedModal } from "./SharedModal";
+import { set } from "astro:schema";
 
 
 
@@ -40,6 +41,10 @@ export default function CourseModals({
   // Edit Form State
   const [editForm, setEditForm] = useState({ naziv: "", opis: "", sadrzaj: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
   const [editFile, setEditFile] = useState<File | null>(null);
+  const [editSporedneSlike, setEditSporedneSlike] = useState<FileList | null>(null);
+
+ const [trenutneSporedneSlike, setTrenutneSporedneSlike] = useState<any[]>([]);
+ 
 
   useEffect(() => {
     if (selectedKurs && showEditModal) {
@@ -54,7 +59,9 @@ export default function CourseModals({
         komentarSredina: selectedKurs.komentarSredina || "",
         komentarDole: selectedKurs.komentarDole || ""
       });
+      
     }
+    
   }, [selectedKurs, showEditModal]);
 
   const handleAddSubmit = async () => {
@@ -65,7 +72,7 @@ export default function CourseModals({
         formData.append("file", addFile);
         const headers: any = {};
         if (accesToken) headers["Authorization"] = `Bearer ${accesToken}`;
-        
+
         const uploadRes = await fetch(`${API_URL}/api/upload-local`, {
           method: "POST",
           headers,
@@ -97,9 +104,53 @@ export default function CourseModals({
         })
       });
       if (response.ok) {
+        const kurs = await response.json();
+        const idKurs = kurs.id;
+        for (const slika of addSporedneSlike || []) {
+          const formData = new FormData();
+          formData.append("file", slika);
+          const headers: any = {};
+          if (accesToken) headers["Authorization"] = `Bearer ${accesToken}`;
+          const uploadRes = await fetch(`${API_URL}/api/upload-local`, {
+            method: "POST",
+            headers,
+            body: formData
+          });
+
+          const uploadData = await uploadRes.json();
+          const filepath = `/uploads/${uploadData.filename}`;
+          const slikaRes = await fetch(`${API_URL}/dodajsliku`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(accesToken && { Authorization: `Bearer ${accesToken}` })
+            },
+            body: JSON.stringify({
+              url: filepath
+            })
+          });
+          const slikaData = await slikaRes.json();
+          const idSlika = slikaData.idSlika;
+
+          // Poveži sa kursom
+          await fetch(`${API_URL}/dodajkursslika`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(accesToken && { Authorization: `Bearer ${accesToken}` })
+            },
+            body: JSON.stringify({
+              idKurs: idKurs,
+              idSlika: idSlika
+            })
+
+          });
+        }
+
         setShowAddModal(false);
         setAddForm({ naziv: "", opis: "", sadrzaj: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
         setAddFile(null);
+        setAddSporedneSlike(null);
         if (onRefresh) onRefresh();
       } else {
         console.error("Greška pri dodavanju kursa");
@@ -111,30 +162,44 @@ export default function CourseModals({
 
   const handleEditSubmit = async () => {
     if (!selectedKurs) return;
+
     try {
       let finalSlikaUrl = selectedKurs.slikaUrl || "";
+      if (editSporedneSlike && editSporedneSlike.length > 0) {
+        const headers: any = {};
+        if (accesToken) headers["Authorization"] = `Bearer ${accesToken}`;
+        const deleteRes = await fetch(`${API_URL}/api/deletekursslika/${selectedKurs.id}`, {
+          method: "POST",
+          headers
+        });
+      }
+
+      // Upload glavne slike ako je promenjena
       if (editFile) {
         const formData = new FormData();
         formData.append("file", editFile);
+
         const headers: any = {};
         if (accesToken) headers["Authorization"] = `Bearer ${accesToken}`;
-        
+
         const uploadRes = await fetch(`${API_URL}/api/upload-local`, {
           method: "POST",
           headers,
           body: formData
         });
+
         if (uploadRes.ok) {
           const uploadData = await uploadRes.json();
           finalSlikaUrl = `/uploads/${uploadData.filename}`;
         }
       }
 
+      // Izmena kursa
       const response = await fetch(`${API_URL}/api/promeni-kurs/${selectedKurs.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          ...(accesToken ? { "Authorization": `Bearer ${accesToken}` } : {})
+          ...(accesToken ? { Authorization: `Bearer ${accesToken}` } : {})
         },
         body: JSON.stringify({
           naziv: editForm.naziv,
@@ -149,10 +214,70 @@ export default function CourseModals({
           komentarDole: editForm.komentarDole
         })
       });
+
       if (response.ok) {
+
+
+        for (const slika of editSporedneSlike || []) {
+          const formData = new FormData();
+          formData.append("file", slika);
+
+          const headers: any = {};
+          if (accesToken) headers["Authorization"] = `Bearer ${accesToken}`;
+
+          const uploadRes = await fetch(`${API_URL}/api/upload-local`, {
+            method: "POST",
+            headers,
+            body: formData
+          });
+
+          if (!uploadRes.ok) {
+            console.error(`Greška pri uploadu slike: ${slika.name}`);
+            continue;
+          }
+
+          const uploadData = await uploadRes.json();
+          const filepath = `/uploads/${uploadData.filename}`;
+
+          // Dodaj u tabelu Slika
+          const slikaRes = await fetch(`${API_URL}/api/dodajsliku`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${accesToken}`
+            },
+            body: JSON.stringify({
+              url: filepath
+            })
+          });
+
+          if (!slikaRes.ok) {
+            console.error("Greška pri dodavanju slike u bazu.");
+            continue;
+          }
+
+          const slikaData = await slikaRes.json();
+
+          // Poveži sliku sa kursom
+          await fetch(`${API_URL}/api/dodajkursslika`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${accesToken}`
+            },
+            body: JSON.stringify({
+              idKurs: selectedKurs.id,
+              idSlika: slikaData.idSlika
+            })
+          });
+        }
+
         setShowEditModal(false);
         setEditFile(null);
+        setEditSporedneSlike(null);
+
         if (onRefresh) onRefresh();
+
         if (setSelectedKurs) {
           setSelectedKurs({
             ...selectedKurs,
@@ -168,6 +293,7 @@ export default function CourseModals({
             komentarDole: editForm.komentarDole
           });
         }
+
       } else {
         console.error("Greška pri izmeni kursa");
       }
@@ -206,7 +332,7 @@ export default function CourseModals({
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Naziv kursa</label>
             <textarea
               value={addForm.naziv}
-              onChange={(e) => setAddForm({...addForm, naziv: e.target.value})}
+              onChange={(e) => setAddForm({ ...addForm, naziv: e.target.value })}
               placeholder="Npr. React napredni kurs"
               rows={2}
               className={textAreaClass}
@@ -216,7 +342,7 @@ export default function CourseModals({
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Opis</label>
             <textarea
               value={addForm.opis}
-              onChange={(e) => setAddForm({...addForm, opis: e.target.value})}
+              onChange={(e) => setAddForm({ ...addForm, opis: e.target.value })}
               placeholder="Opis kursa..."
               rows={4}
               className={textAreaClass}
@@ -226,7 +352,7 @@ export default function CourseModals({
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Sadržaj kursa</label>
             <textarea
               value={addForm.sadrzaj}
-              onChange={(e) => setAddForm({...addForm, sadrzaj: e.target.value})}
+              onChange={(e) => setAddForm({ ...addForm, sadrzaj: e.target.value })}
               placeholder="Upišite sadržaj kursa kako treba da se prikaže na stranici"
               rows={8}
               className={textAreaClass}
@@ -238,7 +364,7 @@ export default function CourseModals({
               <input
                 type="number"
                 value={addForm.cena}
-                onChange={(e) => setAddForm({...addForm, cena: e.target.value})}
+                onChange={(e) => setAddForm({ ...addForm, cena: e.target.value })}
                 placeholder="Npr. 5000"
                 className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
               />
@@ -248,7 +374,7 @@ export default function CourseModals({
               <input
                 type="number"
                 value={addForm.trajanje}
-                onChange={(e) => setAddForm({...addForm, trajanje: e.target.value})}
+                onChange={(e) => setAddForm({ ...addForm, trajanje: e.target.value })}
                 placeholder="Npr. 30"
                 className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
               />
@@ -258,7 +384,7 @@ export default function CourseModals({
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Glavni kurs (preporučuje se)</label>
             <textarea
               value={addForm.glavniKurs}
-              onChange={(e) => setAddForm({...addForm, glavniKurs: e.target.value})}
+              onChange={(e) => setAddForm({ ...addForm, glavniKurs: e.target.value })}
               placeholder="Npr. 3Ds Max + Corona Render"
               rows={2}
               className={textAreaClass}
@@ -269,7 +395,7 @@ export default function CourseModals({
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar gore</label>
               <textarea
                 value={addForm.komentarGore}
-                onChange={(e) => setAddForm({...addForm, komentarGore: e.target.value})}
+                onChange={(e) => setAddForm({ ...addForm, komentarGore: e.target.value })}
                 placeholder="Gornji naslov/komentar"
                 rows={3}
                 className={textAreaClass}
@@ -279,7 +405,7 @@ export default function CourseModals({
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar sredina</label>
               <textarea
                 value={addForm.komentarSredina}
-                onChange={(e) => setAddForm({...addForm, komentarSredina: e.target.value})}
+                onChange={(e) => setAddForm({ ...addForm, komentarSredina: e.target.value })}
                 placeholder="Srednji opis"
                 rows={3}
                 className={textAreaClass}
@@ -289,7 +415,7 @@ export default function CourseModals({
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar dole</label>
               <textarea
                 value={addForm.komentarDole}
-                onChange={(e) => setAddForm({...addForm, komentarDole: e.target.value})}
+                onChange={(e) => setAddForm({ ...addForm, komentarDole: e.target.value })}
                 placeholder="Donji opis/tagovi"
                 rows={3}
                 className={textAreaClass}
@@ -302,6 +428,16 @@ export default function CourseModals({
               type="file"
               accept="image/*"
               onChange={(e) => setAddFile(e.target.files?.[0] || null)}
+              className="w-full text-sm text-neutral-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-neutral-300 hover:file:bg-neutral-700 hover:file:cursor-pointer transition-all border border-neutral-700 rounded-lg bg-neutral-900"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Sporedne slike (opciono)</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setAddSporedneSlike(e.target.files || null)}
               className="w-full text-sm text-neutral-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-neutral-300 hover:file:bg-neutral-700 hover:file:cursor-pointer transition-all border border-neutral-700 rounded-lg bg-neutral-900"
             />
           </div>
@@ -319,7 +455,7 @@ export default function CourseModals({
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Novi naziv</label>
             <textarea
               value={editForm.naziv}
-              onChange={(e) => setEditForm({...editForm, naziv: e.target.value})}
+              onChange={(e) => setEditForm({ ...editForm, naziv: e.target.value })}
               rows={2}
               className={textAreaClass}
             />
@@ -328,7 +464,7 @@ export default function CourseModals({
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Novi opis</label>
             <textarea
               value={editForm.opis}
-              onChange={(e) => setEditForm({...editForm, opis: e.target.value})}
+              onChange={(e) => setEditForm({ ...editForm, opis: e.target.value })}
               rows={4}
               className={textAreaClass}
             />
@@ -337,7 +473,7 @@ export default function CourseModals({
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Sadržaj kursa</label>
             <textarea
               value={editForm.sadrzaj}
-              onChange={(e) => setEditForm({...editForm, sadrzaj: e.target.value})}
+              onChange={(e) => setEditForm({ ...editForm, sadrzaj: e.target.value })}
               rows={8}
               className={textAreaClass}
               placeholder="Sadržaj kursa..."
@@ -349,7 +485,7 @@ export default function CourseModals({
               <input
                 type="number"
                 value={editForm.cena}
-                onChange={(e) => setEditForm({...editForm, cena: e.target.value})}
+                onChange={(e) => setEditForm({ ...editForm, cena: e.target.value })}
                 className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
               />
             </div>
@@ -358,7 +494,7 @@ export default function CourseModals({
               <input
                 type="number"
                 value={editForm.trajanje}
-                onChange={(e) => setEditForm({...editForm, trajanje: e.target.value})}
+                onChange={(e) => setEditForm({ ...editForm, trajanje: e.target.value })}
                 className="w-full h-10 px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
               />
             </div>
@@ -367,7 +503,7 @@ export default function CourseModals({
             <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Glavni kurs (preporučuje se)</label>
             <textarea
               value={editForm.glavniKurs}
-              onChange={(e) => setEditForm({...editForm, glavniKurs: e.target.value})}
+              onChange={(e) => setEditForm({ ...editForm, glavniKurs: e.target.value })}
               rows={2}
               className={textAreaClass}
             />
@@ -377,7 +513,7 @@ export default function CourseModals({
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar gore</label>
               <textarea
                 value={editForm.komentarGore}
-                onChange={(e) => setEditForm({...editForm, komentarGore: e.target.value})}
+                onChange={(e) => setEditForm({ ...editForm, komentarGore: e.target.value })}
                 rows={3}
                 className={textAreaClass}
               />
@@ -386,7 +522,7 @@ export default function CourseModals({
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar sredina</label>
               <textarea
                 value={editForm.komentarSredina}
-                onChange={(e) => setEditForm({...editForm, komentarSredina: e.target.value})}
+                onChange={(e) => setEditForm({ ...editForm, komentarSredina: e.target.value })}
                 rows={3}
                 className={textAreaClass}
               />
@@ -395,7 +531,7 @@ export default function CourseModals({
               <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Komentar dole</label>
               <textarea
                 value={editForm.komentarDole}
-                onChange={(e) => setEditForm({...editForm, komentarDole: e.target.value})}
+                onChange={(e) => setEditForm({ ...editForm, komentarDole: e.target.value })}
                 rows={3}
                 className={textAreaClass}
               />
@@ -416,7 +552,7 @@ export default function CourseModals({
               type="file"
               accept="image/*"
               multiple
-              onChange={(e) => setAddSporedneSlike(e.target.files || null)}
+              onChange={(e) => setEditSporedneSlike(e.target.files || null)}
               className="w-full text-sm text-neutral-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-neutral-300 hover:file:bg-neutral-700 hover:file:cursor-pointer transition-all border border-neutral-700 rounded-lg bg-neutral-900"
             />
           </div>
