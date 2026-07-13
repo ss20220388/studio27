@@ -53,28 +53,36 @@ export default function CourseDetail({
   const [videoFiles, setvideoFiles] = useState<FileList | null>(null);
   const [mode, setModeAddVideo] = useState<'upload' | 'url'>('upload');
   const [trenutneSporedneSlike, setTrenutneSporedneSlike] = useState<any[]>([]);
+
+  const resolveImageSrc = (imagePath: string) => {
+    if (!imagePath) return "";
+    if (/^https?:\/\//i.test(imagePath)) return imagePath;
+    const normalizedPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+    return `${API_URL}/api/uploaded-images${normalizedPath}`;
+  };
+
   useEffect(() => {
     async function fetchSporedneSlike() {
       if (selectedKurs) {
         try {
-          const response = await fetch(`${API_URL}/api/kursslika/${selectedKurs.id}`, {
-            headers: {
-              "Authorization": `Bearer ${accesToken}`
-            }
-          });
+          const response = await fetch(`${API_URL}/api/kursslika/${selectedKurs.id}`);
           if (response.ok) {
             const data = await response.json();
             setTrenutneSporedneSlike(data.kursSlika || []);
           } else {
             console.error("Greška pri dohvatanju sporednih slika");
+            setTrenutneSporedneSlike([]);
           }
         } catch (error) {
           console.error("Greška pri dohvatanju sporednih slika", error);
+          setTrenutneSporedneSlike([]);
         }
+      } else {
+        setTrenutneSporedneSlike([]);
       }
     }
     fetchSporedneSlike();
-  }, [showAddVideo]);
+  }, [selectedKurs?.id, showAddVideo, accesToken, API_URL]);
 
   const handleVideoUpload = async () => {
     if (!videoFiles || showAddVideo === null) return;
@@ -283,35 +291,55 @@ export default function CourseDetail({
         </div>
       </div>
 
-      {/* Info strip */}
-      <label className="bg-neutral-900 border border-neutral-800 rounded-lg px-5 py-4 flex flex-col"> Sporedne Slike </label>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-
-        {trenutneSporedneSlike.map((slika, index) => (
-          <div
-            key={index}
-            className="group relative bg-zinc-900 border border-red-900 rounded-xl overflow-hidden shadow-lg hover:border-red-500 hover:shadow-red-500/20 transition-all duration-300"
-          >
-            <label className="absolute top-2 left-2 bg-black/60 backdrop-blur px-2 py-0.5 rounded-md text-[11px] font-medium text-white">
-              Sporedna slika {index + 1}
-            </label>
-            <img
-              src={`${API_URL}/api/uploaded-images/${slika.url}`}
-              alt={`Sporedna slika ${index + 1}`}
-              className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-
-            <button
-              type="button"
-              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white font-bold opacity-0 group-hover:opacity-100 transition"
-              onClick={() => {
-                // ovde kasnije obrisi sliku
-              }}
-            >
-              ✕
-            </button>
+      {/* Galerija */}
+      <div className="space-y-4">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold text-neutral-600 uppercase tracking-widest mb-0.5">Galerija kursa</p>
+            <h2 className="text-lg font-bold text-white">Pregled glavne i sporednih slika</h2>
+            <p className="text-xs text-neutral-500 mt-1">{trenutneSporedneSlike.length} povezanih slika</p>
           </div>
-        ))}
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="group relative min-h-96 overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 shadow-lg">
+            <img
+              src={resolveImageSrc(selectedKurs.slikaUrl)}
+              alt={selectedKurs.naziv}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            />
+            <div className="absolute inset-0 bg-linear-to-t from-black/50 via-black/10 to-transparent" />
+            <div className="absolute left-4 bottom-4 rounded-xl border border-white/10 bg-black/45 backdrop-blur px-3 py-2">
+              <p className="text-[11px] uppercase tracking-widest text-neutral-300">Glavna slika</p>
+              <p className="text-sm font-medium text-white truncate max-w-[16rem]">{selectedKurs.naziv}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 auto-rows-[11.5rem]">
+            {trenutneSporedneSlike.length > 0 ? (
+              trenutneSporedneSlike.slice(0, 4).map((slika, index) => (
+                <div
+                  key={index}
+                  className="group relative overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900 shadow-lg"
+                >
+                  <img
+                    src={resolveImageSrc(slika.url)}
+                    alt={`Sporedna slika ${index + 1}`}
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/45 via-transparent to-transparent" />
+                  <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur">
+                    {index + 1}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-2 flex items-center justify-center rounded-2xl border border-dashed border-neutral-800 bg-neutral-900/60 p-8 text-sm text-neutral-500">
+                Nema sporednih slika za ovaj kurs.
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-4">

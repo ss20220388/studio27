@@ -1,417 +1,249 @@
 ---
-
 ---
 
 <section
-    id="struktura"
-    class="relative min-h-screen
-                bg-gradient-to-b
-                from-black
-                via-zinc-950
-                to-black
-                flex items-center justify-center
-                px-6 pb-28 overflow-hidden"
+  id="struktura"
+  class="relative overflow-hidden bg-[#050505] px-6 py-24 text-white sm:px-8 lg:px-10 lg:py-32"
 >
-    <!-- Soft white center glow -->
-    <div
-        class="absolute w-[750px] h-[750px] bg-white/5 blur-3xl rounded-full
-              top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 lc-glow"
-    >
+  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(127,29,29,0.28),transparent_30%)" />
+
+  <div class="pointer-events-none absolute inset-0 overflow-hidden">
+    <div class="absolute left-[-8%] top-[-6%] h-96 w-96 rounded-full bg-red-900/20 blur-3xl lc-glow" />
+    <div class="absolute right-[-10%] top-[12%] h-112 w-md rounded-full bg-white/5 blur-3xl lc-glow-delay" />
+    <div class="absolute bottom-[-16%] left-[18%] h-80 w-80 rounded-full bg-red-700/10 blur-3xl lc-glow-soft" />
+  </div>
+
+  <div class="relative z-10 mx-auto max-w-7xl">
+    <div class="mx-auto max-w-4xl text-center">
+      <p class="lc-kicker text-[11px] font-semibold uppercase tracking-[0.55em] text-red-400/90">
+        Struktura učenja
+      </p>
+      <h2 class="lc-title mt-5 text-4xl font-semibold leading-[0.95] tracking-tight text-white sm:text-6xl lg:text-7xl">
+        Kako izgleda učenje kroz kurs.
+      </h2>
+      <p class="lc-subtitle mx-auto mt-6 max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
+        Dva jasno odvojena toka u istoj premium kompoziciji: samostalne lekcije i uživo rad sa predavačem, bez dupliranja i bez vizuelnog šuma.
+      </p>
     </div>
 
-    <div class="relative z-10 max-w-6xl w-full text-center">
-        <!-- TITLE -->
-        <h2
-            class="lc-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-extrabold leading-tight mb-8"
-        >
-            STRUKTURA UČENJA
-        </h2>
-
-        <h3
-            class="lc-title text-4xl mb-16 sm:text-5xl md:text-6xl lg:text-xl text-white font-medium leading-tight mb-8"
-        >
-            (nasnimljene lekcije + video tutorijali)
-        </h3>
-
+    <div class="mt-16 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+      <article class="lc-panel relative overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(180deg,rgba(20,20,20,0.96),rgba(10,10,10,0.9))] p-6 shadow-[0_35px_120px_rgba(0,0,0,0.42)] sm:p-8 lg:p-10">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(127,29,29,0.2),transparent_42%)]" />
         <div class="relative">
-            <!-- Thin center line -->
-            <div
-                class="lc-line absolute top-10 left-0 w-full h-px
-                  bg-gradient-to-r
-                  from-transparent via-white/20 to-transparent"
-            >
+          <div class="flex items-center justify-between gap-4 border-b border-white/10 pb-6">
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-[0.45em] text-red-400/90">01 / Samostalno</p>
+              <h3 class="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                Nasnimljene lekcije + video tutorijali
+              </h3>
+            </div>
+            <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/80">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M12 8v8m-4-4h8"></path>
+              </svg>
+            </div>
+          </div>
+
+          <div class="mt-8 grid gap-4">
+            <div class="lc-step-card">
+              <span class="lc-step-index">01</span>
+              <div>
+                <h4 class="lc-step-title">Kupovina lekcija</h4>
+                <p class="lc-step-text">Odabereš kurs i odmah dobijaš pristup sadržaju.</p>
+              </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-20 relative">
-                <!-- STEP 1 -->
-                <div
-                    class="lc-step flex flex-col items-center group"
-                    style="--step-i:0"
-                >
-                    <div
-                        class="lc-circle w-20 h-20 bg-zinc-900 border border-white/10 rounded-full
-                      flex items-center justify-center mb-6
-                      transition-all duration-300
-                      group-hover:border-white/40"
-                    >
-                        <svg
-                            class="w-6 h-6 text-white/80"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            viewBox="0 0 24 24"
-                        >
-                            <path d="M12 8v8m-4-4h8"></path>
-                        </svg>
-                    </div>
-
-                    <p class="text-white/40 text-xs tracking-widest mb-2">
-                        01.
-                    </p>
-                    <h3 class="text-white font-medium tracking-wide">
-                        Kupovina lekcija
-                    </h3>
-                </div>
-
-                <!-- STEP 2 -->
-                <div
-                    class="lc-step flex flex-col items-center group"
-                    style="--step-i:1"
-                >
-                    <div
-                        class="lc-circle w-20 h-20 bg-zinc-900 border border-white/10 rounded-full
-                      flex items-center justify-center mb-6
-                      transition-all duration-300
-                      group-hover:border-white/40"
-                    >
-                        <svg
-                            class="w-6 h-6 text-white/80"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            viewBox="0 0 24 24"
-                        >
-                            <rect x="4" y="6" width="16" height="12"></rect>
-                        </svg>
-                    </div>
-
-                    <p class="text-white/40 text-xs tracking-widest mb-2">
-                        02.
-                    </p>
-                    <h3 class="text-white font-medium tracking-wide">
-                        Pristup putem e-maila
-                    </h3>
-                </div>
-
-                <!-- STEP 3 -->
-                <div
-                    class="lc-step flex flex-col items-center group"
-                    style="--step-i:2"
-                >
-                    <div
-                        class="lc-circle w-20 h-20 bg-zinc-900 border border-white/10 rounded-full
-                        flex items-center justify-center mb-6
-                        transition-all duration-300
-                        group-hover:border-white/40"
-                    >
-                        <svg
-                            class="w-6 h-6 text-white/80"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            viewBox="0 0 24 24"
-                        >
-                            <polygon points="9 5 19 12 9 19 9 5"></polygon>
-                        </svg>
-                    </div>
-
-                    <p class="text-white/40 text-xs tracking-widest mb-2">
-                        03.
-                    </p>
-                    <h3 class="text-white font-medium tracking-wide">
-                        Praćenje video tutorijala
-                    </h3>
-
-                    
-                </div>
-
-                <!-- STEP 4 -->
-                <div
-                    class="lc-step flex flex-col items-center group"
-                    style="--step-i:3"
-                >
-                    <div
-                        class="lc-circle w-20 h-20 bg-zinc-900 border border-white/10 rounded-full
-                        flex items-center justify-center mb-6
-                        transition-all duration-300
-                        group-hover:border-white/40"
-                    >
-                        <svg
-                            class="w-6 h-6 text-white/80"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                d="M21 15a4 4 0 01-4 4H7l-4 4V5a4 4 0 014-4h10a4 4 0 014 4z"
-                            ></path>
-                        </svg>
-                    </div>
-
-                    <p class="text-white/40 text-xs tracking-widest mb-2">
-                        04.
-                    </p>
-                    <h3 class="text-white font-medium tracking-wide">
-                        Feedback & Pitanja
-                    </h3>
-                </div>
-               
-            </div>
-             <h3
-                    class="lc-title text-4xl mt-16 text-center sm:text-5xl md:text-6xl lg:text-xl text-white font-medium leading-tight mb-8"
-                >
-                    (uzivo sa predavačem)
-                </h3>
-
-
-                  <div class="relative">
-            <!-- Thin center line -->
-            <div
-                class="lc-line absolute top-10 left-0 w-full h-px
-                  bg-gradient-to-r
-                  from-transparent via-white/20 to-transparent"
-            >
+            <div class="lc-step-card">
+              <span class="lc-step-index">02</span>
+              <div>
+                <h4 class="lc-step-title">Pristup putem e-maila</h4>
+                <p class="lc-step-text">Svi detalji stižu uredno na tvoju adresu.</p>
+              </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-20 relative">
-                <!-- STEP 1 -->
-                <div
-                    class="lc-step flex flex-col items-center group"
-                    style="--step-i:0"
-                >
-                    <div
-                        class="lc-circle w-20 h-20 bg-zinc-900 border border-white/10 rounded-full
-                      flex items-center justify-center mb-6
-                      transition-all duration-300
-                      group-hover:border-white/40"
-                    >
-                        <svg
-                            class="w-6 h-6 text-white/80"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            viewBox="0 0 24 24"
-                        >
-                            <path d="M12 8v8m-4-4h8"></path>
-                        </svg>
-                    </div>
-
-                    <p class="text-white/40 text-xs tracking-widest mb-2">
-                        01.
-                    </p>
-                    <h3 class="text-white font-medium tracking-wide">
-                        Prijava na kurs
-                    </h3>
-                </div>
-
-                <!-- STEP 2 -->
-                <div
-                    class="lc-step flex flex-col items-center group"
-                    style="--step-i:1"
-                >
-                    <div
-                        class="lc-circle w-20 h-20 bg-zinc-900 border border-white/10 rounded-full
-                      flex items-center justify-center mb-6
-                      transition-all duration-300
-                      group-hover:border-white/40"
-                    >
-                        <svg
-                            class="w-6 h-6 text-white/80"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            viewBox="0 0 24 24"
-                        >
-                            <rect x="4" y="6" width="16" height="12"></rect>
-                        </svg>
-                    </div>
-
-                    <p class="text-white/40 text-xs tracking-widest mb-2">
-                        02.
-                    </p>
-                    <h3 class="text-white font-medium tracking-wide">
-                        Interaktivni rad putem zoom platforme
-                    </h3>
-                </div>
-
-                <!-- STEP 3 -->
-                <div
-                    class="lc-step flex flex-col items-center group"
-                    style="--step-i:2"
-                >
-                    <div
-                        class="lc-circle w-20 h-20 bg-zinc-900 border border-white/10 rounded-full
-                        flex items-center justify-center mb-6
-                        transition-all duration-300
-                        group-hover:border-white/40"
-                    >
-                        <svg
-                            class="w-6 h-6 text-white/80"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            viewBox="0 0 24 24"
-                        >
-                            <polygon points="9 5 19 12 9 19 9 5"></polygon>
-                        </svg>
-                    </div>
-
-                    <p class="text-white/40 text-xs tracking-widest mb-2">
-                        03.
-                    </p>
-                    <h3 class="text-white font-medium tracking-wide">
-                        Snimci časova
-                    </h3>
-
-                    
-                </div>
-
-                <!-- STEP 4 -->
-                <div
-                    class="lc-step flex flex-col items-center group"
-                    style="--step-i:3"
-                >
-                    <div
-                        class="lc-circle w-20 h-20 bg-zinc-900 border border-white/10 rounded-full
-                        flex items-center justify-center mb-6
-                        transition-all duration-300
-                        group-hover:border-white/40"
-                    >
-                        <svg
-                            class="w-6 h-6 text-white/80"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.5"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                d="M21 15a4 4 0 01-4 4H7l-4 4V5a4 4 0 014-4h10a4 4 0 014 4z"
-                            ></path>
-                        </svg>
-                    </div>
-
-                    <p class="text-white/40 text-xs tracking-widest mb-2">
-                        04.
-                    </p>
-                    <h3 class="text-white font-medium tracking-wide">
-                        Feedback & Pitanja tokom i posle kursa
-                    </h3>
-                </div>
-               
+            <div class="lc-step-card">
+              <span class="lc-step-index">03</span>
+              <div>
+                <h4 class="lc-step-title">Praćenje video tutorijala</h4>
+                <p class="lc-step-text">Gledaš lekcije svojim tempom, kad god želiš.</p>
+              </div>
             </div>
+
+            <div class="lc-step-card">
+              <span class="lc-step-index">04</span>
+              <div>
+                <h4 class="lc-step-title">Pitanja i feedback</h4>
+                <p class="lc-step-text">Dobijaš podršku dok prolaziš kroz materijal.</p>
+              </div>
+            </div>
+          </div>
         </div>
+      </article>
+
+      <article class="lc-panel relative overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(180deg,rgba(16,16,16,0.98),rgba(8,8,8,0.92))] p-6 shadow-[0_35px_120px_rgba(0,0,0,0.42)] sm:p-8 lg:p-10">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_42%)]" />
+        <div class="relative">
+          <div class="flex items-center justify-between gap-4 border-b border-white/10 pb-6">
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-[0.45em] text-red-400/90">02 / Uživo</p>
+              <h3 class="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                Rad sa predavačem uživo
+              </h3>
+            </div>
+            <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/80">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path d="M4 6h16v12H4z"></path>
+                <path d="M8 10h8"></path>
+              </svg>
+            </div>
+          </div>
+
+          <div class="mt-8 grid gap-4">
+            <div class="lc-step-card">
+              <span class="lc-step-index">01</span>
+              <div>
+                <h4 class="lc-step-title">Prijava na kurs</h4>
+                <p class="lc-step-text">Rezervišeš svoje mesto i biraš termin rada.</p>
+              </div>
+            </div>
+
+            <div class="lc-step-card">
+              <span class="lc-step-index">02</span>
+              <div>
+                <h4 class="lc-step-title">Interaktivni rad putem Zoom platforme</h4>
+                <p class="lc-step-text">Uživo pratiš predavanja i radiš zajedno sa predavačem.</p>
+              </div>
+            </div>
+
+            <div class="lc-step-card">
+              <span class="lc-step-index">03</span>
+              <div>
+                <h4 class="lc-step-title">Snimci časova</h4>
+                <p class="lc-step-text">Sve važno ostaje dostupno i nakon sesije.</p>
+              </div>
+            </div>
+
+            <div class="lc-step-card">
+              <span class="lc-step-index">04</span>
+              <div>
+                <h4 class="lc-step-title">Feedback i pitanja tokom i posle kursa</h4>
+                <p class="lc-step-text">Dobijaš precizne odgovore i korekcije na rad.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
     </div>
+  </div>
 </section>
 
 <style>
-    /* Title fade up */
-    .lc-title {
-        opacity: 0;
-        transform: translateY(40px);
-        transition:
-            opacity 0.9s ease-out,
-            transform 0.9s ease-out;
-    }
-    .lc-title.is-visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  .lc-kicker,
+  .lc-title,
+  .lc-subtitle,
+  .lc-panel,
+  .lc-glow,
+  .lc-glow-delay,
+  .lc-glow-soft {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.9s ease-out, transform 0.9s ease-out;
+  }
 
-    /* Background glow pulse */
-    .lc-glow {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.6);
-        transition:
-            opacity 1.2s ease-out,
-            transform 1.2s ease-out;
-    }
-    .lc-glow.is-visible {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-        animation: glowPulse 4s ease-in-out 1.5s infinite;
-    }
-    @keyframes glowPulse {
-        0%,
-        100% {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-        }
-        50% {
-            transform: translate(-50%, -50%) scale(1.08);
-            opacity: 0.7;
-        }
-    }
+  .lc-title.is-visible,
+  .lc-subtitle.is-visible,
+  .lc-panel.is-visible,
+  .lc-kicker.is-visible,
+  .lc-glow.is-visible,
+  .lc-glow-delay.is-visible,
+  .lc-glow-soft.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
 
-    /* Horizontal line draw */
-    .lc-line {
-        transform: scaleX(0);
-        transition: transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.3s;
-    }
-    .lc-line.is-visible {
-        transform: scaleX(1);
-    }
+  .lc-glow {
+    transform: translateY(0) scale(0.85);
+    transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+  }
 
-    /* Steps stagger in */
-    .lc-step {
-        opacity: 0;
-        transform: translateY(50px);
-        transition:
-            opacity 0.7s ease-out,
-            transform 0.7s ease-out;
-        transition-delay: calc(0.4s + var(--step-i) * 0.2s);
-    }
-    .lc-step.is-visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  .lc-glow-delay {
+    transform: translateY(0) scale(0.9);
+    transition: opacity 1.2s ease-out 0.15s, transform 1.2s ease-out 0.15s;
+  }
 
-    /* Circle border draw effect on visible */
-    .lc-step.is-visible .lc-circle {
-        animation: circleAppear 0.6s ease-out forwards;
-        animation-delay: calc(0.6s + var(--step-i) * 0.2s);
-    }
-    @keyframes circleAppear {
-        0% {
-            transform: scale(0.5);
-            border-color: transparent;
-        }
-        60% {
-            transform: scale(1.15);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-        100% {
-            transform: scale(1);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-    }
+  .lc-glow-soft {
+    transform: translateY(0) scale(0.88);
+    transition: opacity 1.2s ease-out 0.25s, transform 1.2s ease-out 0.25s;
+  }
+
+  .lc-panel {
+    position: relative;
+  }
+
+  .lc-step-card {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 1.25rem;
+    padding: 1rem 1rem 1rem 1rem;
+    backdrop-filter: blur(10px);
+    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+  }
+
+  .lc-step-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .lc-step-index {
+    display: inline-grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 9999px;
+    background: linear-gradient(180deg, rgba(127, 29, 29, 0.6), rgba(127, 29, 29, 0.25));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    flex-shrink: 0;
+  }
+
+  .lc-step-title {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.35;
+    font-weight: 600;
+    color: #fff;
+  }
+
+  .lc-step-text {
+    margin-top: 0.35rem;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.62);
+  }
 </style>
 
 <script>
-    const lcObserver = new IntersectionObserver(
-        (entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add("is-visible");
-                }
-            });
-        },
-        { threshold: 0.15 },
-    );
+  const lcObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+        }
+      });
+    },
+    { threshold: 0.15 },
+  );
 
-    document
-        .querySelectorAll(".lc-title, .lc-glow, .lc-line, .lc-step")
-        .forEach((el) => {
-            lcObserver.observe(el);
-        });
+  document
+    .querySelectorAll(".lc-kicker, .lc-title, .lc-subtitle, .lc-panel, .lc-glow, .lc-glow-delay, .lc-glow-soft")
+    .forEach((el) => {
+      lcObserver.observe(el);
+    });
 </script>

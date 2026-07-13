@@ -92,6 +92,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/kursevi/{id}").permitAll()
                                                 .requestMatchers("/api/progress-chart/**").permitAll()
                                                 .requestMatchers("/api/cookies/create-cookie-by-local-storage").permitAll()
+                                                .requestMatchers("/api/kursslika").permitAll()
+                                                .requestMatchers("/api/kursslika/*").permitAll()
                                                 .requestMatchers("/api/send-code-to-mail").permitAll()
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth -> oauth

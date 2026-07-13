@@ -1,7 +1,8 @@
-import { set } from "astro:schema";
 import { motion } from "framer-motion";
 import React from "react";
-export default function BuyButton({ price ,userPocetni,appUrl}) {
+const DEFAULT_APP_URL = import.meta.env.PUBLIC_APP_URL || "http://app.studio27.rs";
+
+export default function BuyButton({ userPocetni = { data: null, error: null }, appUrl = DEFAULT_APP_URL }) {
   const [nistePrijavljeni, setNistePrijavljeni] = React.useState(false);
   const [user, setUser] = React.useState({ data: null, error: null });
   function handelBut() {
@@ -50,11 +51,6 @@ export default function BuyButton({ price ,userPocetni,appUrl}) {
 
         <span className="relative flex items-center gap-3">
           Kupi kurs
-          {price && (
-            <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-              {price} RSD
-            </span>
-          )}
           <svg
             className="w-5 h-5 group-hover:translate-x-1 transition-transform"
             fill="none"

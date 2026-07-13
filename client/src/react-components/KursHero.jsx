@@ -4,9 +4,17 @@ import FloatingShapes from "./FloatingShapes";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
+const resolveImageSrc = (imagePath) => {
+  if (!imagePath) return "";
+  if (/^https?:\/\//i.test(imagePath)) return imagePath;
+  return `${API_URL}/api/uploaded-images${imagePath}`;
+};
+
 export default function KursHero({ kurs }) {
 
   const ref = useRef(null);
+
+  const primaryImage = resolveImageSrc(kurs?.slikaUrl);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -23,9 +31,8 @@ export default function KursHero({ kurs }) {
       ref={ref}
       className="relative h-[120vh] flex items-center justify-center overflow-hidden bg-black text-white"
     >
-
       <motion.img
-        src={`${API_URL}/api/uploaded-images${kurs.slikaUrl}`}
+        src={primaryImage}
         className="absolute w-full h-full object-cover"
         style={{
           scale,
@@ -61,7 +68,7 @@ export default function KursHero({ kurs }) {
           transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="text-6xl md:text-8xl font-bold leading-tight mb-8 tracking-tight"
         >
-          {kurs.naziv}
+          {kurs?.naziv || "Kurs"}
         </motion.h1>
 
         <motion.p
@@ -70,7 +77,7 @@ export default function KursHero({ kurs }) {
           transition={{ duration: 0.8, delay: 0.7 }}
           className="text-lg md:text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto"
         >
-          {kurs.opis? kurs.opis : "U ovom kursu naučićete kako da koristite moderne AI alate za generisanje ideja, automatizaciju poslovnih procesa, analizu podataka i kreiranje digitalnih proizvoda."}
+          {kurs?.opis ? kurs.opis : "U ovom kursu naučićete kako da koristite moderne AI alate za generisanje ideja, automatizaciju poslovnih procesa, analizu podataka i kreiranje digitalnih proizvoda."}
         </motion.p>
 
         {/* Scroll indicator */}

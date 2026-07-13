@@ -2,13 +2,17 @@
 import Layout from "../../layouts/Layout.astro";
 import BigTextSection from "../../react-components/BigTextSection.jsx";
 import KursInfo from "../../react-components/KursInfo.jsx";
-import BuyButton from "../../react-components/BuyButton.jsx";
 import KursHero from "../../react-components/KursHero.jsx";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
-const APP_URL = import.meta.env.PUBLIC_APP_URL || "http://app.studio27.rs";
 const { id } = Astro.params;
+type KursSlika = {
+  url?: string;
+  slikaUrl?: string;
+  putanja?: string;
+};
 let kurs = null;
+let kursSlike = [];
 try {
   const kursRes = await fetch(`${API_URL}/api/kursevi/${id}`);
   kurs = await kursRes.json();
@@ -16,18 +20,6 @@ try {
   console.error("Error fetching kurs data:", error);
 }
 
-const token = Astro.cookies.get("refreshToken")?.value || null;
-let user = {}
-try{
-  const userRes = await fetch(`${API_URL}/api/auth/me`, {
-    headers: {
-      "Authorization": `Bearer ${token}`
-    }
-  });
-  user = await userRes.json();
-} catch (error) {
-  console.error("Error fetching user data:", error);
-}
 ---
 
 <Layout 
@@ -68,11 +60,7 @@ try{
     client:load
   />
 
-  <KursInfo kurs={kurs} client:load />
+  <KursInfo kurs={kurs}client:load />
 
   <!-- CTA Section -->
-  <section class="py-32 bg-black flex flex-col items-center gap-6">
-    <p class="text-white/50 text-sm uppercase tracking-widest">Spremni?</p>
-    <BuyButton price={kurs.cena} userPocetni={user} appUrl={APP_URL} client:load />
-  </section>
 </Layout>
