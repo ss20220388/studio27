@@ -170,7 +170,10 @@ export default function CourseModals({
         if (accesToken) headers["Authorization"] = `Bearer ${accesToken}`;
         const deleteRes = await fetch(`${API_URL}/api/deletekursslika/${selectedKurs.id}`, {
           method: "POST",
-          headers
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accesToken}`
+          }
         });
       }
 
