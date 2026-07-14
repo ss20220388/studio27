@@ -68,6 +68,21 @@ export default function KursInfo({ kurs }) {
   const sadrzajSekcije = buildSadrzajSekcije(sadrzajLinije);
 
   const [slike, setSlike] = useState([])
+  const resolveImageSrc = (imagePath) => {
+    if (!imagePath) return "";
+
+    if (/^https?:\/\//i.test(imagePath)) return imagePath;
+
+    const normalizedPath = imagePath.startsWith("/")
+      ? imagePath
+      : `/${imagePath}`;
+
+    return `${API_URL}/api/uploaded-images${normalizedPath}`;
+  };
+
+  const [activeImage, setActiveImage] = useState(
+    resolveImageSrc(kurs?.slikaUrl)
+  );
   useEffect(() => {
     async function fetchSlike() {
       if (kurs?.id) {
@@ -76,6 +91,7 @@ export default function KursInfo({ kurs }) {
           if (response.ok) {
             const data = await response.json();
             console.log("Dohvaćene sporedne slike:", data.kursSlika);
+            console.log(JSON.stringify(data.kursSlika, null, 2));
             setSlike(data.kursSlika || []);
           } else {
             console.error("Greška pri dohvatanju sporednih slika");
@@ -138,7 +154,7 @@ export default function KursInfo({ kurs }) {
                   <div>
                     <p className="text-xs uppercase tracking-[0.35em] text-white/45">Cena kursa</p>
                     <p className="mt-2 text-3xl font-semibold text-white">
-                      {kurs?.cena ? `${kurs.cena} RSD` : "Cena na upit"}
+                      {kurs?.cena ? `${kurs.cena} €` : "Cena na upit"}
                     </p>
                     <p className="mt-2 max-w-md text-sm leading-7 text-white/60">
                       Kupovina otključava kompletan sadržaj kursa odmah nakon potvrde.
@@ -188,9 +204,31 @@ export default function KursInfo({ kurs }) {
             >
               <div className="absolute -inset-4 rounded-4xl bg-linear-to-br from-red-900/25 to-red-700/15 blur-2xl" />
               <div className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/5 p-3 shadow-2xl backdrop-blur-sm">
-                <div className="flex flex-col h-168 gap-3">
+                <div className="flex flex-col gap-4">
 
-                  <img src={API_URL + `/api/uploaded-images/${kurs.slikaUrl}`} alt={kurs?.naziv || "Kurs"} className="flex-1 object-cover" />
+                  <img
+                    src={activeImage}
+                    alt={kurs?.naziv || "Kurs"}
+                    className="h-[600px] w-full rounded-2xl object-cover"
+                  />
+
+                  {slike.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+
+                      {slike.map((slika) => (
+                        <img
+                          key={slika.idSlika}
+                          src={resolveImageSrc(slika.url)}
+                          onClick={() =>
+                            setActiveImage(resolveImageSrc(slika.url))
+                          }
+                          className="h-28 w-full rounded-xl object-cover cursor-pointer hover:scale-105 transition duration-300"
+                        />
+                      ))}
+
+                    </div>
+                  )}
+
                 </div>
               </div>
             </motion.div>
@@ -198,74 +236,7 @@ export default function KursInfo({ kurs }) {
         </div>
 
         <div className="w-full h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
-        {slike.length > 0 && (
-          <div className="relative w-full min-h-screen bg-black overflow-hidden py-20 px-4 flex justify-center items-center">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.05)_0%,transparent_70%)]" />
-
-            <div className="relative w-full max-w-7xl ">
-              {slike.length > 0 && (
-                <div className="relative w-full min-h-screen bg-black overflow-hidden py-20 px-4 flex justify-center items-center">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(220,38,38,0.05)_0%,transparent_70%)]" />
-
-                  <div className="relative w-full max-w-7xl ">
-                    {slike.length > 0 && (
-                      <section className="bg-black py-24 px-8">
-                        <div className="mx-auto ">
-
-                          <div
-                            className="
-          grid
-          grid-cols-12
-          auto-rows-[180px]
-          gap-6
-          grid-flow-dense
-        "
-                          >
-                            {slike.slice(0, slike.length - (slike.length % 3)).map((slika, index) => {
-                              let classes = "col-span-12 md:col-span-4 row-span-2";
-
-                              // Velike slike
-                              if (index % 7 === 0)
-                                classes = "col-span-12 md:col-span-8 row-span-4";
-
-                              // Horizontalne
-                              else if (index % 5 === 0)
-                                classes = "col-span-12 md:col-span-8 row-span-2";
-
-                              // Vertikalne
-                              else if (index % 3 === 0)
-                                classes = "col-span-12 md:col-span-4 row-span-3";
-
-                              return (
-                                <div
-                                  key={index}
-                                  className={`${classes} group overflow-hidden bg-neutral-900`}
-                                >
-                                  <img
-                                    src={API_URL + `/api/uploaded-images/${slika.url}`}
-                                    className="
-                  h-full
-                  w-full
-                  object-cover
-                  transition-all
-                  duration-700
-                  group-hover:scale-105
-                "
-                                  />
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                        </div>
-                      </section>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        
       </section>
 
       {(sadrzajSekcije.length > 0 || lekcije.length > 0) && (

@@ -344,7 +344,7 @@ export default function CourseDetail({
 
       <div className="flex flex-wrap gap-4">
         {[
-          { label: "Cena", value: `${(selectedKurs.cena || 0).toLocaleString()} $` },
+          { label: "Cena", value: `${(selectedKurs.cena || 0).toLocaleString()} €` },
           { label: "Trajanje", value: `${selectedKurs.trajanje || 0} dana` },
           { label: "Studenata", value: (selectedKurs.brojStudenata || 0).toString() },
           { label: "Lekcija", value: (selectedKurs.lekcije?.length || 0).toString() },

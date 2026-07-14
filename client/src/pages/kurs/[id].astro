@@ -13,13 +13,23 @@ type KursSlika = {
 };
 let kurs = null;
 let kursSlike = [];
+
 try {
   const kursRes = await fetch(`${API_URL}/api/kursevi/${id}`);
   kurs = await kursRes.json();
 } catch (error) {
   console.error("Error fetching kurs data:", error);
 }
+try {
+  const slikeRes = await fetch(`${API_URL}/api/kursslika/${id}`);
 
+  if (slikeRes.ok) {
+    const data = await slikeRes.json();
+    kursSlike = data.kursSlika || [];
+  }
+} catch (error) {
+  console.error("Error fetching kurs images:", error);
+}
 ---
 
 <Layout 
@@ -51,7 +61,11 @@ try {
     }
   ]} 
 >
-  <KursHero kurs={kurs} client:load />
+  <KursHero
+    kurs={kurs}
+    kursSlike={kursSlike}
+    client:load
+/>
 
   <BigTextSection
     glavniTekst={kurs.glavniKurs}

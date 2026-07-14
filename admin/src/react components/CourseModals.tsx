@@ -484,7 +484,7 @@ export default function CourseModals({
           </div>
           <div className="flex gap-4">
             <div className="flex-1">
-              <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Nova cena ($)</label>
+              <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Nova cena (€)</label>
               <input
                 type="number"
                 value={editForm.cena}

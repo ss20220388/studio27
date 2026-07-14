@@ -10,7 +10,7 @@ const resolveImageSrc = (imagePath) => {
   return `${API_URL}/api/uploaded-images${imagePath}`;
 };
 
-export default function KursHero({ kurs }) {
+export default function KursHero({ kurs ,kursSlike}) {
 
   const ref = useRef(null);
 
