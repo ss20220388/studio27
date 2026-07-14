@@ -77,7 +77,7 @@ export default function KursHero({ kurs ,kursSlike}) {
           transition={{ duration: 0.8, delay: 0.7 }}
           className="text-lg md:text-xl text-gray-300 leading-relaxed max-w-[90vw] mx-auto"
         >
-          {kurs?.opis ? kurs.opis : "U ovom kursu naučićete kako da koristite moderne AI alate za generisanje ideja, automatizaciju poslovnih procesa, analizu podataka i kreiranje digitalnih proizvoda."}
+          {kurs?.komentarSredina ? kurs.opis : "U ovom kursu naučićete kako da koristite moderne AI alate za generisanje ideja, automatizaciju poslovnih procesa, analizu podataka i kreiranje digitalnih proizvoda."}
         </motion.p>
 
         {/* Scroll indicator */}
