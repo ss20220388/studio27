@@ -24,7 +24,7 @@ public class KursSlikaRoute {
     public ResponseEntity<Map<String, Object>> dodajKursSlika(@RequestBody Map<String, Object> kursData) {
 
         String SQL = """
-                INSERT INTO KursSlika (idKurs, idSlika)
+                INSERT INTO kursslika (idKurs, idSlika)
                 VALUES (?, ?);
                 """;
 
