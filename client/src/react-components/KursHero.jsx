@@ -33,7 +33,7 @@ export default function KursHero({ kurs ,kursSlike}) {
     >
       <motion.img
         src={primaryImage}
-        className="absolute w-full h-full object-cover"
+        className="absolute w-5/6 mx-auto h-full object-cover"
         style={{
           scale,
           filter: useTransform(imgBrightness, (v) => `brightness(${v})`),
