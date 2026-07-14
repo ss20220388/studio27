@@ -20,7 +20,7 @@ public class SlikaRoute {
     public ResponseEntity<Map<String, Object>> dodajKursSlika(@RequestBody Map<String, Object> kursData) {
 
         String SQL = """
-            INSERT INTO Slika (url)
+            INSERT INTO slika (url)
             VALUES (?);
             """;
 
