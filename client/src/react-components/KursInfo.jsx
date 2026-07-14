@@ -137,17 +137,7 @@ export default function KursInfo({ kurs }) {
                 {kurs?.naziv || "Kurs"}
               </motion.h2>
 
-              <motion.p
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.7, delay: 0.15 }}
-                className="mb-10 text-lg leading-relaxed text-gray-400"
-              >
-                {kurs?.sadrzaj
-                  ? kurs.sadrzaj
-                  : "Ovaj kurs je dizajniran da vam pokaže kako da iskoristite savremene alate i tehnologije kako biste ubrzali svoj rad, automatizovali procese i stvorili nove poslovne prilike."}
-              </motion.p>
+              
                <motion.p
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
