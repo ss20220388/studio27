@@ -66,7 +66,7 @@ export default function KursHero({ kurs ,kursSlike}) {
           initial={{ opacity: 0, y: 80 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="text-6xl md:text-8xl w-11/12 font-bold leading-tight mb-8 tracking-tight"
+          className="text-6xl md:text-8xl max-w-[90vw] font-bold leading-tight mb-8 tracking-tight"
         >
           {kurs?.naziv || "Kurs"}
         </motion.h1>
@@ -75,7 +75,7 @@ export default function KursHero({ kurs ,kursSlike}) {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.7 }}
-          className="text-lg md:text-xl text-gray-300 leading-relaxed w-5/6 mx-auto"
+          className="text-lg md:text-xl text-gray-300 leading-relaxed max-w-[90vw] mx-auto"
         >
           {kurs?.opis ? kurs.opis : "U ovom kursu naučićete kako da koristite moderne AI alate za generisanje ideja, automatizaciju poslovnih procesa, analizu podataka i kreiranje digitalnih proizvoda."}
         </motion.p>
