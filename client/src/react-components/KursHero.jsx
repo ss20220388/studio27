@@ -62,6 +62,15 @@ export default function KursHero({ kurs ,kursSlike}) {
           </span>
         </motion.div>
 
+        <motion.h1
+          initial={{ opacity: 0, y: 80 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="text-4xl md:text-8xl max-w-[90vw] font-bold leading-tight mb-8 tracking-tight"
+        >
+          {kurs?.naziv || "Kurs"}
+        </motion.h1>
+
         
 
         {/* Scroll indicator */}
