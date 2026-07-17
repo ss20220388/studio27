@@ -4,6 +4,7 @@ import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 import ErrorToastNotifier from "../react-components/ErrorToastNotifier";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 export interface Props {
   title: string;
   description?: string;
@@ -226,6 +227,11 @@ const courseSchema = course
     <link
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap"
       rel="stylesheet"
+    />
+    <link
+        rel="preload"
+        as="image"
+        href={`${API_URL}/api/uploaded-images/towebp/naslovna2.webp`}
     />
   </head>
 
