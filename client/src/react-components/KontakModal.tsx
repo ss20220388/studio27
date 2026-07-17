@@ -135,7 +135,7 @@ ${poruka}`;
               {/* Left image — 2/5 of the grid */}
               <div className="relative lg:col-span-2 h-48 lg:h-auto overflow-hidden bg-neutral-900">
                 <img
-                  src={`${API_URL}/api/media?remoteFilePath=/uploads/slikaenterijer.jpg`}
+                  src={`${API_URL}/api/uploaded-images/uploads/slikaenterijer.jpg`}
                   alt="ContactUs"
                   className="w-full h-full object-cover opacity-80"
                   loading="lazy"
