@@ -8,6 +8,7 @@ import sitemap from "@astrojs/sitemap";
 export default defineConfig({
     output: 'server',
     integrations: [react(), sitemap()],
+    site: "https://27archviz.com",
     adapter: node({
     mode: "standalone"
     }),
