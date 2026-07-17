@@ -3,14 +3,18 @@ import { defineConfig } from 'astro/config';
 
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
-
+import node from "@astrojs/node";
 // https://astro.build/config
 export default defineConfig({
   output: 'server',
   integrations: [react()],
+  adapter: node({
+    mode: "standalone"
+    }),
 
   vite: {
     plugins: [tailwindcss()],
+    
     server: {
       allowedHosts: [
          'app.studio27.rs','app.dev.27archviz.com',"app.27archviz.com","https://app.27archviz.com","http://app.27archviz.com"

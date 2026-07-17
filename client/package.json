@@ -5,8 +5,9 @@
   "scripts": {
     "dev": "astro dev --port 3000",
     "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
+    "preview": "astro preview --port 3000",
+    "astro": "astro",
+    "start": "node ./dist/server/entry.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
@@ -21,6 +22,7 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
+    "@astrojs/node": "^9.5.5",
     "@types/js-cookie": "^3.0.6",
     "@types/node": "^25.5.0"
   }
