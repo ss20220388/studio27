@@ -138,6 +138,7 @@ ${poruka}`;
                   src={`${API_URL}/api/media?remoteFilePath=/uploads/slikaenterijer.jpg`}
                   alt="ContactUs"
                   className="w-full h-full object-cover opacity-80"
+                  loading="lazy"
                 />
                 {/* Premium gradient overlay */}
                 <div className="absolute inset-0 bg-linear-to-t lg:bg-linear-to-r from-black via-black/60 to-transparent" />

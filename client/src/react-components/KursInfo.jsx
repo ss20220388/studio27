@@ -211,6 +211,7 @@ export default function KursInfo({ kurs }) {
                     src={activeImage}
                     alt={kurs?.naziv || "Kurs"}
                     className="h-[600px] w-full rounded-2xl object-cover"
+                    loading="lazy"
                   />
 
                   {slike.length > 0 && (
@@ -223,6 +224,7 @@ export default function KursInfo({ kurs }) {
                           onClick={() =>
                             setActiveImage(resolveImageSrc(slika.url))
                           }
+                          loading="lazy"
                           className="h-28 w-full rounded-xl object-cover cursor-pointer hover:scale-105 transition duration-300"
                         />
                       ))}
