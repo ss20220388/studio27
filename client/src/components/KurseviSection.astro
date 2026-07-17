@@ -65,10 +65,13 @@ try {
       <div class="kurs-card relative h-105 sm:h-112.5 md:h-125 overflow-hidden shadow-xl group rounded-2xl" style={`--card-i:${i}`}>
 
         <!-- Image -->
-        <div
-          class="absolute inset-0 bg-cover bg-center transform group-hover:scale-110 transition duration-500"
-          style={`background-image: url('${API_URL}/api/uploaded-images${kurs.slikaUrl}');`}
-        ></div>
+        <img
+          src={`${API_URL}/api/uploaded-images/towebp${kurs.slikaUrl.replace(/\.\w+$/, ".webp")}`}
+          alt={kurs.naziv}
+          loading="lazy"
+          decoding="async"
+          class="absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-110"
+        />
 
         <!-- Overlay -->
         <div class="absolute inset-0 bg-black/70 group-hover:bg-black/60 transition duration-500"></div>
@@ -125,10 +128,13 @@ try {
       <div class="kurs-card relative md:max-w-75 h-105 sm:h-112.5 md:h-125 overflow-hidden shadow-xl group rounded-2xl" style={`--card-i:${i + 4}`}>
 
         <!-- Image -->
-        <div
-          class="absolute inset-0 bg-cover bg-center transform group-hover:scale-110 transition duration-500"
-          style={`background-image: url('${API_URL}/api/uploaded-images${kurs.slikaUrl}');`}
-        ></div>
+        <img
+          src={`${API_URL}/api/uploaded-images/towebp${kurs.slikaUrl.replace(/\.\w+$/, ".webp")}`}
+          alt={kurs.naziv}
+          loading="lazy"
+          decoding="async"
+          class="absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-110"
+        />
 
         <!-- Overlay -->
         <div class="absolute inset-0 bg-black/70 group-hover:bg-black/60 transition duration-500"></div>
