@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import VideoPlayerHLS from "./VideoPlayerHLS";
 
-const KursPlayer = ({ lekcije, token,API_URL }) => {
+const KursPlayer = ({ lekcije, token, API_URL, materijali }) => {
 
     const [selectedVideo, setSelectedVideo] = useState(
         lekcije?.[0]?.klipovi?.[0] || null
     );
+    const skiniMaterijal =(url) => {
+        window.open(url, '_blank')
+    }
 
     const [openLesson, setOpenLesson] = useState(lekcije?.[0]?.lekcijaId || null);
 
@@ -66,10 +69,10 @@ const KursPlayer = ({ lekcije, token,API_URL }) => {
                                                 </span>
                                                 <span className="text-[10px] opacity-70 ml-2 shrink-0">{klip.procenat}%</span>
                                             </div>
-                                            
+
                                             {/* Progress bar tracker */}
                                             <div className="w-full bg-black/40 h-1.5 mt-2 rounded-full overflow-hidden">
-                                                <div 
+                                                <div
                                                     className={`h-full transition-all duration-500 ${selectedVideo?.videoId === klip.videoId ? "bg-white" : "bg-red-600"}`}
                                                     style={{ width: `${klip.procenat}%` }}
                                                 ></div>
@@ -109,6 +112,30 @@ const KursPlayer = ({ lekcije, token,API_URL }) => {
 
             </div>
 
+            <h3 className="lg:col-span-4 text-sm text-neutral-400 mt-3">
+                Materijali
+            </h3>
+            <div className="lg:col-span-4 bg-neutral-900 border border-neutral-800 rounded-xl p-5 h-full overflow-y-auto">
+                <div className="space-y-3">
+                    {materijali && materijali.length > 0 ? (
+                        materijali.map((materijal) => (
+                            <a
+                                key={materijal.id}
+                                href={API_URL+"/api/media?remoteFilePath="+materijal.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block p-3 bg-neutral-800 text-amber-50 hover:bg-neutral-700 rounded-lg transition-colors"
+                            >
+                                {materijal.url}
+                            </a>
+                        ))
+                    ) : (
+                        <p className="text-neutral-500 text-sm">
+                            Nema dostupnih materijala.
+                        </p>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }

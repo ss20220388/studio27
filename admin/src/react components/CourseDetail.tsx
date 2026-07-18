@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import VideoPlayerHLS from "./VideoPlayerHLS";
 import { SharedModal } from "./SharedModal";
+import MaterijaliForma from "./MaterijaliForma";
 
 interface Kurs {
   id: number;
@@ -53,6 +54,10 @@ export default function CourseDetail({
   const [videoFiles, setvideoFiles] = useState<FileList | null>(null);
   const [mode, setModeAddVideo] = useState<'upload' | 'url'>('upload');
   const [trenutneSporedneSlike, setTrenutneSporedneSlike] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>("" as any);
+  const [uploading,setUploading] = useState(false);
+  const [showAddMaterial, setShowAddMaterial] = useState(false);
 
   const resolveImageSrc = (imagePath: string) => {
     if (!imagePath) return "";
@@ -84,6 +89,93 @@ export default function CourseDetail({
     fetchSporedneSlike();
   }, [selectedKurs?.id, showAddVideo, accesToken, API_URL]);
 
+
+  const deleteMaterial = async (itemName: string) => {
+
+
+    try {
+      const res1 = await fetch(`${API_URL}/api/delete-file`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accesToken}`,
+        },
+        body: JSON.stringify({ url: itemName }),
+      });
+
+
+      const filePath = `${itemName}`;
+      
+      const res = await fetch(`${API_URL}/api/delete-file?remoteFilePath=${encodeURIComponent(filePath)}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accesToken}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to delete file (status: ${res.status})`);
+      }
+    } catch (err: any) {
+      console.error(err);
+    }
+  };
+
+  const handleDodajMaterijal = async () => {
+    const file = fileInputRef.current?.files?.[0] ;
+    if (!file) {
+    return;
+    }
+    const FOLDER_PATH = `/uploads`;
+    const formData = new FormData();
+    setUploading(true);
+    const response2 = await fetch(`${API_URL}/api/dodajMaterijaluKurs/${selectedKurs?.id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + accesToken
+      },
+      body: JSON.stringify({
+        url: FOLDER_PATH + "/" + file?.name,
+      })
+    });
+   
+    formData.append("file", file);
+    formData.append("path", FOLDER_PATH);
+    const response = await fetch(`${API_URL}/api/upload-hetzner`, {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + accesToken
+        },
+        body: formData,
+      });
+    
+      setUploading(false);
+  };
+
+  useEffect(() => {
+  if (!selectedKurs?.id) return;
+
+  async function fetchMaterials() {
+    const materialsResponse = await fetch(`${API_URL}/api/materijaliZaKurs/${selectedKurs?.id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accesToken}`,
+        },
+      }
+    );
+    console.log("Materials response:", materialsResponse);
+    if (materialsResponse.ok) {
+      const materialsData = await materialsResponse.json();
+      console.log(materialsData);
+      setMaterials(materialsData.materijali || []);
+    }
+  }
+
+  fetchMaterials();
+}, [selectedKurs?.id, accesToken, API_URL]);
+
   const handleVideoUpload = async () => {
     if (!videoFiles || showAddVideo === null) return;
 
@@ -107,7 +199,7 @@ export default function CourseDetail({
 
         const uploadData = await uploadRes.json();
         const videoId = uploadData.videoId; // Ovo je vraćen folder name / ID na hetzneru
-        console.log("Video uspešno uploadovan i sacuvan u bazi, ID:", videoId);
+
 
         // 2. Osvežavanje UI-ja (dodaj video selektovanoj lekciji)
         const updatedKurs = {
@@ -613,6 +705,41 @@ export default function CourseDetail({
           </div>
         </div>
       </SharedModal>
+      <div>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-white">Materijali</h3>
+          <button className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20"
+            onClick={() => setShowAddMaterial(!showAddMaterial)}
+          >
+            {showAddMaterial ? 'X' : 'Dodaj Materijale'}
+          </button>
+        </div>
+        {uploading&& <p className="text-sm text-neutral-400 mt-1">Učitavanje materijala...</p>}
+        {showAddMaterial && <MaterijaliForma fileInputRef={fileInputRef} onSubmit={handleDodajMaterijal} idKurs={selectedKurs?.id} />}
+
+        <p className="text-sm text-neutral-400 mt-1">Ova sekcija je rezervisana za buduće dodatke i materijale vezane za kurs.</p>
+        <div className="mt-4 space-y-2">
+          {materials.length === 0 ? (
+            <p className="text-sm text-neutral-500">Nema materijala za ovaj kurs.</p>
+          ) : (
+            <ul className="space-y-1">
+              {materials.map((material, index) => (
+                <li key={index} className="flex items-center  justify-between bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-2">
+                  <div className="flex items-center justify-between gap-2 min-w-full">
+                    <span className="text-sm text-white">{material.url}</span>
+                    <button
+                    onClick={() => deleteMaterial(material.url)}
+                    className="text-sm text-red-500 hover:text-red-400 transition-colors"
+                  >
+                    Obriši
+                  </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

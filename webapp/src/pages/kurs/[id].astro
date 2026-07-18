@@ -7,7 +7,7 @@ const token = Astro.cookies.get("refreshToken")?.value || null;
 let pohadjanje = null;
 let userData = null;
 let klipIlekcijeData = null;
-
+let materijaliData = null;
 try {
   const response = await fetch(`${API_URL}/api/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -21,9 +21,17 @@ try {
 
   klipIlekcijeData = await klipIlekcijeRes.json();
   pohadjanje = klipIlekcijeData.pohadja ? klipIlekcijeData : null;
+
+  const response2 = await fetch(`${API_URL}/api/materijaliZaKurs/${Astro.params.id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  materijaliData = await response2.json();
+  materijaliData = materijaliData.materijali || [];
 } catch (error) {
   console.error("Error fetching data:", error);
 }
+
+
 ---
 
 <Layout title="Detalji kursa">
@@ -32,6 +40,7 @@ try {
       pohadjanje ? (
         <KursPlayer
           lekcije={klipIlekcijeData.lekcije}
+          materijali={materijaliData}
           token={token}
           API_URL={API_URL}
           client:load
@@ -42,5 +51,6 @@ try {
         </div>
       )
     }
+   
   </div>
 </Layout>
