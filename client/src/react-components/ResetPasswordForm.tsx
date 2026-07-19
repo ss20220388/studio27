@@ -10,6 +10,7 @@ const ResetPasswordForm = () => {
   const [token, setToken] = useState('');
   const [email, setEmail] = useState('');
   const [invalidLink, setInvalidLink] = useState(false);
+  const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -49,7 +50,7 @@ const ResetPasswordForm = () => {
     }
 
     try {
-      const res = await fetch('http://api.studio27.rs/api/auth/reset-password', {
+      const res = await fetch(`${API_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
