@@ -65,7 +65,7 @@ const KursPlayer = ({ lekcije, token, API_URL, materijali }) => {
                                                             clipRule="evenodd"
                                                         />
                                                     </svg>
-                                                    <span className="truncate">Video {klip.videoId}</span>
+                                                    <span className="truncate">Video</span>
                                                 </span>
                                                 <span className="text-[10px] opacity-70 ml-2 shrink-0">{klip.procenat}%</span>
                                             </div>
