@@ -33,18 +33,18 @@ try {
 ---
 
 <Layout 
-  title={`${kurs.naziv} - Studio 27`}
+  title={`${kurs.naziv} | 27 archviz`}
   description={kurs.opis}
   image={kurs.slikaUrl}
-  canonicalURL="https://studio27.rs/3ds-max-kurs"
+  canonicalURL={new URL(Astro.url.pathname, Astro.site || Astro.url.origin)}
   breadcrumbs={[
     { name: "Kursevi", url: "https://studio27.rs/kursevi" },
-    { name: "3ds Max kurs", url: "https://studio27.rs/3ds-max-kurs" }
+    { name: kurs.naziv, url: new URL(Astro.url.pathname, Astro.site || Astro.url.origin).toString() }
   ]}
   course={{
-    name: "3ds Max kurs",
-    description: "Online kurs 3ds Max, Corona Render i arhitektonske vizualizacije za početnike i napredne.",
-    url: "https://studio27.rs/3ds-max-kurs"
+    name: kurs.naziv,
+    description: kurs.opis,
+    url: new URL(Astro.url.pathname, Astro.site || Astro.url.origin).toString()
   }}
   faq={[
     {
@@ -57,7 +57,7 @@ try {
     },
     {
       question: "Šta ću naučiti na kursu?",
-      answer: "Naučićete 3ds Max, Corona Render, osnove arhitektonske vizualizacije i obradu finalnih rendera."
+      answer: kurs.sadrzaj || "Naučićete softverske alate, osnove arhitektonske vizualizacije i obradu finalnih rendera."
     }
   ]} 
 >
