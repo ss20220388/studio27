@@ -5,30 +5,30 @@ import KursInfo from "../../react-components/KursInfo.jsx";
 import KursHero from "../../react-components/KursHero.jsx";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const APP_URL = import.meta.env.PUBLIC_APP_URL || "http://studio27.rs";
 const { id } = Astro.params;
-type KursSlika = {
-  url?: string;
-  slikaUrl?: string;
-  putanja?: string;
-};
+
+type KursSlika = { url?: string; slikaUrl?: string; putanja?: string; };
+
 let kurs = null;
-let kursSlike = [];
+let kursSlike: KursSlika[] = [];
 
 try {
-  const kursRes = await fetch(`${API_URL}/api/kursevi/${id}`);
-  kurs = await kursRes.json();
-} catch (error) {
-  console.error("Error fetching kurs data:", error);
-}
-try {
-  const slikeRes = await fetch(`${API_URL}/api/kursslika/${id}`);
+  const res = await fetch(`${API_URL}/api/kursevi/${id}`);
+  if (res.ok) kurs = await res.json();
+} catch (e) { console.error("Error:", e); }
 
-  if (slikeRes.ok) {
-    const data = await slikeRes.json();
+try {
+  const res = await fetch(`${API_URL}/api/kursslika/${id}`);
+  if (res.ok) {
+    const data = await res.json();
     kursSlike = data.kursSlika || [];
   }
-} catch (error) {
-  console.error("Error fetching kurs images:", error);
+} catch (e) { console.error("Error:", e); }
+
+// Fallback ako kurs ne postoji
+if (!kurs) {
+  return Astro.redirect('/404');
 }
 ---
 
@@ -38,7 +38,7 @@ try {
   image={kurs.slikaUrl}
   canonicalURL={new URL(Astro.url.pathname, Astro.site || Astro.url.origin)}
   breadcrumbs={[
-    { name: "Kursevi", url: "https://27archviz.com/kursevi" },
+    { name: "Kursevi", url: `${APP_URL}#kursevi` },
     { name: kurs.naziv, url: new URL(Astro.url.pathname, Astro.site || Astro.url.origin).toString() }
   ]}
   course={{
@@ -61,20 +61,52 @@ try {
     }
   ]} 
 >
-  <KursHero
-    kurs={kurs}
-    kursSlike={kursSlike}
-    client:load
-/>
+  {/* Beli wrapper — ako komponente nemaju svoju pozadinu */}
+  <div class="bg-white">
+    <KursHero kurs={kurs} kursSlike={kursSlike} client:load />
+    
+    <BigTextSection
+      glavniTekst={kurs.glavniKurs}
+      naslov={kurs.naziv}
+      opis={kurs.opis}
+      client:load
+    />
 
-  <BigTextSection
-    glavniTekst={kurs.glavniKurs}
-    naslov={kurs.naziv}
-    opis={kurs.opis}
-    client:load
-  />
+    <KursInfo kurs={kurs} client:load />
 
-  <KursInfo kurs={kurs}client:load />
-
-  <!-- CTA Section -->
+    {/* CTA Section */}
+    <section class="relative overflow-hidden py-24">
+      <div class="pointer-events-none absolute inset-0">
+        <div class="absolute -left-20 top-20 h-96 w-96 rounded-full bg-orange-100/50 blur-3xl"></div>
+        <div class="absolute -right-20 bottom-20 h-80 w-80 rounded-full bg-orange-50/60 blur-3xl"></div>
+      </div>
+      
+      <div class="relative z-10 mx-auto max-w-4xl px-6 text-center">
+        <p class="text-[11px] font-semibold uppercase tracking-[0.4em] text-orange-500">Spremni za početak?</p>
+        <h2 class="mt-4 text-4xl font-bold tracking-tight text-gray-900 md:text-5xl">
+          Upiši se na <span class="text-orange-500">{kurs.naziv}</span>
+        </h2>
+        <p class="mx-auto mt-6 max-w-xl text-lg text-gray-500">
+          {kurs.cena ? `Cena kursa: ${kurs.cena} RSD` : 'Kontaktirajte nas za više informacija o ceni i terminima.'}
+        </p>
+        <div class="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          <button 
+            onclick="localStorage.setItem('kontakModalOpen','true');"
+            class="group inline-flex items-center gap-2 rounded-full bg-gray-900 px-8 py-4 text-sm font-semibold text-white transition-all duration-300 hover:bg-orange-500 hover:shadow-lg hover:shadow-orange-500/25"
+          >
+            Posalji te nam poruku
+            <svg class="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </button>
+          <a 
+            href={`${APP_URL}#kursevi`} 
+            class="inline-flex items-center gap-2 rounded-full border border-gray-200 px-8 py-4 text-sm font-semibold text-gray-600 transition-all duration-300 hover:border-orange-200 hover:text-orange-500"
+          >
+            Pogledaj ostale kurseve
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
 </Layout>

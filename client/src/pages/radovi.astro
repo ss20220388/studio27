@@ -5,23 +5,17 @@ import Layout from "../layouts/Layout.astro";
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 let radovi: any[] = [];
-
 try {
-  const resRadovi = await fetch(`${API_URL}/api/radovi`);
-  if (resRadovi.ok) {
-    radovi = await resRadovi.json();
-  }
+  const res = await fetch(`${API_URL}/api/radovi`);
+  if (res.ok) radovi = await res.json();
 } catch (e) {
-  console.error("Greška pri učitavanju radova:", e);
+  console.error("Greška:", e);
 }
 
-// Grupiraj radove po studentu
 const radoviByStudent: Record<string, any[]> = radovi.reduce((acc: any, rad: any) => {
-  const studentName = `${rad.ime} ${rad.prezime}`;
-  if (!acc[studentName]) {
-    acc[studentName] = [];
-  }
-  acc[studentName].push(rad);
+  const name = `${rad.ime} ${rad.prezime}`;
+  if (!acc[name]) acc[name] = [];
+  acc[name].push(rad);
   return acc;
 }, {});
 
@@ -32,124 +26,122 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
   title="Radovi Studenata | 3D Arhitektonska Vizuelizacija | 27 archviz"
   description="Pogledajte galeriju radova i fotorealističnih rendera naših studenata nakon završene obuke za 3ds Max i Corona Render."
   canonicalURL="https://27archviz.com/radovi"
-  breadcrumbs={[
-    { name: "Radovi", url: "https://27archviz.com/radovi" }
-  ]}
+  breadcrumbs={[{ name: "Radovi", url: "https://27archviz.com/radovi" }]}
 >
-  <section class="bg-black min-h-screen relative overflow-hidden">
-    <!-- Animated background with images - repeating pattern -->
-    <div class="animated-bg-container h-screen flex flex-col">
+  <section class="relative min-h-screen overflow-hidden bg-white">
+    <!-- Animated background -->
+    <div class="animated-bg-container pointer-events-none fixed inset-0 z-0 overflow-hidden">
       {radovi.length > 0 && (
-        <>
+        <div class="flex h-screen flex-col opacity-[0.035]">
           {[0, 3, 6, 9, 12].map((delay) => (
-            <div class="animated-images-line flex-1 h-[20vh]" style={`animation-delay: -${delay}s;`}>
-              {/* Prva polovina slika - ponavljamo vise puta da bi sigurno pokrili sirinu ekrana */}
+            <div class="animated-images-line flex-1" style={`animation-delay: -${delay}s;`}>
               {Array(5).fill(0).map(() => radovi.map((rad: any) => (
-                <div class="inline-block flex-shrink-0 h-[20vh]">
+                <div class="inline-block h-[20vh] shrink-0">
                   <img
                     src={`${API_URL}/api/uploaded-images${rad.url}`}
                     alt="rad"
-                    class="h-[20vh] w-[20vh] object-cover opacity-40 hover:opacity-70 transition-opacity"
+                    class="h-[20vh] w-[20vh] object-cover"
                     loading="lazy"
                   />
                 </div>
               )))}
-              {/* Druga polovina - 100% ista kao prva, cime se stvara iluzija beskonacnog skrola na 50% */}
               {Array(5).fill(0).map(() => radovi.map((rad: any) => (
-                <div class="inline-block flex-shrink-0 h-[20vh]">
-                  <img 
+                <div class="inline-block h-[20vh] shrink-0">
+                  <img
                     src={`${API_URL}/api/uploaded-images${rad.url}`}
                     alt="rad"
-                    class="h-[20vh] w-[20vh] object-cover opacity-40 hover:opacity-70 transition-opacity"
+                    class="h-[20vh] w-[20vh] object-cover"
                     loading="lazy"
                   />
                 </div>
               )))}
             </div>
           ))}
-        </>
+        </div>
       )}
     </div>
-    <div class="max-w-7xl mx-auto px-4 py-16 relative z-10">
+
+    <div class="relative z-10 mx-auto max-w-7xl px-4 py-16">
       {studentGroups.length === 0 ? (
-        <p class="text-center text-gray-500 text-lg py-20">Nema dostupnih radova</p>
+        <p class="py-20 text-center text-lg text-gray-400">Nema dostupnih radova</p>
       ) : (
         <div class="space-y-24">
           {studentGroups.map(([studentName, works], index) => {
-            const firstWork = (works as any[])[0];
+            const firstWork = works[0];
             const isEven = index % 2 === 0;
             return (
               <div class="student-work-section">
-                <!-- Student info section with featured image -->
-                <div class={`grid grid-cols-1 md:grid-cols-3 gap-12 mb-16 pb-12 border-b border-gray-700 items-start ${!isEven ? 'md:grid-flow-col-dense' : ''}`}>
-                  <!-- Left side - Text info -->
+                {/* Header grid */}
+                <div class={`grid grid-cols-1 items-start gap-12 border-b border-gray-200 pb-12 mb-16 md:grid-cols-3 ${!isEven ? 'md:grid-flow-col-dense' : ''}`}>
+                  {/* Text */}
                   <div class={`md:col-span-1 ${!isEven ? 'md:col-start-3' : ''}`}>
-                    <h1 class="text-6xl md:text-7xl font-bold text-white mb-6">
+                    <h1 class="student-name mb-6 text-5xl font-bold tracking-tight text-gray-900 md:text-6xl">
                       {studentName}
                     </h1>
-
-                    <div class="space-y-4 mb-8 mt-6 pb-8 border-b border-gray-700">
-                      <p class="text-base text-gray-400 leading-relaxed font-light kurs-naziv">
+                    <div class="mb-8 mt-6 space-y-4 border-b border-gray-100 pb-8">
+                      <p class="text-base font-light leading-relaxed text-gray-500">
                         Projekat razvijen kroz 27 archviz program – dokaz posvećenosti i napretka.
                       </p>
-                      <p class="text-base text-gray-400 leading-relaxed font-light kurs-naziv">
+                      <p class="text-base font-light leading-relaxed text-gray-500">
                         Kreiran tokom kursa kao rezultat kontinuiranog rada i usavršavanja.
                       </p>
-                      <p class="text-base text-gray-400 leading-relaxed font-light kurs-naziv">
+                      <p class="text-base font-light leading-relaxed text-gray-500">
                         Vizija pretvorena u projekat kroz 27 archviz iskustvo.
                       </p>
                     </div>
 
                     {firstWork?.idKurs && (
-                      <p class="kurs-naziv text-xl text-red-900 uppercase mb-4 tracking-wider">
+                      <p class="mb-4 text-xl font-semibold uppercase tracking-wider text-orange-500">
                         {firstWork?.naziv || "Rad"}
                       </p>
                     )}
 
                     {firstWork?.kurs && (
-                      <div class="flex flex-col gap-2 mt-16">
-                        <span class="text-red-500 font-semibold text-xs uppercase tracking-widest">Course</span>
-                        <span class="text-white font-bold text-2xl kurs-naziv">
+                      <div class="mt-8 flex flex-col gap-1">
+                        <span class="text-[10px] font-semibold uppercase tracking-[0.3em] text-orange-400">Kurs</span>
+                        <span class="text-2xl font-bold text-gray-900">
                           {firstWork.kurs.naziv}
                         </span>
                       </div>
                     )}
                   </div>
 
-                  <!-- Right side - Featured image -->
+                  {/* Featured image */}
                   {firstWork && (
                     <div class={`md:col-span-2 ${!isEven ? 'md:col-start-1 md:row-start-1' : ''}`}>
-                      <Image
-                        src={`${API_URL}/api/uploaded-images${firstWork.url}`}
-                        class="w-full h-[32rem] object-cover rounded-3xl hover:scale-105 transition-transform duration-300 shadow-lg"
-                        loading="lazy"
-                        alt="featured work"
-                        width={500}
-                        height={500}
-                      />
+                      <div class="overflow-hidden rounded-3xl shadow-xl shadow-orange-500/5">
+                        <Image
+                          src={`${API_URL}/api/uploaded-images${firstWork.url}`}
+                          class="h-[28rem] w-full object-cover transition-transform duration-500 hover:scale-105"
+                          loading="lazy"
+                          alt="featured work"
+                          width={900}
+                          height={600}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
 
-                <!-- Works gallery -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 overflow-x-auto pb-4">
+                {/* Gallery */}
+                <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
                   {works.map((work: any, idx: number) => {
-                    // Preskoči prvu sliku jer je već prikazana kao featured image
                     if (idx === 0) return null;
                     return (
-                    <div 
-                      class="rad-item-gallery overflow-hidden"
-                      style={`animation-delay: ${idx * 0.1}s`}
-                    >
-                      <Image
-                        src={`${API_URL}/api/uploaded-images${work.url}`} 
-                        class="w-full aspect-square object-cover hover:scale-105 transition-transform duration-300 rounded-lg"
-                        loading="lazy"
-                        alt="radovi"
-                        width={500}
-                        height={500}
-                      />
-                    </div>
+                      <div
+                        class="group relative overflow-hidden rounded-2xl border border-gray-100 bg-gray-50 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-500/10"
+                        style={`animation-delay: ${idx * 0.08}s`}
+                      >
+                        <Image
+                          src={`${API_URL}/api/uploaded-images${work.url}`}
+                          class="aspect-square w-full object-cover transition-all duration-500 group-hover:scale-110"
+                          loading="lazy"
+                          alt="radovi"
+                          width={400}
+                          height={400}
+                        />
+                        <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                      </div>
                     );
                   })}
                 </div>
@@ -163,160 +155,23 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
 </Layout>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap');
-
-  /* Masonry items animation */
-  .rad-item-animate {
+  .student-name,
+  .student-work-section {
     opacity: 0;
-    animation: itemFadeIn 0.6s ease-out forwards;
+    transform: translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+                transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-
-  @keyframes itemFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  /* Gallery items animation */
-  .rad-item-gallery {
-    opacity: 0;
-    animation: galleryFadeIn 0.6s ease-out forwards;
-    position: relative;
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 8px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
-  }
-
-  /* Glow effect na hover */
-  .rad-item-gallery::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.4),
-      transparent
-    );
-    transition: left 0.5s ease-in-out;
-    z-index: 10;
-    pointer-events: none;
-  }
-
-  .rad-item-gallery:hover::before {
-    left: 100%;
-  }
-
-  /* Glow border animation */
-  .rad-item-gallery::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: conic-gradient(
-      from 0deg,
-      transparent 0deg,
-      rgba(255, 255, 255, 0.5) 90deg,
-      rgba(255, 255, 255, 0.2) 180deg,
-      transparent 270deg
-    );
-    opacity: 0;
-    animation: rotateBorder 3s linear infinite;
-    z-index: -1;
-  }
-
-  .rad-item-gallery:hover::after {
+  .student-name.is-visible,
+  .student-work-section.is-visible {
     opacity: 1;
+    transform: translateY(0);
   }
 
-  @keyframes rotateBorder {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
-  /* Image hover effect */
-  .rad-item-gallery:hover img {
-    animation: imagePulse 0.6s ease-in-out;
-    filter: brightness(1.1) drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
-  }
-
-  @keyframes imagePulse {
-    0% {
-      transform: scale(1);
-      filter: brightness(1) drop-shadow(0 0 0px rgba(255, 255, 255, 0));
-    }
-    50% {
-      transform: scale(1.03);
-      filter: brightness(1.2) drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
-    }
-    100% {
-      transform: scale(1.05);
-      filter: brightness(1.1) drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
-    }
-  }
-
-  @keyframes galleryFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px) rotateX(10deg);
-      filter: blur(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) rotateX(0);
-      filter: blur(0);
-    }
-  }
-
-  /* Kurs naziv - Montserrat font */
-  .kurs-naziv {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-  }
-
-  /* Animated background container */
   .animated-bg-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    pointer-events: none;
-    overflow: hidden;
-    background-color: transparent;
-    filter: brightness(0.3);
-  }
-  
-  .animated-bg-container::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1;
-    pointer-events: none;
+    filter: brightness(1);
   }
 
-  /* Animated images line */
   .animated-images-line {
     display: flex;
     gap: 0;
@@ -326,11 +181,19 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
   }
 
   @keyframes scroll {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
   }
 </style>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('is-visible');
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -60px 0px' });
+
+  document.querySelectorAll('.student-name, .student-work-section').forEach(el => {
+    observer.observe(el);
+  });
+</script>

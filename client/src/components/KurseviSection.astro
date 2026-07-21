@@ -9,296 +9,212 @@ type Kurs = {
   komentarSredina: string;
   komentarGore: string;
 };
+
 type ResponseData = {
   kursevi: Kurs[];
 };
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
-let kursevi_1: Kurs[] = [];
-let kursevi_2: Kurs[] = [];
+let sviKursevi: Kurs[] = [];
 let userData: any = {};
 
 try {
-	const res = await fetch(`${API_URL}/api/kursevi`);
+  const res = await fetch(`${API_URL}/api/kursevi`);
   console.log("Fetching kursevi from:", `${API_URL}/api/kursevi`);
-	if (!res.ok) throw new Error(`Kursevi fetch failed: ${res.status}`);
-	const data: ResponseData = await res.json();
-
-  console.log("Received data:", data);
-	
-	kursevi_1 = data?.kursevi?.slice(0, 4) || [];
-	kursevi_2 = data?.kursevi?.slice(4, 6) || [];
-
-  console.log("Kursevi učitani:", kursevi_1, kursevi_2);
+  if (!res.ok) throw new Error(`Kursevi fetch failed: ${res.status}`);
+  const data: ResponseData = await res.json();
+  sviKursevi = data?.kursevi || [];
 } catch (error) {
-	console.error("Greška pri učitavanju kurseva:", error);
-	kursevi_1 = [];
-	kursevi_2 = [];
+  console.error("Greška pri učitavanju kurseva:", error);
+  sviKursevi = [];
 }
 
-
 try {
-	const token = Astro.cookies.get("refreshToken")?.value || null;
-	const response = await fetch(`${API_URL}/api/auth/me`, {
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-	});
-	if (!response.ok) throw new Error(`Auth failed: ${response.status}`);
-	userData = await response.json();
+  const token = Astro.cookies.get("refreshToken")?.value || null;
+  const response = await fetch(`${API_URL}/api/auth/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) throw new Error(`Auth failed: ${response.status}`);
+  userData = await response.json();
 } catch (error) {
-	console.error("Greška pri učitavanju user podataka:", error);
-	userData = {};
+  console.error("Greška pri učitavanju user podataka:", error);
+  userData = {};
 }
 ---
 
-<section id="kursevi" class="bg-black py-28 px-6 sm:px-10 md:px-16">
-
-  <h2 class="anim-fade-up text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white text-center font-extrabold leading-tight mb-16">
-    NAŠI KURSEVI
-  </h2>
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-
-    {kursevi_1.map((kurs, i) => (
-      <div class="kurs-card relative h-105 sm:h-112.5 md:h-125 overflow-hidden shadow-xl group rounded-2xl" style={`--card-i:${i}`}>
-
-        <!-- Image -->
-        <img
-          src={`${API_URL}/api/uploaded-images/${kurs.slikaUrl}`}
-          alt={kurs.naziv}
-          loading="lazy"
-          decoding="async"
-          class="absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-110"
-        />
-
-        <!-- Overlay -->
-        <div class="absolute inset-0 bg-black/70 group-hover:bg-black/60 transition duration-500"></div>
-
-        <!-- Content -->
-        <div class="relative z-10 h-full flex flex-col justify-between p-6 text-white">
-
-           <!-- Top -->
-        <!-- Gornji tekst -->
-    <div class="space-y-4">
-      <h2 class="text-lg font-extrabold leading-snug h-16 flex items-start">
-        {kurs.naziv}
+<section id="kursevi" class="bg-white text-zinc-900 py-16 px-4 sm:px-8 md:px-16 overflow-hidden">
+  <div class="max-w-7xl mx-auto space-y-20">
+    
+    <!-- Naslov Sekcije -->
+    <div class="text-center space-y-3">
+      <h2 class="anim-fade-up text-3xl sm:text-5xl font-black tracking-tight uppercase text-zinc-900">
+        NAŠI KURSEVI
       </h2>
-        <p class="text-sm font-bold h-12 flex items-start">
-        {kurs.glavniKurs}
-      </p>
-
-      <p class="text-xs opacity-90 font-bold h-16 flex items-start">
-        {kurs.komentarGore}
-      </p>
-
-        <p class="text-sm font-bold h-20 flex items-start">
-        {kurs.komentarSredina}
-      </p>
-
-     
+      <div class="w-16 h-1 bg-[#e0533c] mx-auto rounded-full"></div>
     </div>
 
-          <!-- Button -->
-         <!-- Donji deo -->
-    <div class="space-y-3">
-      <p class="text-sm font-extrabold tracking-wide">
-        {kurs.komentarDole}
-      </p>
+    <!-- Lista Kurseva (Svetli KF-School Split Layout) -->
+    <div class="space-y-16">
+      {sviKursevi.map((kurs, i) => {
+        const isEven = i % 2 === 0;
+        return (
+          <div 
+            class="kurs-card border border-zinc-200/80 rounded-3xl overflow-hidden bg-zinc-50/50 hover:shadow-2xl transition-all duration-500 grid grid-cols-1 lg:grid-cols-12 min-h-[480px]"
+            style={`--card-i:${i}`}
+          >
+            <!-- Tekstualni deo (Levo / Desno zavisno od parnosti za bolji vizuelni ritam) -->
+            <div class={`lg:col-span-6 p-8 sm:p-12 flex flex-col justify-between ${isEven ? 'lg:order-1' : 'lg:order-2'} bg-white`}>
+              <div class="space-y-6">
+                <!-- Badges / Tagovi -->
+                <div class="flex flex-wrap items-center gap-2">
+                  {kurs.glavniKurs && (
+                    <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 bg-zinc-100 text-zinc-700 rounded-md border border-zinc-200">
+                      {kurs.glavniKurs}
+                    </span>
+                  )}
+                  {kurs.komentarGore && (
+                    <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 bg-orange-50 text-[#e0533c] rounded-md border border-orange-100">
+                      {kurs.komentarGore}
+                    </span>
+                  )}
+                </div>
 
-      <div class="flex w-full justify-end" > 
-        <a href={`/kurs/${kurs.kursId}`} class="bg-red-900 hover:bg-red-800 px-4 py-2 text-sm  font-semibold rounded-lg">
-        Saznaj više
-      </a>
-      </div>
+                <!-- Naziv Kursa -->
+                <h3 class="text-2xl sm:text-4xl font-extrabold text-zinc-900 leading-tight">
+                  {kurs.naziv}
+                </h3>
+
+                <!-- Opis / Srednji komentar -->
+                <p class="text-base sm:text-lg text-zinc-600 font-normal leading-relaxed">
+                  {kurs.komentarSredina || kurs.opis}
+                </p>
+              </div>
+
+              <!-- Donji deo: Dodatne informacije i CTA Dugme -->
+              <div class="pt-8 mt-6 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {kurs.komentarDole && (
+                  <span class="text-sm font-semibold text-zinc-500">
+                    {kurs.komentarDole}
+                  </span>
+                )}
+                <a 
+                  href={`/kurs/${kurs.kursId}`} 
+                  class="inline-flex items-center justify-center bg-[#e0533c] hover:bg-[#c8432d] text-white font-bold px-8 py-3.5 rounded-xl transition duration-300 shadow-md hover:shadow-lg transform active:scale-95 text-sm tracking-wide uppercase"
+                >
+                  Saznaj više
+                </a>
+              </div>
+            </div>
+
+            <!-- Velika Slika Rendera -->
+            <div class={`lg:col-span-6 relative min-h-[300px] lg:min-h-full overflow-hidden ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
+              <img
+                src={`${API_URL}/api/uploaded-images/${kurs.slikaUrl}`}
+                alt={kurs.naziv}
+                loading="lazy"
+                decoding="async"
+                class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+              />
+            </div>
+          </div>
+        );
+      })}
     </div>
 
+    <!-- FAQ Sekcija (Prebačena u čist svetli dizajn) -->
+    <div class="pt-16 border-t border-zinc-200">
+      <h3 class="text-2xl sm:text-3xl font-extrabold text-center mb-12 text-zinc-900">
+        Često postavljana pitanja
+      </h3>
+
+      <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        <!-- LEVA STRANA -->
+        <div class="space-y-6">
+          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:1">
+            <h4 class="font-bold text-lg text-zinc-900 mb-2">Da li je kurs za početnike?</h4>
+            <p class="text-zinc-600 text-sm leading-relaxed">
+              Da. Kurs je prilagođen i početnicima i onima koji već imaju osnovno znanje. Sve se objašnjava korak po korak – od interfejsa do finalnog rendera.
+            </p>
+          </div>
+
+          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:2">
+            <h4 class="font-bold text-lg text-zinc-900 mb-2">Kako izgleda format kursa?</h4>
+            <p class="text-zinc-600 text-sm leading-relaxed">
+              Kurs je online i sastoji se od snimljenih lekcija koje možeš gledati svojim tempom. Uz video lekcije dobijaš i dodatne materijale, fajlove za vežbu i konkretne projekte.
+            </p>
+          </div>
+
+          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:3">
+            <h4 class="font-bold text-lg text-zinc-900 mb-2">Da li imam vremensko ograničenje kod snimljenih lekcija?</h4>
+            <p class="text-zinc-600 text-sm leading-relaxed">
+              Ne. Kurs prolaziš svojim tempom, bez pritiska i rokova.
+            </p>
+          </div>
         </div>
 
-      </div>
-    ))}
+        <!-- DESNA STRANA -->
+        <div class="space-y-6">
+          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:4">
+            <h4 class="font-bold text-lg text-zinc-900 mb-2">Da li dobijam sertifikat?</h4>
+            <p class="text-zinc-600 text-sm leading-relaxed">
+              Da. Nakon uspešno završenog projekta dobijaš sertifikat o završenom kursu.
+            </p>
+          </div>
 
-  </div>
+          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:5">
+            <h4 class="font-bold text-lg text-zinc-900 mb-2">Da li postoji feedback?</h4>
+            <p class="text-zinc-600 text-sm leading-relaxed">
+              Da. Imaš mogućnost dobijanja povratnih informacija na svoje radove, kao i podršku bez obzira na vreme kupovine.
+            </p>
+          </div>
 
-
-   <div class="flex flex-col md:flex-row flex-wrap justify-center items-center mt-3 gap-8 max-w-7xl mx-auto">
-
-    {kursevi_2.map((kurs, i) => (
-      <div class="kurs-card relative md:max-w-75 h-105 sm:h-112.5 md:h-125 overflow-hidden shadow-xl group rounded-2xl" style={`--card-i:${i + 4}`}>
-
-        <!-- Image -->
-        <img
-          src={`${API_URL}/api/uploaded-images/${kurs.slikaUrl}`}
-          alt={kurs.naziv}
-          loading="lazy"
-          decoding="async"
-          class="absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-110"
-        />
-
-        <!-- Overlay -->
-        <div class="absolute inset-0 bg-black/70 group-hover:bg-black/60 transition duration-500"></div>
-
-        <!-- Content -->
-        <div class="relative z-10 h-full flex flex-col justify-between p-6 text-white">
-
-        <!-- Top -->
-        <!-- Gornji tekst -->
-    <div class="space-y-4">
-      <h2 class="text-lg font-extrabold leading-snug h-16 flex items-start">
-        {kurs.naziv}
-      </h2>
-        <p class="text-sm font-bold h-12 flex items-start">
-        {kurs.glavniKurs}
-      </p>
-
-      <p class="text-xs opacity-90 font-bold h-16 flex items-start">
-        {kurs.komentarGore}
-      </p>
-
-        <p class="text-sm font-bold h-20 flex items-start">
-        {kurs.komentarSredina}
-      </p>
-
-     
-    </div>
-
-          <!-- Button -->
-         <!-- Donji deo -->
-    <div class="space-y-3">
-      <p class="text-sm font-extrabold tracking-wide">
-        {kurs.komentarDole}
-      </p>
-
-      <div class="flex w-full justify-end" > 
-        <a href={`/kurs/${kurs.kursId}`} class="bg-red-900 hover:bg-red-800 px-4 py-2 text-sm  font-semibold rounded-lg">
-        Saznaj više
-      </a>
-      </div>
-    </div>
-
+          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:6">
+            <h4 class="font-bold text-lg text-zinc-900 mb-2">Da li dobijam pristup svim lekcijama odmah?</h4>
+            <p class="text-zinc-600 text-sm leading-relaxed">
+              Da. Nakon uplate dobijaš kompletan pristup svim modulima.
+            </p>
+          </div>
         </div>
-
       </div>
-    ))}
-
-  </div>
- <div class="max-w-7xl mx-auto mt-24 text-white">
-
-  <div class="grid md:grid-cols-2 gap-16">
-
-    <!-- LEVA STRANA -->
-    <div class="space-y-8">
-      <div class="faq-item" style="--faq-i:1">
-        <h3 class="font-bold text-lg mb-3">
-          Da li je kurs za početnike?
-        </h3>
-        <p class="text-gray-300 leading-relaxed">
-          Da. Kurs je prilagođen i početnicima i onima koji već imaju osnovno znanje.
-          Sve se objašnjava korak po korak – od interfejsa do finalnog rendera.
-        </p>
-      </div>
-
-      <div class="faq-item" style="--faq-i:2">
-        <h3 class="font-bold text-lg mb-3">
-          Kako izgleda format kursa?
-        </h3>
-        <p class="text-gray-300 leading-relaxed">
-          Kurs je online i sastoji se od snimljenih lekcija koje možeš gledati svojim tempom.
-          Uz video lekcije dobijaš i dodatne materijale, fajlove za vežbu i konkretne projekte.
-          Možete se odlučiti i za kurs uživo sa predavačem.
-        </p>
-      </div>
-
-      <div class="faq-item" style="--faq-i:3">
-        <h3 class="font-bold text-lg mb-3">
-          Da li imam vremensko ograničenje kod snimljenih lekcija za završetak kursa?
-        </h3>
-        <p class="text-gray-300 leading-relaxed">
-          Ne. Kurs prolaziš svojim tempom, bez pritiska i rokova.
-        </p>
-      </div>
-
-    </div>
-
-    <!-- DESNA STRANA -->
-    <div class="space-y-8">
-
-      <div class="faq-item" style="--faq-i:4">
-        <h3 class="font-bold text-lg mb-3">
-          Da li dobijam sertifikat?
-        </h3>
-        <p class="text-gray-300 leading-relaxed">
-          Da. Nakon uspešno završenog projekta dobijaš sertifikat o završenom kursu.
-        </p>
-      </div>
-
-      <div class="faq-item" style="--faq-i:5">
-        <h3 class="font-bold text-lg mb-3">
-          Da li postoji feedback?
-        </h3>
-        <p class="text-gray-300 leading-relaxed">
-          Da. Imaš mogućnost dobijanja povratnih informacija na svoje radove,
-          kao i podršku bez obzira na vreme kupovine.
-        </p>
-      </div>
-
-      <div class="faq-item" style="--faq-i:6">
-        <h3 class="font-bold text-lg mb-3">
-          Da li dobijam pristup svim lekcijama odmah?
-        </h3>
-        <p class="text-gray-300 leading-relaxed">
-          Da. Nakon uplate dobijaš kompletan pristup svim modulima.
-        </p>
-      </div>
-
-      <div class="faq-item" style="--faq-i:7">
-        <h3 class="font-bold text-lg mb-3">
-          Da li dobijam fajlove i resurse?
-        </h3>
-        <p class="text-gray-300 leading-relaxed">
-          Da. Uz lekcije dobijaš radne fajlove, modele, materijale i dodatne resurse potrebne za vežbu.
-        </p>
-      </div>
-
     </div>
 
   </div>
-</div>
-
 </section>
 
 <style>
-  /* Course cards - slide up with stagger */
+  /* Kurs kartice - animacija ulaza */
   .kurs-card {
     opacity: 0;
-    transform: translateY(60px) scale(0.96);
+    transform: translateY(40px);
     transition: opacity 0.7s cubic-bezier(0.25,0.46,0.45,0.94),
                 transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
     transition-delay: calc(var(--card-i) * 0.12s);
   }
   .kurs-card.is-visible {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 
-  /* FAQ items - slide in from left */
+  /* FAQ stavke */
   .faq-item {
     opacity: 0;
-    transform: translateX(-25px);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
     transition-delay: calc(var(--faq-i) * 0.08s);
   }
   .faq-item.is-visible {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
   }
 
-  /* Generic fade up */
+  /* Fade up animacija */
   .anim-fade-up {
     opacity: 0;
-    transform: translateY(40px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
   }
   .anim-fade-up.is-visible {
     opacity: 1;

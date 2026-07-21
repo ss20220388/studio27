@@ -2,31 +2,77 @@
 import { Image } from "astro:assets"
 import DugmeKontakt from "../react-components/DugmeKontakt"
 ---
-<script>
-  const button = document.getElementById('kontaktDugme');
-  button?.addEventListener('click', () => {
-    localStorage.setItem('kontakModalOpen', 'true');
-  });
 
-</script>
-<section id="onama" class="pt-40 bg-black">
-  <div class="w-full h-[1000px] bg-black relative">
-    <div class="h-48 md:h-40 w-[90%] mx-auto bg-gradient-to-b from-black via-[#301109] to-[#5e1401] relative"></div>
-    
-    <div class="relative md:w-[70%] w-[80%] mx-auto">
-      <div class="absolute md:-top-[7rem] -top-[4rem] flex flex-col items-center">
-        <Image src="/src/assets/studio27.jpg" width={600} height={600} alt="Profile" class="onama-img md:w-[24rem] sm:w-[16rem] w-[10rem] object-center" />
-        <h2 class="onama-heading sm:text-6xl text-6xl text-white font-serif font-extrabold">O nama</h2>
-        <p class="onama-text text-center text-white text-md mt-6">
-          Archviz27 je kreativni studio specijalizovan za profesionalnu 3D arhitektonsku vizualizaciju. Bavimo se izradom fotorealističnih rendera enterijera i eksterijera za klijente širom sveta.
-          <br/><br/>
-          Naš cilj je da svaku ideju pretvorimo u vizuelno iskustvo koje ostavlja utisak. Kombinujemo tehničku preciznost, umetnički pristup i savremene alate poput 3ds Max-a i Corona Renderer-a kako bismo postigli vrhunski kvalitet prezentacije projekata.
-          <br/><br/>
-          Pored render usluga, organizujemo i kurseve 3ds Max + Corona Renderer, namenjene svima koji žele da od nule dođu do profesionalnog nivoa. Naš program je osmišljen tako da polaznicima pruži praktično znanje, realne projekte i jasnu strukturu učenja.
-          <br/><br/>
-          Verujemo da kvalitetna vizualizacija nije samo slika – već moćan alat komunikacije između ideje i realizacije.
-        </p>
-        <div class="onama-btn">
+<section id="onama" class="relative overflow-hidden bg-white pt-24 pb-32 md:pt-32 md:pb-40">
+  <!-- Background decoration -->
+  <div class="pointer-events-none absolute inset-0">
+    <div class="absolute -right-20 top-20 h-96 w-96 rounded-full bg-orange-100/40 blur-3xl"></div>
+    <div class="absolute -left-20 bottom-20 h-80 w-80 rounded-full bg-orange-50/60 blur-3xl"></div>
+  </div>
+
+  <div class="relative z-10 mx-auto max-w-6xl px-6 lg:px-8">
+    <!-- Kicker -->
+    <div class="onama-kicker mx-auto mb-8 flex items-center justify-center gap-3">
+      <div class="h-px w-12 bg-orange-400"></div>
+      <span class="text-[11px] font-semibold uppercase tracking-[0.4em] text-orange-500">Upoznajte nas</span>
+      <div class="h-px w-12 bg-orange-400"></div>
+    </div>
+
+    <div class="grid items-start gap-12 lg:grid-cols-2 lg:gap-16">
+      <!-- Left: Image -->
+      <div class="onama-img relative lg:sticky lg:top-32">
+        <div class="relative overflow-hidden rounded-3xl shadow-2xl shadow-orange-500/10">
+          <Image 
+            src="/src/assets/studio27.jpg" 
+            width={600} 
+            height={700} 
+            alt="Studio 27" 
+            class="h-auto w-full object-cover"
+          />
+          <div class="absolute inset-0 rounded-3xl ring-1 ring-inset ring-black/5"></div>
+        </div>
+        <!-- Floating stat card -->
+        <div class="absolute -bottom-6 -right-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-xl shadow-orange-500/5 md:-right-8 md:p-6">
+          <p class="text-3xl font-bold text-orange-500 md:text-4xl">MNOGO</p>
+          <p class="mt-1 text-sm text-gray-500">Završenih projekata</p>
+        </div>
+      </div>
+
+      <!-- Right: Content -->
+      <div class="lg:pt-4">
+        <h2 class="onama-heading text-4xl font-bold leading-[1.1] tracking-tight text-gray-900 md:text-5xl lg:text-6xl">
+          Mi smo <span class="text-orange-500">27 archviz</span>
+        </h2>
+
+        <div class="onama-text mt-8 space-y-5 text-gray-600">
+          <p class="text-lg leading-relaxed">
+            Kreativni studio specijalizovan za profesionalnu <strong class="text-gray-900">3D arhitektonsku vizualizaciju</strong>. Bavimo se izradom fotorealističnih rendera enterijera i eksterijera za klijente širom sveta.
+          </p>
+          <p class="leading-relaxed">
+            Naš cilj je da svaku ideju pretvorimo u vizuelno iskustvo koje ostavlja utisak. Kombinujemo tehničku preciznost, umetnički pristup i savremene alate poput <span class="font-medium text-gray-900">3ds Max-a</span> i <span class="font-medium text-gray-900">Corona Renderer-a</span>.
+          </p>
+          <p class="leading-relaxed">
+            Pored render usluga, organizujemo i <span class="font-medium text-orange-500">kurseve 3ds Max + Corona Renderer</span>, namenjene svima koji žele da od nule dođu do profesionalnog nivoa. Naš program pruža praktično znanje, realne projekte i jasnu strukturu učenja.
+          </p>
+          <p class="text-lg font-medium leading-relaxed text-gray-800">
+            Verujemo da kvalitetna vizualizacija nije samo slika — već moćan alat komunikacije između ideje i realizacije.
+          </p>
+        </div>
+
+        <!-- Stats -->
+        <div class="onama-stats mt-10 grid grid-cols-3 gap-6 border-t border-gray-100 pt-8">
+          <div>
+            <p class="text-2xl font-bold text-gray-900 md:text-3xl">3+</p>
+            <p class="mt-1 text-sm text-gray-500">Godina iskustva</p>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-gray-900 md:text-3xl">20+</p>
+            <p class="mt-1 text-sm text-gray-500">Polaznika</p>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="onama-btn mt-10 ">
           <DugmeKontakt client:load  />
         </div>
       </div>
@@ -35,45 +81,45 @@ import DugmeKontakt from "../react-components/DugmeKontakt"
 </section>
 
 <style>
-  /* Image reveal */
-  .onama-img {
-    opacity: 0;
-    transform: scale(0.85);
-    transition: opacity 1s ease-out, transform 1s cubic-bezier(0.25,0.46,0.45,0.94);
-  }
-  .onama-img.is-visible {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  /* Heading slide up */
-  .onama-heading {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.8s ease-out 0.3s, transform 0.8s ease-out 0.3s;
-  }
-  .onama-heading.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* Text fade in */
-  .onama-text {
-    opacity: 0;
-    transform: translateY(25px);
-    transition: opacity 0.9s ease-out 0.5s, transform 0.9s ease-out 0.5s;
-  }
-  .onama-text.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* Button pop */
+  .onama-kicker,
+  .onama-img,
+  .onama-heading,
+  .onama-text,
+  .onama-stats,
   .onama-btn {
     opacity: 0;
-    transform: translateY(20px) scale(0.9);
-    transition: opacity 0.6s ease-out 0.8s, transform 0.6s ease-out 0.8s;
+    transform: translateY(24px);
+    transition: opacity 0.8s cubic-bezier(0.2, 0.8, 0.2, 1),
+                transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
+
+  .onama-kicker {
+    transition-delay: 0s;
+    transform: translateY(12px);
+  }
+  .onama-img {
+    transition-delay: 0.1s;
+    transform: translateY(24px) scale(0.97);
+  }
+  .onama-heading {
+    transition-delay: 0.2s;
+  }
+  .onama-text {
+    transition-delay: 0.35s;
+  }
+  .onama-stats {
+    transition-delay: 0.5s;
+  }
+  .onama-btn {
+    transition-delay: 0.65s;
+    transform: translateY(16px) scale(0.95);
+  }
+
+  .onama-kicker.is-visible,
+  .onama-img.is-visible,
+  .onama-heading.is-visible,
+  .onama-text.is-visible,
+  .onama-stats.is-visible,
   .onama-btn.is-visible {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -87,9 +133,9 @@ import DugmeKontakt from "../react-components/DugmeKontakt"
         entry.target.classList.add('is-visible');
       }
     });
-  }, { threshold: 0.1 });
+  }, { threshold: 0.08, rootMargin: '0px 0px -60px 0px' });
 
-  document.querySelectorAll('.onama-img, .onama-heading, .onama-text, .onama-btn').forEach(el => {
-    onamaObserver.observe(el);
-  });
+  document.querySelectorAll(
+    '.onama-kicker, .onama-img, .onama-heading, .onama-text, .onama-stats, .onama-btn'
+  ).forEach(el => onamaObserver.observe(el));
 </script>

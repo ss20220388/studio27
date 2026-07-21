@@ -8,7 +8,7 @@ const DugmeKontakt = () => {
     };
    
     return (
-        <button  onClick={openModal} className="text-lg font-semibold px-6 py-2 mt-8 text-gray-300 border border-white rounded-full hover:bg-white hover:text-black">
+        <button  onClick={openModal} className="text-lg font-semibold px-6 py-2 mt-8 text-white border bg-[#e0533c] border-white rounded-full hover:bg-[#c8432d] transition-colors duration-200 shadow-md">
             Contact
         </button>
     )

@@ -18,38 +18,48 @@ export default function BigTextSection({ naslov, opis, glavniTekst }) {
   const textX = useTransform(scrollYProgress, [0, 1], ["10%", "-10%"]);
   const textX2 = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
 
+  // Fallback text ako nema props
+  const displayGlavni = glavniTekst || "27archviz";
+  const displayNaslov = naslov || "Od nule do profesionalnog rendera";
+  const displayOpis = opis || "Ovaj kurs je dizajniran da vam pokaže kako da iskoristite savremene alate i tehnologije kako biste ubrzali svoj rad, automatizovali procese i stvorili nove poslovne prilike.";
+
+  // Podeli naslov na dva dela (sve osim poslednje 2 reči, i poslednje 2 reči)
+  const words = displayNaslov.split(" ");
+  const firstPart = words.slice(0, -2).join(" ");
+  const lastPart = words.slice(-2).join(" ");
+
   return (
     <section
       ref={ref}
-      className="py-20 md:py-28 bg-black text-white relative overflow-hidden"
+      className="relative overflow-hidden bg-white py-20 text-gray-900 md:py-28"
     >
       {/* Horizontal scrolling text marquee - decorative */}
       <div className="relative mb-12 overflow-hidden">
         <motion.div style={{ x: textX }} className="whitespace-nowrap">
-          <span className="text-[70px] md:text-[110px] font-black text-white/20 select-none tracking-tighter">
-            {glavniTekst} &nbsp; {glavniTekst} &nbsp; {glavniTekst} &nbsp;
+          <span className="select-none text-[70px] font-black tracking-tighter text-gray-300 md:text-[110px]">
+            {displayGlavni} &nbsp; {displayGlavni} &nbsp; {displayGlavni} &nbsp;
           </span>
         </motion.div>
-        <motion.div style={{ x: textX2 }} className="whitespace-nowrap -mt-6">
-          <span className="text-[70px] md:text-[110px] font-black text-white/20 select-none tracking-tighter">
-            STUDIO 27 &nbsp; STUDIO 27 &nbsp; STUDIO 27 &nbsp;
+        <motion.div style={{ x: textX2 }} className="-mt-6 whitespace-nowrap">
+          <span className="select-none text-[70px] font-black tracking-tighter text-gray-300 md:text-[110px]">
+            27archviz &nbsp; 27archviz &nbsp; 27archviz &nbsp;
           </span>
         </motion.div>
       </div>
 
       {/* Main heading */}
-      <div className="relative z-10 max-w-5xl mx-auto text-center px-6">
+      <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
         <motion.h2
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="text-4xl md:text-6xl font-bold tracking-tight mb-8"
+          className="mb-8 text-4xl font-bold tracking-tight md:text-6xl"
         >
-          {naslov.split(" ").slice(0, -2).join(" ")} <br />
+          {firstPart} <br />
           <br />
-          <span className="bg-linear-to-r from-red-800 to-red-500 bg-clip-text text-transparent">
-            {naslov.split(" ").slice(-2).join(" ")}
+          <span className="bg-gradient-to-r from-orange-500 to-orange-400 bg-clip-text text-transparent">
+            {lastPart}
           </span>
         </motion.h2>
 
@@ -58,9 +68,9 @@ export default function BigTextSection({ naslov, opis, glavniTekst }) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-lg md:text-xl text-gray-400 leading-relaxed max-w-3xl mx-auto mb-16"
+          className="mx-auto mb-16 max-w-3xl text-lg leading-relaxed text-gray-500 md:text-xl"
         >
-          {opis? opis : "Ovaj kurs je dizajniran da vam pokaže kako da iskoristite savremene AI alate i tehnologije kako biste ubrzali svoj rad, automatizovali procese i stvorili nove poslovne prilike."}
+          {displayOpis}
         </motion.p>
 
         {/* Feature pills */}
@@ -72,10 +82,10 @@ export default function BigTextSection({ naslov, opis, glavniTekst }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
-              className="flex items-center gap-3 px-6 py-3 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full"
+              className="flex items-center gap-3 rounded-full border border-gray-100 bg-gray-50 px-6 py-3 backdrop-blur-sm"
             >
               <span className="text-xl">{feat.icon}</span>
-              <span className="text-sm font-medium text-gray-300">
+              <span className="text-sm font-medium text-gray-600">
                 {feat.text}
               </span>
             </motion.div>
@@ -85,10 +95,10 @@ export default function BigTextSection({ naslov, opis, glavniTekst }) {
 
       {/* Ambient glow */}
       <div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 rounded-full pointer-events-none"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full"
         style={{
           background:
-            "radial-gradient(circle, rgba(127,29,29,0.08) 0%, transparent 60%)",
+            "radial-gradient(circle, rgba(249,115,22,0.06) 0%, transparent 60%)",
         }}
       />
     </section>

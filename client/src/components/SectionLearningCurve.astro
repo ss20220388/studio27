@@ -3,41 +3,45 @@
 
 <section
   id="struktura"
-  class="relative overflow-hidden bg-[#050505] px-6 py-24 text-white sm:px-8 lg:px-10 lg:py-32"
+  class="relative overflow-hidden bg-white px-6 py-24 text-gray-900 sm:px-8 lg:px-10 lg:py-32"
 >
-  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(127,29,29,0.28),transparent_30%)" />
+  {/* Glow efekti */}
+  <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(249,115,22,0.08),transparent_30%)]" />
 
   <div class="pointer-events-none absolute inset-0 overflow-hidden">
-    <div class="absolute left-[-8%] top-[-6%] h-96 w-96 rounded-full bg-red-900/20 blur-3xl lc-glow" />
-    <div class="absolute right-[-10%] top-[12%] h-112 w-md rounded-full bg-white/5 blur-3xl lc-glow-delay" />
-    <div class="absolute bottom-[-16%] left-[18%] h-80 w-80 rounded-full bg-red-700/10 blur-3xl lc-glow-soft" />
+    <div class="lc-glow absolute left-[-8%] top-[-6%] h-96 w-96 rounded-full bg-orange-200/40 blur-3xl" />
+    <div class="lc-glow-delay absolute right-[-10%] top-[12%] h-112 w-md rounded-full bg-orange-100/30 blur-3xl" />
+    <div class="lc-glow-soft absolute bottom-[-16%] left-[18%] h-80 w-80 rounded-full bg-orange-300/20 blur-3xl" />
   </div>
 
   <div class="relative z-10 mx-auto max-w-7xl">
+    {/* Header */}
     <div class="mx-auto max-w-4xl text-center">
-      <p class="lc-kicker text-[11px] font-semibold uppercase tracking-[0.55em] text-red-400/90">
+      <p class="lc-kicker text-[11px] font-semibold uppercase tracking-[0.55em] text-orange-500/90">
         Struktura učenja
       </p>
-      <h2 class="lc-title mt-5 text-4xl font-semibold leading-[0.95] tracking-tight text-white sm:text-6xl lg:text-7xl">
+      <h2 class="lc-title mt-5 text-4xl font-semibold leading-[0.95] tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
         Kako izgleda učenje kroz kurs.
       </h2>
-      <p class="lc-subtitle mx-auto mt-6 max-w-2xl text-sm leading-7 text-white/60 sm:text-base">
+      <p class="lc-subtitle mx-auto mt-6 max-w-2xl text-sm leading-7 text-gray-500 sm:text-base">
         Dva jasno odvojena toka u istoj premium kompoziciji: samostalne lekcije i uživo rad sa predavačem, bez dupliranja i bez vizuelnog šuma.
       </p>
     </div>
 
+    {/* Grid */}
     <div class="mt-16 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-      <article class="lc-panel relative overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(180deg,rgba(20,20,20,0.96),rgba(10,10,10,0.9))] p-6 shadow-[0_35px_120px_rgba(0,0,0,0.42)] sm:p-8 lg:p-10">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(127,29,29,0.2),transparent_42%)]" />
+      {/* Panel 1 – Samostalno */}
+      <article class="lc-panel relative overflow-hidden rounded-4xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-6 shadow-[0_35px_120px_rgba(0,0,0,0.08)] sm:p-8 lg:p-10">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(249,115,22,0.08),transparent_42%)]" />
         <div class="relative">
-          <div class="flex items-center justify-between gap-4 border-b border-white/10 pb-6">
+          <div class="flex items-center justify-between gap-4 border-b border-gray-200 pb-6">
             <div>
-              <p class="text-[11px] font-semibold uppercase tracking-[0.45em] text-red-400/90">01 / Samostalno</p>
-              <h3 class="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.45em] text-orange-500/90">01 / Samostalno</p>
+              <h3 class="mt-3 text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
                 Nasnimljene lekcije + video tutorijali
               </h3>
             </div>
-            <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/80">
+            <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-gray-200 bg-gray-50 text-orange-500">
               <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                 <path d="M12 8v8m-4-4h8"></path>
               </svg>
@@ -45,52 +49,38 @@
           </div>
 
           <div class="mt-8 grid gap-4">
-            <div class="lc-step-card">
-              <span class="lc-step-index">01</span>
-              <div>
-                <h4 class="lc-step-title">Kupovina lekcija</h4>
-                <p class="lc-step-text">Odabereš kurs i odmah dobijaš pristup sadržaju.</p>
+            {[ 
+              { num: "01", title: "Kupovina lekcija", text: "Odabereš kurs i odmah dobijaš pristup sadržaju." },
+              { num: "02", title: "Pristup putem e-maila", text: "Svi detalji stižu uredno na tvoju adresu." },
+              { num: "03", title: "Praćenje video tutorijala", text: "Gledaš lekcije svojim tempom, kad god želiš." },
+              { num: "04", title: "Pitanja i feedback", text: "Dobijaš podršku dok prolaziš kroz materijal." },
+            ].map((step) => (
+              <div class="lc-step-card flex gap-4 items-start rounded-2xl border border-gray-200 bg-gray-50/50 p-4 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:bg-orange-50/30">
+                <span class="inline-grid h-10 w-10 shrink-0 place-items-center rounded-full border border-orange-200 bg-gradient-to-b from-orange-100 to-orange-50 text-orange-600 text-[11px] font-bold tracking-widest">
+                  {step.num}
+                </span>
+                <div>
+                  <h4 class="text-base font-semibold leading-snug text-gray-900">{step.title}</h4>
+                  <p class="mt-1.5 text-[0.92rem] leading-relaxed text-gray-500">{step.text}</p>
+                </div>
               </div>
-            </div>
-
-            <div class="lc-step-card">
-              <span class="lc-step-index">02</span>
-              <div>
-                <h4 class="lc-step-title">Pristup putem e-maila</h4>
-                <p class="lc-step-text">Svi detalji stižu uredno na tvoju adresu.</p>
-              </div>
-            </div>
-
-            <div class="lc-step-card">
-              <span class="lc-step-index">03</span>
-              <div>
-                <h4 class="lc-step-title">Praćenje video tutorijala</h4>
-                <p class="lc-step-text">Gledaš lekcije svojim tempom, kad god želiš.</p>
-              </div>
-            </div>
-
-            <div class="lc-step-card">
-              <span class="lc-step-index">04</span>
-              <div>
-                <h4 class="lc-step-title">Pitanja i feedback</h4>
-                <p class="lc-step-text">Dobijaš podršku dok prolaziš kroz materijal.</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </article>
 
-      <article class="lc-panel relative overflow-hidden rounded-4xl border border-white/10 bg-[linear-gradient(180deg,rgba(16,16,16,0.98),rgba(8,8,8,0.92))] p-6 shadow-[0_35px_120px_rgba(0,0,0,0.42)] sm:p-8 lg:p-10">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_42%)]" />
+      {/* Panel 2 – Uživo */}
+      <article class="lc-panel relative overflow-hidden rounded-4xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-6 shadow-[0_35px_120px_rgba(0,0,0,0.08)] sm:p-8 lg:p-10">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(249,115,22,0.06),transparent_42%)]" />
         <div class="relative">
-          <div class="flex items-center justify-between gap-4 border-b border-white/10 pb-6">
+          <div class="flex items-center justify-between gap-4 border-b border-gray-200 pb-6">
             <div>
-              <p class="text-[11px] font-semibold uppercase tracking-[0.45em] text-red-400/90">02 / Uživo</p>
-              <h3 class="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              <p class="text-[11px] font-semibold uppercase tracking-[0.45em] text-orange-500/90">02 / Uživo</p>
+              <h3 class="mt-3 text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
                 Rad sa predavačem uživo
               </h3>
             </div>
-            <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/80">
+            <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-gray-200 bg-gray-50 text-orange-500">
               <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                 <path d="M4 6h16v12H4z"></path>
                 <path d="M8 10h8"></path>
@@ -99,37 +89,22 @@
           </div>
 
           <div class="mt-8 grid gap-4">
-            <div class="lc-step-card">
-              <span class="lc-step-index">01</span>
-              <div>
-                <h4 class="lc-step-title">Prijava na kurs</h4>
-                <p class="lc-step-text">Rezervišeš svoje mesto i biraš termin rada.</p>
+            {[ 
+              { num: "01", title: "Prijava na kurs", text: "Rezervišeš svoje mesto i biraš termin rada." },
+              { num: "02", title: "Interaktivni rad putem Zoom platforme", text: "Uživo pratiš predavanja i radiš zajedno sa predavačem." },
+              { num: "03", title: "Snimci časova", text: "Sve važno ostaje dostupno i nakon sesije." },
+              { num: "04", title: "Feedback i pitanja tokom i posle kursa", text: "Dobijaš precizne odgovore i korekcije na rad." },
+            ].map((step) => (
+              <div class="lc-step-card flex gap-4 items-start rounded-2xl border border-gray-200 bg-gray-50/50 p-4 backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:bg-orange-50/30">
+                <span class="inline-grid h-10 w-10 shrink-0 place-items-center rounded-full border border-orange-200 bg-gradient-to-b from-orange-100 to-orange-50 text-orange-600 text-[11px] font-bold tracking-widest">
+                  {step.num}
+                </span>
+                <div>
+                  <h4 class="text-base font-semibold leading-snug text-gray-900">{step.title}</h4>
+                  <p class="mt-1.5 text-[0.92rem] leading-relaxed text-gray-500">{step.text}</p>
+                </div>
               </div>
-            </div>
-
-            <div class="lc-step-card">
-              <span class="lc-step-index">02</span>
-              <div>
-                <h4 class="lc-step-title">Interaktivni rad putem Zoom platforme</h4>
-                <p class="lc-step-text">Uživo pratiš predavanja i radiš zajedno sa predavačem.</p>
-              </div>
-            </div>
-
-            <div class="lc-step-card">
-              <span class="lc-step-index">03</span>
-              <div>
-                <h4 class="lc-step-title">Snimci časova</h4>
-                <p class="lc-step-text">Sve važno ostaje dostupno i nakon sesije.</p>
-              </div>
-            </div>
-
-            <div class="lc-step-card">
-              <span class="lc-step-index">04</span>
-              <div>
-                <h4 class="lc-step-title">Feedback i pitanja tokom i posle kursa</h4>
-                <p class="lc-step-text">Dobijaš precizne odgovore i korekcije na rad.</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </article>
@@ -138,112 +113,26 @@
 </section>
 
 <style>
-  .lc-kicker,
-  .lc-title,
-  .lc-subtitle,
-  .lc-panel,
-  .lc-glow,
-  .lc-glow-delay,
-  .lc-glow-soft {
+  .lc-kicker, .lc-title, .lc-subtitle, .lc-panel,
+  .lc-glow, .lc-glow-delay, .lc-glow-soft {
     opacity: 0;
     transform: translateY(24px);
     transition: opacity 0.9s ease-out, transform 0.9s ease-out;
   }
-
-  .lc-title.is-visible,
-  .lc-subtitle.is-visible,
-  .lc-panel.is-visible,
-  .lc-kicker.is-visible,
-  .lc-glow.is-visible,
-  .lc-glow-delay.is-visible,
-  .lc-glow-soft.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  .lc-glow {
-    transform: translateY(0) scale(0.85);
-    transition: opacity 1.2s ease-out, transform 1.2s ease-out;
-  }
-
-  .lc-glow-delay {
-    transform: translateY(0) scale(0.9);
-    transition: opacity 1.2s ease-out 0.15s, transform 1.2s ease-out 0.15s;
-  }
-
-  .lc-glow-soft {
-    transform: translateY(0) scale(0.88);
-    transition: opacity 1.2s ease-out 0.25s, transform 1.2s ease-out 0.25s;
-  }
-
-  .lc-panel {
-    position: relative;
-  }
-
-  .lc-step-card {
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 1.25rem;
-    padding: 1rem 1rem 1rem 1rem;
-    backdrop-filter: blur(10px);
-    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
-  }
-
-  .lc-step-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .lc-step-index {
-    display: inline-grid;
-    place-items: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 9999px;
-    background: linear-gradient(180deg, rgba(127, 29, 29, 0.6), rgba(127, 29, 29, 0.25));
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.16em;
-    flex-shrink: 0;
-  }
-
-  .lc-step-title {
-    margin: 0;
-    font-size: 1rem;
-    line-height: 1.35;
-    font-weight: 600;
-    color: #fff;
-  }
-
-  .lc-step-text {
-    margin-top: 0.35rem;
-    font-size: 0.92rem;
-    line-height: 1.65;
-    color: rgba(255, 255, 255, 0.62);
+  .lc-glow { transform: translateY(0) scale(0.85); transition: opacity 1.2s ease-out, transform 1.2s ease-out; }
+  .lc-glow-delay { transform: translateY(0) scale(0.9); transition: opacity 1.2s ease-out 0.15s, transform 1.2s ease-out 0.15s; }
+  .lc-glow-soft { transform: translateY(0) scale(0.88); transition: opacity 1.2s ease-out 0.25s, transform 1.2s ease-out 0.25s; }
+  .lc-kicker.is-visible, .lc-title.is-visible, .lc-subtitle.is-visible,
+  .lc-panel.is-visible, .lc-glow.is-visible, .lc-glow-delay.is-visible, .lc-glow-soft.is-visible {
+    opacity: 1; transform: translateY(0);
   }
 </style>
 
 <script>
   const lcObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-        }
-      });
-    },
-    { threshold: 0.15 },
+    (entries) => { entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("is-visible"); }); },
+    { threshold: 0.15 }
   );
-
-  document
-    .querySelectorAll(".lc-kicker, .lc-title, .lc-subtitle, .lc-panel, .lc-glow, .lc-glow-delay, .lc-glow-soft")
-    .forEach((el) => {
-      lcObserver.observe(el);
-    });
+  document.querySelectorAll(".lc-kicker, .lc-title, .lc-subtitle, .lc-panel, .lc-glow, .lc-glow-delay, .lc-glow-soft")
+    .forEach((el) => lcObserver.observe(el));
 </script>
