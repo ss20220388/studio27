@@ -51,6 +51,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
     const [registerErrors, setRegisterErrors] = useState<{ [key: string]: string }>({})
     const [termsAccepted, setTermsAccepted] = useState(false)
     const [proveraKoda, setProveraKoda] = useState(false)
+
     useEffect(() => {
         if (typeof isOpen === 'boolean') setInternalOpen(isOpen)
     }, [isOpen])
@@ -69,7 +70,6 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         }
         return () => { document.body.style.overflow = '' }
     }, [internalOpen])
-
 
     const close = () => {
         setInternalOpen(false)
@@ -115,6 +115,9 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
             }
 
             if (json.accessToken) {
+                // ✅ ČUVAMO accessToken u localStorage
+                localStorage.setItem('accessToken', json.accessToken)
+
                 const meUrl = `${publicApiUrl}/api/auth/me`
 
                 const me = await fetch(meUrl, {
@@ -132,6 +135,9 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                 }
 
                 if (me.ok && meJson) {
+                    // ✅ ČUVAMO user_data u localStorage
+                    localStorage.setItem('user_data', JSON.stringify(meJson))
+                    
                     window.dispatchEvent(
                         new CustomEvent('user-logged-in', { detail: meJson })
                     )
@@ -293,6 +299,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
             setForgotLoading(false)
         }
     }
+
     const handleProveraKoda = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!otpCode || otpCode.length !== 6) {
@@ -304,11 +311,12 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         const res = await fetch(`${publicApiUrl}/api/auth/provera-koda`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ kod: otpCode,email:email }),
+            body: JSON.stringify({ kod: otpCode, email: email }),
         })
         const data = await res.json()
         setProveraKoda(data)
     }
+
     const handleSendOtpReg = async (e: React.FormEvent) => {
         e.preventDefault()
         const emailEl = document.getElementById('loginEmail') as HTMLInputElement | null
@@ -373,8 +381,6 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                     password: newPassword
                 }),
             })
-
-
 
             setSuccess('Lozinka uspešno resetovana!')
             setTimeout(() => {
@@ -538,7 +544,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
             <div className="absolute inset-0 bg-black/60" onClick={close}></div>
 
             <div className="relative rounded-none bg-white p-8 shadow-sm w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-                <button onClick={close} className="absolute right-3 top-3 text-gray-500 hover:text-black cursor-pointer"  aria-label="Zatvori">
+                <button onClick={close} className="absolute right-3 top-3 text-gray-500 hover:text-black cursor-pointer" aria-label="Zatvori">
                     ✕
                 </button>
 
@@ -652,7 +658,6 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                     type="button"
                                     onClick={(e) => {
                                         e.preventDefault()
-
                                         setShowForgotPassword(true)
                                         setError(null)
                                         setSuccess(null)
@@ -709,7 +714,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
 
                 <div className="mb-6">
                     <button onClick={(e) => handleGoogleLogin(e)} type="button" className="flex w-full items-center justify-center border border-gray-300 bg-white px-4 py-3 text-gray-700 transition-colors hover:bg-gray-50 cursor-pointer">
-                        <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24"  fill="currentColor">
+                        <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />

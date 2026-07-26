@@ -45,193 +45,141 @@ try {
 }
 ---
 
-<section id="kursevi" class="bg-white text-zinc-900 py-16 px-4 sm:px-8 md:px-16 overflow-hidden">
-  <div class="max-w-7xl mx-auto space-y-20">
-    
-    <!-- Naslov Sekcije -->
-    <div class="text-center space-y-3">
-      <h2 class="anim-fade-up text-3xl sm:text-5xl font-black tracking-tight uppercase text-zinc-900">
-        NAŠI KURSEVI
-      </h2>
-      <div class="w-16 h-1 bg-[#e0533c] mx-auto rounded-full"></div>
-    </div>
-
-    <!-- Lista Kurseva (Svetli KF-School Split Layout) -->
-    <div class="space-y-16">
-      {sviKursevi.map((kurs, i) => {
-        const isEven = i % 2 === 0;
-        return (
-          <div 
-            class="kurs-card border border-zinc-200/80 rounded-3xl overflow-hidden bg-zinc-50/50 hover:shadow-2xl transition-all duration-500 grid grid-cols-1 lg:grid-cols-12 min-h-[480px]"
-            style={`--card-i:${i}`}
-          >
-            <!-- Tekstualni deo (Levo / Desno zavisno od parnosti za bolji vizuelni ritam) -->
-            <div class={`lg:col-span-6 p-8 sm:p-12 flex flex-col justify-between ${isEven ? 'lg:order-1' : 'lg:order-2'} bg-white`}>
-              <div class="space-y-6">
-                <!-- Badges / Tagovi -->
-                <div class="flex flex-wrap items-center gap-2">
-                  {kurs.glavniKurs && (
-                    <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 bg-zinc-100 text-zinc-700 rounded-md border border-zinc-200">
-                      {kurs.glavniKurs}
-                    </span>
-                  )}
-                  {kurs.komentarGore && (
-                    <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 bg-orange-50 text-[#e0533c] rounded-md border border-orange-100">
-                      {kurs.komentarGore}
-                    </span>
-                  )}
-                </div>
-
-                <!-- Naziv Kursa -->
-                <h3 class="text-2xl sm:text-4xl font-extrabold text-zinc-900 leading-tight">
-                  {kurs.naziv}
-                </h3>
-
-                <!-- Opis / Srednji komentar -->
-                <p class="text-base sm:text-lg text-zinc-600 font-normal leading-relaxed">
-                  {kurs.komentarSredina || kurs.opis}
-                </p>
-              </div>
-
-              <!-- Donji deo: Dodatne informacije i CTA Dugme -->
-              <div class="pt-8 mt-6 border-t border-zinc-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                {kurs.komentarDole && (
-                  <span class="text-sm font-semibold text-zinc-500">
-                    {kurs.komentarDole}
+<section id="kursevi" class="bg-[#18181b] text-white min-h-screen">
+  <div class="flex flex-col">
+    {sviKursevi.map((kurs, i) => {
+      return (
+        <div 
+          class="grid grid-cols-1 lg:grid-cols-2 min-h-screen border-b border-zinc-800/60"
+          style={`--card-i:${i}`}
+        >
+          <!-- LEVA STRANA: Tamna sekcija sa informacijama o kursu -->
+          <div class="p-8 sm:p-16 lg:p-24 flex flex-col justify-center items-start bg-[#18181b] space-y-8 z-10">
+            
+            <!-- Badges / Oznake -->
+            {(kurs.glavniKurs || kurs.komentarGore) && (
+              <div class="flex flex-wrap items-center gap-2">
+                {kurs.glavniKurs && (
+                  <span class="text-xs font-semibold uppercase tracking-wider px-3 py-1 bg-zinc-800 text-zinc-300 rounded-md border border-zinc-700">
+                    {kurs.glavniKurs}
                   </span>
                 )}
-                <a 
-                  href={`/kurs/${kurs.kursId}`} 
-                  class="inline-flex items-center justify-center bg-[#e0533c] hover:bg-[#c8432d] text-white font-bold px-8 py-3.5 rounded-xl transition duration-300 shadow-md hover:shadow-lg transform active:scale-95 text-sm tracking-wide uppercase"
-                >
-                  Saznaj više
-                </a>
+                {kurs.komentarGore && (
+                  <span class="text-xs font-semibold uppercase tracking-wider px-3 py-1 bg-orange-950/40 text-[#e0533c] rounded-md border border-[#e0533c]/30">
+                    {kurs.komentarGore}
+                  </span>
+                )}
+              </div>
+            )}
+
+            <!-- Naslov Kursa sa prepoznatljivim Light/Bold stilom -->
+            <h2 class="text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-tight uppercase font-light">
+              <span class="font-extrabold">{kurs.naziv}</span>
+            </h2>
+
+            <!-- Opis / Srednji komentar -->
+            <p class="text-zinc-400 text-base sm:text-lg max-w-lg font-light leading-relaxed">
+              {kurs.komentarSredina || kurs.opis}
+            </p>
+
+            <!-- Akciona dugmad i Software ikone -->
+            <div class="pt-6 flex flex-col sm:flex-row items-start sm:items-center gap-8 w-full">
+              <a 
+                href={`/kurs/${kurs.kursId}`} 
+                class="inline-flex items-center justify-center bg-[#e0533c] hover:bg-[#d0432c] text-white font-medium px-10 py-3.5 rounded-full transition duration-300 shadow-lg text-sm tracking-wider uppercase"
+              >
+                DETAILS
+              </a>
+
+              <!-- Software logos (3ds Max / Corona) -->
+              <div class="flex items-center gap-3 text-zinc-400 opacity-80 hover:opacity-100 transition-opacity">
+                <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                <div class="flex flex-col text-[10px] uppercase font-bold tracking-widest leading-none">
+                  <span>AUTODESK</span>
+                  <span class="text-xs">3DS MAX</span>
+                  <span class="text-zinc-500 font-normal lowercase pt-0.5">corona</span>
+                </div>
               </div>
             </div>
 
-            <!-- Velika Slika Rendera -->
-            <div class={`lg:col-span-6 relative min-h-[300px] lg:min-h-full overflow-hidden ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
-              <img
-                src={`${API_URL}/api/uploaded-images/${kurs.slikaUrl}`}
-                alt={kurs.naziv}
-                loading="lazy"
-                decoding="async"
-                class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-              />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-
-    <!-- FAQ Sekcija (Prebačena u čist svetli dizajn) -->
-    <div class="pt-16 border-t border-zinc-200">
-      <h3 class="text-2xl sm:text-3xl font-extrabold text-center mb-12 text-zinc-900">
-        Često postavljana pitanja
-      </h3>
-
-      <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-        <!-- LEVA STRANA -->
-        <div class="space-y-6">
-          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:1">
-            <h4 class="font-bold text-lg text-zinc-900 mb-2">Da li je kurs za početnike?</h4>
-            <p class="text-zinc-600 text-sm leading-relaxed">
-              Da. Kurs je prilagođen i početnicima i onima koji već imaju osnovno znanje. Sve se objašnjava korak po korak – od interfejsa do finalnog rendera.
-            </p>
+            {kurs.komentarDole && (
+              <p class="text-xs text-zinc-500 pt-4 uppercase tracking-widest font-medium">
+                {kurs.komentarDole}
+              </p>
+            )}
           </div>
 
-          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:2">
-            <h4 class="font-bold text-lg text-zinc-900 mb-2">Kako izgleda format kursa?</h4>
-            <p class="text-zinc-600 text-sm leading-relaxed">
-              Kurs je online i sastoji se od snimljenih lekcija koje možeš gledati svojim tempom. Uz video lekcije dobijaš i dodatne materijale, fajlove za vežbu i konkretne projekte.
-            </p>
-          </div>
-
-          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:3">
-            <h4 class="font-bold text-lg text-zinc-900 mb-2">Da li imam vremensko ograničenje kod snimljenih lekcija?</h4>
-            <p class="text-zinc-600 text-sm leading-relaxed">
-              Ne. Kurs prolaziš svojim tempom, bez pritiska i rokova.
-            </p>
+          <!-- DESNA STRANA: Velika slika visoke rezolucije -->
+          <div class="relative min-h-[400px] lg:min-h-full overflow-hidden bg-zinc-900">
+            <img
+              src={`${API_URL}/api/uploaded-images/${kurs.slikaUrl}`}
+              alt={kurs.naziv}
+              loading="lazy"
+              decoding="async"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+            />
           </div>
         </div>
+      );
+    })}
+  </div>
 
-        <!-- DESNA STRANA -->
-        <div class="space-y-6">
-          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:4">
-            <h4 class="font-bold text-lg text-zinc-900 mb-2">Da li dobijam sertifikat?</h4>
-            <p class="text-zinc-600 text-sm leading-relaxed">
-              Da. Nakon uspešno završenog projekta dobijaš sertifikat o završenom kursu.
-            </p>
-          </div>
+  <!-- FAQ Sekcija -->
+  <div class="py-24 px-6 max-w-6xl mx-auto border-t border-zinc-800">
+    <h3 class="text-3xl sm:text-4xl font-light text-center mb-16 tracking-wider uppercase">
+      Često postavljana <span class="font-extrabold">pitanja</span>
+    </h3>
 
-          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:5">
-            <h4 class="font-bold text-lg text-zinc-900 mb-2">Da li postoji feedback?</h4>
-            <p class="text-zinc-600 text-sm leading-relaxed">
-              Da. Imaš mogućnost dobijanja povratnih informacija na svoje radove, kao i podršku bez obzira na vreme kupovine.
-            </p>
-          </div>
+    <div class="grid md:grid-cols-2 gap-10">
+      <!-- LEVA STRANA -->
+      <div class="space-y-6">
+        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+          <h4 class="font-bold text-lg text-white mb-2">Da li je kurs za početnike?</h4>
+          <p class="text-zinc-400 text-sm leading-relaxed">
+            Da. Kurs je prilagođen i početnicima i onima koji već imaju osnovno znanje. Sve se objašnjava korak po korak – od interfejsa do finalnog rendera.
+          </p>
+        </div>
 
-          <div class="faq-item p-6 bg-zinc-50 rounded-2xl border border-zinc-100" style="--faq-i:6">
-            <h4 class="font-bold text-lg text-zinc-900 mb-2">Da li dobijam pristup svim lekcijama odmah?</h4>
-            <p class="text-zinc-600 text-sm leading-relaxed">
-              Da. Nakon uplate dobijaš kompletan pristup svim modulima.
-            </p>
-          </div>
+        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+          <h4 class="font-bold text-lg text-white mb-2">Kako izgleda format kursa?</h4>
+          <p class="text-zinc-400 text-sm leading-relaxed">
+            Kurs je online i sastoji se od snimljenih lekcija koje možeš gledati svojim tempom. Uz video lekcije dobijaš i dodatne materijale, fajlove za vežbu i konkretne projekte.
+          </p>
+        </div>
+
+        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+          <h4 class="font-bold text-lg text-white mb-2">Da li imam vremensko ograničenje kod snimljenih lekcija?</h4>
+          <p class="text-zinc-400 text-sm leading-relaxed">
+            Ne. Kurs prolaziš svojim tempom, bez pritiska i rokova.
+          </p>
+        </div>
+      </div>
+
+      <!-- DESNA STRANA -->
+      <div class="space-y-6">
+        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+          <h4 class="font-bold text-lg text-white mb-2">Da li dobijam sertifikat?</h4>
+          <p class="text-zinc-400 text-sm leading-relaxed">
+            Da. Nakon uspešno završenog projekta dobijaš sertifikat o završenom kursu.
+          </p>
+        </div>
+
+        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+          <h4 class="font-bold text-lg text-white mb-2">Da li postoji feedback?</h4>
+          <p class="text-zinc-400 text-sm leading-relaxed">
+            Da. Imaš mogućnost dobijanja povratnih informacija na svoje radove, kao i podršku bez obzira na vreme kupovine.
+          </p>
+        </div>
+
+        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+          <h4 class="font-bold text-lg text-white mb-2">Da li dobijam pristup svim lekcijama odmah?</h4>
+          <p class="text-zinc-400 text-sm leading-relaxed">
+            Da. Nakon uplate dobijaš kompletan pristup svim modulima.
+          </p>
         </div>
       </div>
     </div>
-
   </div>
 </section>
-
-<style>
-  /* Kurs kartice - animacija ulaza */
-  .kurs-card {
-    opacity: 0;
-    transform: translateY(40px);
-    transition: opacity 0.7s cubic-bezier(0.25,0.46,0.45,0.94),
-                transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
-    transition-delay: calc(var(--card-i) * 0.12s);
-  }
-  .kurs-card.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* FAQ stavke */
-  .faq-item {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-    transition-delay: calc(var(--faq-i) * 0.08s);
-  }
-  .faq-item.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* Fade up animacija */
-  .anim-fade-up {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
-  }
-  .anim-fade-up.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-</style>
-
-<script>
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
-      }
-    });
-  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-
-  document.querySelectorAll('.kurs-card, .faq-item, #kursevi .anim-fade-up').forEach(el => {
-    observer.observe(el);
-  });
-</script>

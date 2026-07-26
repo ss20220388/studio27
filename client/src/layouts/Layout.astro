@@ -3,6 +3,8 @@ import Header2 from "../components/Header2.astro";
 import Footer from "../components/Footer.astro";
 import ErrorToastNotifier from "../react-components/ErrorToastNotifier";
 import "../styles/global.css";
+const accessToken = Astro.cookies.get("accessToken")?.value;
+import CartModal from "../react-components/CartModal";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
@@ -200,11 +202,12 @@ const robotsContent = noIndex
     <link rel="preload" as="image" href={`${API_URL}/api/uploaded-images/towebp/naslovna2.webp`} fetchpriority="high" />
   </head>
 
-  <body class="relative">
+  <body class="relative bg-[#18181b]">
     <div class="fixed top-0 left-0 w-full z-50">
       <Header2 />
     </div>
 
+      <CartModal accessToken={accessToken} client:load />
     <div class="pt-[70px] w-screen overflow-hidden">
       <slot />
       <Footer />
