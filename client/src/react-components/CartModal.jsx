@@ -1,14 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
-export default function CartModal({ accessToken }) {
+export default function CartModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [cart, setCart] = useState([]);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
   const [user, setUser] = useState(null);
 
-  // ✅ Fetch user podataka preko prosleđenog accessToken
-  const fetchUser = async (token) => {
+  // ✅ Čita token iz localStorage
+  const getToken = () => {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("accessToken");
+  };
+
+  // ✅ Fetch user preko tokena
+  const fetchUser = useCallback(async () => {
+    const token = getToken();
     if (!token) {
       setUser(null);
       return;
@@ -21,6 +28,8 @@ export default function CartModal({ accessToken }) {
       });
 
       if (!res.ok) {
+        // Token nije validan — obriši ga
+        localStorage.removeItem("accessToken");
         setUser(null);
         return;
       }
@@ -28,14 +37,30 @@ export default function CartModal({ accessToken }) {
       const data = await res.json();
       setUser(data);
     } catch (e) {
+      localStorage.removeItem("accessToken");
       setUser(null);
     }
-  };
+  }, []);
 
-  // ✅ ODMAH reaguje na promenu tokena — bez obzira da li je login ili logout
+  // ✅ Slušaj promene tokena (login iz LoginSectionForm)
   useEffect(() => {
-    fetchUser(accessToken);
-  }, [accessToken]);
+    fetchUser(); // Inicijalna provera
+
+    const handleLogin = () => fetchUser();
+    const handleStorage = (e) => {
+      if (e.key === "accessToken") {
+        fetchUser();
+      }
+    };
+
+    window.addEventListener("user-logged-in", handleLogin);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("user-logged-in", handleLogin);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, [fetchUser]);
 
   const loadCart = () => {
     if (typeof window !== "undefined") {
@@ -59,7 +84,7 @@ export default function CartModal({ accessToken }) {
 
     const handleOpen = () => {
       loadCart();
-      fetchUser(accessToken);
+      fetchUser();
       setIsOpen(true);
     };
 
@@ -70,7 +95,7 @@ export default function CartModal({ accessToken }) {
       window.removeEventListener("cart-updated", handleCartUpdate);
       window.removeEventListener("open-cart", handleOpen);
     };
-  }, [accessToken]);
+  }, [fetchUser]);
 
   const totalItems = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const totalPrice = cart.reduce(
@@ -121,10 +146,10 @@ export default function CartModal({ accessToken }) {
         <button
           onClick={() => {
             loadCart();
-            fetchUser(accessToken);
+            fetchUser();
             setIsOpen(true);
           }}
-          className="fixed top-40 right-8 z-[9999] w-14 h-14 bg-[#e5e7eb] hover:bg-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="fixed top-40 left-8 z-[100] w-14 h-14 bg-[#e5e7eb] hover:bg-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
         >
           <svg
             className="w-7 h-7 text-black stroke-[1.5]"
@@ -147,7 +172,7 @@ export default function CartModal({ accessToken }) {
       )}
 
       {isOpen && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
           <button
             onClick={() => setIsOpen(false)}
             className="fixed top-6 right-8 text-white hover:text-zinc-300 text-3xl font-light z-[10001] cursor-pointer"
@@ -212,7 +237,6 @@ export default function CartModal({ accessToken }) {
               <span>Ukupno: {totalPrice.toLocaleString()} €</span>
             </div>
 
-            {/* Nije ulogovan */}
             {!user ? (
               <div className="bg-[#eaeaea] p-4 text-sm text-black mb-6">
                 Već imate nalog kod nas?{" "}
@@ -224,7 +248,6 @@ export default function CartModal({ accessToken }) {
                 </button>
               </div>
             ) : (
-              /* Ulogovan */
               <div className="bg-zinc-100 p-4 border border-zinc-200 rounded text-sm text-zinc-800 mb-6">
                 Prijavljeni ste kao:{" "}
                 <span className="font-bold">{user.email || user.name}</span>

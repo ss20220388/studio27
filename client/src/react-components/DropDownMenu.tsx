@@ -47,13 +47,17 @@ const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUr
 
 
     const handleLogout = async () => {
-        try {
-            await fetch(`${publicApiUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' })
-        } catch (error) { /* ignore */ }
-        setUser(null)
-        setOpen(false)
-       window.dispatchEvent(new CustomEvent('user-logged-out'))
-    }
+    try {
+        await fetch(`${publicApiUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' })
+    } catch (error) { /* ignore */ }
+    
+    // ✅ OBRIŠI accessToken iz localStorage
+    localStorage.removeItem('accessToken')
+    
+    setUser(null)
+    setOpen(false)
+    window.dispatchEvent(new CustomEvent('user-logged-out'))
+}
     
 
     if (!user) {
@@ -78,7 +82,7 @@ const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUr
     const initials = `${(user.ime || '')[0] || ''}${(user.prezime || '')[0] || ''}`.toUpperCase() || 'K'
 
     return (
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setOpen(!open)}
                 className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors cursor-pointer"
@@ -92,7 +96,7 @@ const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUr
             <AnimatePresence>
             {open && (
                 <>
-                    <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+                    <div className="fixed inset-0  z-9999" onClick={() => setOpen(false)} />
 
                     <motion.div 
                         initial={{ opacity: 0, y: -10, scale: 0.95 }}

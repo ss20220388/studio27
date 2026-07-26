@@ -146,6 +146,9 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                 close()
             }
 
+            
+
+
         } catch (e: any) {
             setError(e?.message || 'Greška pri komunikaciji sa serverom')
         } finally {
