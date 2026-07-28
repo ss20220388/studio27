@@ -1,0 +1,16 @@
+---
+// src/pages/pay.astro
+import PaymentCheckout from "../react-components/PaymentCheckout.jsx";
+import "../styles/global.css";
+---
+
+<html lang="sr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plaćanje | 27archviz</title>
+  </head>
+  <body class="bg-[#f4f4f6] min-h-screen flex items-center justify-center p-4 font-sans text-slate-900">
+    <PaymentCheckout client:only="react" />
+  </body>
+</html>

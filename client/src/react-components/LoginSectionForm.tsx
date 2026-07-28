@@ -115,38 +115,31 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
             }
 
             if (json.accessToken) {
-                // ✅ ČUVAMO accessToken u localStorage
-                localStorage.setItem('accessToken', json.accessToken)
+                // 1. Zapisujemo u localStorage
+                localStorage.setItem('accessToken', json.accessToken);
 
-                const meUrl = `${publicApiUrl}/api/auth/me`
-
+                const meUrl = `${publicApiUrl}/api/auth/me`;
                 const me = await fetch(meUrl, {
-                    headers: { 'Authorization': `Bearer ${json.accessToken}` },
+                    headers: { Authorization: `Bearer ${json.accessToken}` },
                     credentials: 'include',
-                })
+                });
 
-                const meText = await me.text()
+                if (me.ok) {
+                    const meData = await me.json();
 
-                let meJson: any = null
-                try {
-                    meJson = JSON.parse(meText)
-                } catch (err) {
-                    // ignore
-                }
-
-                if (me.ok && meJson) {
-                    // ✅ ČUVAMO user_data u localStorage
-                    localStorage.setItem('user_data', JSON.stringify(meJson))
-                    
+                    // 2. Šaljemo token u event detail-u
                     window.dispatchEvent(
-                        new CustomEvent('user-logged-in', { detail: meJson })
-                    )
+                        new CustomEvent('user-logged-in', {
+                            detail: { token: json.accessToken }
+                        })
+                    );
                 }
 
-                close()
+                close();
             }
+            window.navigation.reload()
 
-            
+
 
 
         } catch (e: any) {
@@ -596,14 +589,14 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                     <div>
                         <label htmlFor="loginEmail" className="mb-2 block text-sm font-medium text-gray-700">E-pošta</label>
                         <div className="relative">
-                            <input 
-                                type="email" 
-                                id="loginEmail" 
-                                name="email" 
+                            <input
+                                type="email"
+                                id="loginEmail"
+                                name="email"
                                 readOnly={!loginForm && proveraKoda}
-                                className={`w-full border px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.email && !loginForm ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'} ${!loginForm && proveraKoda ? 'bg-gray-50' : 'bg-white'}`} 
-                                placeholder="petar.petrovic@example.com" 
-                                required 
+                                className={`w-full border px-4 py-3 text-gray-900 focus:border-transparent focus:ring-2 focus:outline-none transition-colors ${registerErrors.email && !loginForm ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'} ${!loginForm && proveraKoda ? 'bg-gray-50' : 'bg-white'}`}
+                                placeholder="petar.petrovic@example.com"
+                                required
                             />
                             {!loginForm && !proveraKoda && (
                                 <button
@@ -611,7 +604,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                     onClick={handleSendOtpReg}
                                     disabled={forgotLoading}
                                     className="absolute right-2 top-2 bottom-2 bg-gray-100 px-4 text-xs font-medium text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors disabled:opacity-50 cursor-pointer"
-                                > 
+                                >
                                     {forgotLoading ? 'Slanje...' : 'Pošalji kod'}
                                 </button>
                             )}
@@ -633,7 +626,7 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
                                             placeholder="------"
                                         />
                                         <button
-                                            type="button" 
+                                            type="button"
                                             onClick={handleProveraKoda}
                                             disabled={otpCode.length !== 6}
                                             className="shrink-0 bg-black px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-gray-800 disabled:opacity-50 cursor-pointer"

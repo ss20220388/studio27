@@ -57,6 +57,7 @@ const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUr
     setUser(null)
     setOpen(false)
     window.dispatchEvent(new CustomEvent('user-logged-out'))
+    window.navigation.reload()
 }
     
 

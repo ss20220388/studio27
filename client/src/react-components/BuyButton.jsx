@@ -50,7 +50,7 @@ export default function BuyButton({ kurs }) {
       onClick={handleAddToCart}
       className="w-full sm:w-auto px-8 py-4 bg-[#f05a24] hover:bg-[#d94e1f] text-white font-bold text-base rounded-full shadow-lg transition-all duration-200 transform active:scale-95 cursor-pointer flex items-center justify-center gap-2"
     >
-      {isAdded ? "Dodato u korpu! ✓" : "Get the access"}
+      {isAdded ? "Dodato u korpu! ✓" : "Kupi kurs"}
     </button>
   );
 }

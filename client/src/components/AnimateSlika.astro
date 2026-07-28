@@ -1,0 +1,22 @@
+---
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const imageUrl = `${API_URL}/api/uploaded-images/towebp/15.webp`; 
+---
+
+<section class="bg-white py-16 md:py-24 text-black">
+  <!-- Tekst iznad rama -->
+  <div class="max-w-4xl mx-auto px-6 text-center mb-16">
+    <p class="text-zinc-600 text-base md:text-xl font-light leading-relaxed max-w-3xl mx-auto tracking-wide">
+      Digital book format with micro-lessons in video format, which will make your learning pleasant, simple, convenient and incredibly beautiful.
+    </p>
+  </div>
+
+  <!-- VELIKI PARALLAX FRAME / RAM KOJI OTKRIVA SLIKU -->
+  <div 
+    class="relative w-full h-[85vh] min-h-[600px] lg:min-h-[750px] overflow-hidden bg-fixed bg-center bg-cover bg-no-repeat"
+    style={`background-image: url('${imageUrl}');`}
+  >
+    <!-- Suptilni beli overlay na vrhu i dnu rama za mekan i elegantan prelaz -->
+    <div class="absolute inset-0 bg-gradient-to-b  pointer-events-none"></div>
+  </div>
+</section>

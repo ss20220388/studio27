@@ -1,6 +1,7 @@
 import React from "react";
 import { createPortal } from "react-dom";
-import BuyCourseModal from "./BuyCourseModal";
+
+
 
 const KursDetaljiModal = ({
     kurs,
@@ -12,6 +13,7 @@ const KursDetaljiModal = ({
 }) => {
     const [komentari, setKomentari] = React.useState([]);
     const [loadingKomentari, setLoadingKomentari] = React.useState(false);
+    const APP_URL = import.meta.env.PUBLIC_APP_URL || "http://studio27.rs";
 
     React.useEffect(() => {
         if (isOpen) {
@@ -82,7 +84,7 @@ const KursDetaljiModal = ({
                         
                         {kurs.cena > 0 && !pohadjanje && (
                             <div className="inline-block bg-neutral-800/80 border border-neutral-700 backdrop-blur-md rounded-xl mt-4 px-6 py-3">
-                                <div className="text-sm text-neutral-400 font-medium">Cena Modula</div>
+                                <div className="text-sm text-neutral-400 font-medium">Cena Kursa</div>
                                 <div className="text-3xl font-bold text-red-500">{kurs.cena} <span className="text-lg">EUR</span></div>
                             </div>
                         )}
@@ -125,18 +127,18 @@ const KursDetaljiModal = ({
                     <div className="mt-auto pt-8"></div>
 
                     <div className="sticky bottom-0 md:static mt-auto pt-6 border-t border-neutral-800 bg-neutral-900 pb-2 md:pb-0 z-10 w-full">
-                        {pohadjanje ? (
+                        {pohadjanje ?(
                             <button 
                                 onClick={() => window.location.href = `/kurs/${kurs.kursId}`} 
                                 className="bg-red-900 hover:bg-red-800 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 w-full text-lg shadow-[0_4px_20px_rgba(127,29,29,0.3)] hover:shadow-[0_4px_30px_rgba(127,29,29,0.6)] cursor-pointer"
                             >
                                 Uđi u panel sa lekcijama
                             </button>
-                        ) : (
-                            <div className="flex flex-col sm:flex-row items-center gap-4">
-                                <div className="w-full">
-                                    <BuyCourseModal API_URL={API_URL} token={accessToken} kursId={kurs.kursId} naziv={kurs.naziv} cena={kurs.cena} />
-                                </div>
+                        ) :(
+                            <div>
+                                <a href={`${APP_URL}/kurs/${kurs.kursId}`}  className="bg-red-900 hover:bg-red-800 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 w-full text-lg shadow-[0_4px_20px_rgba(127,29,29,0.3)] hover:shadow-[0_4px_30px_rgba(127,29,29,0.6)] cursor-pointer">
+                                    Pogledajte kurs
+                                </a>
                             </div>
                         )}
                     </div>

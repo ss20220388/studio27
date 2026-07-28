@@ -18,46 +18,34 @@ let radovi: Rad[] = [];
 try {
   const res = await fetch(`${API_URL}/api/radovi`);
   if (res.ok) radovi = await res.json();
-} catch (e) { console.error("Greška:", e); }
+} catch (e) { console.error("Greška radovi:", e); }
 
 let recenzije: Recenzija[] = [];
 try {
   const res = await fetch(`${API_URL}/api/recenzije`);
   if (res.ok) recenzije = await res.json();
-} catch (e) { console.error("Greška:", e); }
+} catch (e) { console.error("Greška recenzije:", e); }
 
-// STROGO deljivo sa 4 — ako nema dovoljno, prikaži 0 (ili koliko možeš)
 const count = Math.floor(radovi.length / 4) * 4;
-const radoviPrikaz = radovi.slice(0, count); // Bez Math.max — ako je 0, prikaži 0
-const recenzijePrikaz = recenzije.slice(0, 6);
+const radoviPrikaz = radovi.slice(0, count);
 ---
 
-<!-- Dodaj !bg-white sa important da override-uješ sve -->
-<section id="recenzije" class="relative overflow-hidden !bg-white">
+<section id="recenzije" class="bg-white py-16 text-black font-sans">
   
-  <!-- Glow efekti -->
-  <div class="pointer-events-none absolute inset-0 opacity-50">
-    <div class="absolute left-1/4 top-0 h-96 w-96 animate-pulse rounded-full bg-orange-200/30 blur-3xl"></div>
-    <div class="absolute bottom-0 right-1/4 h-96 w-96 animate-pulse rounded-full bg-orange-100/20 blur-3xl" style="animation-delay: 2s;"></div>
-    <div class="absolute right-0 top-1/2 h-80 w-80 animate-pulse rounded-full bg-orange-300/10 blur-2xl" style="animation-delay: 1s;"></div>
-  </div>
-
-  <!-- Radovi -->
-  <div class="relative z-10 w-full">
+  <!-- GRID RADOVA -->
+  <div class="w-full mb-20">
     {radoviPrikaz.length === 0 ? (
       <p class="py-12 text-center text-lg text-gray-400">Nema dostupnih radova</p>
     ) : (
       <div class="grid grid-cols-1 gap-0 sm:grid-cols-2 md:grid-cols-4">
-        {radoviPrikaz.map((rad, idx) => (
+        {radoviPrikaz.map((rad) => (
           <a
             href="/radovi"
-            class="rad-item-animate group relative block aspect-square w-full cursor-pointer overflow-hidden"
-            style={`animation-delay: ${idx * 0.1}s`}
+            class="group relative block aspect-square w-full cursor-pointer overflow-hidden"
           >
-            <div class="pointer-events-none absolute inset-0 z-10 bg-gradient-to-br from-white/0 via-transparent to-white/0 transition-all duration-500 group-hover:from-white/20 group-hover:to-white/30"></div>
             <img
-              src={`${API_URL}/api/uploaded-images${rad.url}`}
-              class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              src={`${API_URL}/api/uploaded-images/${rad.url}`}
+              class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
               alt="Slika rada"
             />
@@ -67,167 +55,154 @@ const recenzijePrikaz = recenzije.slice(0, 6);
     )}
   </div>
 
-  <!-- Recenzije -->
-  <div class="relative z-10 mx-auto max-w-7xl px-4 py-24">
-    <div class="rec-subtitle mb-24 text-center">
-      <h4 class="rec-title mb-6 text-center text-3xl font-bold text-gray-900 md:text-4xl">
-        Recenzije naših studenata
-      </h4>
-      <p class="mx-auto mt-4 max-w-2xl text-lg text-gray-500">
-        Pročitajte iskustva polaznika koji su završili naše kurseve
-      </p>
-      <div class="mt-8 flex justify-center">
-        <div class="h-1 w-20 animate-pulse bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
-      </div>
-    </div>
+  <!-- SLIDER RECENZIJA -->
+  <div class="max-w-6xl mx-auto px-6 relative">
+    
+    <!-- NASLOV -->
+    <h2 class="text-5xl md:text-6xl font-black text-black tracking-tight mb-16">
+      Student Reviews
+    </h2>
 
     {recenzije.length === 0 ? (
-      <p class="text-center text-lg text-gray-400">Još uvek nema recenzija.</p>
+      <p class="text-zinc-400 text-lg py-8">Još uvek nema recenzija.</p>
     ) : (
-      <div class="gap-8 space-y-8 md:columns-2 lg:columns-3">
-        {recenzijePrikaz.map((recenzija, i) => (
-          <div
-            class="rec-card group relative block aspect-auto overflow-hidden break-inside-avoid border border-gray-200 bg-gradient-to-br from-gray-50/80 to-white p-8 text-gray-900 shadow-xl shadow-orange-500/5 transition-all duration-500 hover:border-orange-300/50"
-            style={`--rec-i:${i}`}
-          >
-            <div class="pointer-events-none absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-orange-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" style="animation: shimmer 3s infinite;"></div>
-            <div class="pointer-events-none absolute inset-0 rounded-lg border border-orange-500/20 opacity-0 shadow-lg shadow-orange-500/10 transition-opacity duration-500 group-hover:opacity-100" style="animation: glow 2s ease-in-out infinite;"></div>
+      <div class="relative min-h-[220px]">
+        <!-- NAVIGACIJA - STRELICE -->
+        <button
+          id="prev-btn"
+          aria-label="Prethodna recenzija"
+          class="absolute -left-12 top-1/2 -translate-y-1/2 text-black hover:opacity-60 transition-opacity p-2 hidden md:block cursor-pointer"
+        >
+          <svg class="w-8 h-8 stroke-[1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
 
-            <div class="relative z-10">
-              {recenzija.kurs && (
-                <p class="mb-6 text-xs font-bold uppercase tracking-wide text-orange-500/80 transition-colors duration-300 group-hover:text-orange-600">
-                  {recenzija.kurs.naziv}
-                </p>
-              )}
+        <button
+          id="next-btn"
+          aria-label="Sledeća recenzija"
+          class="absolute -right-6 md:-right-12 top-1/2 -translate-y-1/2 text-black hover:opacity-60 transition-opacity p-2 cursor-pointer"
+        >
+          <svg class="w-8 h-8 stroke-[1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
 
-              <div class="mb-6 flex gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <svg
-                    class={`h-5 w-5 transition-transform duration-300 group-hover:scale-110 ${star <= recenzija.ocena ? "text-yellow-400 drop-shadow-lg" : "text-gray-300"}`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
+        <!-- SLAJDOVI -->
+        <div id="reviews-container" class="relative">
+          {recenzije.map((recenzija, index) => {
+            const studentIme = recenzija.student 
+              ? `${recenzija.student.ime} ${recenzija.student.prezime}`.trim()
+              : "Student";
+            
+            const kursNaziv = recenzija.kurs?.naziv || "Polaznik kursa";
+            const slikaUrl = recenzija.kurs?.slikaUrl 
+              ? `${API_URL}/uploaded-images${recenzija.kurs.slikaUrl}`
+              : "https://via.placeholder.com/150";
+
+            return (
+              <div
+                class={`review-slide transition-opacity duration-300 ${index === 0 ? "block opacity-100" : "hidden opacity-0"}`}
+                data-index={index}
+              >
+                <div class="flex flex-col md:flex-row items-start gap-8 pr-8 md:pr-12">
+                  
+                  <!-- AVATAR -->
+                  <div class="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden flex-shrink-0 bg-gray-100">
+                    <img
+                      src={`${API_URL}/api/uploaded-images/towebp/vanjak11.webp`}
+                      alt={studentIme}
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <!-- TEKST RECENZIJE -->
+                  <div class="flex-1 space-y-6 pt-1">
+                    <p class="text-zinc-600 text-sm md:text-base leading-relaxed max-w-3xl font-normal">
+                      {recenzija.opis || "Nema teksta recenzije."}
+                    </p>
+
+                    <div>
+                      <h4 class="font-bold text-black text-base md:text-lg tracking-wide">
+                        {studentIme}
+                      </h4>
+                      <p class="text-zinc-500 text-xs md:text-sm">
+                        {kursNaziv}
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
               </div>
+            );
+          })}
+        </div>
 
-              <p class="text-sm leading-relaxed text-gray-600 transition-colors duration-300 group-hover:text-gray-800">
-                "{recenzija.opis || "Bez komentara"}"
-              </p>
-            </div>
-          </div>
-        ))}
+        <!-- TAČKICE (PAGINATION DOTS) -->
+        <div class="flex justify-center items-center gap-2 mt-12">
+          {recenzije.map((_, idx) => (
+            <button
+              class={`dot-btn w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${idx === 0 ? "bg-black" : "bg-zinc-300"}`}
+              data-dot-index={idx}
+              aria-label={`Slikaj na recenziju ${idx + 1}`}
+            />
+          ))}
+        </div>
+
       </div>
     )}
+
   </div>
 </section>
 
-<style>
-  @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-  @keyframes glow {
-    0%, 100% { box-shadow: 0 0 10px rgba(249,115,22,0.2), inset 0 0 10px rgba(249,115,22,0.05); }
-    50% { box-shadow: 0 0 20px rgba(249,115,22,0.35), inset 0 0 20px rgba(249,115,22,0.1); }
-  }
-
-  .rec-title, .rec-subtitle {
-    opacity: 0; transform: translateY(30px);
-    transition: opacity 0.5s cubic-bezier(0.2,0.8,0.2,1), transform 0.5s cubic-bezier(0.2,0.8,0.2,1);
-  }
-  .rec-title.is-visible, .rec-subtitle.is-visible { opacity: 1; transform: translateY(0); }
-
-  .rad-item-animate {
-    animation: radItemFadeScale 0.4s cubic-bezier(0.2,0.8,0.2,1) forwards;
-    animation-play-state: paused;
-    position: relative; overflow: hidden;
-    border: 1px solid rgba(0,0,0,0.08);
-  }
-  .rad-item-animate.is-visible { animation-play-state: running; }
-
-  .rad-item-animate::before {
-    content: ''; position: absolute; top: 0; left: -100%;
-    width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-    opacity: 0; z-index: 10; pointer-events: none;
-  }
-  .rad-item-animate:hover::before { animation: shimmerShine 0.6s ease-in-out; }
-
-  @keyframes shimmerShine {
-    0% { left: -100%; opacity: 0; } 50% { opacity: 1; } 100% { left: 100%; opacity: 0; }
-  }
-
-  .rad-item-animate::after {
-    content: ''; position: absolute; inset: 0; padding: 1px;
-    background: linear-gradient(135deg, rgba(0,0,0,0.15), rgba(0,0,0,0.05));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-    opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
-  }
-  .rad-item-animate:hover::after { opacity: 1; }
-
-  .rad-item-animate:hover img {
-    animation: imageGlow 0.5s ease-in-out;
-    filter: brightness(1.1) saturate(1.15);
-  }
-
-  @keyframes imageGlow {
-    0% { transform: scale(1); filter: brightness(1) saturate(1); }
-    50% { transform: scale(1.02); filter: brightness(1.15) saturate(1.25) drop-shadow(0 0 10px rgba(249,115,22,0.3)); }
-    100% { transform: scale(1.05); filter: brightness(1.1) saturate(1.15) drop-shadow(0 0 15px rgba(249,115,22,0.2)); }
-  }
-
-  @keyframes radItemFadeScale {
-    from { opacity: 0; transform: scale(0.95) translateY(15px); filter: blur(8px); }
-    to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
-  }
-
-  .rec-card {
-    opacity: 0; transform: translateY(30px) scale(0.98);
-    transition: opacity 0.4s cubic-bezier(0.2,0.8,0.2,1), transform 0.4s cubic-bezier(0.2,0.8,0.2,1), backdrop-filter 0.4s ease-out;
-    transition-delay: calc(var(--rec-i) * 0.05s);
-    backdrop-filter: blur(10px);
-  }
-  .rec-card.is-visible { opacity: 1; transform: translateY(0) scale(1); }
-  .rec-card:hover {
-    backdrop-filter: blur(20px);
-    box-shadow: 0 15px 30px -5px rgba(249,115,22,0.15);
-  }
-
-  .rec-card:hover .flex.gap-1 .text-yellow-400 {
-    animation: starBounce 0.5s ease-out infinite;
-    filter: drop-shadow(0 0 4px rgba(250,204,21,0.5));
-  }
-  @keyframes starBounce {
-    0%, 100% { transform: scale(1) translateY(0); } 50% { transform: scale(1.15) translateY(-3px); }
-  }
-
-  @supports (backdrop-filter: blur(10px)) {
-    .rec-card { background: rgba(255,255,255,0.6); backdrop-filter: blur(10px); }
-    .rec-card:hover { background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); }
-  }
-</style>
-
 <script>
-  const recObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('is-visible'); });
-  }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+  let currentIndex = 0;
+  const slides = document.querySelectorAll('.review-slide');
+  const dots = document.querySelectorAll('.dot-btn');
+  const totalSlides = slides.length;
 
-  document.querySelectorAll('.rec-title, .rec-subtitle, .rad-item-animate, .rec-card').forEach(el => {
-    recObserver.observe(el);
+  function showSlide(index: number) {
+    if (totalSlides === 0) return;
+    
+    // Normalizacija indeksa
+    if (index >= totalSlides) currentIndex = 0;
+    else if (index < 0) currentIndex = totalSlides - 1;
+    else currentIndex = index;
+
+    slides.forEach((slide, i) => {
+      if (i === currentIndex) {
+        slide.classList.remove('hidden');
+        setTimeout(() => slide.classList.add('opacity-100'), 10);
+      } else {
+        slide.classList.remove('opacity-100');
+        slide.classList.add('hidden');
+      }
+    });
+
+    dots.forEach((dot, i) => {
+      if (i === currentIndex) {
+        dot.classList.remove('bg-zinc-300');
+        dot.classList.add('bg-black');
+      } else {
+        dot.classList.remove('bg-black');
+        dot.classList.add('bg-zinc-300');
+      }
+    });
+  }
+
+  document.getElementById('next-btn')?.addEventListener('click', () => {
+    showSlide(currentIndex + 1);
   });
 
-  document.querySelectorAll('.rec-card').forEach((card) => {
-    const htmlCard = card as HTMLElement;
-    htmlCard.addEventListener('mousemove', (e) => {
-      const rect = htmlCard.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      htmlCard.style.transition = 'none';
-      htmlCard.style.transform = `perspective(1000px) rotateX(${(y-0.5)*-12}deg) rotateY(${(x-0.5)*12}deg) translateY(-5px) scale3d(1.02,1.02,1.02)`;
-    });
-    htmlCard.addEventListener('mouseleave', () => {
-      htmlCard.style.transition = 'transform 0.4s cubic-bezier(0.2,0.8,0.2,1), backdrop-filter 0.4s ease-out';
-      htmlCard.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0) scale3d(1,1,1)';
+  document.getElementById('prev-btn')?.addEventListener('click', () => {
+    showSlide(currentIndex - 1);
+  });
+
+  dots.forEach((dot) => {
+    dot.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const idx = parseInt(target.getAttribute('data-dot-index') || '0', 10);
+      showSlide(idx);
     });
   });
 </script>

@@ -1,21 +1,23 @@
 import React, { useState, useEffect, useCallback } from "react";
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
-export default function CartModal() {
+export default function CartModal({ accessToken: initialToken }) {
   const [isOpen, setIsOpen] = useState(false);
   const [cart, setCart] = useState([]);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
   const [user, setUser] = useState(null);
 
-  // ✅ Čita token iz localStorage
-  const getToken = () => {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem("accessToken");
+  // ✅ Čitanje tokena isključivo iz "token" cookie-ja
+  const getCookieToken = () => {
+    if (typeof document === "undefined") return null;
+    const match = document.cookie.match(new RegExp("(^| )token=([^;]+)"));
+    return match ? match[2] : null;
   };
 
-  // ✅ Fetch user preko tokena
+  // ✅ Dohvatanje korisnika samo preko cookie-ja ili prosleđenog prop-a
   const fetchUser = useCallback(async () => {
-    const token = getToken();
+    const token = getCookieToken() || initialToken;
+
     if (!token) {
       setUser(null);
       return;
@@ -28,8 +30,6 @@ export default function CartModal() {
       });
 
       if (!res.ok) {
-        // Token nije validan — obriši ga
-        localStorage.removeItem("accessToken");
         setUser(null);
         return;
       }
@@ -37,29 +37,13 @@ export default function CartModal() {
       const data = await res.json();
       setUser(data);
     } catch (e) {
-      localStorage.removeItem("accessToken");
       setUser(null);
     }
-  }, []);
+  }, [initialToken]);
 
-  // ✅ Slušaj promene tokena (login iz LoginSectionForm)
+  // ✅ Pri prvom renderu (ili osvežavanju stranice) proveri korisnika iz cookie-ja
   useEffect(() => {
-    fetchUser(); // Inicijalna provera
-
-    const handleLogin = () => fetchUser();
-    const handleStorage = (e) => {
-      if (e.key === "accessToken") {
-        fetchUser();
-      }
-    };
-
-    window.addEventListener("user-logged-in", handleLogin);
-    window.addEventListener("storage", handleStorage);
-
-    return () => {
-      window.removeEventListener("user-logged-in", handleLogin);
-      window.removeEventListener("storage", handleStorage);
-    };
+    fetchUser();
   }, [fetchUser]);
 
   const loadCart = () => {
@@ -133,11 +117,19 @@ export default function CartModal() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const finalData = user
-      ? { name: user.name, email: user.email, phone: user.phone }
-      : formData;
 
-    console.log("Submit order:", finalData, cart);
+    const finalData = user
+      ? { ...user, isGuest: false }
+      : { ...formData, isGuest: true };
+
+    localStorage.setItem("user_order_data", JSON.stringify(finalData));
+    localStorage.setItem("cart_order_data", JSON.stringify(cart));
+
+    if (window.navigation) {
+      window.navigation.navigate("/pay");
+    } else {
+      window.location.href = "/pay";
+    }
   };
 
   return (
@@ -181,7 +173,9 @@ export default function CartModal() {
           </button>
 
           <div className="relative w-full max-w-[480px] bg-white text-black p-8 shadow-2xl my-auto max-h-[92vh] overflow-y-auto font-sans">
-            <h2 className="text-2xl font-bold mb-6 text-black tracking-tight">Vaša porudžbina:</h2>
+            <h2 className="text-2xl font-bold mb-6 text-black tracking-tight">
+              Vaša porudžbina:
+            </h2>
 
             <div className="space-y-6 pb-6 border-b border-zinc-200">
               {cart.length === 0 ? (
@@ -237,15 +231,23 @@ export default function CartModal() {
               <span>Ukupno: {totalPrice.toLocaleString()} €</span>
             </div>
 
-            {!user ? (
-              <div className="bg-[#eaeaea] p-4 text-sm text-black mb-6">
-                Već imate nalog kod nas?{" "}
-                <button
-                  onClick={openLoginModal}
-                  className="underline font-medium hover:text-zinc-700 cursor-pointer"
-                >
-                  Prijavite se ili registrujte
-                </button>
+            {/* ZONA ZA INFORMISANJE O NALOGU */}
+            {!user?.email ? (
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded text-sm text-amber-900 mb-6">
+                <p className="font-semibold mb-1">Nemate nalog?</p>
+                <p className="text-xs text-amber-800 leading-relaxed mb-2">
+                  Unesite podatke ispod. Nakon porudžbine, na vašu email adresu ćemo poslati pristupne podatke (šifru) za kreiranje vašeg naloga.
+                </p>
+                <p className="text-xs text-zinc-600 border-t border-amber-200/60 pt-2">
+                  Već imate nalog?{" "}
+                  <button
+                    type="button"
+                    onClick={openLoginModal}
+                    className="underline font-bold hover:text-black cursor-pointer"
+                  >
+                    Prijavite se ovde
+                  </button>
+                </p>
               </div>
             ) : (
               <div className="bg-zinc-100 p-4 border border-zinc-200 rounded text-sm text-zinc-800 mb-6">
@@ -254,61 +256,61 @@ export default function CartModal() {
               </div>
             )}
 
+            {/* FORMA */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              {user ? (
-                <div className="bg-zinc-100 p-4 border border-zinc-200 rounded text-sm text-zinc-800">
-                  Podaci će biti preuzeti iz vašeg naloga.
-                </div>
-              ) : (
+              {!user?.email && (
                 <>
                   <div>
-                    <label className="block text-sm text-zinc-800 mb-1.5">Ime i prezime</label>
+                    <label className="block text-sm text-zinc-800 mb-1.5 font-medium">
+                      Ime i prezime
+                    </label>
                     <input
                       type="text"
                       required
+                      placeholder="Petar Petrović"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-black focus:outline-none text-sm text-black bg-white"
+                      className="w-full px-3 py-2.5 border border-zinc-400 focus:border-black focus:outline-none text-sm text-black bg-white rounded-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-zinc-800 mb-1.5">Email adresa</label>
+                    <label className="block text-sm text-zinc-800 mb-1.5 font-medium">
+                      Email adresa (za dostavu šifre i računa)
+                    </label>
                     <input
                       type="email"
                       required
-                      placeholder="Email adresa"
+                      placeholder="primer@email.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-black focus:outline-none text-sm text-black placeholder-zinc-400 bg-white"
+                      className="w-full px-3 py-2.5 border border-zinc-400 focus:border-black focus:outline-none text-sm text-black placeholder-zinc-400 bg-white rounded-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-zinc-800 mb-1.5">Broj telefona</label>
+                    <label className="block text-sm text-zinc-800 mb-1.5 font-medium">
+                      Broj telefona
+                    </label>
                     <input
                       type="tel"
                       required
-                      placeholder="Broj telefona"
+                      placeholder="+381 6X XXX XXX"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-black focus:outline-none text-sm text-black placeholder-zinc-400 bg-white"
+                      className="w-full px-3 py-2.5 border border-zinc-400 focus:border-black focus:outline-none text-sm text-black placeholder-zinc-400 bg-white rounded-none"
                     />
                   </div>
                 </>
               )}
 
-              <div className="pt-6">
-                <div className="flex justify-end items-center font-bold text-base text-black mb-4">
-                  <span>Ukupno: {totalPrice.toLocaleString()} €</span>
-                </div>
-
+              <div className="pt-4">
                 <button
                   type="submit"
                   disabled={cart.length === 0}
                   className="w-full py-3.5 bg-black hover:bg-zinc-800 disabled:bg-zinc-400 text-white font-bold transition-colors uppercase tracking-wider text-sm cursor-pointer"
                 >
-                  Naruči
+                  Naruči i Nastavi na Plaćanje
                 </button>
               </div>
             </form>

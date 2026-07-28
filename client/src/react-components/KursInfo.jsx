@@ -4,9 +4,10 @@ import BuyButton from "./BuyButton.jsx";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
-export default function KursInfo({ kurs,accessToken }) {
+export default function KursInfo({ kurs, accessToken }) {
   const [slike, setSlike] = useState([]);
   const [activeImage, setActiveImage] = useState("");
+  const [openSection, setOpenSection] = useState(null); // Čuva indeks otvorene kartice
 
   const resolveImageSrc = (imagePath) => {
     if (!imagePath) return "";
@@ -38,6 +39,52 @@ export default function KursInfo({ kurs,accessToken }) {
     fetchSlike();
   }, [kurs?.id]);
 
+  // ✅ Funkcija koja grupiše tekst po NASLOVIMA (Samo Velika Slova) i podstavkama
+  const parseSekcije = (rawText) => {
+    if (!rawText) return [];
+
+    const lines = rawText
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    const sekcije = [];
+    let currentSekcija = null;
+
+    lines.forEach((line) => {
+      // Proveravamo da li je linija samo sa velikim slovima (ignorise brojeve i razmake)
+      const cleanLine = line.replace(/[^a-zA-ZČĆŽŠĐčćžšđ]/g, "");
+      const isALLCAPS = cleanLine.length > 0 && cleanLine === cleanLine.toUpperCase();
+
+      if (isALLCAPS) {
+        // Ako je izraz SAMO VELIKIM SLOVIMA, pravimo novu sekciju
+        if (currentSekcija) {
+          sekcije.push(currentSekcija);
+        }
+        currentSekcija = { naslov: line, stavke: [] };
+      } else if (currentSekcija) {
+        // Ako sadrži i mala slova, dodajemo ga u trenutnu sekciju
+        currentSekcija.stavke.push(line);
+      } else {
+        // U slučaju da tekst počinje bez VELIKIH SLOVA, pravimo podrazumevanu sekciju
+        currentSekcija = { naslov: "SADRŽAJ KURSA", stavke: [line] };
+      }
+    });
+
+    if (currentSekcija) {
+      sekcije.push(currentSekcija);
+    }
+
+    return sekcije;
+  };
+
+  const rawSadrzaj = kurs?.sadrzajKursa || kurs?.sadrzaj;
+  const sekcije = parseSekcije(rawSadrzaj);
+
+  const toggleSection = (index) => {
+    setOpenSection(openSection === index ? null : index);
+  };
+
   return (
     <div className="min-h-screen bg-[#18181b] text-white font-sans selection:bg-orange-500 selection:text-white">
       {/* HEADER SECTION - HERO & DETAILS */}
@@ -48,13 +95,16 @@ export default function KursInfo({ kurs,accessToken }) {
           <div className="space-y-4">
             <div className="relative overflow-hidden rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl aspect-[4/3] sm:aspect-square">
               <img
-                src={activeImage || "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&auto=format&fit=crop&q=80"}
+                src={
+                  activeImage ||
+                  "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&auto=format&fit=crop&q=80"
+                }
                 alt={kurs?.naziv || "Kurs preview"}
                 className="w-full h-full object-cover transition-opacity duration-300"
               />
             </div>
 
-            {/* Mala galerija slika ako postoje dodatne slike */}
+            {/* Mala galerija slika */}
             {slike.length > 0 && (
               <div className="grid grid-cols-4 gap-3 pt-2">
                 {slike.map((slika) => (
@@ -80,23 +130,22 @@ export default function KursInfo({ kurs,accessToken }) {
 
           {/* DESNO: Informacije o kursu */}
           <div className="flex flex-col justify-start pt-2 space-y-6">
-            {/* Naslov */}
             <div>
               <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white uppercase leading-none">
                 {kurs?.naziv || "LIGHTSTART3D"}
               </h1>
               <p className="text-zinc-400 text-sm sm:text-base mt-2 font-light">
-                {kurs?.podnaslov || "3D visualization course from scratch to pro in recording"}
+                {kurs?.komentarGore || "3D visualization course from scratch to pro in recording"}
               </p>
             </div>
 
             {/* Cene */}
             <div className="space-y-1">
               <div className="text-3xl font-black text-white tracking-wide">
-                {kurs?.cena ? `${kurs.cena} €` : "337$"}
+                {kurs?.cena ? `${kurs.cena} €` : "Ne možete kupiti dati proizvod"}
               </div>
               <div className="text-zinc-500 text-sm font-medium">
-                {kurs?.softveri || "3DsMAX + Corona renderer"}
+                {kurs?.glavniKurs || "3DsMAX + Corona renderer"}
               </div>
               {kurs?.cenaRSD && (
                 <div className="text-lg font-bold text-zinc-300 pt-2">
@@ -106,9 +155,16 @@ export default function KursInfo({ kurs,accessToken }) {
             </div>
 
             {/* Buy button */}
-            <div className="pt-2">
-              <BuyButton kurs={kurs} />
-            </div>
+            {kurs?.cena ? (
+              <div className="pt-2">
+                <BuyButton kurs={kurs} />
+              </div>
+            ) : (
+              <div className="pt-2 text-zinc-500 text-sm">
+                Ovaj kurs trenutno nije dostupan za kupovinu. <br />
+                Molimo kontaktirajte nas za više informacija.
+              </div>
+            )}
 
             {/* Opisne kartice / Tekst */}
             <div className="space-y-4 pt-4 text-zinc-300 text-sm sm:text-base leading-relaxed font-light">
@@ -117,42 +173,70 @@ export default function KursInfo({ kurs,accessToken }) {
                   "The course is designed for one and a half to two months of intensive study with 2-3 theoretical classes and practice at least three times a week."}
               </p>
               <p className="text-zinc-400">
-                {kurs?.dodatniOpis ||
-                  "The course is aimed at mastering the profession of a 3D visualizer from scratch to the first results. The course program will give you a complete understanding of the profession and teach you how to cope with any tasks."}
+                {kurs?.komentarSredina ||
+                  "The course is aimed at mastering the profession of a 3D visualizer from scratch to the first results."}
               </p>
             </div>
           </div>
-
         </div>
       </section>
 
-      {/* MODULI / SADRŽAJ KURSA */}
-      {Array.isArray(kurs?.lekcije) && kurs.lekcije.length > 0 && (
+      {/* INTERAKTIVNI PROGRAM KURSA / ACCORDION */}
+      {sekcije.length > 0 && (
         <section className="border-t border-zinc-800 bg-zinc-900/50 py-16">
           <div className="max-w-7xl mx-auto px-6">
             <h2 className="text-2xl sm:text-3xl font-bold text-white uppercase tracking-wider mb-8">
-              Program Kursa
+              Sadržaj i Program Kursa
             </h2>
 
             <div className="space-y-4">
-              {kurs.lekcije.map((lekcija, idx) => (
-                <details
-                  key={lekcija.id || idx}
-                  className="group bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden transition-all duration-200"
-                >
-                  <summary className="flex items-center justify-between p-6 cursor-pointer list-none select-none">
-                    <span className="text-lg font-semibold text-zinc-200 group-hover:text-white">
-                      {lekcija.naziv || `Lekcija ${idx + 1}`}
-                    </span>
-                    <span className="text-zinc-500 group-open:rotate-180 transition-transform duration-200">
-                      ▼
-                    </span>
-                  </summary>
-                  <div className="px-6 pb-6 text-zinc-400 text-sm leading-relaxed border-t border-zinc-800/50 pt-4">
-                    {lekcija.opis || "Nema dostupnog opisa za ovu lekciju."}
+              {sekcije.map((sekcija, index) => {
+                const isOpen = openSection === index;
+                return (
+                  <div
+                    key={index}
+                    className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden transition-all duration-200"
+                  >
+                    {/* KLIKABILNA KARTICA / NASLOV (VELIKA SLOVA) */}
+                    <button
+                      onClick={() => toggleSection(index)}
+                      className="w-full flex items-center justify-between p-6 text-left cursor-pointer hover:bg-zinc-800/50 transition-colors"
+                    >
+                      <span className="text-lg sm:text-xl font-bold text-white tracking-wide uppercase">
+                        {sekcija.naslov}
+                      </span>
+                      <span
+                        className={`text-orange-500 font-bold text-xl transition-transform duration-300 ${
+                          isOpen ? "rotate-180" : "rotate-0"
+                        }`}
+                      >
+                        ▼
+                      </span>
+                    </button>
+
+                    {/* Sadržaj koji se pojavljuje tek na klik */}
+                    {isOpen && (
+                      <div className="px-6 pb-6 pt-2 border-t border-zinc-800/60 bg-zinc-950/40 space-y-3">
+                        {sekcija.stavke.length > 0 ? (
+                          sekcija.stavke.map((stavka, sIdx) => (
+                            <div
+                              key={sIdx}
+                              className="flex items-start gap-3 text-zinc-300 text-sm sm:text-base leading-relaxed"
+                            >
+                              <span className="text-orange-500 mt-1">•</span>
+                              <span>{stavka}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-zinc-500 text-sm">
+                            Nema dodatnih pojedinosti za ovu sekciju.
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </details>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>

@@ -1,5 +1,4 @@
 import React from "react";
-import BuyCourseModal from "./BuyCourseModal";
 import KursDetaljiModal from "./KursDetaljiModal";
 
 const ReactKurs = ({
@@ -132,12 +131,6 @@ const ReactKurs = ({
                             <p className="text-sm opacity-90 mb-6 text-white max-w-xs shadow-sm">
                                 Nemate pristup ovom kursu
                             </p>
-                            <div 
-                                className="w-full max-w-[220px]"
-                                onClick={e => e.stopPropagation()}
-                            >
-                                <BuyCourseModal API_URL={API_URL} token={accessToken} kursId={kurs.kursId} naziv={kurs.naziv} cena={kurs.cena} />
-                            </div>
                         </div>
                     </div>
                 )}
