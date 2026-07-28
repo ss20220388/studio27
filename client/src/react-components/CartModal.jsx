@@ -161,7 +161,7 @@ export default function CartModal({ accessToken: initialToken }) {
       )}
 
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 overflow-hidden">
+        <div className="fixed inset-0 z-10002 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 overflow-hidden">
           <div className="relative w-full sm:max-w-[480px] bg-white text-black p-5 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-none font-sans">
             {/* Dugme X spušteno unutar belog kartičnog prozora */}
             <button
