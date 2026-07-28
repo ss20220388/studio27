@@ -3,20 +3,30 @@ const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 const imageUrl = `${API_URL}/api/uploaded-images/towebp/15.webp`; 
 ---
 
-<section class="bg-white py-16 md:py-24 text-black">
+<section class="bg-white py-12 md:py-24 text-black">
   <!-- Tekst iznad rama -->
-  <div class="max-w-4xl mx-auto px-6 text-center mb-16">
-    <p class="text-zinc-600 text-base md:text-xl font-light leading-relaxed max-w-3xl mx-auto tracking-wide">
+  <div class="max-w-4xl mx-auto px-6 text-center mb-10 md:mb-16">
+    <p class="text-zinc-600 text-sm sm:text-base md:text-xl font-light leading-relaxed max-w-3xl mx-auto tracking-wide">
       Digital book format with micro-lessons in video format, which will make your learning pleasant, simple, convenient and incredibly beautiful.
     </p>
   </div>
 
-  <!-- VELIKI PARALLAX FRAME / RAM KOJI OTKRIVA SLIKU -->
+  <!-- MOBILNI POGLED (do md ekrana): Stabilna responsive slika -->
+  <div class="block md:hidden relative w-full h-[50vh] min-h-[350px] overflow-hidden bg-zinc-100">
+    <img 
+      src={imageUrl} 
+      alt="Preview visual"
+      class="w-full h-full object-cover object-center"
+      loading="lazy"
+    />
+    <div class="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/10 pointer-events-none"></div>
+  </div>
+
+  <!-- DESKTOP POGLED (md i veći ekrani): Originalni veliku Parallax ram -->
   <div 
-    class="relative w-full h-[85vh] min-h-[600px] lg:min-h-[750px] overflow-hidden bg-fixed bg-center bg-cover bg-no-repeat"
+    class="hidden md:block relative w-full h-[85vh] min-h-[750px] overflow-hidden bg-fixed bg-center bg-cover bg-no-repeat"
     style={`background-image: url('${imageUrl}');`}
   >
-    <!-- Suptilni beli overlay na vrhu i dnu rama za mekan i elegantan prelaz -->
-    <div class="absolute inset-0 bg-gradient-to-b  pointer-events-none"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/10 pointer-events-none"></div>
   </div>
 </section>
