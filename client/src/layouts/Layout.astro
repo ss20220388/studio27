@@ -203,16 +203,18 @@ const robotsContent = noIndex
   </head>
 
   <body class="relative bg-[#18181b]">
-    <div class="fixed top-0 left-0 w-full z-50">
+    <!-- Povećajte z-index zaglavlja sa z-50 na z-[1000] -->
+    <div class="fixed top-0 left-0 w-full z-[1000]">
       <Header2 />
     </div>
 
-      <CartModal accessToken={accessToken} client:load />
+    <CartModal accessToken={accessToken} client:load />
+
     <div class="pt-[70px] w-screen overflow-hidden">
       <slot />
       <Footer />
     </div>
 
     <ErrorToastNotifier losGmailCookie={losGmailCookie} client:load />
-  </body>
+</body>
 </html>

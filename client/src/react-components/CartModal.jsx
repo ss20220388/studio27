@@ -7,14 +7,12 @@ export default function CartModal({ accessToken: initialToken }) {
   const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
   const [user, setUser] = useState(null);
 
-  // ✅ Čitanje tokena isključivo iz "token" cookie-ja
   const getCookieToken = () => {
     if (typeof document === "undefined") return null;
     const match = document.cookie.match(new RegExp("(^| )token=([^;]+)"));
     return match ? match[2] : null;
   };
 
-  // ✅ Dohvatanje korisnika samo preko cookie-ja ili prosleđenog prop-a
   const fetchUser = useCallback(async () => {
     const token = getCookieToken() || initialToken;
 
@@ -41,7 +39,6 @@ export default function CartModal({ accessToken: initialToken }) {
     }
   }, [initialToken]);
 
-  // ✅ Pri prvom renderu (ili osvežavanju stranice) proveri korisnika iz cookie-ja
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
@@ -133,7 +130,7 @@ export default function CartModal({ accessToken: initialToken }) {
   };
 
   return (
-    <>
+    <div>
       {!isOpen && (
         <button
           onClick={() => {
@@ -141,10 +138,10 @@ export default function CartModal({ accessToken: initialToken }) {
             fetchUser();
             setIsOpen(true);
           }}
-          className="fixed top-40 left-8 z-[100] w-14 h-14 bg-[#e5e7eb] hover:bg-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="fixed bottom-6 right-6 sm:bottom-auto sm:top-40 sm:left-8 z-[80] w-14 h-14 bg-zinc-900 sm:bg-[#e5e7eb]  text-white sm:text-black rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
         >
           <svg
-            className="w-7 h-7 text-black stroke-[1.5]"
+            className="w-6 h-6 stroke-[1.5]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -156,7 +153,7 @@ export default function CartModal({ accessToken: initialToken }) {
             />
           </svg>
           {totalItems > 0 && (
-            <span className="absolute -bottom-1 -right-1 bg-red-600 text-white font-bold text-xs rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-black">
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white font-bold text-xs rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-white sm:border-black">
               {totalItems}
             </span>
           )}
@@ -164,104 +161,107 @@ export default function CartModal({ accessToken: initialToken }) {
       )}
 
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-sm p-4 overflow-y-auto">
-          <button
-            onClick={() => setIsOpen(false)}
-            className="fixed top-6 right-8 text-white hover:text-zinc-300 text-3xl font-light z-[10001] cursor-pointer"
-          >
-            ✕
-          </button>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 overflow-hidden">
+          <div className="relative w-full sm:max-w-[480px] bg-white text-black p-5 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-none font-sans">
+            {/* Dugme X spušteno unutar belog kartičnog prozora */}
+            <button
+              onClick={() => setIsOpen(false)}
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-zinc-400 hover:text-black text-2xl font-light p-2 cursor-pointer leading-none transition-colors"
+            >
+              ✕
+            </button>
 
-          <div className="relative w-full max-w-[480px] bg-white text-black p-8 shadow-2xl my-auto max-h-[92vh] overflow-y-auto font-sans">
-            <h2 className="text-2xl font-bold mb-6 text-black tracking-tight">
-              Vaša porudžbina:
+            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-black tracking-tight border-b border-zinc-100 pb-3 pr-8">
+              Vaša porudžbina
             </h2>
 
-            <div className="space-y-6 pb-6 border-b border-zinc-200">
+            <div className="space-y-4 sm:space-y-6 pb-4 sm:pb-6 border-b border-zinc-200">
               {cart.length === 0 ? (
-                <p className="text-zinc-500 text-center py-4">Vaša korpa je prazna.</p>
+                <p className="text-zinc-500 text-center py-6 text-sm">
+                  Vaša korpa je trenutno prazna.
+                </p>
               ) : (
                 cart.map((item) => (
-                  <div key={item.id} className="flex items-start justify-between gap-3 text-xs">
+                  <div key={item.id} className="flex items-center justify-between gap-3 text-xs sm:text-sm">
                     {item.image && (
                       <img
                         src={API_URL + "/api/uploaded-images" + item.image}
                         alt={item.title}
-                        className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+                        className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded flex-shrink-0"
                       />
                     )}
-                    <div className="flex-1 min-w-0 pr-2">
-                      <h3 className="font-bold text-black uppercase tracking-wide leading-tight">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-black uppercase tracking-wide leading-tight text-xs sm:text-sm line-clamp-2">
                         {item.title}
                       </h3>
+                      <div className="text-zinc-700 font-semibold mt-1">
+                        {(item.price * (item.quantity || 1)).toLocaleString()} €
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 pt-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center border border-zinc-300 rounded px-1">
+                        <button
+                          onClick={() => updateQuantity(item.id, -1)}
+                          className="w-6 h-6 flex items-center justify-center text-zinc-600 hover:text-black font-bold"
+                        >
+                          –
+                        </button>
+                        <span className="font-medium px-2 text-xs">{item.quantity || 1}</span>
+                        <button
+                          onClick={() => updateQuantity(item.id, 1)}
+                          className="w-6 h-6 flex items-center justify-center text-zinc-600 hover:text-black font-bold"
+                        >
+                          +
+                        </button>
+                      </div>
+
                       <button
-                        onClick={() => updateQuantity(item.id, -1)}
-                        className="w-5 h-5 rounded-full border border-zinc-300 flex items-center justify-center text-zinc-500 hover:border-black hover:text-black transition-colors"
+                        onClick={() => removeItem(item.id)}
+                        className="text-zinc-400 hover:text-red-600 p-1 transition-colors"
                       >
-                        –
-                      </button>
-                      <span className="font-medium px-1">{item.quantity || 1}</span>
-                      <button
-                        onClick={() => updateQuantity(item.id, 1)}
-                        className="w-5 h-5 rounded-full border border-zinc-300 flex items-center justify-center text-zinc-500 hover:border-black hover:text-black transition-colors"
-                      >
-                        +
+                        ✕
                       </button>
                     </div>
-
-                    <div className="text-right min-w-[70px] pt-1 font-semibold text-black">
-                      {(item.price * (item.quantity || 1)).toLocaleString()} €
-                    </div>
-
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="text-zinc-400 hover:text-black pt-1 pl-1 transition-colors"
-                    >
-                      ✕
-                    </button>
                   </div>
                 ))
               )}
             </div>
 
-            <div className="flex justify-end items-center py-4 font-bold text-base text-black">
-              <span>Ukupno: {totalPrice.toLocaleString()} €</span>
+            <div className="flex justify-between items-center py-4 font-bold text-base text-black border-b border-zinc-100 mb-4">
+              <span>Ukupno:</span>
+              <span className="text-lg">{totalPrice.toLocaleString()} €</span>
             </div>
 
-            {/* ZONA ZA INFORMISANJE O NALOGU */}
             {!user?.email ? (
-              <div className="bg-amber-50 border border-amber-200 p-4 rounded text-sm text-amber-900 mb-6">
-                <p className="font-semibold mb-1">Nemate nalog?</p>
-                <p className="text-xs text-amber-800 leading-relaxed mb-2">
-                  Unesite podatke ispod. Nakon porudžbine, na vašu email adresu ćemo poslati pristupne podatke (šifru) za kreiranje vašeg naloga.
+              <div className="bg-amber-50 border border-amber-200 p-3.5 rounded text-xs text-amber-900 mb-5">
+                <p className="font-semibold mb-1 text-sm">Nemate nalog?</p>
+                <p className="text-amber-800 leading-relaxed mb-2">
+                  Popunite polja ispod. Nakon uplate, šaljemo pristupne podatke na vaš e-mail.
                 </p>
-                <p className="text-xs text-zinc-600 border-t border-amber-200/60 pt-2">
+                <p className="text-zinc-600 border-t border-amber-200/60 pt-2">
                   Već imate nalog?{" "}
                   <button
                     type="button"
                     onClick={openLoginModal}
-                    className="underline font-bold hover:text-black cursor-pointer"
+                    className="underline font-bold text-black hover:text-orange-600 cursor-pointer"
                   >
                     Prijavite se ovde
                   </button>
                 </p>
               </div>
             ) : (
-              <div className="bg-zinc-100 p-4 border border-zinc-200 rounded text-sm text-zinc-800 mb-6">
+              <div className="bg-zinc-100 p-3 border border-zinc-200 rounded text-xs text-zinc-800 mb-5">
                 Prijavljeni ste kao:{" "}
-                <span className="font-bold">{user.email || user.name}</span>
+                <span className="font-bold text-black">{user.email || user.name}</span>
               </div>
             )}
 
-            {/* FORMA */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               {!user?.email && (
                 <>
                   <div>
-                    <label className="block text-sm text-zinc-800 mb-1.5 font-medium">
+                    <label className="block text-xs font-medium text-zinc-700 mb-1">
                       Ime i prezime
                     </label>
                     <input
@@ -270,13 +270,13 @@ export default function CartModal({ accessToken: initialToken }) {
                       placeholder="Petar Petrović"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-zinc-400 focus:border-black focus:outline-none text-sm text-black bg-white rounded-none"
+                      className="w-full px-3 py-2 sm:py-2.5 border border-zinc-300 focus:border-black focus:outline-none text-xs sm:text-sm text-black bg-white rounded-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-zinc-800 mb-1.5 font-medium">
-                      Email adresa (za dostavu šifre i računa)
+                    <label className="block text-xs font-medium text-zinc-700 mb-1">
+                      Email adresa
                     </label>
                     <input
                       type="email"
@@ -284,12 +284,12 @@ export default function CartModal({ accessToken: initialToken }) {
                       placeholder="primer@email.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-zinc-400 focus:border-black focus:outline-none text-sm text-black placeholder-zinc-400 bg-white rounded-none"
+                      className="w-full px-3 py-2 sm:py-2.5 border border-zinc-300 focus:border-black focus:outline-none text-xs sm:text-sm text-black placeholder-zinc-400 bg-white rounded-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-zinc-800 mb-1.5 font-medium">
+                    <label className="block text-xs font-medium text-zinc-700 mb-1">
                       Broj telefona
                     </label>
                     <input
@@ -298,25 +298,25 @@ export default function CartModal({ accessToken: initialToken }) {
                       placeholder="+381 6X XXX XXX"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-zinc-400 focus:border-black focus:outline-none text-sm text-black placeholder-zinc-400 bg-white rounded-none"
+                      className="w-full px-3 py-2 sm:py-2.5 border border-zinc-300 focus:border-black focus:outline-none text-xs sm:text-sm text-black placeholder-zinc-400 bg-white rounded-none"
                     />
                   </div>
                 </>
               )}
 
-              <div className="pt-4">
+              <div className="pt-2">
                 <button
                   type="submit"
                   disabled={cart.length === 0}
-                  className="w-full py-3.5 bg-black hover:bg-zinc-800 disabled:bg-zinc-400 text-white font-bold transition-colors uppercase tracking-wider text-sm cursor-pointer"
+                  className="w-full py-3 sm:py-3.5 bg-black hover:bg-zinc-800 disabled:bg-zinc-300 text-white font-bold transition-colors uppercase tracking-wider text-xs sm:text-sm cursor-pointer"
                 >
-                  Naruči i Nastavi na Plaćanje
+                  Nastavi na Plaćanje
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
