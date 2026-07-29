@@ -45,90 +45,89 @@ try {
 }
 ---
 
-<section id="kursevi" class="bg-[#18181b] py-12 md:py-4 text-white min-h-screen">
-  <div class="flex flex-col">
-    {sviKursevi.map((kurs, i) => {
-      return (
-        <div 
-          class="grid grid-cols-1 lg:grid-cols-2 min-h-screen border-b border-zinc-800/60"
-          style={`--card-i:${i}`}
-        >
-          <!-- LEVA STRANA: Tamna sekcija sa informacijama o kursu -->
-          <div class="p-8 sm:p-16 lg:p-24 flex flex-col justify-center items-start bg-[#18181b] text-white space-y-8 z-10">
-            
-            <!-- Badges / Oznake -->
-            {(kurs.glavniKurs || kurs.komentarGore) && (
-              <div class="flex flex-wrap items-center gap-2">
-                {kurs.glavniKurs && (
-                  <span class="text-xs font-semibold uppercase tracking-wider px-3 py-1 bg-zinc-800 text-zinc-100 rounded-md border border-zinc-700">
-                    {kurs.glavniKurs}
-                  </span>
-                )}
-                {kurs.komentarGore && (
-                  <span class="text-xs font-semibold uppercase tracking-wider px-3 py-1 bg-orange-950/80 text-orange-200 rounded-md border border-orange-700/60">
-                    {kurs.komentarGore}
-                  </span>
-                )}
-              </div>
-            )}
-
-            <!-- Naslov Kursa -->
-            <h2 class="text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-tight uppercase font-light text-white">
-              <span class="font-extrabold">{kurs.naziv}</span>
-            </h2>
-
-            <!-- Opis / Srednji komentar -->
-            <p class="text-zinc-200 text-base sm:text-lg max-w-lg font-light leading-relaxed">
-              {kurs.komentarSredina || kurs.opis}
-            </p>
-
-            <!-- Akciona dugmad i Software ikone -->
-            <div class="pt-6 flex flex-col sm:flex-row items-start sm:items-center gap-8 w-full">
-              <a 
-                href={`/kurs/${kurs.kursId}`} 
-                class="inline-flex items-center justify-center bg-[#bc3b24] hover:bg-[#9e301c] text-white font-medium px-10 py-3.5 rounded-full transition duration-300 shadow-lg text-sm tracking-wider uppercase"
-              >
-                Pogledajte kurs
-              </a>
-
-              <!-- Software logos (3ds Max / Corona) -->
-              <div class="flex items-center gap-3 text-zinc-200 transition-opacity">
-                <svg class="w-8 h-8 fill-current text-zinc-300" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
-                <div class="flex flex-col text-[10px] uppercase font-bold tracking-widest leading-none">
-                  <span class="text-zinc-200">AUTODESK</span>
-                  <span class="text-xs text-white">3DS MAX</span>
-                  <span class="text-zinc-300 font-medium lowercase pt-0.5">corona</span>
-                </div>
-              </div>
-              
-            </div>
-
-            {kurs.komentarDole && (
-              <p class="text-xs text-zinc-400 pt-4 uppercase tracking-widest font-medium">
-                {kurs.komentarDole}
-              </p>
-            )}
-          </div>
-
-          <!-- DESNA STRANA: Velika slika visoke rezolucije -->
-          <div class="relative min-h-[400px] lg:min-h-full overflow-hidden bg-zinc-900">
-            <img
-              src={`${API_URL}/api/uploaded-images${kurs.slikaUrl}`}
-              alt={kurs.naziv}
-              loading={i === 0 ? "eager" : "lazy"}
-              fetchpriority={i === 0 ? "high" : "auto"}
-              decoding="async"
-              class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-            />
-          </div>
-        </div>
-      );
-    })}
+<section id="kursevi" class="bg-[#18181b] py-20 text-white min-h-screen">
+  
+  <!-- ZAGLAVLJE SEKCIJE -->
+  <div class="max-w-[1700px] mx-auto px-6 mb-12 text-center space-y-3">
+    <p class="text-xs md:text-sm font-semibold tracking-[0.25em] text-zinc-400 uppercase">
+      Edukacija & Obuke
+    </p>
+    <h2 class="text-3xl md:text-5xl font-black text-white tracking-tight uppercase">
+      NAŠI KURSEVI
+    </h2>
   </div>
 
-  <!-- FAQ Sekcija -->
+  <!-- GRID KARTICA (TAČNO 4 U JEDNOJ LINIJI NA DESKTOPU) -->
+  <div class="max-w-[1700px] mx-auto px-6 mb-24">
+    {sviKursevi.length === 0 ? (
+      <p class="text-center text-zinc-500 py-12">Trenutno nema dostupnih kurseva.</p>
+    ) : (
+      /* grid-cols-1 za mobilne, sm:grid-cols-2 za tablete, lg:grid-cols-4 za desktop */
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {sviKursevi.map((kurs) => (
+          <div class="group relative flex flex-col justify-between bg-zinc-900/60 border border-zinc-800/80 rounded-xl overflow-hidden transition-all duration-300 hover:border-zinc-500 hover:shadow-2xl hover:-translate-y-1">
+            
+            <!-- SLIKA KURSA -->
+            <a href={`/kurs/${kurs.kursId}`} class="relative aspect-[16/11] overflow-hidden block">
+              <img
+                src={`${API_URL}/api/uploaded-images${kurs.slikaUrl}`}
+                alt={kurs.naziv}
+                loading="lazy"
+                class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent opacity-90"></div>
+              
+              <!-- BADGE PREKO SLIKE -->
+              {(kurs.glavniKurs || kurs.komentarGore) && (
+                <div class="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
+                  {kurs.glavniKurs && (
+                    <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 bg-black/80 backdrop-blur-md text-white rounded border border-white/10">
+                      {kurs.glavniKurs}
+                    </span>
+                  )}
+                  {kurs.komentarGore && (
+                    <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 bg-[#bc3b24] text-white rounded shadow-sm">
+                      {kurs.komentarGore}
+                    </span>
+                  )}
+                </div>
+              )}
+            </a>
+
+            <!-- SADRŽAJ KARTICE -->
+            <div class="p-5 flex flex-col justify-between flex-grow space-y-4">
+              
+              <div class="space-y-2">
+                <a href={`/kurs/${kurs.kursId}`} class="block">
+                  <h3 class="text-lg font-extrabold uppercase tracking-tight text-white group-hover:text-[#bc3b24] transition-colors duration-300 leading-snug">
+                    {kurs.naziv}
+                  </h3>
+                </a>
+
+                <p class="text-zinc-400 text-xs font-light leading-relaxed line-clamp-3">
+                  {kurs.komentarSredina || kurs.opis}
+                </p>
+              </div>
+
+              <!-- DNO KARTICE -->
+              <div class="pt-4 border-t border-zinc-800/80 flex items-center justify-between gap-2">
+                <a
+                  href={`/kurs/${kurs.kursId}`}
+                  class="inline-flex items-center justify-center bg-[#bc3b24] hover:bg-[#9e301c] text-white text-[11px] font-semibold uppercase tracking-wider px-4 py-2.5 rounded-full transition-all duration-300 shadow-md w-full text-center"
+                >
+                  Saznaj više
+                </a>
+              </div>
+
+            </div>
+
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+
+  <!-- FAQ SEKCIJA (NEPROMENJENA) -->
   <div class="py-24 px-6 max-w-6xl mx-auto border-t border-zinc-800">
     <h3 class="text-3xl sm:text-4xl font-light text-center mb-16 tracking-wider uppercase text-white">
       Često postavljana <span class="font-extrabold">pitanja</span>
@@ -138,21 +137,21 @@ try {
       <!-- LEVA STRANA -->
       <div class="space-y-6">
         <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
-          <h4 class="font-bold text-lg text-white mb-2">Da li je kurs za početnike?</h4>
+          <h2 class="font-bold text-lg text-white mb-2">Da li je kurs za početnike?</h2>
           <p class="text-zinc-300 text-sm leading-relaxed">
             Da. Kurs je prilagođen i početnicima i onima koji već imaju osnovno znanje. Sve se objašnjava korak po korak – od interfejsa do finalnog rendera.
           </p>
         </div>
 
         <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
-          <h4 class="font-bold text-lg text-white mb-2">Kako izgleda format kursa?</h4>
+          <h2 class="font-bold text-lg text-white mb-2">Kako izgleda format kursa?</h2>
           <p class="text-zinc-300 text-sm leading-relaxed">
             Kurs je online i sastoji se od snimljenih lekcija koje možeš gledati svojim tempom. Uz video lekcije dobijaš i dodatne materijale, fajlove za vežbu i konkretne projekte.
           </p>
         </div>
 
         <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
-          <h4 class="font-bold text-lg text-white mb-2">Da li imam vremensko ograničenje kod snimljenih lekcija?</h4>
+          <h2 class="font-bold text-lg text-white mb-2">Da li imam vremensko ograničenje kod snimljenih lekcija?</h2>
           <p class="text-zinc-300 text-sm leading-relaxed">
             Ne. Kurs prolaziš svojim tempom, bez pritiska i rokova.
           </p>
@@ -162,21 +161,14 @@ try {
       <!-- DESNA STRANA -->
       <div class="space-y-6">
         <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
-          <h4 class="font-bold text-lg text-white mb-2">Da li dobijam sertifikat?</h4>
-          <p class="text-zinc-300 text-sm leading-relaxed">
-            Da. Nakon uspešno završenog projekta dobijaš sertifikat o završenom kursu.
-          </p>
-        </div>
-
-        <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
-          <h4 class="font-bold text-lg text-white mb-2">Da li postoji feedback?</h4>
+          <h2 class="font-bold text-lg text-white mb-2">Da li postoji feedback?</h2>
           <p class="text-zinc-300 text-sm leading-relaxed">
             Da. Imaš mogućnost dobijanja povratnih informacija na svoje radove, kao i podršku bez obzira na vreme kupovine.
           </p>
         </div>
 
         <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
-          <h4 class="font-bold text-lg text-white mb-2">Da li dobijam pristup svim lekcijama odmah?</h4>
+          <h2 class="font-bold text-lg text-white mb-2">Da li dobijam pristup svim lekcijama odmah?</h2>
           <p class="text-zinc-300 text-sm leading-relaxed">
             Da. Nakon uplate dobijaš kompletan pristup svim modulima.
           </p>

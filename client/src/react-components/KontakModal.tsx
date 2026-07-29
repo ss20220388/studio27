@@ -117,10 +117,6 @@ export default function KontaktModal({textButtona}: {textButtona?: string}) {
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-white via-white/40 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6 lg:bottom-10 lg:left-8 hidden sm:block">
-                  <h3 className="text-gray-900 text-xl font-bold mb-2">Započnite<br/>svoju karijeru.</h3>
-                  <p className="text-gray-500 text-xs">Prijavite se odmah i osigurajte svoje mesto na našim najtraženijim obukama.</p>
-                </div>
               </div>
 
               {/* Right form */}

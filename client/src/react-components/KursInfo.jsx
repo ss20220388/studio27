@@ -86,7 +86,7 @@ export default function KursInfo({ kurs, accessToken }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#18181b] text-white font-sans selection:bg-orange-500 selection:text-white">
+    <div id="detalje-kursa" className="min-h-screen bg-[#18181b] text-white font-sans selection:bg-orange-500 selection:text-white">
       {/* HEADER SECTION - HERO & DETAILS */}
       <section className="max-w-7xl mx-auto px-6 py-12 md:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
@@ -199,25 +199,27 @@ export default function KursInfo({ kurs, accessToken }) {
                   >
                     {/* KLIKABILNA KARTICA / NASLOV (VELIKA SLOVA) */}
                     <button
-                      onClick={() => toggleSection(index)}
+                      onClick={() =>sekcija.stavke.length > 0 &&  toggleSection(index)}
                       className="w-full flex items-center justify-between p-6 text-left cursor-pointer hover:bg-zinc-800/50 transition-colors"
                     >
                       <span className="text-lg sm:text-xl font-bold text-white tracking-wide uppercase">
                         {sekcija.naslov}
                       </span>
-                      <span
-                        className={`text-orange-500 font-bold text-xl transition-transform duration-300 ${
-                          isOpen ? "rotate-180" : "rotate-0"
-                        }`}
-                      >
-                        ▼
-                      </span>
+
+                     {sekcija.stavke.length > 0 && (
+                       <span
+                         className={`text-orange-500 font-bold text-xl transition-transform duration-300 ${
+                           isOpen ? "rotate-180" : "rotate-0"
+                         }`}
+                       >
+                         ▼
+                      </span>)}
                     </button>
 
                     {/* Sadržaj koji se pojavljuje tek na klik */}
                     {isOpen && (
                       <div className="px-6 pb-6 pt-2 border-t border-zinc-800/60 bg-zinc-950/40 space-y-3">
-                        {sekcija.stavke.length > 0 ? (
+                        {sekcija.stavke.length > 0 && (
                           sekcija.stavke.map((stavka, sIdx) => (
                             <div
                               key={sIdx}
@@ -227,10 +229,6 @@ export default function KursInfo({ kurs, accessToken }) {
                               <span>{stavka}</span>
                             </div>
                           ))
-                        ) : (
-                          <p className="text-zinc-500 text-sm">
-                            Nema dodatnih pojedinosti za ovu sekciju.
-                          </p>
                         )}
                       </div>
                     )}

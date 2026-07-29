@@ -72,25 +72,7 @@ export default function BigTextSection({ naslov, opis, glavniTekst }) {
         >
           {displayOpis}
         </motion.p>
-
-        {/* Feature pills */}
-        <div className="flex flex-wrap justify-center gap-4">
-          {features.map((feat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 + i * 0.1 }}
-              className="flex items-center gap-3 rounded-full border border-gray-100 bg-gray-50 px-6 py-3 backdrop-blur-sm"
-            >
-              <span className="text-xl">{feat.icon}</span>
-              <span className="text-sm font-medium text-gray-600">
-                {feat.text}
-              </span>
-            </motion.div>
-          ))}
-        </div>
+        
       </div>
 
       {/* Ambient glow */}
