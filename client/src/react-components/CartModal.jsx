@@ -112,20 +112,95 @@ export default function CartModal({ accessToken: initialToken }) {
     window.dispatchEvent(new CustomEvent("open-login"));
   };
 
-  const handleSubmit = (e) => {
+  const registerUser = async (payload) => {
+    try {
+      const res = await fetch(`${API_URL}/api/auth/register-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      return res.json();
+    } catch (error) {
+      console.error("Error registering user:", error);
+      return "Error registering user";
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const finalData = user
+    const finalData = user?.email
       ? { ...user, isGuest: false }
       : { ...formData, isGuest: true };
 
-    localStorage.setItem("user_order_data", JSON.stringify(finalData));
-    localStorage.setItem("cart_order_data", JSON.stringify(cart));
+    if (!finalData.isGuest) {
+      // Registrovan/ulogovan korisnik
+      localStorage.setItem("user_order_data", JSON.stringify(finalData));
+      localStorage.setItem("cart_order_data", JSON.stringify(cart));
 
-    if (window.navigation) {
-      window.navigation.navigate("/pay");
+      if (window.navigation) {
+        window.navigation.navigate("/pay");
+      } else {
+        window.location.href = "/pay";
+      }
     } else {
-      window.location.href = "/pay";
+      // Gost - kreira se nalog
+      const name = formData.name.trim();
+      const surname = name.split(" ").slice(1).join(" ") || " ";
+      const firstName = name.split(" ")[0] || " ";
+      const pass = Math.random().toString(36).slice(-8); // Generisana lozinka
+
+      const payload = {
+        email: formData.email.trim(),
+        password: pass,
+        ime: firstName,
+        prezime: surname,
+        brojTelefona: formData.phone.trim()
+      };
+
+      try {
+        const response = await registerUser(payload);
+
+        // Provera uspešnosti (prihvata i Axios response i standardni fetch response)
+        const isSuccess = response ;
+
+        if (isSuccess) {
+          // 2. Priprema i slanje email-a
+          const mailPayload = {
+            to: payload.email,
+            subject: "Dobrodošli! Vaši podaci za prijavu",
+            subText: `Zdravo ${payload.ime}, vaš nalog je uspešno kreiran.`,
+            body: `Vaša privremena lozinka za prijavu je: ${pass}\n\nMolimo vas da je promenite nakon prve prijave.`
+          };
+
+          const mailResponse = await fetch(`${API_URL}/api/send-mail-to-person`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(mailPayload)
+          });
+
+          if (mailResponse.ok) {
+            console.log("Korisnik registrovan i email uspešno poslat!");
+          } else {
+            console.warn("Korisnik registrovan, ali slanje email-a nije uspelo.");
+          }
+
+          localStorage.setItem("user_order_data", JSON.stringify({ ...payload, isGuest: false }));
+          localStorage.setItem("cart_order_data", JSON.stringify(cart));
+
+          if (window.navigation) {
+            window.navigation.navigate("/pay");
+          } else {
+            window.location.href = "/pay";
+          }
+        } else {
+          console.error("Registracija nije uspela:", response);
+        }
+      } catch (error) {
+        console.error("Greška tokom procesa registracije ili slanja mail-a:", error);
+      }
     }
   };
 

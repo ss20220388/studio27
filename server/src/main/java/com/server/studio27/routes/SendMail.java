@@ -84,10 +84,10 @@ public class SendMail {
                 ".btn { display: inline-block; padding: 14px 30px; background-color: #b91c1c; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-weight: bold; margin-top: 25px; transition: background-color 0.2s; letter-spacing: 1px; }" +
                 "</style></head><body>" +
                 "<div class='container'>" +
-                "<div class='header'><h1>STUDIO 27</h1></div>" +
+                "<div class='header'><h1>27archviz</h1></div>" +
                 "<div class='content'>" + subjectHtml + subTextHtml + bodyContent + "</div>" +
                 "<div class='footer'>" +
-                "&copy; 2026 Studio 27. Sva prava zadržana.<br>" +
+                "&copy; 2026 27archviz. Sva prava zadržana.<br>" +
                 "E-mail: <a href='mailto:info@27archviz.com'>info@27archviz.com</a> | Web: <a href='" + frontendUrl + "'>" + frontendUrl + "</a>" +
                 "</div></div></body></html>";
     }
@@ -149,7 +149,7 @@ public class SendMail {
 
             helper.setFrom(fromEmail);
             helper.setTo(request.to);
-            helper.setSubject("Studio 27 - Vaš kod za resetovanje lozinke");
+            helper.setSubject("27archviz - Vaš kod za resetovanje lozinke");
             helper.setText(buildHtmlEmail("Kod za resetovanje lozinke","Molimo koristite ovaj kod za resetovanje lozinke:",kod.toString()), true);
 
             mailSender.send(message);
@@ -168,7 +168,7 @@ public class SendMail {
             
             helper.setFrom(fromEmail);
             helper.setTo(request.to);
-            helper.setSubject("Potvrda o plaćanju - Studio 27");
+            helper.setSubject("Potvrda o plaćanju - 27archviz");
             
             String receiptHtml = "<h2>Poštovani/a " + request.name + ",</h2>" +
                     "<p>Vaša uplata je uspešno evidentirana. Zahvaljujemo Vam se na poverenju!</p>" +

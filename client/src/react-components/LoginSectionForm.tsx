@@ -243,16 +243,6 @@ const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) =>
         }
     }
 
-    const handleOpenPrivacyPolicy = () => {
-        try {
-            const filePath = `/pravila/Privacy-Policy.pdf`
-            const url = `${publicApiUrl}/api/media?remoteFilePath=${encodeURIComponent(filePath)}`
-            window.open(url, '_blank')
-        } catch (err) {
-            console.error('Greška pri otvaranju dokumenta:', err)
-        }
-    }
-
     async function handleGoogleLogin(e: any) {
         e.preventDefault()
         try {

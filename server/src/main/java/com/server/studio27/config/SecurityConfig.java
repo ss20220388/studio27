@@ -95,6 +95,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/kursslika").permitAll()
                                                 .requestMatchers("/api/kursslika/*").permitAll()
                                                 .requestMatchers("/api/send-code-to-mail").permitAll()
+                                                .requestMatchers("/api/send-mail-to-person").permitAll()
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth -> oauth
                                                 .successHandler((request, response, authentication) -> {
