@@ -127,7 +127,11 @@ const courseSchema = course
       },
       educationalLevel: course.educationalLevel || "beginner to advanced",
       inLanguage: course.inLanguage || "sr",
-      courseMode: course.courseMode || "online",
+      // STARO (uzrokuje grešku): courseMode: course.courseMode || "online",
+      hasCourseInstance: {
+        "@type": "CourseInstance",
+        courseMode: course.courseMode || "online",
+      },
     }
   : null;
 
