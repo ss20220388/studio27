@@ -4,36 +4,38 @@ import Layout from "../layouts/Layout.astro";
 import ReactKurs from "../react components/ReactKurs";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
-
 const token = Astro.cookies.get("refreshToken")?.value || null;
-const response = await fetch(`${API_URL}/api/auth/me`, {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-});
-const userData = await response.json();
+let kursevi: any[] = [];
+let userData: any = { userId: null };
+try {
+  
+  const response = await fetch(`${API_URL}/api/auth/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  userData = await response.json();
 
-interface Kurs {
-  id: number;
-  naziv: string;
-  opis: string;
-  cena: number;
-  trajanje: number;
-  slikaUrl: string;
+  interface Kurs {
+    id: number;
+    naziv: string;
+    opis: string;
+    cena: number;
+    trajanje: number;
+    slikaUrl: string;
+  }
+  interface ResponseData {
+    kursevi: Kurs[];
+  }
+
+  const data: Response = await fetch(`${API_URL}/api/kursevi`);
+
+  const kurseviRes: ResponseData = await data.json();
+  const kursevi1 = kurseviRes.kursevi;
+   kursevi = kursevi1.filter((kurs: Kurs) => kurs.cena > 0);
+} catch {
+  console.error("Greška pri dohvatanju kurseva ili korisničkih podataka.");
 }
-interface ResponseData {
-  kursevi: Kurs[];
-}
-
-const data: Response = await fetch(`${API_URL}/api/kursevi`);
-
-const kurseviRes: ResponseData = await data.json();
-const kursevi = kurseviRes.kursevi;
-console.log("=== KORPA DEBUG ===");
-console.log("API_URL:", API_URL);
-console.log("Token exists:", !!token);
-console.log("User Data:", userData);
-console.log("Kursevi:", kursevi);
 ---
 
 <Layout title="Korpa">
@@ -44,14 +46,16 @@ console.log("Kursevi:", kursevi);
     </div>
 
     <div class="bg-red-900/20 border border-red-800/40 rounded-lg p-4 mb-6">
-      <p class="inline-block bg-red-900/40 text-white text-sm font-semibold px-4 py-2 rounded-full">
+      <p
+        class="inline-block bg-red-900/40 text-white text-sm font-semibold px-4 py-2 rounded-full"
+      >
         ℹ️ Klikni na kurs da vidiš detalje i kupi
       </p>
     </div>
 
     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 stagger-children">
       {
-        kursevi.map((kurs) => (
+        kursevi?.map((kurs) => (
           <ReactKurs
             paid={false}
             client:idle

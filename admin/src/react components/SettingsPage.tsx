@@ -46,7 +46,7 @@ export default function SettingsPage({ token, apiUrl,clientUrl }: { token: strin
       }
     
       const mailsData = await mailsResponse.json();
-      console.log("Email adrese korisnika:", mailsData);
+    
        emailList = mailsData || [];
     }catch(error){
       console.error("Greška pri slanju email-a.");

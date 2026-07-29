@@ -126,7 +126,7 @@ const KursPlayer = ({ lekcije, token, API_URL, materijali }) => {
                                 rel="noopener noreferrer"
                                 className="block p-3 bg-neutral-800 text-amber-50 hover:bg-neutral-700 rounded-lg transition-colors"
                             >
-                                {materijal.url}
+                                {materijal.naziv || materijal.url}
                             </a>
                         ))
                     ) : (

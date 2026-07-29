@@ -21,7 +21,7 @@ let userData: any = {};
 
 try {
   const res = await fetch(`${API_URL}/api/kursevi`);
-  console.log("Fetching kursevi from:", `${API_URL}/api/kursevi`);
+  
   if (!res.ok) throw new Error(`Kursevi fetch failed: ${res.status}`);
   const data: ResponseData = await res.json();
   sviKursevi = data?.kursevi || [];

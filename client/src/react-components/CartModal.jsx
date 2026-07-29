@@ -181,11 +181,7 @@ export default function CartModal({ accessToken: initialToken }) {
             body: JSON.stringify(mailPayload)
           });
 
-          if (mailResponse.ok) {
-            console.log("Korisnik registrovan i email uspešno poslat!");
-          } else {
-            console.warn("Korisnik registrovan, ali slanje email-a nije uspelo.");
-          }
+          
 
           localStorage.setItem("user_order_data", JSON.stringify({ ...payload, isGuest: false }));
           localStorage.setItem("cart_order_data", JSON.stringify(cart));

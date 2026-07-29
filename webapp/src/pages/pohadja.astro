@@ -14,23 +14,30 @@ interface Kurs {
     slikaUrl: string;
 }
 const token = Astro.cookies.get("refreshToken")?.value || null;
-const response = await fetch(`${API_URL}/api/auth/me`, {
-    headers: {
-        Authorization: `Bearer ${token}`,
-    },
-});
-const userData = await response.json();
+let kursevi: any[] = [];
+let userData: any = { userId: null };
 
-const kurseviResponse = await fetch(
-    `${API_URL}/api/moj-kursevi/` + userData.userId,
-    {
+try {
+    const response = await fetch(`${API_URL}/api/auth/me`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
-    },
-);
-const kurseviData = await kurseviResponse.json();
-console.log(kurseviData);
+    });
+    userData = await response.json();
+
+    const kurseviResponse = await fetch(
+        `${API_URL}/api/moj-kursevi/` + userData.userId,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        },
+    );
+    let kurseviData = await kurseviResponse.json();
+    kursevi = kurseviData.kursevi?.filter((kurs: Kurs) => kurs.cena > 0);
+} catch {
+    console.error("Greška pri dohvatanju kurseva ili korisničkih podataka.");
+}
 ---
 
 <Layout title="Moji kursevi">
@@ -52,7 +59,7 @@ console.log(kurseviData);
 
         <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4 stagger-children">
             {
-                kurseviData.kursevi?.map((kurs: Kurs) => (
+                kursevi?.map((kurs: Kurs) => (
                     <ReactKurs
                         client:idle
                         kurs={kurs}

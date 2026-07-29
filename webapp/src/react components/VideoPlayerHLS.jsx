@@ -87,11 +87,7 @@ const VideoPlayerHLS = ({ videoId, fileName = "index.m3u8", accessToken, API_URL
         }),
       });
 
-      if (!response.ok) {
-        console.error("Greška pri snimanju napretka", response.status);
-      } else {
-        console.log(`Uspešno zabeležen napredak: ${procenat}%`);
-      }
+     
     } catch (error) {
       console.error("Mrežna greška pri snimanju napretka:", error);
     }

@@ -30,6 +30,10 @@ try {
 } catch (error) {
   console.error("Error fetching data:", error);
 }
+klipIlekcijeData.lekcije.sort((a:any, b:any) => {
+  return a.lekcijaId - b.lekcijaId;
+});
+
 
 
 ---

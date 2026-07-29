@@ -59,7 +59,14 @@ public class Materijali {
         jdbcTemplate.update(SQL, url);
         return ResponseEntity.ok(Map.of("success", true));
     }
+
+    @PostMapping("/materijali/addNaziv")
+    public ResponseEntity<Map<String,Object>> addNaziv(@RequestBody Map<String,Object> request) {
+        String url = (String) request.get("url");
+        String naziv = (String) request.get("naziv");
+        String SQL = "UPDATE materijali SET naziv = ? WHERE url = ?";
+        jdbcTemplate.update(SQL, naziv, url);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
     
-
-
 }

@@ -37,7 +37,7 @@ const ErrorToastNotifier = ({ losGmailCookie }) => {
     if (!message) return null
 
     return (
-        <div className="fixed top-[120px] right-5 max-w-md z-50 animate-slide-in-right">
+        <div className="fixed top-[120px] right-5 max-w-md z-[100000] animate-slide-in-right">
             <div className="bg-black border border-red-500/30 rounded-lg shadow-2xl overflow-hidden">
                 <div className="flex items-center gap-4 px-6 py-4">
                     <div className="flex-shrink-0">

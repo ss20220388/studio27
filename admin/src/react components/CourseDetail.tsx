@@ -56,7 +56,7 @@ export default function CourseDetail({
   const [trenutneSporedneSlike, setTrenutneSporedneSlike] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>("" as any);
-  const [uploading,setUploading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [showAddMaterial, setShowAddMaterial] = useState(false);
 
   const resolveImageSrc = (imagePath: string) => {
@@ -65,6 +65,21 @@ export default function CourseDetail({
     const normalizedPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
     return `${API_URL}/api/uploaded-images/${normalizedPath}`;
   };
+
+  const handleMaterialNameChange = async (url: string, newName: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/materijali/addNaziv`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accesToken}`,
+        },
+        body: JSON.stringify({ url, naziv: newName }),
+      });
+    } catch (error) {
+      console.error("Greška pri ažuriranju naziva materijala", error);
+    }
+  }
 
   useEffect(() => {
     async function fetchSporedneSlike() {
@@ -105,7 +120,7 @@ export default function CourseDetail({
 
 
       const filePath = `${itemName}`;
-      
+
       const res = await fetch(`${API_URL}/api/delete-file?remoteFilePath=${encodeURIComponent(filePath)}`, {
         method: "DELETE",
         headers: {
@@ -122,9 +137,9 @@ export default function CourseDetail({
   };
 
   const handleDodajMaterijal = async () => {
-    const file = fileInputRef.current?.files?.[0] ;
+    const file = fileInputRef.current?.files?.[0];
     if (!file) {
-    return;
+      return;
     }
     const FOLDER_PATH = `/uploads`;
     const formData = new FormData();
@@ -139,42 +154,41 @@ export default function CourseDetail({
         url: FOLDER_PATH + "/" + file?.name,
       })
     });
-   
+
     formData.append("file", file);
     formData.append("path", FOLDER_PATH);
     const response = await fetch(`${API_URL}/api/upload-hetzner`, {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer " + accesToken
-        },
-        body: formData,
-      });
-    
-      setUploading(false);
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + accesToken
+      },
+      body: formData,
+    });
+
+    setUploading(false);
   };
 
   useEffect(() => {
-  if (!selectedKurs?.id) return;
+    if (!selectedKurs?.id) return;
 
-  async function fetchMaterials() {
-    const materialsResponse = await fetch(`${API_URL}/api/materijaliZaKurs/${selectedKurs?.id}`, {
+    async function fetchMaterials() {
+      const materialsResponse = await fetch(`${API_URL}/api/materijaliZaKurs/${selectedKurs?.id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accesToken}`,
         },
       }
-    );
-    console.log("Materials response:", materialsResponse);
-    if (materialsResponse.ok) {
-      const materialsData = await materialsResponse.json();
-      console.log(materialsData);
-      setMaterials(materialsData.materijali || []);
-    }
-  }
+      );
 
-  fetchMaterials();
-}, [selectedKurs?.id, accesToken, API_URL]);
+      if (materialsResponse.ok) {
+        const materialsData = await materialsResponse.json();
+        setMaterials(materialsData.materijali || []);
+      }
+    }
+
+    fetchMaterials();
+  }, [selectedKurs?.id, accesToken, API_URL]);
 
   const handleVideoUpload = async () => {
     if (!videoFiles || showAddVideo === null) return;
@@ -714,7 +728,7 @@ export default function CourseDetail({
             {showAddMaterial ? 'X' : 'Dodaj Materijale'}
           </button>
         </div>
-        {uploading&& <p className="text-sm text-neutral-400 mt-1">Učitavanje materijala...</p>}
+        {uploading && <p className="text-sm text-neutral-400 mt-1">Učitavanje materijala...</p>}
         {showAddMaterial && <MaterijaliForma fileInputRef={fileInputRef} onSubmit={handleDodajMaterijal} idKurs={selectedKurs?.id} />}
 
         <p className="text-sm text-neutral-400 mt-1">Ova sekcija je rezervisana za buduće dodatke i materijale vezane za kurs.</p>
@@ -727,12 +741,27 @@ export default function CourseDetail({
                 <li key={index} className="flex items-center  justify-between bg-neutral-900 border border-neutral-800 rounded-lg px-4 py-2">
                   <div className="flex items-center justify-between gap-2 min-w-full">
                     <span className="text-sm text-white">{material.url}</span>
+                    <input
+                      type="text"
+                      value={material.naziv || ""}
+                      onChange={(e) => {
+                        const updatedMaterials = [...materials];
+                        updatedMaterials[index] = {
+                          ...updatedMaterials[index],
+                          naziv: e.target.value,
+                        };
+                        setMaterials(updatedMaterials);
+                      }}
+                      onBlur={()=>handleMaterialNameChange(material.url, material.naziv || "")}
+                      placeholder="Unesite naziv materijala"
+                      className="w-full px-2 py-1 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+                    />
                     <button
-                    onClick={() => deleteMaterial(material.url)}
-                    className="text-sm text-red-500 hover:text-red-400 transition-colors"
-                  >
-                    Obriši
-                  </button>
+                      onClick={() => deleteMaterial(material.url)}
+                      className="text-sm text-red-500 hover:text-red-400 transition-colors"
+                    >
+                      Obriši
+                    </button>
                   </div>
                 </li>
               ))}
