@@ -142,7 +142,7 @@ export default function KursInfo({ kurs, accessToken }) {
             {/* Cene */}
             <div className="space-y-1">
               <div className="text-3xl font-black text-white tracking-wide">
-                {kurs?.cena ? `${kurs.cena} €` : "Ne možete kupiti dati proizvod"}
+                {kurs?.cena ? `${kurs.cena} €` : "Pitajte za više informacija"}
               </div>
               <div className="text-zinc-500 text-sm font-medium">
                 {kurs?.glavniKurs || "3DsMAX + Corona renderer"}
