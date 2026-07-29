@@ -111,7 +111,7 @@ export default function KontaktModal({textButtona}: {textButtona?: string}) {
               {/* Left image */}
               <div className="relative lg:col-span-2 h-48 lg:h-auto overflow-hidden bg-gray-100">
                 <img
-                  src={`${API_URL}/api/uploaded-images/uploads/slikaenterijer.jpg`}
+                  src={`${API_URL}/api/uploaded-images/towebp/slikaenterijer.webp`}
                   alt="ContactUs"
                   className="w-full h-full object-cover opacity-90"
                   loading="lazy"
