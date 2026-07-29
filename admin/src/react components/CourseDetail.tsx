@@ -63,7 +63,7 @@ export default function CourseDetail({
     if (!imagePath) return "";
     if (/^https?:\/\//i.test(imagePath)) return imagePath;
     const normalizedPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
-    return `${API_URL}/api/uploaded-images${normalizedPath}`;
+    return `${API_URL}/api/uploaded-images/${normalizedPath}`;
   };
 
   useEffect(() => {
