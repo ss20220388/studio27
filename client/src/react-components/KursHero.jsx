@@ -31,6 +31,7 @@ export default function KursHero({ kurs ,kursSlike}) {
       ref={ref}
       className="relative h-[120vh] flex items-center justify-center overflow-hidden bg-black text-white"
     >
+      <h1 className="sr-only">{kurs?.naziv || "Kurs"}</h1>
       <motion.img
         src={primaryImage}
         className="absolute w-full h-full object-cover"
