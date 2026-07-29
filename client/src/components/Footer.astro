@@ -1,143 +1,147 @@
 ---
 import MasterCard from "../assets/mastercard.svg";
 import Visa from "../assets/visa1.svg";
-const API_URL = import.meta.env.PUBLIC_API_URL || 'http://api.studio27.rs';
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 ---
 
-<footer class="bg-black text-white py-12 px-8 md:px-16">
-    <div class="max-w-7xl mx-auto">
-        <!-- Main Footer Content -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <!-- Company Info -->
-            <div class="md:col-span-1">
-                <p class="text-xs text-gray-400 leading-relaxed">
-                    ©2026 27archviz<br />
-                    SRBIJA PIB: 114735847
-                    </br>
-                    MB: 67814657
-                    </br>
-                    ALEKSINAČKIH RUDARA 39E, 11070
-                    </br>
-                    BEOGRAD-NOVI BEOGRAD
-                </p>
-            </div>
+<footer class="bg-black text-white py-12 px-8 md:px-16 border-t border-zinc-800">
+  <div class="max-w-7xl mx-auto">
+    <!-- Main Footer Content -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+      
+      <!-- Company Info -->
+      <div class="md:col-span-1 text-xs text-zinc-300 leading-relaxed">
+        <p class="mb-2">
+          ©2026 27archviz<br />
+          SRBIJA PIB: 114735847<br />
+          MB: 67814657
+        </p>
+        <p class="text-zinc-400">
+          ALEKSINAČKIH RUDARA 39E, 11070<br />
+          BEOGRAD-NOVI BEOGRAD
+        </p>
+      </div>
 
-            <!-- Contact Info -->
-            <div class="md:col-span-1">
-                <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">
-                    Telefon
-                </p>
-                <a
-                    href="tel:+381665934314"
-                    class="text-sm  transition-colors"
-                >
-                    <img
-                        src="/images/phone.png"
-                        alt="Phone Icon"
-                        class="inline-block  mr-2 hover:scale-105" />
-                </a>
+      <!-- Contact Info -->
+      <div class="md:col-span-1">
+        <p class="text-xs text-zinc-400 uppercase tracking-wider mb-2 font-semibold">Telefon</p>
+        <a 
+          href="tel:+381665934314" 
+          class="inline-flex items-center text-sm text-zinc-200 hover:text-white transition-colors mb-4"
+        >
+          <img
+            src="/images/phone.png"
+            alt=""
+            aria-hidden="true"
+            width="20"
+            height="20"
+            class="inline-block mr-2 hover:scale-105"
+          />
+          +381 66 593 4314
+        </a>
 
-                <p
-                    class="text-xs text-gray-500 uppercase tracking-wider mb-2 mt-4"
-                >
-                    E-mail
-                </p>
-                <a
-                    href="mailto:studio27.vizz@gmail.com"
-                    class="text-sm  transition-colors"
-                >
-                    <img
-                        src="/images/email.png"
-                        alt="Email Icon"
-                        class="inline-block  mr-2 hover:scale-105" />
-                </a>
-            </div>
+        <p class="text-xs text-zinc-400 uppercase tracking-wider mb-2 font-semibold">
+          E-mail
+        </p>
+        <a 
+          href="mailto:studio27.vizz@gmail.com" 
+          class="inline-flex items-center text-sm text-zinc-200 hover:text-white transition-colors"
+        >
+          <img
+            src="/images/email.png"
+            alt=""
+            aria-hidden="true"
+            width="20"
+            height="20"
+            class="inline-block mr-2 hover:scale-105"
+          />
+          studio27.vizz@gmail.com
+        </a>
+      </div>
 
-            <!-- Legal Links -->
-            <div class="md:col-span-1">
-                <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">
-                    Public offer 
-                </p>
-                <div class="space-y-2">
-                    <div>
-                        <button
-                            type="button"
-                            class="text-gray-300 hover:no-underline font-medium transition-colors hover:text-gray-500 cursor-pointer"
-                            id="openTermsBtn"
-                        >
-                            Privacy Policy
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Payment & Social -->
-            <div
-                class="md:col-span-1 flex flex-col items-start md:items-end space-y-6"
+      <!-- Legal Links -->
+      <div class="md:col-span-1">
+        <p class="text-xs text-zinc-400 uppercase tracking-wider mb-2 font-semibold">
+          Dokumenti
+        </p>
+        <div class="space-y-2">
+          <div>
+            <button
+              type="button"
+              class="text-sm text-zinc-300 hover:text-white font-medium transition-colors cursor-pointer underline underline-offset-4"
+              id="openTermsBtn"
             >
-                <!-- Payment Methods -->
-                <div class="flex items-center space-x-3">
-                    <MasterCard class="w-8 h-8" />
-                    <Visa class="w-8 h-8" />
-                </div>
+              Privacy Policy
+            </button>
+          </div>
+        </div>
+      </div>
 
-                <!-- Social Icons -->
-                <div class="flex items-center space-x-6 text-gray-400">
-                    <a
-                        href="https://www.instagram.com/studio27.visualization?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
-                        class="hover:text-white transition-colors"
-                    >
-                        <svg
-                            class="w-5 h-5"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"
-                            ></path>
-                            <path
-                                d="M12 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 10.162a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"
-                            ></path>
-                        </svg>
-                    </a>
-                </div>
-            </div>
+      <!-- Payment & Social -->
+      <div class="md:col-span-1 flex flex-col items-start md:items-end space-y-6">
+        <!-- Payment Methods -->
+        <div class="flex items-center space-x-3 text-white">
+          <MasterCard class="w-8 h-8" aria-label="MasterCard" />
+          <Visa class="w-8 h-8" aria-label="Visa" />
         </div>
 
-        <!-- Bottom Credit -->
-        <div class="border-t border-gray-800 pt-6 text-right">
-            <p class="text-xs text-gray-600">Site by Stemis</p>
+        <!-- Social Icons -->
+        <div class="flex items-center space-x-6 text-zinc-300">
+          <a
+            href="https://www.instagram.com/studio27.visualization?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+            class="hover:text-white transition-colors p-1"
+            aria-label="Instagram profil Studio27"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"
+              ></path>
+              <path
+                d="M12 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 10.162a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"
+              ></path>
+            </svg>
+          </a>
         </div>
+      </div>
+
     </div>
+
+    <!-- Bottom Credit -->
+    <div class="border-t border-zinc-800 pt-6 text-right">
+      <p class="text-xs text-zinc-400">Site by Stemis</p>
+    </div>
+  </div>
 </footer>
 
 <script define:vars={{ API_URL }}>
-    const openTermsBtn = document.getElementById('openTermsBtn');
-    const openPrivacyBtn = document.getElementById('openPrivacyBtn');
+  const openTermsBtn = document.getElementById("openTermsBtn");
+  const openPrivacyBtn = document.getElementById("openPrivacyBtn");
 
-    if (openTermsBtn) {
-        openTermsBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            try {
-                const filePath = `/pravila/Analiticka - formule.pdf`;
-                const url = `${API_URL}/api/media?remoteFilePath=${encodeURIComponent(filePath)}`;
-                window.open(url, '_blank');
-            } catch (err) {
-                console.error('Greška pri otvaranju dokumenta:', err);
-            }
-        });
-    }
+  if (openTermsBtn) {
+    openTermsBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      try {
+        const filePath = `/pravila/Analiticka - formule.pdf`;
+        const url = `${API_URL}/api/media?remoteFilePath=${encodeURIComponent(filePath)}`;
+        window.open(url, "_blank");
+      } catch (err) {
+        console.error("Greška pri otvaranju dokumenta:", err);
+      }
+    });
+  }
 
-    if (openPrivacyBtn) {
-        openPrivacyBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            try {
-                const filePath = `/pravila/Privacy-Policy.pdf`;
-                const url = `${API_URL}/api/media?remoteFilePath=${encodeURIComponent(filePath)}`;
-                window.open(url, '_blank');
-            } catch (err) {
-                console.error('Greška pri otvaranju dokumenta:', err);
-            }
-        });
-    }
+  if (openPrivacyBtn) {
+    openPrivacyBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      try {
+        const filePath = `/pravila/Privacy-Policy.pdf`;
+        const url = `${API_URL}/api/media?remoteFilePath=${encodeURIComponent(filePath)}`;
+        window.open(url, "_blank");
+      } catch (err) {
+        console.error("Greška pri otvaranju dokumenta:", err);
+      }
+    });
+  }
 </script>

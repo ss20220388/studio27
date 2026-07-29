@@ -54,31 +54,31 @@ try {
           style={`--card-i:${i}`}
         >
           <!-- LEVA STRANA: Tamna sekcija sa informacijama o kursu -->
-          <div class="p-8 sm:p-16 lg:p-24 flex flex-col justify-center items-start bg-[#18181b] space-y-8 z-10">
+          <div class="p-8 sm:p-16 lg:p-24 flex flex-col justify-center items-start bg-[#18181b] text-white space-y-8 z-10">
             
             <!-- Badges / Oznake -->
             {(kurs.glavniKurs || kurs.komentarGore) && (
               <div class="flex flex-wrap items-center gap-2">
                 {kurs.glavniKurs && (
-                  <span class="text-xs font-semibold uppercase tracking-wider px-3 py-1 bg-zinc-800 text-zinc-300 rounded-md border border-zinc-700">
+                  <span class="text-xs font-semibold uppercase tracking-wider px-3 py-1 bg-zinc-800 text-zinc-100 rounded-md border border-zinc-700">
                     {kurs.glavniKurs}
                   </span>
                 )}
                 {kurs.komentarGore && (
-                  <span class="text-xs font-semibold uppercase tracking-wider px-3 py-1 bg-orange-950/40 text-[#e0533c] rounded-md border border-[#e0533c]/30">
+                  <span class="text-xs font-semibold uppercase tracking-wider px-3 py-1 bg-orange-950/80 text-orange-200 rounded-md border border-orange-700/60">
                     {kurs.komentarGore}
                   </span>
                 )}
               </div>
             )}
 
-            <!-- Naslov Kursa sa prepoznatljivim Light/Bold stilom -->
-            <h2 class="text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-tight uppercase font-light">
+            <!-- Naslov Kursa -->
+            <h2 class="text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-tight uppercase font-light text-white">
               <span class="font-extrabold">{kurs.naziv}</span>
             </h2>
 
             <!-- Opis / Srednji komentar -->
-            <p class="text-zinc-400 text-base sm:text-lg max-w-lg font-light leading-relaxed">
+            <p class="text-zinc-200 text-base sm:text-lg max-w-lg font-light leading-relaxed">
               {kurs.komentarSredina || kurs.opis}
             </p>
 
@@ -86,26 +86,27 @@ try {
             <div class="pt-6 flex flex-col sm:flex-row items-start sm:items-center gap-8 w-full">
               <a 
                 href={`/kurs/${kurs.kursId}`} 
-                class="inline-flex items-center justify-center bg-[#e0533c] hover:bg-[#d0432c] text-white font-medium px-10 py-3.5 rounded-full transition duration-300 shadow-lg text-sm tracking-wider uppercase"
+                class="inline-flex items-center justify-center bg-[#bc3b24] hover:bg-[#9e301c] text-white font-medium px-10 py-3.5 rounded-full transition duration-300 shadow-lg text-sm tracking-wider uppercase"
               >
                 Pogledajte kurs
               </a>
 
               <!-- Software logos (3ds Max / Corona) -->
-              <div class="flex items-center gap-3 text-zinc-400 opacity-80 hover:opacity-100 transition-opacity">
-                <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
+              <div class="flex items-center gap-3 text-zinc-200 transition-opacity">
+                <svg class="w-8 h-8 fill-current text-zinc-300" viewBox="0 0 24 24">
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
                 <div class="flex flex-col text-[10px] uppercase font-bold tracking-widest leading-none">
-                  <span>AUTODESK</span>
-                  <span class="text-xs">3DS MAX</span>
-                  <span class="text-zinc-500 font-normal lowercase pt-0.5">corona</span>
+                  <span class="text-zinc-200">AUTODESK</span>
+                  <span class="text-xs text-white">3DS MAX</span>
+                  <span class="text-zinc-300 font-medium lowercase pt-0.5">corona</span>
                 </div>
               </div>
+              
             </div>
 
             {kurs.komentarDole && (
-              <p class="text-xs text-zinc-500 pt-4 uppercase tracking-widest font-medium">
+              <p class="text-xs text-zinc-400 pt-4 uppercase tracking-widest font-medium">
                 {kurs.komentarDole}
               </p>
             )}
@@ -116,7 +117,8 @@ try {
             <img
               src={`${API_URL}/api/uploaded-images${kurs.slikaUrl}`}
               alt={kurs.naziv}
-              loading="lazy"
+              loading={i === 0 ? "eager" : "lazy"}
+              fetchpriority={i === 0 ? "high" : "auto"}
               decoding="async"
               class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
             />
@@ -128,30 +130,30 @@ try {
 
   <!-- FAQ Sekcija -->
   <div class="py-24 px-6 max-w-6xl mx-auto border-t border-zinc-800">
-    <h3 class="text-3xl sm:text-4xl font-light text-center mb-16 tracking-wider uppercase">
+    <h3 class="text-3xl sm:text-4xl font-light text-center mb-16 tracking-wider uppercase text-white">
       Često postavljana <span class="font-extrabold">pitanja</span>
     </h3>
 
     <div class="grid md:grid-cols-2 gap-10">
       <!-- LEVA STRANA -->
       <div class="space-y-6">
-        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+        <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
           <h4 class="font-bold text-lg text-white mb-2">Da li je kurs za početnike?</h4>
-          <p class="text-zinc-400 text-sm leading-relaxed">
+          <p class="text-zinc-300 text-sm leading-relaxed">
             Da. Kurs je prilagođen i početnicima i onima koji već imaju osnovno znanje. Sve se objašnjava korak po korak – od interfejsa do finalnog rendera.
           </p>
         </div>
 
-        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+        <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
           <h4 class="font-bold text-lg text-white mb-2">Kako izgleda format kursa?</h4>
-          <p class="text-zinc-400 text-sm leading-relaxed">
+          <p class="text-zinc-300 text-sm leading-relaxed">
             Kurs je online i sastoji se od snimljenih lekcija koje možeš gledati svojim tempom. Uz video lekcije dobijaš i dodatne materijale, fajlove za vežbu i konkretne projekte.
           </p>
         </div>
 
-        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+        <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
           <h4 class="font-bold text-lg text-white mb-2">Da li imam vremensko ograničenje kod snimljenih lekcija?</h4>
-          <p class="text-zinc-400 text-sm leading-relaxed">
+          <p class="text-zinc-300 text-sm leading-relaxed">
             Ne. Kurs prolaziš svojim tempom, bez pritiska i rokova.
           </p>
         </div>
@@ -159,23 +161,23 @@ try {
 
       <!-- DESNA STRANA -->
       <div class="space-y-6">
-        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+        <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
           <h4 class="font-bold text-lg text-white mb-2">Da li dobijam sertifikat?</h4>
-          <p class="text-zinc-400 text-sm leading-relaxed">
+          <p class="text-zinc-300 text-sm leading-relaxed">
             Da. Nakon uspešno završenog projekta dobijaš sertifikat o završenom kursu.
           </p>
         </div>
 
-        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+        <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
           <h4 class="font-bold text-lg text-white mb-2">Da li postoji feedback?</h4>
-          <p class="text-zinc-400 text-sm leading-relaxed">
+          <p class="text-zinc-300 text-sm leading-relaxed">
             Da. Imaš mogućnost dobijanja povratnih informacija na svoje radove, kao i podršku bez obzira na vreme kupovine.
           </p>
         </div>
 
-        <div class="p-8 bg-zinc-900/60 rounded-2xl border border-zinc-800/80">
+        <div class="p-8 bg-zinc-900/90 rounded-2xl border border-zinc-800">
           <h4 class="font-bold text-lg text-white mb-2">Da li dobijam pristup svim lekcijama odmah?</h4>
-          <p class="text-zinc-400 text-sm leading-relaxed">
+          <p class="text-zinc-300 text-sm leading-relaxed">
             Da. Nakon uplate dobijaš kompletan pristup svim modulima.
           </p>
         </div>

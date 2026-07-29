@@ -63,16 +63,16 @@ if (!kurs) {
 >
   {/* Beli wrapper — ako komponente nemaju svoju pozadinu */}
   <div class="bg-white">
-    <KursHero kurs={kurs} kursSlike={kursSlike} client:load />
+    <KursHero kurs={kurs} kursSlike={kursSlike} client:visible />
     
     <BigTextSection
       glavniTekst={kurs.glavniKurs}
       naslov={kurs.naziv}
       opis={kurs.opis}
-      client:load
+      client:visible
     />
 
-    <KursInfo kurs={kurs} accessToken={accessToken} client:load />
+    <KursInfo kurs={kurs} accessToken={accessToken} client:visible />
 
     {/* CTA Section */}
     

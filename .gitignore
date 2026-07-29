@@ -5,9 +5,11 @@
 .env.*.local
 .env.*.production
 
+
 # Backend
 server/src/main/resources/application.properties
 server/src/main/resources/application-*.properties
+JPG2WEBP/*
 
 # IDE
 .idea/

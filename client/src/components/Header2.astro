@@ -19,13 +19,16 @@ const PUBLIC_API_URL =
 >
   <nav id="header" class="w-full fixed top-0 z-50 bg-black shadow py-3">
     <div
-      class="w-screen relative min-w-20  container mx-auto flex flex-wrap items-center justify-between mt-0 pb-1"
+      class="w-screen relative min-w-20 container mx-auto flex flex-wrap items-center justify-between mt-0 pb-1"
     >
       <!-- First Row: Logo & Kontakt -->
-      <div class="flex md:gap-8 items-center justify-between w-full md:w-auto px-4 md:px-0 md:ml-12">
+      <div
+        class="flex md:gap-8 items-center justify-between w-full md:w-auto px-4 md:px-0 md:ml-12"
+      >
         <a
           class="flex items-center tracking-wide no-underline hover:no-underline font-bold text-white text-l mr-8"
           href={`${CLIENT_URL}/#home`}
+          aria-label="27archviz Home"
         >
           27archviz
           <Image
@@ -38,7 +41,9 @@ const PUBLIC_API_URL =
         </a>
 
         <!-- Kontakt Button (Visible only on mobile inside the first row) -->
-        <div class=" inline-block font-bold text-white bg-[#e0533c] hover:bg-[#c8432d] transition-colors duration-200 py-1 px-3 shadow-md text-sm rounded">
+        <div
+          class="inline-block font-bold text-white bg-[#bc3b24] hover:bg-[#9e301c] transition-colors duration-200 py-1 px-3 shadow-md text-sm rounded"
+        >
           <KontakModal textButtona="Kontakt" client:load />
         </div>
       </div>
@@ -55,7 +60,9 @@ const PUBLIC_API_URL =
           </svg>
         </button>
 
-        <div class="inline-block font-bold text-white transition-colors duration-200 shadow-md">
+        <div
+          class="inline-block font-bold text-white transition-colors duration-200 shadow-md"
+        >
           <DropDownMenu
             client:load
             publicAppUrl={PUBLIC_APP_URL}
@@ -71,39 +78,50 @@ const PUBLIC_API_URL =
       >
         <li>
           <a
+            aria-label="Početna"
             class="block w-full text-center md:text-left md:w-auto md:inline-block no-underline font-medium text-gray-300 hover:text-white hover:bg-neutral-900/80 md:hover:bg-transparent rounded-lg text-l py-3 px-4 transition-all duration-300"
             href={`${CLIENT_URL}/#home`}>Početna</a
           >
         </li>
         <li>
           <a
+            aria-label="Program kursa"
             class="block w-full text-center md:text-left md:w-auto md:inline-block no-underline font-medium text-gray-300 hover:text-white hover:bg-neutral-900/80 md:hover:bg-transparent rounded-lg text-l py-3 px-4 transition-all duration-300"
             href={`${CLIENT_URL}/#kursevi`}>Program kursa</a
           >
         </li>
         <li>
           <a
+            aria-label="Struktura učenja"
             class="block w-full text-center md:text-left md:w-auto md:inline-block no-underline font-medium text-gray-300 hover:text-white hover:bg-neutral-900/80 md:hover:bg-transparent rounded-lg text-l py-3 px-4 transition-all duration-300"
             href={`${CLIENT_URL}/#struktura`}>Struktura učenja</a
           >
         </li>
         <li>
           <a
+            aria-label="Radovi studenata"
             class="block w-full text-center md:text-left md:w-auto md:inline-block no-underline font-medium text-gray-300 hover:text-white hover:bg-neutral-900/80 md:hover:bg-transparent rounded-lg text-l py-3 px-4 transition-all duration-300"
             href="/radovi">Radovi studenata</a
           >
         </li>
         <li>
           <a
+            aria-label="O nama"
             class="block w-full text-center md:text-left md:w-auto md:inline-block no-underline font-medium text-gray-300 hover:text-white hover:bg-neutral-900/80 md:hover:bg-transparent rounded-lg text-l py-3 px-4 transition-all duration-300"
             href={`${CLIENT_URL}/#onama`}>O nama</a
           >
         </li>
 
-        
-        <li class="hidden lg:inline md:ml-28 md:pl-6 mt-2 md:mt-0 ">
-          <div class="inline-block font-bold text-white transition-colors duration-200 py-2 px-7 text-lg rounded shadow-md ">
-            <DropDownMenu client:load publicAppUrl={PUBLIC_APP_URL} publicAdminUrl={PUBLIC_ADMIN_URL} publicApiUrl={PUBLIC_API_URL} />
+        <li class="hidden lg:inline md:ml-28 md:pl-6 mt-2 md:mt-0">
+          <div
+            class="inline-block font-bold text-white transition-colors duration-200 py-2 px-7 text-lg rounded shadow-md"
+          >
+            <DropDownMenu
+              client:load
+              publicAppUrl={PUBLIC_APP_URL}
+              publicAdminUrl={PUBLIC_ADMIN_URL}
+              publicApiUrl={PUBLIC_API_URL}
+            />
           </div>
         </li>
       </ul>
@@ -132,7 +150,11 @@ const PUBLIC_API_URL =
         document.addEventListener("click", (e) => {
           try {
             const target = e.target as Node;
-            if (window.innerWidth < 768 && !nav.contains(target) && !btn.contains(target)) {
+            if (
+              window.innerWidth < 768 &&
+              !nav.contains(target) &&
+              !btn.contains(target)
+            ) {
               nav.classList.add("hidden");
             }
           } catch (err) {}
@@ -141,7 +163,3 @@ const PUBLIC_API_URL =
     }
   </script>
 </section>
-
-
-
-

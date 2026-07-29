@@ -208,12 +208,14 @@ export default function CartModal({ accessToken: initialToken }) {
     <div>
       {!isOpen && (
         <button
+          type="button"
+          aria-label="Otvori korpu"
           onClick={() => {
             loadCart();
             fetchUser();
             setIsOpen(true);
           }}
-          className="fixed bottom-6 right-6 sm:bottom-auto sm:top-40 sm:left-8 z-[80] w-14 h-14 bg-zinc-900 sm:bg-[#e5e7eb]  text-white sm:text-black rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="fixed bottom-6 right-6 sm:bottom-auto sm:top-40 sm:left-8 z-[80] w-14 h-14 bg-zinc-900 sm:bg-[#e5e7eb] text-white sm:text-black rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
         >
           <svg
             className="w-6 h-6 stroke-[1.5]"
@@ -240,6 +242,8 @@ export default function CartModal({ accessToken: initialToken }) {
           <div className="relative w-full sm:max-w-[480px] bg-white text-black p-5 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-none font-sans">
             {/* Dugme X spušteno unutar belog kartičnog prozora */}
             <button
+              type="button"
+              aria-label="Zatvori korpu"
               onClick={() => setIsOpen(false)}
               className="absolute top-3 right-3 sm:top-4 sm:right-4 text-zinc-400 hover:text-black text-2xl font-light p-2 cursor-pointer leading-none transition-colors"
             >
@@ -277,6 +281,8 @@ export default function CartModal({ accessToken: initialToken }) {
                     <div className="flex items-center gap-2">
                       <div className="flex items-center border border-zinc-300 rounded px-1">
                         <button
+                          type="button"
+                          aria-label="Smanji količinu"
                           onClick={() => updateQuantity(item.id, -1)}
                           className="w-6 h-6 flex items-center justify-center text-zinc-600 hover:text-black font-bold"
                         >
@@ -284,6 +290,8 @@ export default function CartModal({ accessToken: initialToken }) {
                         </button>
                         <span className="font-medium px-2 text-xs">{item.quantity || 1}</span>
                         <button
+                          type="button"
+                          aria-label="Povećaj količinu"
                           onClick={() => updateQuantity(item.id, 1)}
                           className="w-6 h-6 flex items-center justify-center text-zinc-600 hover:text-black font-bold"
                         >
@@ -292,6 +300,8 @@ export default function CartModal({ accessToken: initialToken }) {
                       </div>
 
                       <button
+                        type="button"
+                        aria-label="Ukloni iz korpe"
                         onClick={() => removeItem(item.id)}
                         className="text-zinc-400 hover:text-red-600 p-1 transition-colors"
                       >
