@@ -40,7 +40,6 @@ const {
   image = "/images/default-seo-image.png",
   imageAlt = "27 archviz – 3ds Max i arhitektonska vizualizacija kurs",
   canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url.origin),
-  // Očišćena podrazumevana lista ključnih reči (bez pretrpavanja)
   keywords = "3ds Max kurs, 3D modelovanje, Corona Render obuka, arhitektonska vizualizacija, archviz kurs Srbija",
   noIndex = false,
   type = "website",
@@ -140,10 +139,15 @@ const robotsContent = noIndex
 <!doctype html>
 <html lang="sr-Latn" prefix="og: https://ogp.me/ns#">
   <head>
+    <!-- Preconnect za API domen za brže skidanja JS zavisnosti i poziva -->
+    <link rel="preconnect" href={API_URL} />
+    <link rel="dns-prefetch" href={API_URL} />
+
     <script
       src="https://analytics.ahrefs.com/analytics.js"
       data-key="971qb8FEOy/jmMtsImFp1A"
       async></script>
+    
     <!-- Tehnički meta tagovi -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -244,13 +248,7 @@ const robotsContent = noIndex
       )
     }
 
-    <!-- Fontovi i Preload performanse -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Preload hero slike -->
     <link
       rel="preload"
       as="image"
@@ -258,29 +256,41 @@ const robotsContent = noIndex
       fetchpriority="high"
     />
 
-    <!-- Preconnect za brže povezivanje sa Google serverima -->
+    <!-- Google Fonts sa asinhronim učitavanjem (bez blokiranja renderovanja) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-    <!-- Google Font sa display=swap -->
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap"
+    />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap"
+      />
+    </noscript>
   </head>
 
   <body class="relative bg-[#18181b]">
-    <!-- Povećajte z-index zaglavlja sa z-50 na z-[1000] -->
+    <!-- Zaglavlje -->
     <div class="fixed top-0 left-0 w-full z-[1000]">
       <Header2 />
     </div>
 
     <CartModal accessToken={accessToken} client:load />
 
-    <div class="pt-[70px] w-screen overflow-hidden">
+    <!-- Glavni sadržaj omotan u semantički <main> tag -->
+    <main class="pt-[70px] w-screen overflow-hidden">
       <slot />
       <Footer />
-    </div>
+    </main>
 
     <ErrorToastNotifier losGmailCookie={losGmailCookie} client:visible />
   </body>
