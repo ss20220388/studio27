@@ -72,6 +72,7 @@ try {
               <img
                 src={`${API_URL}/api/uploaded-images${kurs.slikaUrl}`}
                 alt={kurs.naziv}
+                fetchpriority="high"
                 loading="eager"
                 class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
