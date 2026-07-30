@@ -2,7 +2,7 @@ import { set } from "astro:schema";
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-const PUBLIC_API_KEY = import.meta.env.PUBLIC_API_KEY || "http://api.studio27.rs"
+const PUBLIC_API_KEY = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs"
 interface User {
   id: number;
   ime: string;
