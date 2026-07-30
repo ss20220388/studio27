@@ -13,7 +13,7 @@ const KursDetaljiModal = ({
 }) => {
     const [komentari, setKomentari] = React.useState([]);
     const [loadingKomentari, setLoadingKomentari] = React.useState(false);
-    const APP_URL = import.meta.env.PUBLIC_APP_URL || "http://studio27.rs";
+    const APP_URL = import.meta.env.PUBLIC_CLIENT_URL || "http://studio27.rs";
 
     React.useEffect(() => {
         if (isOpen) {
