@@ -2,6 +2,7 @@ import { set } from "astro:schema";
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
+const PUBLIC_API_KEY = import.meta.env.PUBLIC_API_KEY || "http://api.studio27.rs"
 interface User {
   id: number;
   ime: string;
@@ -186,7 +187,7 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
 
   async function dodajKorisnikaUBazu() {
     try {
-      const response = await fetch("/api/auth/register-user", {
+      const response = await fetch(`${PUBLIC_API_KEY}/api/auth/register-user`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -210,7 +211,7 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
 
   async function obrisiKorisnika(studentId:number) {
     try {
-      const response = await fetch("/api/obrisi-studenta", {
+      const response = await fetch(`${PUBLIC_API_KEY}/api/obrisi-studenta`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -230,7 +231,7 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
   async function ukloniDeviceId() {
     if (!deviceUser) return;
     try {
-      const response = await fetch("/api/unlock-device", {
+      const response = await fetch(`${PUBLIC_API_KEY}/api/unlock-device`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -248,7 +249,7 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
   async function editujKorisnika() {
     if (!editUser) return;
     try {
-      const response = await fetch("/api/edit-student-sa-adminom", {
+      const response = await fetch(`${PUBLIC_API_KEY}/api/edit-student-sa-adminom`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
