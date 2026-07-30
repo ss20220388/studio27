@@ -1,8 +1,8 @@
-import { set } from "astro:schema";
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-const PUBLIC_API_KEY = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs"
+const PUBLIC_API_KEY = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
 interface User {
   id: number;
   ime: string;
@@ -13,7 +13,6 @@ interface User {
   status: "aktivan" | "neaktivan";
   deviceId: string | null;
   deviceInfo: string | null;
-
   kursevi: Kurs[];
 }
 
@@ -28,6 +27,7 @@ interface StudentApiResponse {
   active: number;
   kursevi: Kurs[];
 }
+
 interface Kurs {
   kursId: number;
   naziv: string;
@@ -106,7 +106,7 @@ const Modal = ({
         right: 0,
         bottom: 0,
         width: "100%",
-        height: "100%"
+        height: "100%",
       }}
     >
       <div
@@ -148,7 +148,6 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
     kursevi: student.kursevi,
   }));
 
-
   // Modals
   const [showAdd, setShowAdd] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
@@ -187,11 +186,11 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
 
   async function dodajKorisnikaUBazu() {
     try {
-      const response = await fetch(`${PUBLIC_API_KEY}/api/auth/register-user`, {
+      await fetch(`${PUBLIC_API_KEY}/api/auth/register-user`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
+          "Authorization": "Bearer " + token,
         },
         body: JSON.stringify({
           ime: addForm.ime,
@@ -201,41 +200,36 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
         }),
       });
       window.location.reload();
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Greška prilikom dodavanja korisnika:", error);
     }
-
   }
 
-
-  async function obrisiKorisnika(studentId:number) {
+  async function obrisiKorisnika(studentId: number) {
     try {
-      const response = await fetch(`${PUBLIC_API_KEY}/api/obrisi-studenta`, {
+      await fetch(`${PUBLIC_API_KEY}/api/obrisi-studenta`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
+          "Authorization": "Bearer " + token,
         },
         body: studentId.toString(),
       });
       setDeleteUser(null);
       window.location.reload();
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Greška prilikom brisanja korisnika:", error);
     }
   }
 
-
   async function ukloniDeviceId() {
     if (!deviceUser) return;
     try {
-      const response = await fetch(`${PUBLIC_API_KEY}/api/unlock-device`, {
+      await fetch(`${PUBLIC_API_KEY}/api/unlock-device`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
+          "Authorization": "Bearer " + token,
         },
         body: JSON.stringify({ email: deviceUser.email }),
       });
@@ -249,11 +243,11 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
   async function editujKorisnika() {
     if (!editUser) return;
     try {
-      const response = await fetch(`${PUBLIC_API_KEY}/api/edit-student-sa-adminom`, {
+      await fetch(`${PUBLIC_API_KEY}/api/edit-student-sa-adminom`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
+          "Authorization": "Bearer " + token,
         },
         body: JSON.stringify({
           studentId: editUser.id,
@@ -261,8 +255,8 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
           prezime: editUser.prezime,
           email: editUser.email,
           brojTelefona: editUser.telefon,
-          kursevi: editUser.kursevi.map(k => k.kursId)
-        })
+          kursevi: editUser.kursevi.map((k) => k.kursId),
+        }),
       });
       setEditUser(null);
       window.location.reload();
@@ -270,7 +264,6 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
       console.error("Greška prilikom uređivanja korisnika:", error);
     }
   }
-
 
   return (
     <div className="space-y-6 animate-fade-in" style={{ paddingInline: "20px", paddingBlock: "10px" }}>
@@ -349,14 +342,16 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
                   <td className="px-5 py-3 text-neutral-400">{u.email}</td>
                   <td className="px-5 py-3">
                     <span
-                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${u.status === "aktivan"
-                        ? "bg-emerald-900/20 text-emerald-400 border border-emerald-800/30"
-                        : "bg-neutral-800 text-neutral-500 border border-neutral-700"
-                        }`}
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                        u.status === "aktivan"
+                          ? "bg-emerald-900/20 text-emerald-400 border border-emerald-800/30"
+                          : "bg-neutral-800 text-neutral-500 border border-neutral-700"
+                      }`}
                     >
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${u.status === "aktivan" ? "bg-emerald-400" : "bg-neutral-600"
-                          }`}
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          u.status === "aktivan" ? "bg-emerald-400" : "bg-neutral-600"
+                        }`}
                       />
                       {u.status}
                     </span>
@@ -438,10 +433,11 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
               <button
                 key={i}
                 onClick={() => setPage(i)}
-                className={`w-8 h-8 rounded-md text-xs font-medium transition-colors ${i === page
-                  ? "bg-red-900 text-white"
-                  : "text-neutral-400 hover:text-white hover:bg-neutral-800"
-                  }`}
+                className={`w-8 h-8 rounded-md text-xs font-medium transition-colors ${
+                  i === page
+                    ? "bg-red-900 text-white"
+                    : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                }`}
               >
                 {i + 1}
               </button>
@@ -477,7 +473,8 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
                 dodajKorisnikaUBazu();
                 setShowAdd(false);
               }}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20">
+              className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20"
+            >
               Sačuvaj
             </button>
           </div>
@@ -504,7 +501,6 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
                     className="flex items-center gap-1 bg-neutral-800 text-neutral-300 text-xs font-medium px-2 py-1 rounded-md max-w-[180px]"
                   >
                     <span className="truncate">{k.naziv}</span>
-
                     <button
                       onClick={() =>
                         setEditUser({
@@ -523,11 +519,11 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
                     <select
                       value={selectedCourse}
                       onChange={(e) => setSelectedCourse(e.target.value)}
-                      className="w-full appearance-none  bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 pr-8 text-sm text-neutral-200 outline-none focus:border-red-900  transition-all duration-200 cursor-pointer"
+                      className="w-full appearance-none bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 pr-8 text-sm text-neutral-200 outline-none focus:border-red-900 transition-all duration-200 cursor-pointer"
                     >
                       <option value="" className="bg-neutral-800 text-neutral-500">Izaberi kurs...</option>
                       {sviKursevi.map((k) => (
-                        <option key={k.kursId} value={k.kursId} className="bg-neutral-800 hover:bg-red-900 focus:bg-red-900  text-neutral-200">
+                        <option key={k.kursId} value={k.kursId} className="bg-neutral-800 text-neutral-200">
                           {k.naziv}
                         </option>
                       ))}
@@ -550,7 +546,6 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
                     Dodaj
                   </button>
                 </div>
-
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">
@@ -560,9 +555,10 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
               >
                 Otkaži
               </button>
-              <button 
-              onClick={() => editujKorisnika()}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20">
+              <button
+                onClick={() => editujKorisnika()}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20"
+              >
                 Sačuvaj izmene
               </button>
             </div>
@@ -580,7 +576,6 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
                   {deviceUser.deviceId}
                 </code>
               </div>
-
               <div className="flex items-center justify-between">
                 <span className="text-xs text-neutral-500">Korisnik</span>
                 <span className="text-xs text-neutral-300">
@@ -588,13 +583,11 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
                 </span>
               </div>
             </div>
-
             <div className="bg-amber-900/10 border border-amber-800/20 rounded-lg p-3">
               <p className="text-xs text-amber-400">
                 Uklanjanjem Device ID-a korisnik će moći da se prijavi sa novog uređaja.
               </p>
             </div>
-
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setDeviceUser(null)}
@@ -602,15 +595,17 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
               >
                 Zatvori
               </button>
-              <button 
-              onClick={() => ukloniDeviceId()}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-amber-700 hover:bg-amber-600 transition-colors">
+              <button
+                onClick={() => ukloniDeviceId()}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-amber-700 hover:bg-amber-600 transition-colors"
+              >
                 Ukloni Device ID
               </button>
             </div>
           </div>
         )}
       </Modal>
+
       <Modal open={!!deleteUser} onClose={() => setDeleteUser(null)} title="Obriši studenta">
         {deleteUser && (
           <div className="space-y-4">
@@ -622,9 +617,10 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
               >
                 Otkaži
               </button>
-              <button 
-              onClick={()=> obrisiKorisnika(deleteUser.id)}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20">
+              <button
+                onClick={() => obrisiKorisnika(deleteUser.id)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20"
+              >
                 Obriši
               </button>
             </div>
