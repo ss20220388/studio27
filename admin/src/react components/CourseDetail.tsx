@@ -167,6 +167,21 @@ export default function CourseDetail({
 
     setUploading(false);
   };
+  
+  const handleSlikaChange = async (url: string, newUrlSlika: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/materijali/addSlika`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accesToken}`,
+        },
+        body: JSON.stringify({ url, urlSlika: newUrlSlika }),
+      });
+    } catch (error) {
+      console.error("Greška pri ažuriranju naziva materijala", error);
+    }
+  }
 
   useEffect(() => {
     if (!selectedKurs?.id) return;
@@ -754,6 +769,21 @@ export default function CourseDetail({
                       }}
                       onBlur={()=>handleMaterialNameChange(material.url, material.naziv || "")}
                       placeholder="Unesite naziv materijala"
+                      className="w-full px-2 py-1 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
+                    />
+                    <input
+                      type="text"
+                      value={material.urlSlika || ""}
+                      onChange={(e) => {
+                        const updatedMaterials = [...materials];
+                        updatedMaterials[index] = {
+                          ...updatedMaterials[index],
+                          urlSlika: e.target.value,
+                        };
+                        setMaterials(updatedMaterials);
+                      }}
+                      onBlur={()=>handleSlikaChange(material.url, material.urlSlika || "")}
+                      placeholder="Unesite URL slike"
                       className="w-full px-2 py-1 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600"
                     />
                     <button

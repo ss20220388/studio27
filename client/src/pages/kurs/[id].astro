@@ -8,6 +8,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 const APP_URL = import.meta.env.PUBLIC_APP_URL || "http://studio27.rs";
 const { id } = Astro.params;
 const accessToken = Astro.cookies.get("accessToken")?.value;
+
 type KursSlika = { url?: string; slikaUrl?: string; putanja?: string; };
 
 let kurs = null;
@@ -16,7 +17,7 @@ let kursSlike: KursSlika[] = [];
 try {
   const res = await fetch(`${API_URL}/api/kursevi/${id}`);
   if (res.ok) kurs = await res.json();
-} catch (e) { console.error("Error:", e); }
+} catch (e) { console.error("Error fetching course:", e); }
 
 try {
   const res = await fetch(`${API_URL}/api/kursslika/${id}`);
@@ -24,46 +25,64 @@ try {
     const data = await res.json();
     kursSlike = data.kursSlika || [];
   }
-} catch (e) { console.error("Error:", e); }
+} catch (e) { console.error("Error fetching course images:", e); }
 
-// Fallback ako kurs ne postoji
+// Ako kurs ne postoji, preusmeri na 404
 if (!kurs) {
   return Astro.redirect('/404');
 }
+
+// ---------------- SEO PRIPREMA ZASNOVANA NA TVOJIM KOLONAMA ----------------
+
+// Priprema čistog opisa za meta tag (uzima opis, a ako ga nema koristi komentarDole)
+const rawDescription = kurs.opis || kurs.komentarDole || "Naučite arhitektonsku vizualizaciju od nule uz naše stručne kurseve.";
+const seoDescription = rawDescription.replace(/<[^>]*>?/gm, '').slice(0, 155).trim() + "...";
+
+// Priprema SEO naslova (kombinuje naziv i glavniKurs iz baze)
+const seoTitle = `${kurs.naziv}${kurs.glavniKurs ? ` - ${kurs.glavniKurs}` : ''} | 27 archviz`;
+
+// Kanonski URL
+const canonicalUrl = new URL(Astro.url.pathname, Astro.url.origin).toString();
+
+// Određivanje prve slike za og:image
+const firstGalleryImage = kursSlike && kursSlike.length > 0 ? kursSlike[0]?.url : null;
+const rawImageUrl = firstGalleryImage || kurs.slikaUrl;
+const seoImage = rawImageUrl ? (rawImageUrl.startsWith('http') ? rawImageUrl : `${API_URL}/api/uploaded-images${rawImageUrl}`) : undefined;
 ---
 
 <Layout 
-  title={`${kurs.naziv} | 27 archviz`}
-  description={kurs.opis}
-  image={kurs.slikaUrl}
-  canonicalURL={new URL(Astro.url.pathname, Astro.site || Astro.url.origin)}
+  title={seoTitle}
+  description={seoDescription}
+  image={seoImage}
+  canonicalURL={canonicalUrl}
   breadcrumbs={[
+    { name: "Početna", url: `${APP_URL}` },
     { name: "Kursevi", url: `${APP_URL}#kursevi` },
-    { name: kurs.naziv, url: new URL(Astro.url.pathname, Astro.site || Astro.url.origin).toString() }
+    { name: kurs.naziv, url: canonicalUrl }
   ]}
   course={{
     name: kurs.naziv,
-    description: kurs.opis,
-    url: new URL(Astro.url.pathname, Astro.site || Astro.url.origin).toString()
+    description: seoDescription,
+    url: canonicalUrl
   }}
   faq={[
     {
-      question: "Da li je kurs namenjen početnicima?",
-      answer: "Da, kurs je prilagođen početnicima i objašnjen korak po korak."
+      question: `Za koga je namenjen kurs ${kurs.naziv}?`,
+      answer: kurs.komentarGore || "Kurs je namenjen svima koji žele da savladaju vizuelizacije, od početnika do naprednih korisnika."
     },
     {
-      question: "Da li se kurs prati online?",
-      answer: "Da, kurs možete pratiti online svojim tempom."
+      question: "Kako se pristupa lekcijama i koliko traje pristup?",
+      answer: "Pristup video materijalima je neograničen i možete ih gledati uvek i svojim tempom."
     },
     {
-      question: "Šta ću naučiti na kursu?",
-      answer: kurs.sadrzaj || "Naučićete softverske alate, osnove arhitektonske vizualizacije i obradu finalnih rendera."
+      question: "Koji softveri se izučavaju na kursu?",
+      answer: kurs.glavniKurs || "Na kursu se rade vodeći alati za 3D renderovanje i arhitektonsku vizualizaciju."
     }
   ]} 
 >
-  {/* Beli wrapper — ako komponente nemaju svoju pozadinu */}
-  <div class="bg-white">
-    <KursHero kurs={kurs} kursSlike={kursSlike} client:visible />
+  {/* Pozadina sa crnom bojom radi glatkog spajanja sa Hero sekcijom */}
+  <div class="bg-black text-white min-h-screen">
+    <KursHero kurs={kurs} kursSlike={kursSlike} client:load />
     
     <BigTextSection
       glavniTekst={kurs.glavniKurs}
@@ -73,8 +92,5 @@ if (!kurs) {
     />
 
     <KursInfo kurs={kurs} accessToken={accessToken} client:visible />
-
-    {/* CTA Section */}
-    
   </div>
 </Layout>

@@ -13,7 +13,6 @@ const resolveImageSrc = (imagePath) => {
 export default function KursHero({ kurs, kursSlike }) {
   const ref = useRef(null);
 
-  // Koristimo sliku iz kursSlike ako postoji, inače slikaUrl iz kursa
   const firstGalleryImage = kursSlike && kursSlike.length > 0 ? kursSlike[0]?.url : null;
   const primaryImage = resolveImageSrc(firstGalleryImage || kurs?.slikaUrl);
 
@@ -22,10 +21,9 @@ export default function KursHero({ kurs, kursSlike }) {
     offset: ["start start", "end start"],
   });
 
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.25]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.2]);
   const opacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
-  const y = useTransform(scrollYProgress, [0, 1], [0, 150]);
-  const imgBrightness = useTransform(scrollYProgress, [0, 1], [1, 0.4]);
+  const y = useTransform(scrollYProgress, [0, 1], [0, 100]);
 
   const scrollToDetails = (e) => {
     e.preventDefault();
@@ -35,86 +33,84 @@ export default function KursHero({ kurs, kursSlike }) {
     }
   };
 
+  // komentarSredina pretvaramo u bullet linije
+  const bulletLines = kurs?.komentarSredina
+    ? kurs.komentarSredina.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+    : [];
+
   return (
     <section
       ref={ref}
-      className="relative h-[120vh] flex items-center justify-center overflow-hidden bg-black text-white"
+      className="relative min-h-screen flex items-center justify-start overflow-hidden bg-black text-white px-6 md:px-16 py-20"
     >
-      <h1 className="sr-only">{kurs?.naziv || "Kurs"}</h1>
+      {/* Pozadinska slika kursa */}
       {primaryImage && (
         <motion.img
           src={primaryImage}
-          className="absolute w-full h-full object-cover"
-          style={{
-            scale,
-            filter: useTransform(imgBrightness, (v) => `brightness(${v})`),
-          }}
-          alt="slika kursa"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ scale }}
+          alt={kurs?.naziv || "slika kursa"}
         />
       )}
 
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black" />
+      {/* Tamni sloj prekrit s ciljem lakšeg čitanja */}
+      <div className="absolute inset-0 bg-black/60 backdrop-brightness-90" />
 
       <FloatingShapes />
 
+      {/* Sadržaj na levoj strani */}
       <motion.div
         style={{ opacity, y }}
-        className="relative z-10 max-w-5xl text-center px-6 flex flex-col items-center"
+        className="relative z-10 max-w-4xl text-left flex flex-col items-start space-y-6 mt-10"
       >
-        {/* Kategorija badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="inline-block mb-6"
-        >
-          <span className="px-5 py-2 text-xs md:text-sm font-semibold tracking-[0.25em] uppercase bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white/90">
-            27archviz
-          </span>
-        </motion.div>
+        <div>
+          {/* Naslov (naziv) i komentarGore desno */}
+          <div className="flex flex-wrap items-baseline gap-3 mb-2">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black uppercase tracking-tight leading-none text-white drop-shadow-md">
+              {kurs?.naziv}
+            </h1>
 
-        {/* Naslov Kursa */}
-        <motion.h1
-          initial={{ opacity: 0, y: 80 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="text-4xl md:text-8xl max-w-[90vw] font-black leading-tight mb-8 tracking-tight uppercase text-white"
-        >
-          {kurs?.naziv || "Kurs"}
-        </motion.h1>
+            {kurs?.komentarGore && (
+              <span className="text-xs sm:text-sm font-semibold text-zinc-300 border-l-2 border-orange-500 pl-3">
+                {kurs.komentarGore}
+              </span>
+            )}
+          </div>
 
-        {/* Akciono Dugme */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        >
+          {/* glavniKurs (npr. 3Ds MAX + CORONA) */}
+          {kurs?.glavniKurs && (
+            <p className="text-xs sm:text-sm md:text-base font-semibold tracking-wider uppercase text-zinc-300 mt-3">
+              {kurs.glavniKurs}
+            </p>
+          )}
+        </div>
+
+        {/* komentarSredina ispisan kao bulleti sa crticom */}
+        {bulletLines.length > 0 && (
+          <div className="space-y-2 py-2 text-xl sm:text-2xl md:text-3xl font-extrabold uppercase tracking-tight text-white drop-shadow">
+            {bulletLines.map((line, idx) => (
+              <p key={idx}>- {line.replace(/^-\s*/, "")}</p>
+            ))}
+          </div>
+        )}
+
+        {/* komentarDole - veliki donji tekst */}
+        {kurs?.komentarDole && (
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold uppercase leading-tight text-white max-w-3xl pt-2">
+            {kurs.komentarDole}
+          </h2>
+        )}
+
+        {/* Zaobljeno narandžasto dugme sa sjajem */}
+        <div className="pt-6">
           <a
             href="#detalje-kursa"
             onClick={scrollToDetails}
-            className="inline-flex items-center justify-center bg-[#bc3b24] hover:bg-[#9e301c] text-white text-xs md:text-sm font-bold uppercase tracking-wider px-8 py-4 rounded-full transition-all duration-300 shadow-xl hover:scale-105"
+            className="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white text-sm md:text-base font-black uppercase tracking-widest px-10 py-4 rounded-full transition-all duration-300 shadow-[0_0_25px_rgba(249,115,22,0.6)] hover:shadow-[0_0_35px_rgba(249,115,22,0.85)] hover:scale-105 active:scale-95 cursor-pointer"
           >
-            Pogledaj kurs
+            Saznaj više
           </a>
-        </motion.div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 1 }}
-          className="mt-12"
-        >
-          <a href="#detalje-kursa" onClick={scrollToDetails} className="block cursor-pointer">
-            <motion.div
-              animate={{ y: [0, 12, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              className="w-6 h-10 mx-auto border-2 border-white/30 rounded-full flex justify-center pt-2 hover:border-white/60 transition-colors"
-            >
-              <motion.div className="w-1.5 h-1.5 bg-white/80 rounded-full" />
-            </motion.div>
-          </a>
-        </motion.div>
+        </div>
       </motion.div>
     </section>
   );

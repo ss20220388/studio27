@@ -68,5 +68,12 @@ public class Materijali {
         jdbcTemplate.update(SQL, naziv, url);
         return ResponseEntity.ok(Map.of("success", true));
     }
-    
+    @PostMapping("/materijali/addUrlSlika")
+    public ResponseEntity<Map<String,Object>> addSlika(@RequestBody Map<String,Object> request) {
+        String url = (String) request.get("url");
+        String urlSlika = (String) request.get("urlSlika");
+        String SQL = "UPDATE materijali SET urlSlika = ? WHERE url = ?";
+        jdbcTemplate.update(SQL, urlSlika, url);
+        return ResponseEntity.ok(Map.of("success", true));
+    }
 }

@@ -49,4 +49,14 @@ public class RadoviController {
 
         return radovi;
     }
+
+    public void deleteRadoviById(int idRad) {
+        String SQL = "DELETE FROM radovistudenata WHERE idRad = ?";
+        jdbcTemplate.update(SQL, idRad);
+    }
+
+    public void addRadovi(Map<String, Object> rad) {
+        String SQL = "INSERT INTO radovistudenata (kursId, slikaId, ime, prezime) VALUES (?, ?, ?, ?)";
+        jdbcTemplate.update(SQL, rad.get("kursId"), rad.get("slikaId"), rad.get("ime"), rad.get("prezime"));
+    }
 }

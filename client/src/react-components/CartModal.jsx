@@ -211,7 +211,7 @@ export default function CartModal({ accessToken: initialToken }) {
             fetchUser();
             setIsOpen(true);
           }}
-          className="fixed bottom-6 right-6 sm:bottom-auto sm:top-40 sm:left-8 z-[80] w-14 h-14 bg-zinc-900 sm:bg-[#e5e7eb] text-white sm:text-black rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="fixed bottom-6 right-6 sm:bottom-auto sm:top-40 sm:right-8 z-[80] w-14 h-14 bg-zinc-900 sm:bg-[#e5e7eb] text-white sm:text-black rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
         >
           <svg
             className="w-6 h-6 stroke-[1.5]"

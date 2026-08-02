@@ -1,0 +1,47 @@
+---
+import Layout from "../layouts/Layout.astro";
+import RadoviForma from "../react components/RadoviForma.jsx";
+
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const accessToken = Astro.cookies.get("refreshToken")?.value || null;
+
+let sviKursevi = [];
+
+try {
+  const res = await fetch(`${API_URL}/api/kursevi`);
+  if (!res.ok) throw new Error(`Kursevi fetch failed: ${res.status}`);
+  const data = await res.json();
+  
+  sviKursevi = data?.kursevi || data || [];
+} catch (error) {
+  console.error("Greška pri učitavanju kurseva:", error);
+  sviKursevi = [];
+}
+---
+
+<Layout>
+  <div class="min-h-screen bg-zinc-950 text-zinc-100 py-12 px-4 sm:px-6">
+    <div class="max-w-2xl mx-auto">
+      
+      <!-- Zaglavlje -->
+      <div class="mb-8 text-center sm:text-left border-b border-zinc-800 pb-6">
+        <h1 class="text-3xl font-extrabold text-white tracking-tight flex items-center justify-center sm:justify-start gap-3">
+          <span class="w-3 h-8 bg-red-600 rounded-sm inline-block shadow-[0_0_12px_rgba(220,38,38,0.8)]"></span>
+          Radovi studenata
+        </h1>
+        <p class="text-zinc-400 mt-2 text-sm sm:text-base">
+          Dodajte nove radove studenata popunjavanjem forme ispod.
+        </p>
+      </div>
+
+      <!-- React Forma -->
+      <RadoviForma 
+        client:load 
+        sviKursevi={sviKursevi} 
+        API_URL={API_URL} 
+        accessToken={accessToken} 
+      />
+
+    </div>
+  </div>
+</Layout>
