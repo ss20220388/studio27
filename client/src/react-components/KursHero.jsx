@@ -53,7 +53,7 @@ export default function KursHero({ kurs, kursSlike }) {
         />
       )}
 
-      {/* Tamni sloj prekrit s ciljem lakšeg čitanja */}
+      {/* Tamni sloj prekrivača */}
       <div className="absolute inset-0 bg-black/60 backdrop-brightness-90" />
 
       <FloatingShapes />
@@ -61,17 +61,17 @@ export default function KursHero({ kurs, kursSlike }) {
       {/* Sadržaj na levoj strani */}
       <motion.div
         style={{ opacity, y }}
-        className="relative z-10 max-w-4xl text-left flex flex-col items-start space-y-6 mt-10"
+        className="relative z-10 max-w-3xl text-left flex flex-col items-start space-y-6 mt-10"
       >
-        <div>
+        <div className="space-y-3">
           {/* Naslov (naziv) i komentarGore desno */}
           <div className="flex flex-wrap items-baseline gap-3 mb-2">
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black uppercase tracking-tight leading-none text-white drop-shadow-md">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-black uppercase tracking-tight leading-tight text-white drop-shadow-md">
               {kurs?.naziv}
             </h1>
 
             {kurs?.komentarGore && (
-              <span className="text-xs sm:text-sm font-semibold text-zinc-300 border-l-2 border-orange-500 pl-3">
+              <span className="text-xs sm:text-sm font-semibold text-zinc-300 border-l-2 border-[#550000] pl-3 uppercase">
                 {kurs.komentarGore}
               </span>
             )}
@@ -79,34 +79,30 @@ export default function KursHero({ kurs, kursSlike }) {
 
           {/* glavniKurs (npr. 3Ds MAX + CORONA) */}
           {kurs?.glavniKurs && (
-            <p className="text-xs sm:text-sm md:text-base font-semibold tracking-wider uppercase text-zinc-300 mt-3">
+            <p className="text-xs sm:text-sm font-bold tracking-widest uppercase text-zinc-400">
               {kurs.glavniKurs}
             </p>
           )}
         </div>
 
-        {/* komentarSredina ispisan kao bulleti sa crticom */}
+        {/* komentarSredina - elegantan i moderan stil umesto prevelikih slova */}
         {bulletLines.length > 0 && (
-          <div className="space-y-2 py-2 text-xl sm:text-2xl md:text-3xl font-extrabold uppercase tracking-tight text-white drop-shadow">
+          <div className="space-y-2.5 pt-2 text-sm sm:text-base md:text-lg font-medium text-zinc-200 leading-relaxed max-w-2xl drop-shadow">
             {bulletLines.map((line, idx) => (
-              <p key={idx}>- {line.replace(/^-\s*/, "")}</p>
+              <div key={idx} className="flex items-start space-x-3">
+                <span className="text-[#550000] font-bold text-lg select-none">•</span>
+                <span>{line.replace(/^-\s*/, "")}</span>
+              </div>
             ))}
           </div>
         )}
 
-        {/* komentarDole - veliki donji tekst */}
-        {kurs?.komentarDole && (
-          <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold uppercase leading-tight text-white max-w-3xl pt-2">
-            {kurs.komentarDole}
-          </h2>
-        )}
-
-        {/* Zaobljeno narandžasto dugme sa sjajem */}
-        <div className="pt-6">
+        {/* Dugme sa tamno crvenim akcentom */}
+        <div className="pt-4">
           <a
             href="#detalje-kursa"
             onClick={scrollToDetails}
-            className="inline-flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white text-sm md:text-base font-black uppercase tracking-widest px-10 py-4 rounded-full transition-all duration-300 shadow-[0_0_25px_rgba(249,115,22,0.6)] hover:shadow-[0_0_35px_rgba(249,115,22,0.85)] hover:scale-105 active:scale-95 cursor-pointer"
+            className="inline-flex items-center justify-center bg-[#550000] hover:bg-[#770000] text-white text-xs sm:text-sm font-bold uppercase tracking-widest px-8 py-3.5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg cursor-pointer"
           >
             Saznaj više
           </a>

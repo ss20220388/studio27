@@ -83,14 +83,6 @@ const seoImage = rawImageUrl ? (rawImageUrl.startsWith('http') ? rawImageUrl : `
   {/* Pozadina sa crnom bojom radi glatkog spajanja sa Hero sekcijom */}
   <div class="bg-black text-white min-h-screen">
     <KursHero kurs={kurs} kursSlike={kursSlike} client:load />
-    
-    <BigTextSection
-      glavniTekst={kurs.glavniKurs}
-      naslov={kurs.naziv}
-      opis={kurs.opis}
-      client:visible
-    />
-
     <KursInfo kurs={kurs} accessToken={accessToken} client:visible />
   </div>
 </Layout>

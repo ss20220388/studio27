@@ -16,7 +16,7 @@ type Recenzija = {
 
 let radovi: Rad[] = [];
 try {
-  const res = await fetch(`${API_URL}/api/radovi`);
+  const res = await fetch(`${API_URL}/api/radovi-sa-rasporedom`);
   if (res.ok) radovi = await res.json();
 } catch (e) { console.error("Greška radovi:", e); }
 
@@ -27,7 +27,9 @@ try {
 } catch (e) { console.error("Greška recenzije:", e); }
 
 const count = Math.floor(radovi.length / 4) * 4;
-const radoviPrikaz = radovi.slice(0, count);
+let radoviPrikaz = radovi.slice(0, 16);
+
+console.log(radovi)
 const countrec = Math.floor(recenzije.length / 3) * 3;
 recenzije = recenzije.slice(0, countrec);
 ---
@@ -105,7 +107,7 @@ recenzije = recenzije.slice(0, countrec);
 
                 <!-- TEKST RECENZIJE -->
                 <p class="text-zinc-700 text-sm md:text-base leading-relaxed font-normal italic">
-                  "{recenzija.opis || "Odličan kurs, sve preporuke!"}"
+                  {recenzija.opis || "Odličan kurs, sve preporuke!"}
                 </p>
               </div>
 

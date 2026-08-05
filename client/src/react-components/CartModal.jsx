@@ -47,7 +47,10 @@ export default function CartModal({ accessToken: initialToken }) {
     if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem("cart_items");
-        setCart(saved ? JSON.parse(saved) : []);
+        const items = saved ? JSON.parse(saved) : [];
+        // Osiguravamo da je količina uvek 1
+        const normalized = items.map((item) => ({ ...item, quantity: 1 }));
+        setCart(normalized);
       } catch (e) {
         setCart([]);
       }
@@ -58,8 +61,12 @@ export default function CartModal({ accessToken: initialToken }) {
     loadCart();
 
     const handleCartUpdate = (e) => {
-      if (e?.detail) setCart(e.detail);
-      else loadCart();
+      if (e?.detail) {
+        const normalized = e.detail.map((item) => ({ ...item, quantity: 1 }));
+        setCart(normalized);
+      } else {
+        loadCart();
+      }
       setIsOpen(true);
     };
 
@@ -78,27 +85,11 @@ export default function CartModal({ accessToken: initialToken }) {
     };
   }, [fetchUser]);
 
-  const totalItems = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  const totalItems = cart.length;
   const totalPrice = cart.reduce(
-    (acc, item) => acc + (Number(item.price) || 0) * (item.quantity || 1),
+    (acc, item) => acc + (Number(item.price || item.cena) || 0),
     0
   );
-
-  const updateQuantity = (id, delta) => {
-    const updated = cart
-      .map((item) => {
-        if (item.id === id) {
-          const newQty = (item.quantity || 1) + delta;
-          return newQty > 0 ? { ...item, quantity: newQty } : null;
-        }
-        return item;
-      })
-      .filter(Boolean);
-
-    setCart(updated);
-    localStorage.setItem("cart_items", JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent("cart-updated", { detail: updated }));
-  };
 
   const removeItem = (id) => {
     const updated = cart.filter((item) => item.id !== id);
@@ -115,10 +106,10 @@ export default function CartModal({ accessToken: initialToken }) {
   const registerUser = async (payload) => {
     try {
       const res = await fetch(`${API_URL}/api/auth/register-user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      })
+      });
       return res.json();
     } catch (error) {
       console.error("Error registering user:", error);
@@ -133,10 +124,12 @@ export default function CartModal({ accessToken: initialToken }) {
       ? { ...user, isGuest: false }
       : { ...formData, isGuest: true };
 
+    const currentCourse = cart?.[0] || {};
+    const naziv = currentCourse.naziv || currentCourse.naslov || currentCourse.title || "";
+    const cena = currentCourse.cena || currentCourse.price || 0;
+
     if (!finalData.isGuest) {
-      // Registrovan/ulogovan korisnik
-      localStorage.setItem("user_order_data", JSON.stringify(finalData));
-      localStorage.setItem("cart_order_data", JSON.stringify(cart));
+      localStorage.setItem("userEmail", finalData.email);
 
       if (window.navigation) {
         window.navigation.navigate("/pay");
@@ -144,47 +137,47 @@ export default function CartModal({ accessToken: initialToken }) {
         window.location.href = "/pay";
       }
     } else {
-      // Gost - kreira se nalog
       const name = formData.name.trim();
       const surname = name.split(" ").slice(1).join(" ") || " ";
       const firstName = name.split(" ")[0] || " ";
-      const pass = Math.random().toString(36).slice(-8); // Generisana lozinka
+      const pass = Math.random().toString(36).slice(-8);
 
       const payload = {
         email: formData.email.trim(),
         password: pass,
         ime: firstName,
         prezime: surname,
-        brojTelefona: formData.phone.trim()
+        brojTelefona: formData.phone.trim(),
       };
 
       try {
         const response = await registerUser(payload);
-
-        // Provera uspešnosti (prihvata i Axios response i standardni fetch response)
-        const isSuccess = response ;
+        const isSuccess = response;
 
         if (isSuccess) {
-          // 2. Priprema i slanje email-a
           const mailPayload = {
             to: payload.email,
             subject: "Dobrodošli! Vaši podaci za prijavu",
             subText: `Zdravo ${payload.ime}, vaš nalog je uspešno kreiran.`,
-            body: `Vaša privremena lozinka za prijavu je: ${pass}\n\nMolimo vas da je promenite nakon prve prijave.`
+            body: `Vaša privremena lozinka za prijavu je: ${pass}\n\nMolimo vas da je promenite nakon prve prijave.`,
           };
 
-          const mailResponse = await fetch(`${API_URL}/api/send-mail-to-person`, {
-            method: 'POST',
+          await fetch(`${API_URL}/api/send-mail-to-person`, {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json'
+              "Content-Type": "application/json",
             },
-            body: JSON.stringify(mailPayload)
+            body: JSON.stringify(mailPayload),
           });
 
-          
-
-          localStorage.setItem("user_order_data", JSON.stringify({ ...payload, isGuest: false }));
-          localStorage.setItem("cart_order_data", JSON.stringify(cart));
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              userEmail: payload.email,
+              naziv: naziv,
+              cena: cena,
+            })
+          );
 
           if (window.navigation) {
             window.navigation.navigate("/pay");
@@ -195,7 +188,10 @@ export default function CartModal({ accessToken: initialToken }) {
           console.error("Registracija nije uspela:", response);
         }
       } catch (error) {
-        console.error("Greška tokom procesa registracije ili slanja mail-a:", error);
+        console.error(
+          "Greška tokom procesa registracije ili slanja mail-a:",
+          error
+        );
       }
     }
   };
@@ -236,7 +232,6 @@ export default function CartModal({ accessToken: initialToken }) {
       {isOpen && (
         <div className="fixed inset-0 z-10002 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 overflow-hidden">
           <div className="relative w-full sm:max-w-[480px] bg-white text-black p-5 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-none font-sans">
-            {/* Dugme X spušteno unutar belog kartičnog prozora */}
             <button
               type="button"
               aria-label="Zatvori korpu"
@@ -261,49 +256,27 @@ export default function CartModal({ accessToken: initialToken }) {
                     {item.image && (
                       <img
                         src={API_URL + "/api/uploaded-images" + item.image}
-                        alt={item.title}
+                        alt={item.title || item.naslov || item.naziv}
                         className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded flex-shrink-0"
                       />
                     )}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-black uppercase tracking-wide leading-tight text-xs sm:text-sm line-clamp-2">
-                        {item.title}
+                        {item.title || item.naslov || item.naziv}
                       </h3>
                       <div className="text-zinc-700 font-semibold mt-1">
-                        {(item.price * (item.quantity || 1)).toLocaleString()} €
+                        {Number(item.price || item.cena || 0).toLocaleString()} €
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center border border-zinc-300 rounded px-1">
-                        <button
-                          type="button"
-                          aria-label="Smanji količinu"
-                          onClick={() => updateQuantity(item.id, -1)}
-                          className="w-6 h-6 flex items-center justify-center text-zinc-600 hover:text-black font-bold"
-                        >
-                          –
-                        </button>
-                        <span className="font-medium px-2 text-xs">{item.quantity || 1}</span>
-                        <button
-                          type="button"
-                          aria-label="Povećaj količinu"
-                          onClick={() => updateQuantity(item.id, 1)}
-                          className="w-6 h-6 flex items-center justify-center text-zinc-600 hover:text-black font-bold"
-                        >
-                          +
-                        </button>
-                      </div>
-
-                      <button
-                        type="button"
-                        aria-label="Ukloni iz korpe"
-                        onClick={() => removeItem(item.id)}
-                        className="text-zinc-400 hover:text-red-600 p-1 transition-colors"
-                      >
-                        ✕
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      aria-label="Ukloni iz korpe"
+                      onClick={() => removeItem(item.id)}
+                      className="text-zinc-400 hover:text-red-600 p-1 transition-colors"
+                    >
+                      ✕
+                    </button>
                   </div>
                 ))
               )}

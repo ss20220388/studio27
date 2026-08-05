@@ -1,7 +1,11 @@
 ---
 // src/pages/pay.astro
-import PaymentCheckout from "../react-components/PaymentCheckout.jsx";
+import PaymentFlow from "../react-components/PaymentFlow.jsx";
 import "../styles/global.css";
+
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const cookie = Astro.cookies.get("refreshToken");
+const accessToken = cookie ? cookie.value : null;
 ---
 
 <html lang="sr">
@@ -11,6 +15,6 @@ import "../styles/global.css";
     <title>Plaćanje | 27archviz</title>
   </head>
   <body class="bg-[#f4f4f6] min-h-screen flex items-center justify-center p-4 font-sans text-slate-900">
-    <PaymentCheckout client:only="react" />
+    <PaymentFlow API_URL={API_URL} token={accessToken} client:only="react" />
   </body>
 </html>

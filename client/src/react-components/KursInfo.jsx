@@ -88,7 +88,7 @@ export default function KursInfo({ kurs, accessToken }) {
           
           {/* LEVO: Glavna slika i galerija */}
           <div className="space-y-4">
-            <div className="relative overflow-hidden rounded-lg bg-zinc-900 border border-zinc-800 shadow-2xl aspect-[4/3] sm:aspect-[5/4]">
+            <div className="relative overflow-hidden rounded-lg bg-zinc-900 border border-zinc-800 shadow-2xl min-w-[500px]">
               <img
                 src={
                   activeImage ||
@@ -100,27 +100,7 @@ export default function KursInfo({ kurs, accessToken }) {
             </div>
 
             {/* Galerija sličica sa narandžastim akcentom */}
-            {slike.length > 0 && (
-              <div className="grid grid-cols-4 gap-3 pt-2">
-                {slike.map((slika) => (
-                  <button
-                    key={slika.idSlika}
-                    onClick={() => setActiveImage(resolveImageSrc(slika.url))}
-                    className={`relative overflow-hidden rounded-md border-2 aspect-square cursor-pointer transition-all ${
-                      activeImage === resolveImageSrc(slika.url)
-                        ? "border-orange-500 scale-95"
-                        : "border-zinc-800 hover:border-zinc-600 opacity-70 hover:opacity-100"
-                    }`}
-                  >
-                    <img
-                      src={resolveImageSrc(slika.url)}
-                      alt="Thumbnail"
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+            
           </div>
 
           {/* DESNO: Informacije o kursu po uzoru na sliku 2 */}
@@ -194,7 +174,7 @@ export default function KursInfo({ kurs, accessToken }) {
 
                       {sekcija.stavke.length > 0 && (
                         <span
-                          className={`text-orange-500 font-bold text-xl transition-transform duration-300 ${
+                          className={`text-[#550000] font-bold text-xl transition-transform duration-300 ${
                             isOpen ? "rotate-180" : "rotate-0"
                           }`}
                         >
@@ -210,7 +190,7 @@ export default function KursInfo({ kurs, accessToken }) {
                             key={sIdx}
                             className="flex items-start gap-3 text-zinc-300 text-sm sm:text-base leading-relaxed"
                           >
-                            <span className="text-orange-500 mt-1">•</span>
+                            <span className="text-[#550000] mt-1">•</span>
                             <span>{stavka}</span>
                           </div>
                         ))}

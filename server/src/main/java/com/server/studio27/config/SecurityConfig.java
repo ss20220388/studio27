@@ -88,6 +88,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/video/stream").permitAll()
                                                 .requestMatchers("/api/video/stream-protected").permitAll()
                                                 .requestMatchers("/api/radovi").permitAll()
+                                                .requestMatchers("/api/radovi-sa-rasporedom").permitAll()
                                                 .requestMatchers("/api/upload-hls-hetzner").permitAll()
                                                 .requestMatchers("/api/kursevi/{id}").permitAll()
                                                 .requestMatchers("/api/progress-chart/**").permitAll()

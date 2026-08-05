@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.server.studio27.controllers.RadoviController;
-import com.server.studio27.models.RadoviStudenata;
 
 
 @RequestMapping("/api")
@@ -22,8 +21,13 @@ public class RadoviRoute {
     private RadoviController radoviController;
 
     @GetMapping("/radovi")
-    public List<RadoviStudenata> getRadovi() {
+    public List<Map<String, Object>> getRadovi() {
         return radoviController.getAllRadovi();
+    }
+
+    @GetMapping("/radovi-sa-rasporedom")
+    public List<Map<String, Object>> getRadoviSaRasporedom() {
+        return radoviController.getAllRadoviSaRasporedom();
     }
 
     @PostMapping("/addRad")
