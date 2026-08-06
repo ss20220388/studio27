@@ -72,7 +72,7 @@ export default function KontaktModal({textButtona}: {textButtona?: string}) {
       return;
     }
 
-    const ADMIN_WHATSAPP = '381612563121';
+    const ADMIN_WHATSAPP = '381665934314';
     const message = `*Nova poruka sa sajta Studio27*\n\n*Ime:* ${name}\n*Email:* ${email}\n*Telefon:* ${telefon}\n*Naslov:* ${naslov}\n\n*Poruka:*\n${poruka}`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappLink = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodedMessage}`;
@@ -102,7 +102,7 @@ export default function KontaktModal({textButtona}: {textButtona?: string}) {
           >
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md border border-gray-200 hover:bg-orange-50 hover:border-orange-200 text-gray-400 hover:text-orange-500 transition-all duration-300 text-xl leading-none cursor-pointer"
+              className="absolute top-4 right-4 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-md border border-gray-200 hover:bg-orange-50 hover:border-orange-500 text-gray-400 hover:text-[#550000] transition-all duration-300 text-xl leading-none cursor-pointer"
             >
               &times;
             </button>
@@ -123,8 +123,8 @@ export default function KontaktModal({textButtona}: {textButtona?: string}) {
               <div className="lg:col-span-3 p-6 lg:p-10 overflow-y-auto max-h-[calc(95vh-12rem)] lg:max-h-[95vh]">
                 <div className="mb-8">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-px bg-orange-400" />
-                    <p className="text-[10px] font-bold tracking-[0.25em] uppercase text-orange-500">Kontaktirajte nas</p>
+                    <div className="w-8 h-px bg-[#550000]" />
+                    <p className="text-[10px] font-bold tracking-[0.25em] uppercase text-[#550000]">Kontaktirajte nas</p>
                   </div>
                   <h2 className="text-3xl font-bold text-gray-900 leading-tight">
                     Pošaljite nam poruku
@@ -161,13 +161,13 @@ export default function KontaktModal({textButtona}: {textButtona?: string}) {
                       name="message"
                       placeholder="Napišite nam šta vas zanima..."
                       rows={4}
-                      className="w-full text-sm text-gray-900 placeholder-gray-400 bg-gray-50 border border-gray-200 rounded-xl focus:border-orange-400 focus:bg-white focus:ring-2 focus:ring-orange-100 outline-none p-4 transition-all duration-300 resize-none"
+                      className="w-full text-sm text-gray-900 placeholder-gray-400 bg-gray-50 border border-gray-200 rounded-xl focus:border-[#550000] focus:bg-white focus:ring-2 focus:ring-[#550000]/25 outline-none p-4 transition-all duration-300 resize-none"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full h-12 mt-4 text-white text-sm font-bold tracking-widest uppercase rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-400 hover:to-orange-300 active:scale-[0.98] shadow-lg shadow-orange-500/25 transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer"
+                    className="w-full h-12 mt-4 text-white text-sm font-bold tracking-widest uppercase rounded-xl bg-gradient-to-r from-[#550000] to-[#c8432d] hover:from-[#c8432d] hover:to-[#550000] active:scale-[0.98] shadow-lg shadow-[#550000]/25 transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer"
                   >
                     <span>Pošalji poruku</span>
                     <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
