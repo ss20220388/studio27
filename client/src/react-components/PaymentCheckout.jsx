@@ -76,8 +76,8 @@ export default function UplatnicaCheckout({ onSuccess = null , onBack= null,API_
       : `Payment Instructions - ${nazivEng || "Studio 27 Courses"}`;
 
     const bodyText = isSrb
-      ? `Poštovani,\n\nU nastavku se nalaze instrukcije za uplatu selektovanih kurseva:\n"${nazivSrb}"\n\nPrimalac: Doroteja Dokić PR Studio 27\nSvrha uplate: Kupovina kurseva - ${nazivSrb}\nIznos: ${formatRsd(ukupnoRsd)} RSD\nRačun primaoca: 265-1100310090996-19\nŠifra uplate: 289\nModel: 97\nPoziv na broj: 2026/01\n\nNalog vam je već kreiran i dobili ste poruku sa šifrom na vašu mejl adresu. Pristup kursevima ćete dobiti nakon što ga admini odobre. Kao potvrdu možete pokazati i izvršenu uplatnicu sa onlajn aplikacije.`
-      : `Dear Customer,\n\nHere are your wire transfer payment instructions for:\n"${nazivEng}"\n\nBeneficiary Name: Studio 27 Visualization (Doroteja Dokić)\nSWIFT / BIC: RZBSRSBG\nIBAN: RS35265100000115128090\nDescription: SEPA PLACANJE - ${nazivEng}\nAmount: ${ukupnoEur} EUR\n\nYour account is already created and you received an email with your password. You will get access once admins approve your payment.`;
+      ? `Poštovani,\n\nU nastavku se nalaze instrukcije za uplatu selektovanih kurseva:\n"${nazivSrb}"\n\nPrimalac: Studio 27\nSvrha uplate: Kupovina kurseva - ${nazivSrb}\nIznos: ${formatRsd(ukupnoRsd)} RSD\nRačun primaoca: 265-1100310090996-19\nŠifra uplate: 289\nModel: 97\nPoziv na broj: 2026/01\n\nNalog vam je već kreiran i dobili ste poruku sa šifrom na vašu mejl adresu. Pristup kursevima ćete dobiti nakon izvršene uplate. Kao potvrdu možete pokazati i izvršenu uplatnicu sa onlajn aplikacije.`
+      : `Dear Customer,\n\nHere are your wire transfer payment instructions for:\n"${nazivEng}"\n\nBeneficiary Name: Studio 27 Visualization\nSWIFT / BIC: RZBSRSBG\nIBAN: RS35265100000115128090\nDescription: SEPA PLACANJE - ${nazivEng}\nAmount: ${ukupnoEur} EUR\n\nYour account is already created and you received an email with your password. You will get access once payment goes through.`;
 
     try {
       const response = await fetch(`${API_URL}/api/send-mail-to-person`, {
@@ -228,7 +228,7 @@ export default function UplatnicaCheckout({ onSuccess = null , onBack= null,API_
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            Nalog vam je već kreiran i dobili ste poruku sa šifrom na vašu mejl adresu. Pristup kursevima ćete dobiti nakon što ga admini odobre. Kao potvrdu možete pokazati i izvršenu uplatnicu sa onlajn aplikacije.
+            Nalog vam je već kreiran i dobili ste poruku sa šifrom na vašu mejl adresu. Pristup kursevima ćete dobiti nakon izvršene uplate. Kao potvrdu možete pokazati i izvršenu uplatnicu sa onlajn aplikacije.
           </div>
         </div>
 
