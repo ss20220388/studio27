@@ -108,7 +108,7 @@ const KursPlayer = ({ lekcije, token, API_URL, materijali }) => {
 
             {/* DONJI DEO: SCENE I MATERIJALI */}
             <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 sm:p-10 space-y-12">
-                
+
                 {/* 1. SEKCIJA: DODATNE SCENE (Sa slikama) */}
                 {scene.length > 0 && (
                     <div className="space-y-6 text-center">
@@ -152,33 +152,79 @@ const KursPlayer = ({ lekcije, token, API_URL, materijali }) => {
                 )}
 
                 {/* 2. SEKCIJA: MATERIJALI KURSA (Oblik pilule/dugmadi sa slike) */}
-                <div className="space-y-6 text-center">
-                    <h2 className="text-2xl font-bold tracking-wider text-white uppercase">
-                        Materijali Kursa
-                    </h2>
-
-                    {obicniMaterijali.length > 0 ? (
-                        <div className="flex flex-col items-center space-y-3 max-w-xl mx-auto">
-                            {obicniMaterijali.map((materijal) => (
-                                <a
-                                    key={materijal.id}
-                                    href={`${API_URL}/api/media?remoteFilePath=${materijal.url}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full py-3 px-6 rounded-full border border-neutral-700 bg-neutral-900/50 hover:bg-neutral-800 hover:border-red-600 text-neutral-200 text-sm font-medium transition-all duration-200 shadow-sm"
-                                >
-                                    {materijal.naziv || materijal.url}
-                                </a>
-                            ))}
-                        </div>
-                    ) : (
-                        scene.length === 0 && (
+                {(() => {
+                    if (obicniMaterijali.length === 0) {
+                        return scene.length === 0 ? (
                             <p className="text-neutral-500 text-sm">
                                 Nema dostupnih materijala za ovaj kurs.
                             </p>
-                        )
-                    )}
-                </div>
+                        ) : null;
+                    }
+
+                    // Grupisanje: grupe po tagu + posebna lista za materijale bez taga
+                    const grupisaniMaterijali = obicniMaterijali.reduce((acc, item) => {
+                        const tagKey = item.tag ? item.tag.trim() : null;
+                        if (tagKey) {
+                            if (!acc.grupe[tagKey]) {
+                                acc.grupe[tagKey] = [];
+                            }
+                            acc.grupe[tagKey].push(item);
+                        } else {
+                            acc.bezTaga.push(item);
+                        }
+                        return acc;
+                    }, { grupe: {}, bezTaga: [] });
+
+                    return (
+                        <div className="space-y-8 max-w-xl mx-auto">
+                            {/* 1. Grupe sa tagovima */}
+                            {Object.entries(grupisaniMaterijali.grupe).map(([tag, stavke]) => (
+                                <div key={tag} className="space-y-3">
+                                    <h3 className="text-lg font-semibold text-neutral-300 text-left border-b border-neutral-800 pb-1">
+                                        {tag}
+                                    </h3>
+                                    <div className="flex flex-col items-center space-y-3">
+                                        {stavke.map((materijal) => (
+                                            <a
+                                                key={materijal.id}
+                                                href={`${API_URL}/api/media?remoteFilePath=${materijal.url}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="w-full py-3 px-6 rounded-full border border-neutral-700 bg-neutral-900/50 hover:bg-neutral-800 hover:border-orange-500 text-neutral-200 text-sm font-medium transition-all duration-200 shadow-sm text-center"
+                                            >
+                                                {materijal.naziv || materijal.url}
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* 2. Materijali bez taga (prikazuju se skroz dole) */}
+                            {grupisaniMaterijali.bezTaga.length > 0 && (
+                                <div className="space-y-3 pt-2">
+                                    {Object.keys(grupisaniMaterijali.grupe).length > 0 && (
+                                        <h3 className="text-lg font-semibold text-neutral-400 text-left border-b border-neutral-800 pb-1">
+                                            Ostali materijali
+                                        </h3>
+                                    )}
+                                    <div className="flex flex-col items-center space-y-3">
+                                        {grupisaniMaterijali.bezTaga.map((materijal) => (
+                                            <a
+                                                key={materijal.id}
+                                                href={`${API_URL}/api/media?remoteFilePath=${materijal.url}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="w-full py-3 px-6 rounded-full border border-neutral-700 bg-neutral-900/50 hover:bg-neutral-800 hover:border-orange-500 text-neutral-200 text-sm font-medium transition-all duration-200 shadow-sm text-center"
+                                            >
+                                                {materijal.naziv || materijal.url}
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
 
             </div>
         </div>

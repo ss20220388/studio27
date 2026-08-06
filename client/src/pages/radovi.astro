@@ -11,9 +11,17 @@ try {
   console.error("Greška pri dohvatanju radova:", e);
 }
 
-// Grupisanje radova po imenu i prezimenu studenta
+// Grupisanje radova po imenu i prezimenu studenta (filtriraju se radovi bez validnog imena/prezimena)
 const radoviByStudent: Record<string, any[]> = radovi.reduce((acc: any, rad: any) => {
-  const name = `${rad.ime} ${rad.prezime}`.trim() || "Anonimni Student";
+  // Provera da li uopšte postoje ime ili prezime i da nisu "null"
+  const ime = rad.ime && rad.ime !== "null" ? rad.ime.trim() : "";
+  const prezime = rad.prezime && rad.prezime !== "null" ? rad.prezime.trim() : "";
+
+  // Ako nemamo ni ime ni prezime, preskačemo ovaj rad
+  if (!ime && !prezime) return acc;
+
+  const name = `${ime} ${prezime}`.trim();
+
   if (!acc[name]) acc[name] = [];
   acc[name].push(rad);
   return acc;
@@ -50,22 +58,20 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
                   {studentName}
                 </h2>
                 <p class="text-base md:text-lg font-medium text-zinc-500">
-                  Kurs: <span class="text-[#550000] font-semibold">{kursNaziv}</span>
+                  Kurs: <span class="text-[#orange-500] font-semibold">{kursNaziv}</span>
                 </p>
               </div>
 
               <!-- RED SA RADOVIMA (SLIKAMA) -->
               <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
                 {works.map((work: any) => (
-                  <div class="group hover:scale-110  ease-linear duration-1000 relative aspect-square overflow-hidden bg-zinc-100 rounded-lg cursor-pointer border border-transparent transition-colors">
+                  <div class="group hover:scale-105 ease-linear duration-300 relative aspect-square overflow-hidden bg-zinc-100 rounded-lg cursor-pointer border border-transparent transition-all">
                     <img
                       src={`${API_URL}/api/uploaded-images${work.url}`}
                       alt={`Rad studenta ${studentName}`}
-                      class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-120"
+                      class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
                       loading="lazy"
                     />
-                    <!-- Blagi overlay sa tonom vaše boje pri hoveru -->
-                   
                   </div>
                 ))}
               </div>
