@@ -50,8 +50,8 @@ export default function UplatnicaForm({ onSuccess, onBack, API_URL, token,kursev
       : `Payment Instructions - ${naziv || "Studio 27 Course"}`;
 
     const bodyText = isSrb
-      ? `Poštovani,\n\nU nastavku se nalaze instrukcije za uplatu kursa:\n"${naziv}"\n\nPrimalac: Doroteja Dokić PR Studio 27\nSvrha uplate: Kupovina kursa - ${naziv}\nIznos: ${cenaRsdFormatted} RSD\nRačun primaoca: 265-1100310090996-19\nŠifra uplate: 289\nModel: 97\nPoziv na broj: 2026/01\n\nNalog vam je već kreiran i dobili ste poruku sa šifrom na vašu mejl adresu. Pristup kursu ćete dobiti nakon što ga admini odobre. Kao potvrdu možete pokazati i izvršenu uplatnicu sa onlajn aplikacije.`
-      : `Dear Customer,\n\nHere are your wire transfer payment instructions for:\n"${naziv}"\n\nBeneficiary Name: Studio 27 Visualization (Doroteja Dokić)\nSWIFT / BIC: RZBSRSBG\nIBAN: RS35265100000115128090\nDescription: SEPA PLACANJE - ${naziv}\nAmount: ${cenaEur} EUR\n\nYour account is already created and you received an email with your password. You will get access once admins approve your payment.`;
+      ? `Poštovani,\n\nU nastavku se nalaze instrukcije za uplatu kursa:\n"${naziv}"\n\nPrimalac: Studio 27\nSvrha uplate: Kupovina kursa - ${naziv}\nIznos: ${cenaRsdFormatted} RSD\nRačun primaoca: 265-1100310090996-19\nŠifra uplate: 289\nModel: 97\nPoziv na broj: 2026/01\n\nNalog vam je već kreiran i dobili ste poruku sa šifrom na vašu mejl adresu. Pristup kursevima ćete dobiti nakon izvršene uplate. Kao potvrdu možete pokazati i izvršenu uplatnicu sa onlajn aplikacije.`
+      : `Dear Customer,\n\nHere are your wire transfer payment instructions for:\n"${naziv}"\n\nBeneficiary Name: Studio 27 Visualization \nSWIFT / BIC: RZBSRSBG\nIBAN: RS35265100000115128090\nDescription: SEPA PLACANJE - ${naziv}\nAmount: ${cenaEur} EUR\n\nYour account is already created and you received an email with your password. You will get access once admins approve your payment.`;
 
     try {
       const response = await fetch(`${API_URL}/api/send-mail-to-person`, {
@@ -183,7 +183,7 @@ export default function UplatnicaForm({ onSuccess, onBack, API_URL, token,kursev
 
       {/* OBAVEŠTENJE O NALOGU */}
       <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl mb-4 text-xs text-amber-900 leading-relaxed">
-        Nalog vam je već kreiran i dobili ste poruku sa šifrom na vašu mejl adresu. Pristup kursu ćete dobiti nakon što ga admini odobre. Kao potvrdu možete pokazati i izvršenu uplatnicu sa onlajn aplikacije.
+        Nalog vam je već kreiran i dobili ste poruku sa šifrom na vašu mejl adresu. Pristup kursu ćete dobiti nakon izvršene uplate. Kao potvrdu možete pokazati i izvršenu uplatnicu sa onlajn aplikacije.
       </div>
 
       {/* TAB SWITCHER */}

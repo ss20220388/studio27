@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, { useState, useEffect } from "react";
 import BuyButton from "./BuyButton.jsx";
+import DugmeKontakt from "./DugmeKontakt.jsx";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
@@ -131,7 +132,9 @@ export default function KursInfo({ kurs, accessToken }) {
               <div className="pt-2">
                 <BuyButton kurs={kurs} />
               </div>
-            ):<span className="text-sm text-zinc-400">Ovaj kurs se prati isključivo uzivo</span>}
+            ):<div className="pt-2">
+              <DugmeKontakt />  
+              </div>}
 
             {/* Opisni tekst u dva paragrafa */}
             <div className="space-y-4 pt-2 text-zinc-300 text-sm sm:text-base leading-relaxed font-normal">
