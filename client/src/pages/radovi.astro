@@ -11,23 +11,30 @@ try {
   console.error("Greška pri dohvatanju radova:", e);
 }
 
-// Grupisanje radova po imenu i prezimenu studenta (filtriraju se radovi bez validnog imena/prezimena)
-const radoviByStudent: Record<string, any[]> = radovi.reduce((acc: any, rad: any) => {
-  // Provera da li uopšte postoje ime ili prezime i da nisu "null"
+// Grupisanje radova po imenu i prezimenu studenta
+const radoviByStudent: Record<string, { displayName: string; works: any[] }> = radovi.reduce((acc, rad) => {
   const ime = rad.ime && rad.ime !== "null" ? rad.ime.trim() : "";
   const prezime = rad.prezime && rad.prezime !== "null" ? rad.prezime.trim() : "";
 
-  // Ako nemamo ni ime ni prezime, preskačemo ovaj rad
+  // Ako nemamo ni ime ni prezime, preskačemo rad
   if (!ime && !prezime) return acc;
 
-  const name = `${ime} ${prezime}`.trim();
+  const displayName = `${ime} ${prezime}`.replace(/\s+/g, " ").trim();
+  // Ključ za grupisanje pretvaramo u lowercase kako bismo izbegli dupliranje zbog VELIKIH/malih slova
+  const groupKey = displayName.toLowerCase();
 
-  if (!acc[name]) acc[name] = [];
-  acc[name].push(rad);
+  if (!acc[groupKey]) {
+    acc[groupKey] = {
+      displayName,
+      works: []
+    };
+  }
+  
+  acc[groupKey].works.push(rad);
   return acc;
 }, {});
 
-const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
+const studentGroups = Object.values(radoviByStudent);
 ---
 
 <Layout 
@@ -45,7 +52,7 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
       </div>
     ) : (
       <div class="max-w-[1600px] mx-auto px-6 space-y-24 md:space-y-32">
-        {studentGroups.map(([studentName, works]) => {
+        {studentGroups.map(({ displayName, works }) => {
           const firstWork = works[0];
           const kursNaziv = firstWork?.kurs?.naziv || firstWork?.naziv || "3DS MAX + CORONA RENDER";
 
@@ -55,10 +62,10 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
               <!-- ZAGLAVLJE STUDENT SEKCIJE (IME + KURS) -->
               <div class="max-w-4xl space-y-2">
                 <h2 class="text-4xl md:text-6xl font-black text-black tracking-tight">
-                  {studentName}
+                  {displayName}
                 </h2>
                 <p class="text-base md:text-lg font-medium text-zinc-500">
-                  Kurs: <span class="text-[#orange-500] font-semibold">{kursNaziv}</span>
+                  Kurs: <span class="text-orange-500 font-semibold">{kursNaziv}</span>
                 </p>
               </div>
 
@@ -68,7 +75,7 @@ const studentGroups = Object.entries(radoviByStudent) as [string, any[]][];
                   <div class="group hover:scale-105 ease-linear duration-300 relative aspect-square overflow-hidden bg-zinc-100 rounded-lg cursor-pointer border border-transparent transition-all">
                     <img
                       src={`${API_URL}/api/uploaded-images${work.url}`}
-                      alt={`Rad studenta ${studentName}`}
+                      alt={`Rad studenta ${displayName}`}
                       class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
                       loading="lazy"
                     />
