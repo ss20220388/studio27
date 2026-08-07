@@ -11,44 +11,62 @@ try {
   console.error("Greška pri dohvatanju radova:", e);
 }
 
-// Grupisanje radova po imenu i prezimenu studenta
-const radoviByStudent: Record<string, { displayName: string; redosledOsoba: number | null; works: any[] }> = radovi.reduce((acc, rad) => {
-  const ime = rad.ime && rad.ime !== "null" ? rad.ime.trim() : "";
-  const prezime = rad.prezime && rad.prezime !== "null" ? rad.prezime.trim() : "";
+// Grupisanje radova po imenu i prezimenu
+const radoviByStudent: Record<string, { displayName: string; redosledOsoba: number | null; works: any[] }> = {};
 
-  // Ako nemamo ni ime ni prezime, preskačemo rad
-  if (!ime && !prezime) return acc;
+for (const rad of radovi) {
+  
+  const ime = rad.ime && rad.ime !== "null" ? String(rad.ime).trim() : "";
+  const prezime = rad.prezime && rad.prezime !== "null" ? String(rad.prezime).trim() : "";
+
+  // Ako nemamo ni ime ni prezime, preskačemo rad potpuno
+  if (!ime && !prezime) continue;
 
   const displayName = `${ime} ${prezime}`.replace(/\s+/g, " ").trim();
   const groupKey = displayName.toLowerCase();
 
-  // Provera za redosledOsoba (uzima se prva validna vrednost ako postoji)
-  const redosled = rad.redosledOsoba !== null && rad.redosledOsoba !== undefined && rad.redosledOsoba !== "null"
-    ? Number(rad.redosledOsoba)
-    : null;
+  let rawRedosled = rad.redosledOsoba;
+  console.log(`Processing student: ${displayName}, raw redosled: ${rawRedosled}`);
+  let parsedRedosled: number | null = null;
+  if (rawRedosled !== null && rawRedosled !== undefined && rawRedosled !== "null" && rawRedosled !== "") {
+    const num = Number(rawRedosled);
+    if (!isNaN(num)) parsedRedosled = num;
+  }
 
-  if (!acc[groupKey]) {
-    acc[groupKey] = {
+  if (!radoviByStudent[groupKey]) {
+    radoviByStudent[groupKey] = {
       displayName,
-      redosledOsoba: redosled,
+      redosledOsoba: parsedRedosled,
       works: []
     };
-  } else if (acc[groupKey].redosledOsoba === null && redosled !== null) {
-    acc[groupKey].redosledOsoba = redosled;
+  } else if (radoviByStudent[groupKey].redosledOsoba === null && parsedRedosled !== null) {
+    radoviByStudent[groupKey].redosledOsoba = parsedRedosled;
   }
-  
-  acc[groupKey].works.push(rad);
-  return acc;
-}, {});
 
-// Sortiranje: prvo po redosledOsoba (od najmanjeg ka najvećem), a oni bez redosleda idu na kraj
+  radoviByStudent[groupKey].works.push(rad);
+}
+
+// 1. Sortiranje studenata: Prvo po redosledOsoba (1, 2, 3...), pa onda oni bez redosleda
 const studentGroups = Object.values(radoviByStudent).sort((a, b) => {
   if (a.redosledOsoba !== null && b.redosledOsoba !== null) {
     return a.redosledOsoba - b.redosledOsoba;
   }
   if (a.redosledOsoba !== null) return -1;
   if (b.redosledOsoba !== null) return 1;
-  return 0;
+  return a.displayName.localeCompare(b.displayName); // Alfabetski ako oba nemaju redosled
+});
+
+// 2. Sortiranje pojedinačnih slika/radova unutar svakog studenta po polju `raspored`
+studentGroups.forEach(group => {
+  group.works.sort((a, b) => {
+    const rA = a.raspored !== null && a.raspored !== undefined && a.raspored !== "null" ? Number(a.raspored) : null;
+    const rB = b.raspored !== null && b.raspored !== undefined && b.raspored !== "null" ? Number(b.raspored) : null;
+
+    if (rA !== null && !isNaN(rA) && rB !== null && !isNaN(rB)) return rA - rB;
+    if (rA !== null && !isNaN(rA)) return -1;
+    if (rB !== null && !isNaN(rB)) return 1;
+    return 0;
+  });
 });
 ---
 

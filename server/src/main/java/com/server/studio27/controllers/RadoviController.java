@@ -24,7 +24,8 @@ public class RadoviController {
                 rs.ime AS ime,
                 rs.prezime AS prezime,
                 ss.url AS url,
-                rs.raspored as raspored
+                rs.raspored as raspored,
+                rs.redosledOsoba as redosledOsoba
             FROM radovistudenata rs
             LEFT JOIN kurs k ON rs.kursId = k.kursId
             LEFT JOIN slika ss ON ss.slikaId = rs.slikaId
