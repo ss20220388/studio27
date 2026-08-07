@@ -12,7 +12,7 @@ try {
 }
 
 // Grupisanje radova po imenu i prezimenu studenta
-const radoviByStudent: Record<string, { displayName: string; works: any[] }> = radovi.reduce((acc, rad) => {
+const radoviByStudent: Record<string, { displayName: string; redosledOsoba: number | null; works: any[] }> = radovi.reduce((acc, rad) => {
   const ime = rad.ime && rad.ime !== "null" ? rad.ime.trim() : "";
   const prezime = rad.prezime && rad.prezime !== "null" ? rad.prezime.trim() : "";
 
@@ -20,21 +20,36 @@ const radoviByStudent: Record<string, { displayName: string; works: any[] }> = r
   if (!ime && !prezime) return acc;
 
   const displayName = `${ime} ${prezime}`.replace(/\s+/g, " ").trim();
-  // Ključ za grupisanje pretvaramo u lowercase kako bismo izbegli dupliranje zbog VELIKIH/malih slova
   const groupKey = displayName.toLowerCase();
+
+  // Provera za redosledOsoba (uzima se prva validna vrednost ako postoji)
+  const redosled = rad.redosledOsoba !== null && rad.redosledOsoba !== undefined && rad.redosledOsoba !== "null"
+    ? Number(rad.redosledOsoba)
+    : null;
 
   if (!acc[groupKey]) {
     acc[groupKey] = {
       displayName,
+      redosledOsoba: redosled,
       works: []
     };
+  } else if (acc[groupKey].redosledOsoba === null && redosled !== null) {
+    acc[groupKey].redosledOsoba = redosled;
   }
   
   acc[groupKey].works.push(rad);
   return acc;
 }, {});
 
-const studentGroups = Object.values(radoviByStudent);
+// Sortiranje: prvo po redosledOsoba (od najmanjeg ka najvećem), a oni bez redosleda idu na kraj
+const studentGroups = Object.values(radoviByStudent).sort((a, b) => {
+  if (a.redosledOsoba !== null && b.redosledOsoba !== null) {
+    return a.redosledOsoba - b.redosledOsoba;
+  }
+  if (a.redosledOsoba !== null) return -1;
+  if (b.redosledOsoba !== null) return 1;
+  return 0;
+});
 ---
 
 <Layout 
