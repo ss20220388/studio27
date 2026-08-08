@@ -26,10 +26,10 @@ try {
   if (res.ok) recenzije = await res.json();
 } catch (e) { console.error("Greška recenzije:", e); }
 
-const count = Math.floor(radovi.length / 4) * 4;
-let radoviPrikaz = radovi.slice(0, 16);
+// Uzimamo sve radove u grupama po 5 (npr. 15, 20, 25...)
+const count = Math.floor(radovi.length / 5) * 5;
+let radoviPrikaz = radovi.slice(0, count);
 
-console.log(radovi)
 const countrec = Math.floor(recenzije.length / 3) * 3;
 recenzije = recenzije.slice(0, countrec);
 ---
@@ -48,23 +48,26 @@ recenzije = recenzije.slice(0, countrec);
 
 <main id="recenzije" class="bg-white text-black font-sans pb-24">
   
-  <!-- GRID RADOVA -->
+  <!-- GRID RADOVA (5 KOLONA, VERTIKALNE SLIKE BEZ GAP-A) -->
   <div class="w-full mb-24">
     {radoviPrikaz.length === 0 ? (
       <p class="py-12 text-center text-lg text-zinc-500">Nema dostupnih radova</p>
     ) : (
-      <div class="grid grid-cols-1 gap-0 sm:grid-cols-2 md:grid-cols-4">
+      <!-- Postavljamo grid: 1 kolona mob, 2 sm, 3 md, 5 lg. Bez razmaka (gap-0) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-0 w-full">
         {radoviPrikaz.map((rad) => (
           <a
             aria-label={`Pogledajte rad: ${rad.naziv}`}
             href="/radovi"
-            class="group relative block aspect-square w-full cursor-pointer overflow-hidden"
+           
+            class="group relative block aspect-[2/3] w-full cursor-pointer overflow-hidden bg-zinc-100"
           >
             <img
               src={`${API_URL}/api/uploaded-images${rad.url}`}
+              
               class="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               loading="lazy"
-              alt="Rad studenta"
+              alt={rad.naziv || "Rad studenta"}
             />
           </a>
         ))}
@@ -111,7 +114,7 @@ recenzije = recenzije.slice(0, countrec);
                 </p>
               </div>
 
-              <!-- DNO KARTICE: PRELEPO STILIZOVANA ZAZNACKA ZU KURS -->
+              <!-- DNO KARTICE -->
               <div class="pt-6 mt-8 border-t border-zinc-200/60 flex items-center">
                 <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-zinc-200 text-zinc-900 shadow-sm">
                   <span class="w-2 h-2 rounded-full bg-black"></span>
