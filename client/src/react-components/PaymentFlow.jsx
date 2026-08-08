@@ -177,7 +177,7 @@ export default function UplatnicaCheckout({ onSuccess = null, onBack = null, API
             studentId: meData.userId,
             kursId: singleKursId,
             datumPlacanja: new Date().toISOString().split("T")[0],
-            cenaPlacanja: tab === "srb" ? cenaStavkeRsd : cenaStavkeEur,
+            cenaPlacanja: cenaStavkeEur,
             status: "C",
             tip: "UPLATNICA",
             url: fileUrl,
