@@ -16,8 +16,10 @@ import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 import com.server.studio27.models.SftpStream;
+import com.server.studio27.services.SftpDownloadStream;
 
 @Component
 public class HetznerAPIController {
@@ -182,6 +184,16 @@ public class HetznerAPIController {
             if (session != null && session.isConnected())
                 session.disconnect();
         }
+    }
+    public SftpDownloadStream downloadFileStream(String remoteFilePath) throws Exception {
+        Session session = createSession();
+        ChannelSftp sftp = (ChannelSftp) session.openChannel("sftp");
+        sftp.connect();
+
+        SftpATTRS attrs = sftp.stat(remoteFilePath);
+        InputStream inputStream = sftp.get(remoteFilePath);
+
+        return new SftpDownloadStream(inputStream, attrs, session, sftp);
     }
     public String removeFolder(String remoteFolderPath) {
         Session session = null;

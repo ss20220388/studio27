@@ -2,6 +2,7 @@ package com.server.studio27.routes;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,10 +24,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import com.server.studio27.controllers.HetznerAPIController;
+import com.server.studio27.services.SftpDownloadStream;
 import com.server.studio27.services.VideoHlsService;
-
 @RestController
 @RequestMapping("/api")
 public class FileRoute {
@@ -139,31 +142,52 @@ public class FileRoute {
     }
 
     @GetMapping("/media")
-    public ResponseEntity<byte[]> downloadFile(@RequestParam String remoteFilePath) {
-        byte[] fileData = hetznerapiService.downloadFile(remoteFilePath);
-        if (fileData == null || fileData.length == 0) {
+    public ResponseEntity<StreamingResponseBody> downloadFile(@RequestParam String remoteFilePath) {
+        try {
+            SftpDownloadStream sftpStream = hetznerapiService.downloadFileStream(remoteFilePath);
+
+            String filename = remoteFilePath.substring(remoteFilePath.lastIndexOf("/") + 1);
+            String contentType = getContentType(filename);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(contentType));
+            headers.setContentDisposition(ContentDisposition.builder("attachment").filename(filename).build());
+            
+            // Postavljanje veličine fajla da bi pretraživač prikazao progress bar
+            headers.setContentLength(sftpStream.getFileSize());
+
+            StreamingResponseBody responseBody = outputStream -> {
+                // Try-with-resources automatski poziva sftpStream.close() na kraju
+                try (sftpStream; InputStream is = sftpStream.getInputStream()) {
+                    byte[] buffer = new byte[8192];
+                    int bytesRead;
+                    while ((bytesRead = is.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                    outputStream.flush();
+                }
+            };
+
+            return ResponseEntity.ok().headers(headers).body(responseBody);
+
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        HttpHeaders headers = new HttpHeaders();
-        String filename = remoteFilePath.substring(remoteFilePath.lastIndexOf("/") + 1);
-        String contentType = "application/octet-stream";
-        if (filename.endsWith(".jpg") || filename.endsWith(".jpeg"))
-            contentType = "image/jpeg";
-        else if (filename.endsWith(".png"))
-            contentType = "image/png";
-        else if (filename.endsWith(".mp4"))
-            contentType = "video/mp4";
-        else if (filename.endsWith(".pdf"))
-            contentType = "application/pdf";
-        headers.setContentType(MediaType.parseMediaType(contentType));
-        headers.setContentDispositionFormData("attachment", filename);
-        return ResponseEntity.ok().headers(headers).body(fileData);
     }
 
     @DeleteMapping("/delete-file")
     public ResponseEntity<String> deleteFile(@RequestParam String remoteFilePath) {
         String result = hetznerapiService.deleteFile(remoteFilePath);
         return ResponseEntity.ok().body(result);
+    }
+
+    private String getContentType(String filename) {
+        String lower = filename.toLowerCase();
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+        if (lower.endsWith(".png")) return "image/png";
+        if (lower.endsWith(".mp4")) return "video/mp4";
+        if (lower.endsWith(".pdf")) return "application/pdf";
+        return "application/octet-stream";
     }
 
 }
