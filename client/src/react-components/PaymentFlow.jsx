@@ -56,14 +56,14 @@ export default function UplatnicaCheckout({ onSuccess = null, onBack = null, API
 
           // Izračunavanje ukupne cene u EUR i RSD
           const sumaEur = parsedCart.reduce((acc, item) => acc + (Number(item.price || item.cena) || 0), 0);
-          const sumaRsd = sumaEur * 117;
+          const sumaRsd = sumaEur * 117.4;
 
           setUkupnoEur(sumaEur);
           setUkupnoRsd(sumaRsd);
 
           // Spisak naziva za RSD
           const spisakSrb = parsedCart
-            .map((item) => `${item.title || item.naslov || item.naziv} (${formatRsd((Number(item.price || item.cena) || 0) * 117)} RSD)`)
+            .map((item) => `${item.title || item.naslov || item.naziv} (${formatRsd((Number(item.price || item.cena) || 0) * 117.4)} RSD)`)
             .join(", ");
           setNazivSrb(spisakSrb);
 
@@ -165,7 +165,7 @@ export default function UplatnicaCheckout({ onSuccess = null, onBack = null, API
       for (const item of cartList) {
         const singleKursId = item.id || item.kursId;
         const cenaStavkeEur = Number(item.price || item.cena) || 0;
-        const cenaStavkeRsd = Math.round(cenaStavkeEur * 117);
+        const cenaStavkeRsd = Math.round(cenaStavkeEur * 117.4);
 
         const dodajPlacanjeRes = await fetch(`${API_URL}/api/dodaj-placanje`, {
           method: "POST",
@@ -330,7 +330,7 @@ export default function UplatnicaCheckout({ onSuccess = null, onBack = null, API
                   </span>
                   <div className="bg-white p-3 rounded-xl border border-slate-200">
                     <p className="font-extrabold text-slate-900">
-                      Doroteja Dokić PR Studio 27
+                     Studio 27
                     </p>
                     <p className="text-xs text-slate-500 mt-0.5">Beograd, Srbija</p>
                   </div>
@@ -409,7 +409,7 @@ export default function UplatnicaCheckout({ onSuccess = null, onBack = null, API
                   Beneficiary Name:
                 </span>
                 <p className="font-bold text-white text-base bg-slate-800/80 p-3 rounded-xl border border-slate-700">
-                  Studio 27 Visualization (Doroteja Dokić)
+                  Studio 27 Visualization 
                 </p>
               </div>
 
