@@ -29,6 +29,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import com.server.studio27.controllers.HetznerAPIController;
 import com.server.studio27.services.SftpDownloadStream;
 import com.server.studio27.services.VideoHlsService;
+
 @RestController
 @RequestMapping("/api")
 public class FileRoute {
@@ -49,7 +50,7 @@ public class FileRoute {
             @RequestParam("lekcijaId") int lekcijaId) throws Exception {
         try {
             String videoId = videoHlsService.convertToHlsAndUpload(file);
-            
+
             String SQL = "INSERT INTO video (url, lekcijaId) VALUES (?, ?);";
             jdbcTemplate.update(SQL, videoId, lekcijaId);
 
@@ -71,7 +72,8 @@ public class FileRoute {
         try {
             List<String> files = hetznerapiService.listFilesInFolder(remoteFolderPath);
             for (String file : files) {
-                if (".".equals(file) || "..".equals(file)) continue;
+                if (".".equals(file) || "..".equals(file))
+                    continue;
                 hetznerapiService.deleteFile(remoteFolderPath + "/" + file);
             }
             hetznerapiService.removeFolder(remoteFolderPath);
@@ -152,19 +154,15 @@ public class FileRoute {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType(contentType));
             headers.setContentDisposition(ContentDisposition.builder("attachment").filename(filename).build());
-            
-            // Postavljanje veličine fajla da bi pretraživač prikazao progress bar
             headers.setContentLength(sftpStream.getFileSize());
 
             StreamingResponseBody responseBody = outputStream -> {
-                // Try-with-resources automatski poziva sftpStream.close() na kraju
                 try (sftpStream; InputStream is = sftpStream.getInputStream()) {
-                    byte[] buffer = new byte[8192];
-                    int bytesRead;
-                    while ((bytesRead = is.read(buffer)) != -1) {
-                        outputStream.write(buffer, 0, bytesRead);
-                    }
+                    // Efikasno preusmerava stream direktno klijentu bez seckanja
+                    is.transferTo(outputStream);
                     outputStream.flush();
+                } catch (Exception e) {
+                    System.err.println("Prekinut download od strane klijenta: " + e.getMessage());
                 }
             };
 
@@ -183,10 +181,14 @@ public class FileRoute {
 
     private String getContentType(String filename) {
         String lower = filename.toLowerCase();
-        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
-        if (lower.endsWith(".png")) return "image/png";
-        if (lower.endsWith(".mp4")) return "video/mp4";
-        if (lower.endsWith(".pdf")) return "application/pdf";
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg"))
+            return "image/jpeg";
+        if (lower.endsWith(".png"))
+            return "image/png";
+        if (lower.endsWith(".mp4"))
+            return "video/mp4";
+        if (lower.endsWith(".pdf"))
+            return "application/pdf";
         return "application/octet-stream";
     }
 

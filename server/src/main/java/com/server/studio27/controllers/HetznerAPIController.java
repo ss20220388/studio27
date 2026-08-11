@@ -77,7 +77,11 @@ public class HetznerAPIController {
         config.put("StrictHostKeyChecking", "no");
         session.setConfig(config);
 
-        session.connect(15000); // 15s timeout
+        session.setServerAliveInterval(10000);
+        // 2. Onemogućava prekid veze tokom čitanja fajla
+        session.setTimeout(0);
+
+        session.connect(15000); // Konekcija se otvara u roku od 15s
         return session;
     }
 
@@ -185,6 +189,7 @@ public class HetznerAPIController {
                 session.disconnect();
         }
     }
+
     public SftpDownloadStream downloadFileStream(String remoteFilePath) throws Exception {
         Session session = createSession();
         ChannelSftp sftp = (ChannelSftp) session.openChannel("sftp");
@@ -195,6 +200,7 @@ public class HetznerAPIController {
 
         return new SftpDownloadStream(inputStream, attrs, session, sftp);
     }
+
     public String removeFolder(String remoteFolderPath) {
         Session session = null;
         ChannelSftp sftp = null;
