@@ -8,36 +8,42 @@ type Props = {
 
 async function getDeviceId({ API_URL }: { API_URL: string }): Promise<string> {
     const makeId = async (): Promise<string> => {
-        const response = await fetch("https://api.ipify.org?format=json");
+        try {
+            const response = await fetch("https://api.ipify.org?format=json");
+            if (!response.ok) throw new Error("Mrežna greška pri dobijanju IP adrese");
 
-        if (!response.ok) {
-            throw new Error("Nije moguće dobiti IP adresu");
+            const data = await response.json();
+            if (data.ip) return data.ip;
+        } catch (err) {
+            console.warn("Nije moguće dobiti IP adresu, koristi se fallback UUID:", err);
         }
 
-        const data = await response.json();
-
-        if (!data.ip) {
-            throw new Error("IP adresa nije pronađena");
-        }
-
-        return data.ip;
+        // Fallback: Generisanje jedinstvenog UUID-a ako ipify ne radi ili nema mreže
+        return typeof crypto !== 'undefined' && crypto.randomUUID 
+            ? crypto.randomUUID() 
+            : `device_${Math.random().toString(36).substring(2, 11)}_${Date.now()}`;
     };
 
-    let id: string;
+    let id: string | null = null;
 
+    // 1. Pokušaj čitanje iz localStorage-a
     try {
-        const savedId = localStorage.getItem('deviceId');
-
-        if (savedId) {
-            id = savedId;
-        } else {
-            id = await makeId();
-            localStorage.setItem('deviceId', id);
-        }
-    } catch {
-        id = await makeId();
+        id = localStorage.getItem('deviceId');
+    } catch (e) {
+        console.warn("localStorage nije dostupan:", e);
     }
 
+    // 2. Ako nema sačuvanog ID-a, kreiraj novi i sačuvaj ga
+    if (!id) {
+        id = await makeId();
+        try {
+            localStorage.setItem('deviceId', id);
+        } catch (e) {
+            console.warn("Nije moguće sačuvati deviceId u localStorage:", e);
+        }
+    }
+
+    // 3. Slanje na backend radi kreiranja kolačića
     const res = await fetch(`${API_URL}/api/cookies/create-cookie-by-local-storage`, {
         method: 'POST',
         headers: {
@@ -48,7 +54,7 @@ async function getDeviceId({ API_URL }: { API_URL: string }): Promise<string> {
     });
 
     if (!res.ok) {
-        throw new Error(`Cookie endpoint failed: ${res.status}`);
+        throw new Error(`Cookie endpoint failed with status: ${res.status}`);
     }
 
     return id;
