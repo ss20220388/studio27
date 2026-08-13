@@ -7,33 +7,51 @@ type Props = {
 }
 
 async function getDeviceId({ API_URL }: { API_URL: string }): Promise<string> {
-    const makeId = async () => {
-    const response = await fetch("https://api.ipify.org?format=json");
-    const data = await response.json();
-    return data.ip;
-}
+    const makeId = async (): Promise<string> => {
+        const response = await fetch("https://api.ipify.org?format=json");
 
-    let id: string
+        if (!response.ok) {
+            throw new Error("Nije moguće dobiti IP adresu");
+        }
+
+        const data = await response.json();
+
+        if (!data.ip) {
+            throw new Error("IP adresa nije pronađena");
+        }
+
+        return data.ip;
+    };
+
+    let id: string;
 
     try {
-        id = localStorage.getItem('deviceId') || await makeId()
-        localStorage.setItem('deviceId', id)
+        const savedId = localStorage.getItem('deviceId');
+
+        if (savedId) {
+            id = savedId;
+        } else {
+            id = await makeId();
+            localStorage.setItem('deviceId', id);
+        }
     } catch {
-        id =await makeId()
+        id = await makeId();
     }
 
     const res = await fetch(`${API_URL}/api/cookies/create-cookie-by-local-storage`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json'
+        },
         credentials: 'include',
-        body: JSON.stringify({ deviceId: id }),
-    })
+        body: JSON.stringify({ deviceId: id })
+    });
 
     if (!res.ok) {
-        throw new Error(`Cookie endpoint failed: ${res.status}`)
+        throw new Error(`Cookie endpoint failed: ${res.status}`);
     }
 
-    return id
+    return id;
 }
 
 const LoginSectionForm: React.FC<Props> = ({ isOpen, onClose, publicApiUrl }) => {
