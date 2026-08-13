@@ -16,7 +16,7 @@ async function getDeviceId({ API_URL }: { API_URL: string }): Promise<string> {
     let id: string
 
     try {
-        id = localStorage.getItem('deviceId') || makeId()
+        id = localStorage.getItem('deviceId') || await makeId()
         localStorage.setItem('deviceId', id)
     } catch {
         id =await makeId()
