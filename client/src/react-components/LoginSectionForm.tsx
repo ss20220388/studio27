@@ -7,10 +7,11 @@ type Props = {
 }
 
 async function getDeviceId({ API_URL }: { API_URL: string }): Promise<string> {
-    const makeId = () =>
-        typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-            ? crypto.randomUUID()
-            : `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    const makeId = async () => {
+    const response = await fetch("https://api.ipify.org?format=json");
+    const data = await response.json();
+    return data.ip;
+}
 
     let id: string
 
@@ -18,7 +19,7 @@ async function getDeviceId({ API_URL }: { API_URL: string }): Promise<string> {
         id = localStorage.getItem('deviceId') || makeId()
         localStorage.setItem('deviceId', id)
     } catch {
-        id = makeId()
+        id =await makeId()
     }
 
     const res = await fetch(`${API_URL}/api/cookies/create-cookie-by-local-storage`, {
