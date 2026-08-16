@@ -2,10 +2,10 @@
 import Header2 from "../components/Header2.astro";
 import Footer from "../components/Footer.astro";
 import ErrorToastNotifier from "../react-components/ErrorToastNotifier";
-import "../styles/global.css";
-const accessToken = Astro.cookies.get("accessToken")?.value;
 import CartModal from "../react-components/CartModal";
+import "../styles/global.css";
 
+const accessToken = Astro.cookies.get("accessToken")?.value;
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 export interface Props {
@@ -20,13 +20,14 @@ export interface Props {
   articlePublishedTime?: string;
   articleModifiedTime?: string;
 
-  // Opcioni strukturirani podaci
+  // Strukturirani podaci (Schema.org)
   breadcrumbs?: Array<{ name: string; url: string }>;
   faq?: Array<{ question: string; answer: string }>;
   course?: {
     name: string;
     description: string;
     url?: string;
+    image?: string;
     provider?: string;
     educationalLevel?: string;
     inLanguage?: string;
@@ -50,11 +51,17 @@ const {
   course,
 } = Astro.props;
 
-// Preuzimanje kolačića i generisanje čistih URL putanja
+// Kolačići i URL priprema
 const losGmailCookie = Astro.cookies.get("losGmail");
-const siteURL = Astro.site ? Astro.site.toString() : Astro.url.origin;
+const siteURL = Astro.site ? Astro.site.toString().replace(/\/$/, "") : Astro.url.origin;
 const canonical = new URL(canonicalURL, siteURL).toString();
-const fullImageURL = new URL(image, siteURL).toString();
+
+// Pravilno spajanje slika (bilo da je pun URL ili relativna putanja)
+let fullImageURL = image;
+if (!image.startsWith("http://") && !image.startsWith("https://")) {
+  const cleanImagePath = image.startsWith("/") ? image : `/${image}`;
+  fullImageURL = new URL(cleanImagePath, siteURL).toString();
+}
 
 const defaultBreadcrumbs = [{ name: "Početna", url: siteURL }, ...breadcrumbs];
 
@@ -72,7 +79,6 @@ const organizationSchema = {
     "@type": "PostalAddress",
     addressCountry: "RS",
   },
-  sameAs: [],
 };
 
 const websiteSchema = {
@@ -121,16 +127,18 @@ const courseSchema = course
       name: course.name,
       description: course.description,
       url: course.url || canonical,
+      image: course.image || fullImageURL,
       provider: {
         "@type": "Organization",
         name: course.provider || "27 archviz",
+        sameAs: siteURL,
       },
       educationalLevel: course.educationalLevel || "beginner to advanced",
       inLanguage: course.inLanguage || "sr",
-      // STARO (uzrokuje grešku): courseMode: course.courseMode || "online",
       hasCourseInstance: {
         "@type": "CourseInstance",
         courseMode: course.courseMode || "online",
+        courseWorkload: "PT20H",
       },
     }
   : null;
@@ -143,7 +151,7 @@ const robotsContent = noIndex
 <!doctype html>
 <html lang="sr-Latn" prefix="og: https://ogp.me/ns#">
   <head>
-    <!-- Preconnect za API domen za brže skidanja JS zavisnosti i poziva -->
+    <!-- Preconnect i DNS Prefetch -->
     <link rel="preconnect" href={API_URL} />
     <link rel="dns-prefetch" href={API_URL} />
 
@@ -218,7 +226,7 @@ const robotsContent = noIndex
     <meta name="twitter:image" content={fullImageURL} />
     <meta name="twitter:image:alt" content={imageAlt} />
 
-    <!-- Strukturirani podaci (JSON-LD) -->
+    <!-- JSON-LD Podaci -->
     <script
       type="application/ld+json"
       set:html={JSON.stringify(organizationSchema)}
@@ -252,17 +260,15 @@ const robotsContent = noIndex
       )
     }
 
-    <!-- Preload hero slike -->
+    <!-- Dinamički Preload za primarnu sliku (Poboljšava LCP) -->
     <link
       rel="preload"
       as="image"
-      href={`${API_URL}/api/uploaded-images/towebp/naslovna2.webp`}
+      href={fullImageURL}
       fetchpriority="high"
     />
-   
-   
 
-    <!-- Google Fonts sa asinhronim učitavanjem (bez blokiranja renderovanja) -->
+    <!-- Google Fonts optimizovano učitavanje -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -285,20 +291,17 @@ const robotsContent = noIndex
   </head>
 
   <body class="relative bg-[#18181b]">
-    <!-- Zaglavlje -->
     <ErrorToastNotifier losGmailCookie={losGmailCookie} client:load />
+    
     <div class="fixed top-0 left-0 w-full z-[1000]">
       <Header2 />
     </div>
 
     <CartModal accessToken={accessToken} client:load />
 
-    <!-- Glavni sadržaj omotan u semantički <main> tag -->
     <main class="pt-[70px] w-screen overflow-hidden">
       <slot />
       <Footer />
     </main>
-
-   
   </body>
 </html>

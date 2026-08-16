@@ -5,49 +5,145 @@ import KurseviSection from "../components/KurseviSection.astro";
 import ONamaSection from "../components/ONamaSection.astro";
 import RecenzijeSection from "../components/RecenzijeSection.astro";
 import AnimateSlika from "../components/AnimateSlika.astro";
+
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const SITE_URL = "https://27archviz.com";
+
+// Dohvatanje slike glavnog kursa za OpenGraph / SEO kartice
+let primarySeoImage = `${SITE_URL}/images/og-main.webp`;
+
+try {
+  const res = await fetch(`${API_URL}/api/kursevi/7`);
+  if (res.ok) {
+    const kursData = await res.json();
+    if (kursData?.slikaUrl) {
+      primarySeoImage = kursData.slikaUrl.startsWith("http")
+        ? kursData.slikaUrl
+        : `${API_URL}/api/uploaded-images${kursData.slikaUrl.startsWith("/") ? "" : "/"}${kursData.slikaUrl}`;
+    }
+  }
+} catch (e) {
+  console.error("Greška pri dohvatanju SEO slike za početnu:", e);
+}
+
+// Schema.org Edukativna Organizacija i Lista Kurseva za Google Rich Snippets
+const orgSchema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "EducationalOrganization",
+      "@id": `${SITE_URL}/#organization`,
+      "name": "27 archviz",
+      "url": SITE_URL,
+      "logo": `${SITE_URL}/favicon.ico`,
+      "image": primarySeoImage,
+      "description": "Škola arhitektonske vizuelizacije i dizajna enterijera. Online obuke za 3ds Max, Corona Render, AutoCAD i Photoshop od nule do fotorealističnih rendera.",
+      "sameAs": [
+        "https://www.instagram.com/27archviz/"
+      ]
+    },
+    {
+      "@type": "ItemList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "item": {
+            "@type": "Course",
+            "name": "KURS VIZUALIZACIJE EKSTERIJERA",
+            "description": "Kompletan proces izrade profesionalnih eksterijernih vizuelizacija, napredno osvetljenje, okruženje i materijali u 3ds Max-u i Corona Renderu.",
+            "provider": { "@id": `${SITE_URL}/#organization` },
+            "url": `${SITE_URL}/kurs/3`
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "item": {
+            "@type": "Course",
+            "name": "KURS 3DS MAX + CORONA RENDER (OD 0 DO LEVEL UP-A)",
+            "description": "Individualna ili online obuka uživo 1 na 1. Učenje modelovanja, teksturisanja i renderinga uz direktan rad sa mentorom.",
+            "provider": { "@id": `${SITE_URL}/#organization` },
+            "url": `${SITE_URL}/kurs/5`
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "item": {
+            "@type": "Course",
+            "name": "KURS DIZAJNA ENTERIJERA (AUTOCAD + PHOTOSHOP)",
+            "description": "Savladajte osnove dizajna enterijera, razumevanje prostora, tehničko crtanje u AutoCAD-u i prezentaciju projekata.",
+            "provider": { "@id": `${SITE_URL}/#organization` },
+            "url": `${SITE_URL}/kurs/6`
+          }
+        },
+        {
+          "@type": "ListItem",
+          "position": 4,
+          "item": {
+            "@type": "Course",
+            "name": "OD NULE DO PROFESIONALNOG RENDERA",
+            "description": "Sveobuhvatni video kurs 3D arhitektonske vizuelizacije. Unapređeni materijali, vežbe i neograničen pristup snimcima.",
+            "provider": { "@id": `${SITE_URL}/#organization` },
+            "url": `${SITE_URL}/kurs/7`
+          }
+        }
+      ]
+    }
+  ]
+};
 ---
 
 <Layout
-    title="Početna | 27 archviz"
-    description="Želiš fotorealistične rendere? Upiši online kurs za 3ds Max i Corona Render. Nauči 3D modelovanje, osvetljenje i archviz od nule uz podršku mentora."
-    canonicalURL="https://27archviz.com/"
-    breadcrumbs={[
-        { name: "KURS VIZUALIZACIJE EKSTERIJERA", url: "https://27archviz.com/kurs/3" },
-        { name: "OD NULE DO PROFESIONALNOG RENDERA", url: "https://27archviz.com/kurs/7" },
-        { name: "Radovi", url: "https://27archviz.com/radovi/" },
-    ]}
-    course={{
-        name: "KURS VIZUALIZACIJE EKSTERIJERA",
-        description:
-            "Na ovom kursu naučićete kompletan proces izrade profesionalnih eksterijernih vizuelizacija, napredno osvetljenje, okruženje i materijale u 3ds Max-u.",
-        url: "https://27archviz.com/kurs/3",
-        provider: "Studio 27",
-        educationalLevel: "Beginner to Advanced",
-        courseMode: "online",
-    }}
-    faq={[
-        {
-            question: "Šta se sve uči na kursu arhitektonske vizuelizacije?",
-            answer: "Proces je kompletan: od uvoza AutoCAD crteža, preko preciznog 3D modelovanja u 3ds Max-u, postavljanja Corona svetala i materijala, pa sve do finalnog doterivanja rendera u Photoshopu.",
-        },
-        {
-            question: "Da li dobijam podršku tokom trajanja obuke?",
-            answer: "Da, iako je kurs online i predavanja su snimljena unapred kako biste učili svojim tempom, obezbeđena je direktna mentorska podrška za sve nedoumice i pregled vaših radova.",
-        },
-        {
-            question: "Kome je namenjen ovaj 3D kurs?",
-            answer: "Namenjen je arhitektama, dizajnerima enterijera, studentima i svima koji žele da savladaju profesionalni archviz i podignu svoje rendere na fotorealističan nivo.",
-        },
-    ]}
+  title="Početna | 3ds Max, Corona Render & Dizajn Enterijera | 27 archviz"
+  description="Naučite 3D modelovanje, dizajna enterijera i fotorealističnu vizuelizaciju. Kursevi za 3ds Max, Corona Render, AutoCAD i Photoshop uz neograničen pristup i podršku."
+  canonicalURL={`${SITE_URL}/`}
+  image={primarySeoImage}
+  keywords="kurs 3ds max, corona render obuka, dizajn enterijera kurs, autocad obuka, arhitektonska vizuelizacija, 3d modelovanje, archviz tutorijali, rendering kursevi"
+  breadcrumbs={[
+    { name: "Početna", url: `${SITE_URL}/` },
+    { name: "Vizuelizacija Eksterijera", url: `${SITE_URL}/kurs/3` },
+    { name: "3ds Max Od 0 Do Level Up-a", url: `${SITE_URL}/kurs/5` },
+    { name: "Dizajn Enterijera", url: `${SITE_URL}/kurs/6` },
+    { name: "Od Nule Do Profesionalnog Rendera", url: `${SITE_URL}/kurs/7` },
+    { name: "Radovi Studenata", url: `${SITE_URL}/radovi` }
+  ]}
+  faq={[
+    {
+      question: "Šta se sve uči na kursevima arhitektonske vizuelizacije i dizajna?",
+      answer: "Zavisno od obuke, savladava se kompletan proces: od crtanja i uvoza osnova u AutoCAD-u, preko 3D modelovanja u 3ds Max-u i rada sa Corona svetlima/materijalima, do postprodukcije u Photoshopu."
+    },
+    {
+      question: "Kakvi sve formati kurseva postoje?",
+      answer: "Nudimo unapred snimljene video materijale sa neograničenim pristupom i vežbama za samostalno učenje, kao i uživo '1 na 1' online obuke sa mentorom."
+    },
+    {
+      question: "Da li je potrebno prethodno iskustvo u softverima?",
+      answer: "Nije potrebno. Kursevi su koncipirani tako da vas vode korak po korak od potpunog početnika do naprednog nivoa."
+    },
+    {
+      question: "Da li dobijam podršku tokom i nakon obuke?",
+      answer: "Da, svi polaznici imaju obezbeđenu direktnu mentorsku podršku za pregled radova, konsultacije i rešavanje nedoumica u radu."
+    }
+  ]}
 >
+  <!-- Schema.org Organizacijska i ItemList struktura za pretraživače -->
+  <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
+
+  <!-- Preload najvažnije SEO slike za LCP brzinu -->
+  <link rel="preload" as="image" href={primarySeoImage} fetchpriority="high" />
+
+  <main class="bg-white text-black min-h-screen">
+    <!-- Skriveni H1 naslov sa ključnim rečima za Google indeksiranje -->
     <h1 class="sr-only">
-        Kurs Arhitektonske Vizuelizacije – 3ds Max & Corona Render
+      Kursevi Arhitektonske Vizuelizacije i Dizajna Enterijera – 3ds Max, Corona Render & AutoCAD | 27 archviz
     </h1>
 
     <KurseviSection />
     <AnimateSlika />
-
     <SectionLearningCurve />
     <RecenzijeSection />
     <ONamaSection />
+  </main>
 </Layout>

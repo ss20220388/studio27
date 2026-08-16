@@ -4,8 +4,9 @@ import BuyButton from "./BuyButton.jsx";
 import DugmeKontakt from "./DugmeKontakt.jsx";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const APP_URL = import.meta.env.PUBLIC_APP_URL || "http://app.studio27.rs";
 
-export default function KursInfo({ kurs, accessToken }) {
+export default function KursInfo({ kurs, accessToken, isLoggedIn, hasPurchasedCourse }) {
   const [slike, setSlike] = useState([]);
   const [activeImage, setActiveImage] = useState("");
   const [openSection, setOpenSection] = useState(null);
@@ -83,7 +84,6 @@ export default function KursInfo({ kurs, accessToken }) {
 
   return (
     <div id="detalje-kursa" className="min-h-screen bg-black text-white font-sans selection:bg-orange-500 selection:text-white">
-      {/* HEADER SECTION - TEMA SA DRUGE SLIKE */}
       <section className="max-w-7xl mx-auto px-6 py-16 md:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           
@@ -99,12 +99,9 @@ export default function KursInfo({ kurs, accessToken }) {
                 className="w-full h-full object-cover transition-opacity duration-300"
               />
             </div>
-
-            {/* Galerija sličica sa narandžastim akcentom */}
-            
           </div>
 
-          {/* DESNO: Informacije o kursu po uzoru na sliku 2 */}
+          {/* DESNO: Informacije o kursu */}
           <div className="flex flex-col justify-start space-y-6">
             <div>
               <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white uppercase leading-tight">
@@ -118,7 +115,7 @@ export default function KursInfo({ kurs, accessToken }) {
             {/* Prikaz Cene */}
             <div className="space-y-1">
               <div className="text-4xl sm:text-5xl font-black text-white tracking-tight">
-                {kurs?.cena ? `${kurs.cena} €` : "Javite nam se kako biste poceli sa slusanjem kursa!"}
+                {kurs?.cena ? `${kurs.cena} €` : "Javite nam se kako biste počeli sa slušanjem kursa!"}
               </div>
               {kurs?.cenaRSD && (
                 <div className="text-lg font-semibold text-zinc-400">
@@ -127,16 +124,28 @@ export default function KursInfo({ kurs, accessToken }) {
               )}
             </div>
 
-            {/* Dugme za kupovinu */}
-            {kurs?.cena ? (
-              <div className="pt-2">
+            {/* Dugme za akciju: Pristupi ili Kupi */}
+            <div className="pt-2">
+              {hasPurchasedCourse ? (
+                <div className="space-y-3">
+                  <a
+                    href={`${APP_URL}`}
+                    className="inline-block bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-lg transition-colors text-center shadow-lg"
+                  >
+                    Pristupi web aplikaciji za gledanje kursa
+                  </a>
+                  <p className="text-sm font-medium text-zinc-400">
+                    Već ste kupili ovaj kurs. Pristup snimcima je neograničen.
+                  </p>
+                </div>
+              ) : kurs?.cena ? (
                 <BuyButton kurs={kurs} />
-              </div>
-            ):<div className="pt-2">
-              <DugmeKontakt />  
-              </div>}
+              ) : (
+                <DugmeKontakt />
+              )}
+            </div>
 
-            {/* Opisni tekst u dva paragrafa */}
+            {/* Opisni tekst */}
             <div className="space-y-4 pt-2 text-zinc-300 text-sm sm:text-base leading-relaxed font-normal">
               <p>
                 {kurs?.opis ||

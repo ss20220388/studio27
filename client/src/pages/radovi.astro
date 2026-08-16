@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const SITE_URL = "https://27archviz.com";
 
 let radovi: any[] = [];
 try {
@@ -11,22 +12,19 @@ try {
   console.error("Greška pri dohvatanju radova:", e);
 }
 
-// Grupisanje radova po imenu i prezimenu
+// Grupisanje radova po studentu
 const radoviByStudent: Record<string, { displayName: string; redosledOsoba: number | null; works: any[] }> = {};
 
 for (const rad of radovi) {
-  
   const ime = rad.ime && rad.ime !== "null" ? String(rad.ime).trim() : "";
   const prezime = rad.prezime && rad.prezime !== "null" ? String(rad.prezime).trim() : "";
 
-  // Ako nemamo ni ime ni prezime, preskačemo rad potpuno
   if (!ime && !prezime) continue;
 
   const displayName = `${ime} ${prezime}`.replace(/\s+/g, " ").trim();
   const groupKey = displayName.toLowerCase();
 
   let rawRedosled = rad.redosledOsoba;
-  console.log(`Processing student: ${displayName}, raw redosled: ${rawRedosled}`);
   let parsedRedosled: number | null = null;
   if (rawRedosled !== null && rawRedosled !== undefined && rawRedosled !== "null" && rawRedosled !== "") {
     const num = Number(rawRedosled);
@@ -43,20 +41,27 @@ for (const rad of radovi) {
     radoviByStudent[groupKey].redosledOsoba = parsedRedosled;
   }
 
-  radoviByStudent[groupKey].works.push(rad);
+  // Sanitizacija URL slike
+  let cleanUrl = rad.url || "";
+  if (cleanUrl && !cleanUrl.startsWith("http")) {
+    cleanUrl = cleanUrl.startsWith("/") ? cleanUrl : `/${cleanUrl}`;
+    cleanUrl = `${API_URL}/api/uploaded-images${cleanUrl}`;
+  }
+
+  radoviByStudent[groupKey].works.push({ ...rad, fullUrl: cleanUrl });
 }
 
-// 1. Sortiranje studenata: Prvo po redosledOsoba (1, 2, 3...), pa onda oni bez redosleda
+// Sortiranje studenata
 const studentGroups = Object.values(radoviByStudent).sort((a, b) => {
   if (a.redosledOsoba !== null && b.redosledOsoba !== null) {
     return a.redosledOsoba - b.redosledOsoba;
   }
   if (a.redosledOsoba !== null) return -1;
   if (b.redosledOsoba !== null) return 1;
-  return a.displayName.localeCompare(b.displayName); // Alfabetski ako oba nemaju redosled
+  return a.displayName.localeCompare(b.displayName);
 });
 
-// 2. Sortiranje pojedinačnih slika/radova unutar svakog studenta po polju `raspored`
+// Sortiranje slika unutar grupe
 studentGroups.forEach(group => {
   group.works.sort((a, b) => {
     const rA = a.raspored !== null && a.raspored !== undefined && a.raspored !== "null" ? Number(a.raspored) : null;
@@ -68,52 +73,112 @@ studentGroups.forEach(group => {
     return 0;
   });
 });
+
+// SEO Slike za Open Graph & Schema.org ImageGallery
+const allImages = studentGroups.flatMap(g => g.works.map(w => w.fullUrl));
+const primarySeoImage = allImages[0] || `${SITE_URL}/images/default-seo-image.png`;
+
+// Generisanje Schema.org ImageGallery
+const gallerySchema = {
+  "@context": "https://schema.org",
+  "@type": "ImageGallery",
+  "name": "Galerija Studentskih Radova - 27 archviz",
+  "description": "3D fotorealistični renderi i arhitektonske vizuelizacije polaznika 27 archviz akademije.",
+  "url": `${SITE_URL}/radovi`,
+  "image": allImages.slice(0, 10),
+  "hasPart": studentGroups.flatMap(group => 
+    group.works.map(work => ({
+      "@type": "VisualArtwork",
+      "name": `3D Render - ${group.displayName}`,
+      "artist": {
+        "@type": "Person",
+        "name": group.displayName
+      },
+      "image": work.fullUrl,
+      "description": `Arhitektonska vizuelizacija polaznika ${group.displayName}`
+    }))
+  )
+};
 ---
 
 <Layout 
   title="Radovi Studenata | 3D Arhitektonska Vizuelizacija | 27 archviz"
-  description="Pogledajte galeriju radova i fotorealističnih rendera naših studenata nakon završene obuke."
-  canonicalURL="https://27archviz.com/radovi"
-  breadcrumbs={[{ name: "Radovi", url: "https://27archviz.com/radovi" }]}
+  description="Istražite fotorealistične rendere i 3D vizuelizacije naših studenata nastale tokom 3ds Max i Corona Render obuke."
+  canonicalURL={`${SITE_URL}/radovi`}
+  image={primarySeoImage}
+  keywords="radovi studenata, 3ds max renderi, corona render primeri, arhitektonska vizuelizacija portfolio, 3D modelovanje polaznici"
+  breadcrumbs={[{ name: "Radovi Studenata", url: `${SITE_URL}/radovi` }]}
 >
-  <main class="min-h-screen bg-white text-black py-16 md:py-24 font-sans">
-    <h1 class="sr-only">Galerija Radova Studenata | 27 archviz</h1>
+  <!-- Schema.org podaci za indeksiranje u Google Slikama -->
+  <script type="application/ld+json" set:html={JSON.stringify(gallerySchema)} />
+
+  <main class="min-h-screen bg-white text-zinc-900 py-12 md:py-20 font-sans">
+    
+    <!-- Hero sekcija stranice -->
+    <header class="max-w-7xl mx-auto px-6 mb-16 text-center space-y-4">
+      <h1 class="text-4xl md:text-6xl font-black tracking-tight uppercase text-black">
+        Radovi <span class="text-[#550000]">Studenata</span>
+      </h1>
+      <p class="text-zinc-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-medium">
+        Pogledajte galeriju fotorealističnih 3D rendera i projekata koje su naši polaznici izradili tokom i nakon obuke.
+      </p>
+    </header>
 
     {studentGroups.length === 0 ? (
       <div class="max-w-7xl mx-auto px-6 text-center py-20 text-zinc-400">
-        Nema dostupnih radova
+        Trenutno nema dostupnih radova.
       </div>
     ) : (
-      <div class="max-w-[1600px] mx-auto px-6 space-y-24 md:space-y-32">
-        {studentGroups.map(({ displayName, works }) => {
+      <div class="max-w-[1700px] mx-auto px-6 space-y-20 md:space-y-28">
+        {studentGroups.map(({ displayName, works }, gIndex) => {
           const firstWork = works[0];
           const kursNaziv = firstWork?.kurs?.naziv || firstWork?.naziv || "3DS MAX + CORONA RENDER";
 
           return (
-            <section class="student-block space-y-8">
+            <section class="student-block space-y-6 opacity-0 translate-y-6 transition-all duration-700 ease-out">
               
-              <!-- ZAGLAVLJE STUDENT SEKCIJE (IME + KURS) -->
-              <div class="max-w-4xl space-y-2">
-                <h2 class="text-4xl md:text-6xl font-black text-black tracking-tight">
-                  {displayName}
-                </h2>
-                <p class="text-base md:text-lg font-medium text-zinc-500">
-                  Kurs: <span class="text-orange-500 font-semibold">{kursNaziv}</span>
-                </p>
+              <!-- Zaglavlje studenta -->
+              <div class="border-b border-zinc-200 pb-4 flex flex-col md:flex-row md:items-end justify-between gap-2">
+                <div>
+                  <h2 class="text-2xl md:text-4xl font-bold text-black tracking-wide">
+                    {displayName}
+                  </h2>
+                  <p class="text-sm md:text-base text-zinc-600 mt-1">
+                    Kurs: <span class="text-[#550000] font-semibold">{kursNaziv}</span>
+                  </p>
+                </div>
+                <span class="text-xs text-zinc-400 uppercase tracking-widest font-semibold">
+                  {works.length} {works.length === 1 ? "render" : "rendera"}
+                </span>
               </div>
 
-              <!-- RED SA RADOVIMA (SLIKAMA) -->
+              <!-- Grid slika sa hover efektom u nijansi #550000 -->
               <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                {works.map((work: any) => (
-                  <div class="group hover:scale-105 ease-linear duration-300 relative aspect-square overflow-hidden bg-zinc-100 rounded-lg cursor-pointer border border-transparent transition-all">
-                    <img
-                      src={`${API_URL}/api/uploaded-images${work.url}`}
-                      alt={`Rad studenta ${displayName}`}
-                      class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
+                {works.map((work: any, wIndex: number) => {
+                  const isPriority = gIndex === 0 && wIndex < 4;
+                  return (
+                    <div 
+                      class="gallery-item group relative aspect-square overflow-hidden bg-zinc-100 rounded-lg cursor-pointer border border-zinc-200 hover:border-[#550000] shadow-sm hover:shadow-md transition-all duration-300"
+                      data-full-src={work.fullUrl}
+                      data-author={displayName}
+                    >
+                      <img
+                        src={work.fullUrl}
+                        alt={`3D Arhitektonska vizuelizacija - ${displayName}`}
+                        class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        loading={isPriority ? "eager" : "lazy"}
+                        fetchpriority={isPriority ? "high" : "auto"}
+                        width="400"
+                        height="400"
+                      />
+                      <div class="absolute inset-0 bg-[#550000]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-white bg-[#550000] px-3 py-1.5 rounded shadow-lg border border-[#330000]">
+                          Uvećaj
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
             </section>
@@ -121,32 +186,60 @@ studentGroups.forEach(group => {
         })}
       </div>
     )}
+
+    <!-- Lightbox Modal sa elegantnom tamnom pozadinom -->
+    <div id="lightbox" class="fixed inset-0 z-[2000] bg-black/90 hidden items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300">
+      <button id="close-lightbox" class="absolute top-6 right-6 text-white hover:text-[#ff7777] text-4xl font-bold p-2 z-[2001] transition-colors">&times;</button>
+      <div class="max-w-6xl max-h-[90vh] flex flex-col items-center">
+        <img id="lightbox-img" src="" alt="Uvećani render" class="max-h-[80vh] max-w-full object-contain rounded-lg shadow-2xl border border-zinc-800" />
+        <p id="lightbox-caption" class="text-zinc-200 mt-4 text-lg font-medium text-center"></p>
+      </div>
+    </div>
+
   </main>
 </Layout>
 
-<style>
-  .student-block {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-  }
-
-  .student-block.is-visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-</style>
-
 <script>
+  // Lazy animacija učitavanja blokova
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
+        entry.target.classList.remove('opacity-0', 'translate-y-6');
+        observer.unobserve(entry.target);
       }
     });
   }, { threshold: 0.05 });
 
-  document.querySelectorAll('.student-block').forEach(el => {
-    observer.observe(el);
+  document.querySelectorAll('.student-block').forEach(el => observer.observe(el));
+
+  // Lightbox kôd za otvaranje i zatvaranje slika
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
+  const lightboxCaption = document.getElementById('lightbox-caption');
+  const closeBtn = document.getElementById('close-lightbox');
+
+  document.querySelectorAll('.gallery-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const src = item.getAttribute('data-full-src');
+      const author = item.getAttribute('data-author');
+      if (src && lightbox && lightboxImg && lightboxCaption) {
+        lightboxImg.src = src;
+        lightboxCaption.textContent = `Autor: ${author}`;
+        lightbox.classList.remove('hidden');
+        lightbox.classList.add('flex');
+      }
+    });
+  });
+
+  const closeLightbox = () => {
+    if (lightbox) {
+      lightbox.classList.add('hidden');
+      lightbox.classList.remove('flex');
+    }
+  };
+
+  closeBtn?.addEventListener('click', closeLightbox);
+  lightbox?.addEventListener('click', (e) => {
+    if (e.target === lightbox) closeLightbox();
   });
 </script>
