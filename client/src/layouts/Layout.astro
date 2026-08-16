@@ -53,7 +53,9 @@ const {
 
 // Kolačići i URL priprema
 const losGmailCookie = Astro.cookies.get("losGmail");
-const siteURL = Astro.site ? Astro.site.toString().replace(/\/$/, "") : Astro.url.origin;
+const siteURL = Astro.site
+  ? Astro.site.toString().replace(/\/$/, "")
+  : Astro.url.origin;
 const canonical = new URL(canonicalURL, siteURL).toString();
 
 // Pravilno spajanje slika (bilo da je pun URL ili relativna putanja)
@@ -151,6 +153,8 @@ const robotsContent = noIndex
 <!doctype html>
 <html lang="sr-Latn" prefix="og: https://ogp.me/ns#">
   <head>
+    <!-- Google tag (gtag.js) -->
+
     <!-- Preconnect i DNS Prefetch -->
     <link rel="preconnect" href={API_URL} />
     <link rel="dns-prefetch" href={API_URL} />
@@ -261,12 +265,7 @@ const robotsContent = noIndex
     }
 
     <!-- Dinamički Preload za primarnu sliku (Poboljšava LCP) -->
-    <link
-      rel="preload"
-      as="image"
-      href={fullImageURL}
-      fetchpriority="high"
-    />
+    <link rel="preload" as="image" href={fullImageURL} fetchpriority="high" />
 
     <!-- Google Fonts optimizovano učitavanje -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -288,11 +287,25 @@ const robotsContent = noIndex
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap"
       />
     </noscript>
+    <!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/googletagmanager.com/gtag/js?id=AW-18393028886"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "AW-18393028886");
+    </script>
   </head>
 
   <body class="relative bg-[#18181b]">
     <ErrorToastNotifier losGmailCookie={losGmailCookie} client:load />
-    
+
     <div class="fixed top-0 left-0 w-full z-[1000]">
       <Header2 />
     </div>
