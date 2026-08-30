@@ -1,7 +1,9 @@
 ---
 import MasterCard from "../assets/mastercard.svg";
 import Visa from "../assets/visa1.svg";
+
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const APP_URL = import.meta.env.PUBLIC_APP_URL || "http://studio27.rs";
 ---
 
 <footer class="bg-black text-white py-12 px-8 md:px-16 border-t border-zinc-800">
@@ -79,8 +81,11 @@ const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
       <div class="md:col-span-1 flex flex-col items-start md:items-end space-y-6">
         <!-- Payment Methods -->
         <div class="flex items-center space-x-3 text-white">
-          <MasterCard class="w-8 h-8" aria-label="MasterCard" />
-          <Visa class="w-8 h-8" aria-label="Visa" />
+          <img
+            src={`${APP_URL}/images/logo_kartice.png`}
+            alt="Logo kartice"
+            class=" h-auto  object-contain"
+          />
         </div>
 
         <!-- Social Icons -->

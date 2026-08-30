@@ -97,6 +97,10 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/kursslika/*").permitAll()
                                                 .requestMatchers("/api/send-code-to-mail").permitAll()
                                                 .requestMatchers("/api/send-mail-to-person").permitAll()
+                                                .requestMatchers("/api/payment/create").permitAll()
+                                                .requestMatchers("/api/payment/notify").permitAll()
+                                                .requestMatchers("/api/payment/return").permitAll()
+                                                .requestMatchers("/api/payment/return/**").permitAll()
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth -> oauth
                                                 .successHandler((request, response, authentication) -> {
