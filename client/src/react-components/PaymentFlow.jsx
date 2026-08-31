@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 
 export default function UplatnicaCheckout({
-  onSuccess = null,
   onBack = null,
   API_URL,
   token,
@@ -10,8 +9,6 @@ export default function UplatnicaCheckout({
   const [error, setError] = useState("");
   const [cartList, setCartList] = useState([]);
   const [totals, setTotals] = useState({ eur: 0, rsd: 0 });
-  
-  // Obavezno polje za prihvatanje uslova pre kartičnog plaćanja
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const EUR_RSD_RATE = 117.4;
@@ -43,7 +40,7 @@ export default function UplatnicaCheckout({
       return setError("Morate prihvatiti uslove kupovine i potvrditi saglasnost pre nastavka.");
     }
 
-    if (totals.rsd <= 0 || totals.eur <= 0) {
+    if (totals.rsd <= 0) {
       return setError("Iznos za plaćanje nije ispravan.");
     }
     
@@ -54,8 +51,6 @@ export default function UplatnicaCheckout({
 
     try {
       const orderId = `ORD-${Date.now()}`;
-      const amountRsdInParas = String(Math.round(totals.rsd * 100));
-      const amountEurInCents = String(Math.round(totals.eur * 100));
 
       const response = await fetch(`${API_URL}/api/payment/create`, {
         method: "POST",
@@ -65,8 +60,8 @@ export default function UplatnicaCheckout({
         },
         body: JSON.stringify({
           orderId,
-          totalAmountRsd: amountRsdInParas,
-          altTotalAmountEur: amountEurInCents,
+          totalAmountRsd: String(totals.rsd.toFixed(2)),
+          purchaseDesc: `Porudzbina ${orderId}`
         }),
       });
 
@@ -181,7 +176,6 @@ export default function UplatnicaCheckout({
                     </div>
                   </div>
 
-                  {/* PRIKAZ OBRAČUNSKOG KURSA */}
                   <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
                     <span className="font-medium">Primenjeni obračunski kurs:</span>
                     <span className="font-bold text-slate-800 bg-slate-200/60 px-2.5 py-1 rounded-md">
@@ -232,7 +226,7 @@ export default function UplatnicaCheckout({
               </div>
             </div>
 
-            {/* CHECKBOX SAGLASNOSTI SA PREUZIMANJEM PDF DOKUMENTA */}
+            {/* CHECKBOX SAGLASNOSTI */}
             <div className="mb-6 space-y-3 bg-slate-100/70 p-4 rounded-2xl border border-slate-200">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
@@ -242,15 +236,7 @@ export default function UplatnicaCheckout({
                   className="mt-1 h-4 w-4 rounded border-slate-300 text-[#550000] focus:ring-[#550000] cursor-pointer"
                 />
                 <span className="text-xs text-slate-600 leading-normal">
-                  Potvrđujem da sam upoznat/a sa{" "}
-                  <a
-                    href="/uslovi-koriscenja.pdf"
-                    download="Uslovi_Koriscenja_Studio27.pdf"
-                    className="underline font-bold text-slate-800 hover:text-[#550000] transition"
-                  >
-                    Uslovima korišćenja (PDF ⬇)
-                  </a>
-                  . Slažem se da pristup digitalnom sadržaju (online kursu) dobijam odmah nakon uspešne uplate, čime **izričito pristajem na početak izvršenja usluge i potvrđujem da gubim pravo na odustanak od ugovora i povraćaj novca**.
+                  Potvrđujem da sam saglasan/na sa uslovima kupovine i da pristup digitalnom sadržaju dobijam odmah nakon uspešne uplate.
                 </span>
               </label>
             </div>
@@ -291,7 +277,7 @@ export default function UplatnicaCheckout({
               )}
             </button>
 
-            {/* INFO & CONVERSION STATEMENT */}
+            {/* INFO */}
             <div className="mt-5 text-center space-y-2">
               <p className="text-[11px] text-slate-400">
                 Kupovina je jednokratna. Odabrani kurs ostaje u vašem vlasništvu **trajno**.
@@ -300,8 +286,6 @@ export default function UplatnicaCheckout({
                 *Sva plaćanja biće izvršena u dinarima (RSD) po navedenom kursu (1 EUR = {EUR_RSD_RATE} RSD). Ukoliko se plaća platnim karticama inostranih banaka izdavalaca, dinarski iznos transakcije biće konvertovan u novčanu jedinicu kartice po kursu poslovne banke ili kartičnih organizacija.
               </p>
             </div>
-
-           
 
             {/* BACK */}
             <div className="mt-8 pt-6 border-t border-slate-200 flex justify-center">
