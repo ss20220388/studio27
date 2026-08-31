@@ -7,7 +7,7 @@ import ContinueWatching from "../components/ContinueWatching.astro";
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://app.studio27.rs";
 
 const refreshToken = Astro.cookies.get("refreshToken")?.value;
-const accessToken = Astro.cookies.get("accessToken")?.value;
+const accessToken = Astro.cookies.get("refreshToken")?.value;
 
 let progressStats = {
 	zavrseno: 0,

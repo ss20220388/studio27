@@ -8,7 +8,7 @@ const APP_URL = import.meta.env.PUBLIC_APP_URL || "http://studio27.rs";
 
 const { id } = Astro.params;
 
-const accessToken = Astro.cookies.get("accessToken")?.value;
+const accessToken = Astro.cookies.get("refreshToken")?.value;
 const refreshToken = Astro.cookies.get("refreshToken")?.value;
 
 let isLoggedIn = false;

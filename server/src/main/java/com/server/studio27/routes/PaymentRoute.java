@@ -1,13 +1,17 @@
 package com.server.studio27.routes;
 
-import com.server.studio27.services.PaymentService;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
-import java.util.Map;
+import com.server.studio27.services.PaymentService;
 
 @RestController
 @RequestMapping("/api")
@@ -29,6 +33,7 @@ public class PaymentRoute {
         try {
             String orderId = request.get("orderId");
             String totalAmountRsd = request.get("totalAmountRsd");
+            String purchaseDesc = request.getOrDefault("purchaseDesc", "Order " + orderId);
 
             if (orderId == null || orderId.isBlank()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Order ID je obavezan."));
@@ -40,7 +45,8 @@ public class PaymentRoute {
 
             String paymentForm = paymentService.createPaymentForm(
                     orderId,
-                    totalAmountRsd
+                    totalAmountRsd,
+                    purchaseDesc
             );
 
             return ResponseEntity.ok(Map.of("paymentForm", paymentForm));
@@ -53,22 +59,6 @@ public class PaymentRoute {
                             "error", e.getMessage() == null ? "Unknown error" : e.getMessage()
                     )
             );
-        }
-    }
-
-    @PostMapping(value = "/payment/notify", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> notifyPayment(
-            @RequestParam Map<String, String> params
-    ) {
-        try {
-            boolean success = paymentService.processNotification(params);
-            String responseBody = paymentService.buildNotifyResponseBody(params, success);
-
-            return ResponseEntity.ok(responseBody);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("ERROR");
         }
     }
 

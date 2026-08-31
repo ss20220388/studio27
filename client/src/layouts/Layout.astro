@@ -5,7 +5,7 @@ import ErrorToastNotifier from "../react-components/ErrorToastNotifier";
 import CartModal from "../react-components/CartModal";
 import "../styles/global.css";
 
-const accessToken = Astro.cookies.get("accessToken")?.value;
+const accessToken = Astro.cookies.get("refreshToken")?.value;
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 export interface Props {

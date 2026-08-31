@@ -10,6 +10,9 @@ export default function UplatnicaCheckout({
   const [error, setError] = useState("");
   const [cartList, setCartList] = useState([]);
   const [totals, setTotals] = useState({ eur: 0, rsd: 0 });
+  
+  // Obavezno polje za prihvatanje uslova pre kartičnog plaćanja
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const EUR_RSD_RATE = 117.4;
 
@@ -36,6 +39,10 @@ export default function UplatnicaCheckout({
   }, []);
 
   const handleCardPayment = async () => {
+    if (!termsAccepted) {
+      return setError("Morate prihvatiti uslove kupovine i potvrditi saglasnost pre nastavka.");
+    }
+
     if (totals.rsd <= 0 || totals.eur <= 0) {
       return setError("Iznos za plaćanje nije ispravan.");
     }
@@ -46,10 +53,7 @@ export default function UplatnicaCheckout({
     let container = null;
 
     try {
-      // Kraći prefiks radi sigurnosti (UPC limit je max 20 karaktera)
       const orderId = `ORD-${Date.now()}`;
-
-      // UPC gateway zahteva iznose u para-ma / centima (pomnoženo sa 100)
       const amountRsdInParas = String(Math.round(totals.rsd * 100));
       const amountEurInCents = String(Math.round(totals.eur * 100));
 
@@ -72,7 +76,6 @@ export default function UplatnicaCheckout({
         throw new Error(data.message || "Greška pri kreiranju forme za plaćanje.");
       }
 
-      // Kreiramo privremeni skriveni kontejner za DOM ubacivanje forme
       container = document.createElement("div");
       container.style.display = "none";
       container.innerHTML = data.paymentForm;
@@ -83,7 +86,6 @@ export default function UplatnicaCheckout({
         throw new Error("Forma za plaćanje nije pronađena u odgovoru.");
       }
 
-      // Preusmeravanje na UPC gateway
       form.submit();
 
     } catch (err) {
@@ -119,7 +121,7 @@ export default function UplatnicaCheckout({
             <p className="text-xs uppercase tracking-widest font-bold text-slate-400 mb-3">Studio 27</p>
             <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-3">Plaćanje</h1>
             <p className="text-sm md:text-base text-slate-400 max-w-xl leading-relaxed">
-              Završite kupovinu sigurnim plaćanjem putem platne kartice.
+              Završite kupovinu sigurnim plaćanjem putem platne kartice i ostvarite trenutni, trajni pristup kursevima.
             </p>
           </div>
 
@@ -151,7 +153,7 @@ export default function UplatnicaCheckout({
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-bold text-slate-900 truncate">{item.title || item.naslov || item.naziv || "Kurs"}</p>
-                            <p className="text-xs text-slate-400 mt-0.5">Online kurs</p>
+                            <p className="text-xs text-emerald-600 font-semibold mt-0.5">Jednokratna kupovina • Trajni pristup</p>
                           </div>
                         </div>
                         <div className="text-sm font-black text-slate-900 whitespace-nowrap">
@@ -164,19 +166,27 @@ export default function UplatnicaCheckout({
                   <div className="p-6 text-center text-sm text-slate-500">Korpa je prazna.</div>
                 )}
 
-                {/* TOTAL */}
+                {/* TOTAL & KURS */}
                 <div className="bg-slate-50 border-t border-slate-200 p-5 md:p-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
                     <div>
-                      <p className="text-xs uppercase tracking-wider font-bold text-slate-400">Iznos</p>
+                      <p className="text-xs uppercase tracking-wider font-bold text-slate-400">Iznos u EUR</p>
                       <p className="text-2xl font-black text-slate-950 mt-1">{formatEur(totals.eur)} EUR</p>
-                      <p className="text-xs text-slate-400 mt-1">Alternativni prikaz</p>
+                      <p className="text-xs text-slate-400 mt-1">Informativni prikaz</p>
                     </div>
                     <div className="sm:text-right">
-                      <p className="text-xs uppercase tracking-wider font-bold text-slate-400">Za plaćanje</p>
+                      <p className="text-xs uppercase tracking-wider font-bold text-slate-400">Ukupno za naplatu</p>
                       <p className="text-2xl font-black text-slate-950 mt-1">{formatRsd(totals.rsd)} RSD</p>
-                      <p className="text-xs text-slate-400 mt-1">Glavna valuta transakcije</p>
+                      <p className="text-xs text-slate-400 mt-1">Zvanična valuta transakcije</p>
                     </div>
+                  </div>
+
+                  {/* PRIKAZ OBRAČUNSKOG KURSA */}
+                  <div className="pt-3 border-t border-slate-200/80 flex items-center justify-between text-xs text-slate-500">
+                    <span className="font-medium">Primenjeni obračunski kurs:</span>
+                    <span className="font-bold text-slate-800 bg-slate-200/60 px-2.5 py-1 rounded-md">
+                      1 EUR = {EUR_RSD_RATE} RSD
+                    </span>
                   </div>
                 </div>
               </div>
@@ -204,7 +214,7 @@ export default function UplatnicaCheckout({
                         <h3 className="text-base md:text-lg font-black text-slate-900">Platna kartica</h3>
                         <span className="text-[9px] uppercase tracking-wider font-black bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">Sigurno</span>
                       </div>
-                      <p className="text-xs md:text-sm text-slate-500 mt-1">Visa / Mastercard</p>
+                      <p className="text-xs md:text-sm text-slate-500 mt-1">Visa / Mastercard / DinaCard</p>
                     </div>
                   </div>
 
@@ -215,16 +225,34 @@ export default function UplatnicaCheckout({
                 </div>
 
                 <div className="mt-5 pt-5 border-t border-slate-200">
-                  <div className="flex items-start gap-3">
-                    <svg className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v2h8z" />
-                    </svg>
-                    <p className="text-xs md:text-sm text-slate-500 leading-relaxed">
-                      Nakon klika na dugme za plaćanje bićete preusmereni na sigurnu stranicu platnog sistema.
-                    </p>
-                  </div>
+                  <p className="text-xs md:text-sm text-slate-500 leading-relaxed">
+                    Nakon klika na dugme bićete preusmereni na zaštićeni gateway banke gde bezbedno unosite podatke sa kartice.
+                  </p>
                 </div>
               </div>
+            </div>
+
+            {/* CHECKBOX SAGLASNOSTI SA PREUZIMANJEM PDF DOKUMENTA */}
+            <div className="mb-6 space-y-3 bg-slate-100/70 p-4 rounded-2xl border border-slate-200">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-slate-300 text-[#550000] focus:ring-[#550000] cursor-pointer"
+                />
+                <span className="text-xs text-slate-600 leading-normal">
+                  Potvrđujem da sam upoznat/a sa{" "}
+                  <a
+                    href="/uslovi-koriscenja.pdf"
+                    download="Uslovi_Koriscenja_Studio27.pdf"
+                    className="underline font-bold text-slate-800 hover:text-[#550000] transition"
+                  >
+                    Uslovima korišćenja (PDF ⬇)
+                  </a>
+                  . Slažem se da pristup digitalnom sadržaju (online kursu) dobijam odmah nakon uspešne uplate, čime **izričito pristajem na početak izvršenja usluge i potvrđujem da gubim pravo na odustanak od ugovora i povraćaj novca**.
+                </span>
+              </label>
             </div>
 
             {/* ERROR */}
@@ -241,7 +269,7 @@ export default function UplatnicaCheckout({
             <button
               type="button"
               onClick={handleCardPayment}
-              disabled={isSubmitting || totals.rsd <= 0 || cartList.length === 0}
+              disabled={isSubmitting || totals.rsd <= 0 || cartList.length === 0 || !termsAccepted}
               className="w-full px-6 py-4 md:py-5 bg-[#550000] hover:bg-[#770000] text-white rounded-2xl text-sm md:text-base font-black transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl cursor-pointer"
             >
               {isSubmitting ? (
@@ -263,23 +291,17 @@ export default function UplatnicaCheckout({
               )}
             </button>
 
-            {/* INFO */}
-            <div className="mt-5 text-center">
+            {/* INFO & CONVERSION STATEMENT */}
+            <div className="mt-5 text-center space-y-2">
               <p className="text-[11px] text-slate-400">
-                Iznos transakcije: <strong>{formatRsd(totals.rsd)} RSD</strong>
+                Kupovina je jednokratna. Odabrani kurs ostaje u vašem vlasništvu **trajno**.
               </p>
-              <p className="text-[11px] text-slate-400 mt-1">
-                Prikazna vrednost: <strong>{formatEur(totals.eur)} EUR</strong>
+              <p className="text-[10px] text-slate-400 leading-normal max-w-lg mx-auto">
+                *Sva plaćanja biće izvršena u dinarima (RSD) po navedenom kursu (1 EUR = {EUR_RSD_RATE} RSD). Ukoliko se plaća platnim karticama inostranih banaka izdavalaca, dinarski iznos transakcije biće konvertovan u novčanu jedinicu kartice po kursu poslovne banke ili kartičnih organizacija.
               </p>
             </div>
 
-            {/* SECURITY */}
-            <div className="mt-5 flex items-center justify-center gap-2 text-[11px] text-slate-400">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v2h8z" />
-              </svg>
-              Bezbedno kartično plaćanje
-            </div>
+           
 
             {/* BACK */}
             <div className="mt-8 pt-6 border-t border-slate-200 flex justify-center">
@@ -296,7 +318,7 @@ export default function UplatnicaCheckout({
         </div>
 
         <p className="text-center text-[11px] text-slate-400 mt-5">
-          Podaci o kartici se unose na sigurnoj stranici platnog sistema.
+          Podaci o kartici se unose na sigurnoj stranici platnog sistema banke.
         </p>
       </div>
     </div>
