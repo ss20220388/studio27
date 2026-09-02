@@ -19,7 +19,7 @@ public class PaymentRoute {
 
     private final PaymentService paymentService;
 
-    @Value("${app.frontend-url:https://27archviz.com}")
+    @Value("${app.frontend.url}")
     private String frontendUrl;
 
     public PaymentRoute(PaymentService paymentService) {
@@ -33,7 +33,6 @@ public class PaymentRoute {
         try {
             String orderId = request.get("orderId");
             String totalAmountRsd = request.get("totalAmountRsd");
-            String purchaseDesc = request.getOrDefault("purchaseDesc", "Order " + orderId);
 
             if (orderId == null || orderId.isBlank()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Order ID je obavezan."));
@@ -43,10 +42,12 @@ public class PaymentRoute {
                 return ResponseEntity.badRequest().body(Map.of("message", "RSD iznos je obavezan."));
             }
 
+            // Napomena: purchaseDesc se ne koristi za sada (videti komentare u
+            // PaymentService.createPaymentForm) — ako front-end i dalje šalje to
+            // polje u telu zahteva, ovde se jednostavno ignoriše, ne pravi grešku.
             String paymentForm = paymentService.createPaymentForm(
                     orderId,
-                    totalAmountRsd,
-                    purchaseDesc
+                    totalAmountRsd
             );
 
             return ResponseEntity.ok(Map.of("paymentForm", paymentForm));
@@ -62,11 +63,25 @@ public class PaymentRoute {
         }
     }
 
+    /**
+     * Banka na ovaj URL šalje POST kad je transakcija uspešna. PRE nego što
+     * korisnika proglasimo za "platio je", potpis se mora verifikovati —
+     * u suprotnom bilo ko može ručno da pozove ovaj endpoint i lažira uspešno
+     * plaćanje bez da je stvarno platio.
+     */
     @PostMapping("/payment/success")
     public RedirectView paymentSuccess(
             @RequestParam Map<String, String> params
     ) {
         String orderId = params.getOrDefault("OrderID", "");
+        boolean signatureValid = paymentService.verifySignature(params);
+
+        if (!signatureValid) {
+            System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/success za OrderID=" + orderId);
+            return new RedirectView(
+                    frontendUrl + "/checkout/failure?orderId=" + orderId + "&reason=invalid_signature"
+            );
+        }
 
         return new RedirectView(
                 frontendUrl + "/checkout/success?orderId=" + orderId
@@ -78,6 +93,13 @@ public class PaymentRoute {
             @RequestParam Map<String, String> params
     ) {
         String orderId = params.getOrDefault("OrderID", "");
+
+        // Transakcija je već neuspešna, ali svejedno vredi proveriti potpis
+        // radi audit traga (da se u logu vidi da li poziv zaista dolazi od banke).
+        boolean signatureValid = paymentService.verifySignature(params);
+        if (!signatureValid) {
+            System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/failure za OrderID=" + orderId);
+        }
 
         return new RedirectView(
                 frontendUrl + "/checkout/failure?orderId=" + orderId
