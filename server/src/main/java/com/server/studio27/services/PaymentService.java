@@ -53,8 +53,8 @@ public class PaymentService {
             @Value("${payment.currency-id}") String currencyId,
             @Value("${payment.private-key}") String privateKeyPath,
             @Value("${payment.bank-public-key}") String bankPublicKeyPath,
-            @Value("${payment.gateway-url:https://ecommerce.raiffeisenbank.rs/rbrs/pay}") String gatewayUrl,
-            @Value("${payment.locale:rs}") String locale,
+            @Value("${payment.gateway-url}") String gatewayUrl,
+            @Value("${payment.locale:RS}") String locale,
             ResourceLoader resourceLoader,
             NamedParameterJdbcTemplate jdbcTemplate
     ) {
@@ -64,7 +64,7 @@ public class PaymentService {
         this.privateKeyPath = privateKeyPath;
         this.bankPublicKeyPath = bankPublicKeyPath;
         this.gatewayUrl = gatewayUrl;
-        this.locale = locale == null ? "rs" : locale.toLowerCase(Locale.ROOT);
+        this.locale = locale == null ? "RS" : locale.toUpperCase(Locale.ROOT);
         this.resourceLoader = resourceLoader;
         this.jdbcTemplate = jdbcTemplate;
 
@@ -144,8 +144,7 @@ public class PaymentService {
 
         if (prices.size() != courseIds.size()) {
             throw new IllegalArgumentException(
-                    "Jedan ili više kurseva iz korpe nije pronađeno (očekivano " +
-                            courseIds.size() + ", pronađeno " + prices.size() + ")."
+                    "Jedan ili više kurseva iz korpe nije pronađeno."
             );
         }
 
@@ -154,9 +153,7 @@ public class PaymentService {
 
         BigDecimal totalRsd = totalEur.multiply(EUR_RSD_RATE);
 
-        BigDecimal totalRsdCents = totalRsd.setScale(2, RoundingMode.HALF_UP);
-
-        return totalRsdCents.toPlainString();
+        return totalRsd.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 
     public String generateSignature(
