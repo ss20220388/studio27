@@ -34,12 +34,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class PaymentService {
 
-    // Postavi na true SAMO dok debug-uješ potpis, pa vrati na false pre produkcije.
-    private static final boolean DEBUG_LOG_SIGNATURE_STRING = true;
-
-    // Isti kurs koji se koristi i na frontend-u za prikaz (UplatnicaCheckout.jsx).
-    // TODO: ako kurs treba da bude promenljiv, prebaci ga u application.properties
-    // (npr. payment.eur-rsd-rate) umesto da bude hardkodovan na dva mesta.
     private static final BigDecimal EUR_RSD_RATE = new BigDecimal("117.4");
 
     private final String merchantId;
@@ -59,8 +53,8 @@ public class PaymentService {
             @Value("${payment.currency-id}") String currencyId,
             @Value("${payment.private-key}") String privateKeyPath,
             @Value("${payment.bank-public-key}") String bankPublicKeyPath,
-            @Value("${payment.gateway-url}") String gatewayUrl,
-            @Value("${payment.locale}") String locale,
+            @Value("${payment.gateway-url:https://ecommerce.raiffeisenbank.rs/rbrs/pay}") String gatewayUrl,
+            @Value("${payment.locale:rs}") String locale,
             ResourceLoader resourceLoader,
             NamedParameterJdbcTemplate jdbcTemplate
     ) {
@@ -70,7 +64,7 @@ public class PaymentService {
         this.privateKeyPath = privateKeyPath;
         this.bankPublicKeyPath = bankPublicKeyPath;
         this.gatewayUrl = gatewayUrl;
-        this.locale = locale == null ? "" : locale.toUpperCase(Locale.ROOT);
+        this.locale = locale == null ? "rs" : locale.toLowerCase(Locale.ROOT);
         this.resourceLoader = resourceLoader;
         this.jdbcTemplate = jdbcTemplate;
 
@@ -79,18 +73,6 @@ public class PaymentService {
         }
     }
 
-    // =========================================================================
-    // 1) INICIJALIZACIJA PLAĆANJA — kreiranje forme koja se šalje ka banci
-    // =========================================================================
-
-    /**
-     * Kreira HTML formu koja se auto-submituje ka platnom gateway-u.
-     *
-     * Iznos se NE prima od klijenta — računa se ovde, na osnovu ID-jeva
-     * kurseva, direktno iz kolone "cena" u tabeli "kurs". Ovo sprečava da
-     * neko izmeni iznos na klijentu (DevTools, izmenjen localStorage) i
-     * plati proizvoljno mali iznos.
-     */
     public String createPaymentForm(
             String orderId,
             List<Long> courseIds
@@ -105,7 +87,6 @@ public class PaymentService {
 
         String cleanRsd = calculateTotalAmountRsdInCents(courseIds);
 
-        // Format vremena: yyMMddHHmmss (npr. 240820143000)
         String purchaseTime = LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
 
@@ -151,14 +132,6 @@ public class PaymentService {
                 );
     }
 
-    /**
-     * Učitava cene iz tabele "kurs" za tražene ID-jeve i vraća ukupan iznos
-     * u RSD parama (cents), kao string spreman za slanje ka gateway-u.
-     *
-     * Pretpostavka: kolona "cena" je u EUR (u skladu sa prikazom na
-     * frontend-u). Ako je "cena" zapravo već u RSD, samo ukloni konverziju
-     * preko EUR_RSD_RATE ispod.
-     */
     private String calculateTotalAmountRsdInCents(List<Long> courseIds) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("ids", courseIds);
@@ -170,8 +143,6 @@ public class PaymentService {
         );
 
         if (prices.size() != courseIds.size()) {
-            // Neki od poslatih ID-jeva ne postoji u bazi — bolje odbiti
-            // transakciju nego naplatiti pogrešan (nepotpun) iznos.
             throw new IllegalArgumentException(
                     "Jedan ili više kurseva iz korpe nije pronađeno (očekivano " +
                             courseIds.size() + ", pronađeno " + prices.size() + ")."
@@ -183,43 +154,23 @@ public class PaymentService {
 
         BigDecimal totalRsd = totalEur.multiply(EUR_RSD_RATE);
 
-        // U pare (cents) — zaokruženo na 2 decimale pa pretvoreno u ceo broj.
         BigDecimal totalRsdCents = totalRsd.setScale(2, RoundingMode.HALF_UP);
-
-        if (DEBUG_LOG_SIGNATURE_STRING) {
-            System.out.println("[PaymentService] Kursevi: " + courseIds +
-                    " | Ukupno EUR: " + totalEur +
-                    " | Ukupno RSD: " + totalRsdCents);
-        }
 
         return totalRsdCents.toPlainString();
     }
 
-    /**
-     * Sastavljanje stringa za potpis (Inicijalizacija plaćanja - Request).
-     * Redosled polja po UPC specifikaciji:
-     * MerchantID;TerminalID;PurchaseTime;OrderID;Currency;TotalAmount;SD;
-     */
     public String generateSignature(
             String purchaseTime,
             String orderId,
             String totalAmountRsd
     ) throws Exception {
 
-        String sd = ""; // namerno prazno — polje se zove "SD" (potvrđeno iz PHP primera banke),
-                         // ali ga ne šaljemo dok ne bude potrebno.
-
         String data = merchantId + ";" +
                 terminalId + ";" +
                 purchaseTime + ";" +
                 orderId + ";" +
                 currencyId + ";" +
-                totalAmountRsd + ";" +
-                sd + ";";
-
-        if (DEBUG_LOG_SIGNATURE_STRING) {
-            System.out.println("[PaymentService] REQUEST signature data string: [" + data + "]");
-        }
+                totalAmountRsd + ";;";
 
         PrivateKey privateKey = loadPrivateKey();
 
@@ -229,10 +180,6 @@ public class PaymentService {
 
         return Base64.getEncoder().encodeToString(signature.sign());
     }
-
-    // =========================================================================
-    // 2) VERIFIKACIJA POVRATNOG POZIVA — kad banka pozove success/failure URL
-    // =========================================================================
 
     public boolean verifySignature(Map<String, String> params) {
         try {
@@ -251,7 +198,6 @@ public class PaymentService {
             String signatureBase64 = params.getOrDefault("Signature", "");
 
             if (signatureBase64.isBlank()) {
-                System.out.println("[PaymentService] Verifikacija neuspešna: nema Signature parametra.");
                 return false;
             }
 
@@ -268,10 +214,6 @@ public class PaymentService {
                     upcTokenExp + ";" +
                     upcToken + ";";
 
-            if (DEBUG_LOG_SIGNATURE_STRING) {
-                System.out.println("[PaymentService] VERIFY signature data string: [" + data + "]");
-            }
-
             byte[] signatureBytes = Base64.getDecoder().decode(signatureBase64);
             PublicKey publicKey = loadBankPublicCertificate();
 
@@ -279,9 +221,6 @@ public class PaymentService {
 
             if (!valid) {
                 valid = verifyWithAlgorithm(data, signatureBytes, publicKey, "SHA512withRSA");
-                if (valid) {
-                    System.out.println("[PaymentService] Potpis je važeći samo sa SHA512withRSA — potvrdi ovo sa bankom.");
-                }
             }
 
             return valid;
@@ -298,10 +237,6 @@ public class PaymentService {
         signature.update(data.getBytes(StandardCharsets.UTF_8));
         return signature.verify(signatureBytes);
     }
-
-    // =========================================================================
-    // Pomoćne metode
-    // =========================================================================
 
     private PrivateKey loadPrivateKey() throws Exception {
         Resource resource = resourceLoader.getResource(
