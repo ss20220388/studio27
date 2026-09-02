@@ -37,9 +37,9 @@ public class PaymentService {
             @Value("${payment.terminal-id:E1731883}") String terminalId,
             @Value("${payment.currency-id:941}") String currencyId,
             @Value("${payment.private-key:classpath:1731862.pem}") String privateKeyPath,
-            // ISPRAVLJEN URL NA ZVANIČNI TEST ENDPOINT IZ DOKUMENTACIJE:
-            @Value("${payment.gateway-url:https://ecg.test.upc.ua/go/pay}") String gatewayUrl,
-            @Value("${payment.locale:rs}") String locale, // Malim slovima po specifikaciji ("rs" ili "en")
+            // ISPRALJEN URL NA ZVANIČNI GATEWAY IZ MEJLA
+            @Value("${payment.gateway-url:https://ecommerce.raiffeisenbank.rs/rbrs/pay}") String gatewayUrl,
+            @Value("${payment.locale:rs}") String locale,
             ResourceLoader resourceLoader
     ) {
         this.merchantId = merchantId;
@@ -65,18 +65,14 @@ public class PaymentService {
             throw new IllegalArgumentException("OrderID je obavezan.");
         }
 
-        // Iznos u para/centima (npr. 100 RSD -> 10000)
+        // Iznos u parama (npr. 100.00 RSD -> 10000)
         String cleanRsd = toCents(totalAmountRsd);
 
-        if (purchaseDesc == null || purchaseDesc.isBlank()) {
-            purchaseDesc = "Order " + orderId;
-        }
-
-        // Format vremena po specifikaciji: yyMMddHHmmss (npr 260109150000)
+        // Format vremena: yyMMddHHmmss (npr. 240820143000)
         String purchaseTime = LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
 
-        // Generisanje potpisa
+        // Generisanje potpisa sa SHA256withRSA
         String signature = generateSignature(
                 purchaseTime,
                 orderId,
@@ -121,14 +117,18 @@ public class PaymentService {
                         locale,
                         purchaseTime,
                         orderId,
-                        purchaseDesc,
+                        purchaseDesc != null ? purchaseDesc : "",
                         signature
                 );
     }
 
     /**
-     * Potpis za PurchaseDesc:
-     * MerchantID;TerminalID;PurchaseTime;OrderID;Currency;TotalAmount;PurchaseDesc;;
+     * Sastavljanje stringa za potpis (Inicijalizacija plaćanja - Request)
+     * Redosled polja mora tačno odgovarati UPC specifikaciji:
+     * MerchantID;TerminalID;PurchaseTime;OrderID;Currency;TotalAmount;SD;
+     * 
+     * Napomena: SD je opciono polje (Session Data / Description). 
+     * Ako šalješ opis (purchaseDesc), stavlja se tu.
      */
     public String generateSignature(
             String purchaseTime,
@@ -137,16 +137,20 @@ public class PaymentService {
             String purchaseDesc
     ) throws Exception {
 
+        String sd = (purchaseDesc != null) ? purchaseDesc : "";
+
+        // Format po UPC specifikaciji za zahtev plaćanja:
         String data = merchantId + ";" +
                 terminalId + ";" +
                 purchaseTime + ";" +
                 orderId + ";" +
                 currencyId + ";" +
                 totalAmountRsd + ";" +
-                purchaseDesc + ";;";
+                sd + ";";
 
         PrivateKey privateKey = loadPrivateKey();
 
+        // Podrška u mejlu je naglasila: "Set SHA-256 signature algorithm"
         Signature signature = Signature.getInstance("SHA256withRSA", "BC");
         signature.initSign(privateKey);
         signature.update(data.getBytes(StandardCharsets.UTF_8));
