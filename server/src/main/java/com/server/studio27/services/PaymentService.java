@@ -3,6 +3,8 @@ package com.server.studio27.services;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -13,6 +15,7 @@ import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -24,14 +27,20 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PaymentService {
 
-    // Postavi na true SAMO dok debug-uješ potpis, pa vrati na false pre produkcije
-    // (ispisuje tačan string koji se potpisuje/verifikuje u konzolu).
+    // Postavi na true SAMO dok debug-uješ potpis, pa vrati na false pre produkcije.
     private static final boolean DEBUG_LOG_SIGNATURE_STRING = true;
+
+    // Isti kurs koji se koristi i na frontend-u za prikaz (UplatnicaCheckout.jsx).
+    // TODO: ako kurs treba da bude promenljiv, prebaci ga u application.properties
+    // (npr. payment.eur-rsd-rate) umesto da bude hardkodovan na dva mesta.
+    private static final BigDecimal EUR_RSD_RATE = new BigDecimal("117.4");
 
     private final String merchantId;
     private final String terminalId;
@@ -42,6 +51,7 @@ public class PaymentService {
     private final String locale;
 
     private final ResourceLoader resourceLoader;
+    private final NamedParameterJdbcTemplate jdbcTemplate;
 
     public PaymentService(
             @Value("${payment.merchant-id}") String merchantId,
@@ -51,7 +61,8 @@ public class PaymentService {
             @Value("${payment.bank-public-key}") String bankPublicKeyPath,
             @Value("${payment.gateway-url}") String gatewayUrl,
             @Value("${payment.locale}") String locale,
-            ResourceLoader resourceLoader
+            ResourceLoader resourceLoader,
+            NamedParameterJdbcTemplate jdbcTemplate
     ) {
         this.merchantId = merchantId;
         this.terminalId = terminalId;
@@ -59,10 +70,9 @@ public class PaymentService {
         this.privateKeyPath = privateKeyPath;
         this.bankPublicKeyPath = bankPublicKeyPath;
         this.gatewayUrl = gatewayUrl;
-        // Gateway po pravilu očekuje ISO kod velikim slovima (npr. "RS"), iako je
-        // u properties fajlu upisano malim slovima ("rs").
         this.locale = locale == null ? "" : locale.toUpperCase(Locale.ROOT);
         this.resourceLoader = resourceLoader;
+        this.jdbcTemplate = jdbcTemplate;
 
         if (Security.getProvider("BC") == null) {
             Security.addProvider(new BouncyCastleProvider());
@@ -76,23 +86,24 @@ public class PaymentService {
     /**
      * Kreira HTML formu koja se auto-submituje ka platnom gateway-u.
      *
-     * NAPOMENA o SD polju: iz PHP primera za verifikaciju koji je poslala banka
-     * ($post['SD']) potvrđeno je da se polje zove tačno "SD". Ovde ga i dalje
-     * ostavljamo prazno po difoltu (nije obavezno), ali ako kasnije budeš želeo
-     * da pošalješ npr. opis narudžbine, koristi ime polja "SD" — NE "PurchaseDesc"
-     * (to ime ne postoji nigde u dokumentaciji banke).
+     * Iznos se NE prima od klijenta — računa se ovde, na osnovu ID-jeva
+     * kurseva, direktno iz kolone "cena" u tabeli "kurs". Ovo sprečava da
+     * neko izmeni iznos na klijentu (DevTools, izmenjen localStorage) i
+     * plati proizvoljno mali iznos.
      */
     public String createPaymentForm(
             String orderId,
-            String totalAmountRsd
+            List<Long> courseIds
     ) throws Exception {
 
         if (orderId == null || orderId.isBlank()) {
             throw new IllegalArgumentException("OrderID je obavezan.");
         }
+        if (courseIds == null || courseIds.isEmpty()) {
+            throw new IllegalArgumentException("Korpa je prazna.");
+        }
 
-        // Iznos u parama (npr. 100.00 RSD -> 10000)
-        String cleanRsd = toCents(totalAmountRsd);
+        String cleanRsd = calculateTotalAmountRsdInCents(courseIds);
 
         // Format vremena: yyMMddHHmmss (npr. 240820143000)
         String purchaseTime = LocalDateTime.now()
@@ -141,6 +152,50 @@ public class PaymentService {
     }
 
     /**
+     * Učitava cene iz tabele "kurs" za tražene ID-jeve i vraća ukupan iznos
+     * u RSD parama (cents), kao string spreman za slanje ka gateway-u.
+     *
+     * Pretpostavka: kolona "cena" je u EUR (u skladu sa prikazom na
+     * frontend-u). Ako je "cena" zapravo već u RSD, samo ukloni konverziju
+     * preko EUR_RSD_RATE ispod.
+     */
+    private String calculateTotalAmountRsdInCents(List<Long> courseIds) {
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("ids", courseIds);
+
+        List<BigDecimal> prices = jdbcTemplate.queryForList(
+                "SELECT cena FROM kurs WHERE kursId IN (:ids)",
+                params,
+                BigDecimal.class
+        );
+
+        if (prices.size() != courseIds.size()) {
+            // Neki od poslatih ID-jeva ne postoji u bazi — bolje odbiti
+            // transakciju nego naplatiti pogrešan (nepotpun) iznos.
+            throw new IllegalArgumentException(
+                    "Jedan ili više kurseva iz korpe nije pronađeno (očekivano " +
+                            courseIds.size() + ", pronađeno " + prices.size() + ")."
+            );
+        }
+
+        BigDecimal totalEur = prices.stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalRsd = totalEur.multiply(EUR_RSD_RATE);
+
+        // U pare (cents) — zaokruženo na 2 decimale pa pretvoreno u ceo broj.
+        BigDecimal totalRsdCents = totalRsd.setScale(2, RoundingMode.HALF_UP);
+
+        if (DEBUG_LOG_SIGNATURE_STRING) {
+            System.out.println("[PaymentService] Kursevi: " + courseIds +
+                    " | Ukupno EUR: " + totalEur +
+                    " | Ukupno RSD: " + totalRsdCents);
+        }
+
+        return totalRsdCents.toPlainString();
+    }
+
+    /**
      * Sastavljanje stringa za potpis (Inicijalizacija plaćanja - Request).
      * Redosled polja po UPC specifikaciji:
      * MerchantID;TerminalID;PurchaseTime;OrderID;Currency;TotalAmount;SD;
@@ -151,7 +206,8 @@ public class PaymentService {
             String totalAmountRsd
     ) throws Exception {
 
-        String sd = ""; // namerno prazno — videti napomenu u createPaymentForm
+        String sd = ""; // namerno prazno — polje se zove "SD" (potvrđeno iz PHP primera banke),
+                         // ali ga ne šaljemo dok ne bude potrebno.
 
         String data = merchantId + ";" +
                 terminalId + ";" +
@@ -178,20 +234,6 @@ public class PaymentService {
     // 2) VERIFIKACIJA POVRATNOG POZIVA — kad banka pozove success/failure URL
     // =========================================================================
 
-    /**
-     * Verifikuje potpis koji banka šalje nazad na success/failure endpoint.
-     * String za verifikaciju je preuzet DIREKTNO iz PHP primera koji je banka
-     * poslala (druga, konačna $data linija u njihovom kodu):
-     *
-     * MerchantID;TerminalID;PurchaseTime;OrderID;XID;CurrencyID;TotalAmount;SD;TranCode;ApprovalCode;UPCTokenExp;UPCToken;
-     *
-     * Polja UPCTokenExp i UPCToken se koriste samo kod plaćanja tokenizovanom
-     * karticom — kod običnih transakcija će verovatno biti prazna, što je u
-     * redu jer format i dalje predviđa da prazno polje ostavi samo ";".
-     *
-     * Vraća true/false — NE baca izuzetak napolje (loguje grešku interno),
-     * da poziv iz kontrolera uvek dobije jasan boolean odgovor.
-     */
     public boolean verifySignature(Map<String, String> params) {
         try {
             String merchantIdVal = params.getOrDefault("MerchantID", "");
@@ -236,13 +278,9 @@ public class PaymentService {
             boolean valid = verifyWithAlgorithm(data, signatureBytes, publicKey, "SHA256withRSA");
 
             if (!valid) {
-                // Originalni PHP primer u opštoj dokumentaciji koristi SHA-512 za potpisivanje.
-                // Ako SHA-256 ne prođe, probaj SHA-512 kao fallback dok ne potvrdiš tačan
-                // algoritam koji banka koristi za POTPISIVANJE SVOJIH povratnih poziva
-                // (može biti drugačiji od algoritma kojim TI potpisuješ zahtev).
                 valid = verifyWithAlgorithm(data, signatureBytes, publicKey, "SHA512withRSA");
                 if (valid) {
-                    System.out.println("[PaymentService] Potpis je važeći samo sa SHA512withRSA — potvrdi ovo sa bankom i po potrebi zameni default u kodu.");
+                    System.out.println("[PaymentService] Potpis je važeći samo sa SHA512withRSA — potvrdi ovo sa bankom.");
                 }
             }
 
@@ -264,15 +302,6 @@ public class PaymentService {
     // =========================================================================
     // Pomoćne metode
     // =========================================================================
-
-    private String toCents(String amountStr) {
-        if (amountStr == null || amountStr.isBlank()) {
-            throw new IllegalArgumentException("Iznos je obavezan.");
-        }
-        double parsed = Double.parseDouble(amountStr.replace(",", "."));
-        long cents = Math.round(parsed * 100);
-        return String.valueOf(cents);
-    }
 
     private PrivateKey loadPrivateKey() throws Exception {
         Resource resource = resourceLoader.getResource(

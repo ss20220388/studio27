@@ -1,5 +1,6 @@
 package com.server.studio27.routes;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -26,32 +27,37 @@ public class PaymentRoute {
         this.paymentService = paymentService;
     }
 
+    /**
+     * Telo zahteva sa frontend-a: { "orderId": "...", "courseIds": [7, 3] }
+     * NEMA iznosa — iznos se računa isključivo na serveru iz baze
+     * (videti PaymentService.calculateTotalAmountRsdInCents).
+     */
+    public record PaymentCreateRequest(String orderId, List<Long> courseIds) {
+    }
+
     @PostMapping("/payment/create")
     public ResponseEntity<?> createPayment(
-            @RequestBody Map<String, String> request
+            @RequestBody PaymentCreateRequest request
     ) {
         try {
-            String orderId = request.get("orderId");
-            String totalAmountRsd = request.get("totalAmountRsd");
-
-            if (orderId == null || orderId.isBlank()) {
+            if (request.orderId() == null || request.orderId().isBlank()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Order ID je obavezan."));
             }
 
-            if (totalAmountRsd == null || totalAmountRsd.isBlank()) {
-                return ResponseEntity.badRequest().body(Map.of("message", "RSD iznos je obavezan."));
+            if (request.courseIds() == null || request.courseIds().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Korpa je prazna."));
             }
 
-            // Napomena: purchaseDesc se ne koristi za sada (videti komentare u
-            // PaymentService.createPaymentForm) — ako front-end i dalje šalje to
-            // polje u telu zahteva, ovde se jednostavno ignoriše, ne pravi grešku.
             String paymentForm = paymentService.createPaymentForm(
-                    orderId,
-                    totalAmountRsd
+                    request.orderId(),
+                    request.courseIds()
             );
 
             return ResponseEntity.ok(Map.of("paymentForm", paymentForm));
 
+        } catch (IllegalArgumentException e) {
+            // npr. nepostojeći kursId, prazna korpa i sl. — validaciona greška, ne 500.
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body(
@@ -63,12 +69,6 @@ public class PaymentRoute {
         }
     }
 
-    /**
-     * Banka na ovaj URL šalje POST kad je transakcija uspešna. PRE nego što
-     * korisnika proglasimo za "platio je", potpis se mora verifikovati —
-     * u suprotnom bilo ko može ručno da pozove ovaj endpoint i lažira uspešno
-     * plaćanje bez da je stvarno platio.
-     */
     @PostMapping("/payment/success")
     public RedirectView paymentSuccess(
             @RequestParam Map<String, String> params
@@ -94,8 +94,6 @@ public class PaymentRoute {
     ) {
         String orderId = params.getOrDefault("OrderID", "");
 
-        // Transakcija je već neuspešna, ali svejedno vredi proveriti potpis
-        // radi audit traga (da se u logu vidi da li poziv zaista dolazi od banke).
         boolean signatureValid = paymentService.verifySignature(params);
         if (!signatureValid) {
             System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/failure za OrderID=" + orderId);
