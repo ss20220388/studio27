@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +28,7 @@ public class PaymentRoute {
     public PaymentRoute(PaymentService paymentService) {
         this.paymentService = paymentService;
     }
+
     public record PaymentCreateRequest(String orderId, List<Long> courseIds, BigDecimal totalAmount) {
     }
 
@@ -64,10 +66,45 @@ public class PaymentRoute {
         }
     }
 
+    // Ruta koju banka poziva (Server-to-Server) i očekuje format odgovora iz PHP skripte
+    @PostMapping(value = "/payment/notify", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> paymentNotify(@RequestParam Map<String, String> params) {
+        String merchantId = params.getOrDefault("MerchantID", "");
+        String terminalId = params.getOrDefault("TerminalID", "");
+        String orderId = params.getOrDefault("OrderID", "");
+        String delay = params.getOrDefault("Delay", "");
+        String currency = params.getOrDefault("Currency", "");
+        String totalAmount = params.getOrDefault("TotalAmount", "");
+        String xid = params.getOrDefault("XID", "");
+        String purchaseTime = params.getOrDefault("PurchaseTime", "");
+
+        boolean signatureValid = paymentService.verifySignature(params);
+
+        StringBuilder response = new StringBuilder();
+        response.append("MerchantID = ").append(merchantId).append("\n");
+        response.append("TerminalID = ").append(terminalId).append("\n");
+        response.append("OrderID = ").append(orderId).append("\n");
+        response.append("Delay = ").append(delay).append("\n");
+        response.append("Currency = ").append(currency).append("\n");
+        response.append("TotalAmount = ").append(totalAmount).append("\n");
+        response.append("XID = ").append(xid).append("\n");
+        response.append("PurchaseTime = ").append(purchaseTime).append("\n");
+
+        if (signatureValid) {
+            response.append("Response.action= approve \n");
+            response.append("Response.reason= ok \n");
+            response.append("Response.forwardUrl= \n");
+            return ResponseEntity.ok(response.toString());
+        } else {
+            response.append("Response.action= reverse \n");
+            response.append("Response.reason= something goes wrong \n");
+            response.append("Response.forwardUrl= \n");
+            return ResponseEntity.ok(response.toString());
+        }
+    }
+
     @PostMapping("/payment/success")
-    public RedirectView paymentSuccess(
-            @RequestParam Map<String, String> params
-    ) {
+    public RedirectView paymentSuccess(@RequestParam Map<String, String> params) {
         String orderId = params.getOrDefault("OrderID", "");
         boolean signatureValid = paymentService.verifySignature(params);
 
@@ -84,9 +121,7 @@ public class PaymentRoute {
     }
 
     @PostMapping("/payment/failure")
-    public RedirectView paymentFailure(
-            @RequestParam Map<String, String> params
-    ) {
+    public RedirectView paymentFailure(@RequestParam Map<String, String> params) {
         String orderId = params.getOrDefault("OrderID", "");
 
         boolean signatureValid = paymentService.verifySignature(params);
