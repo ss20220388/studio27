@@ -14,7 +14,6 @@ export default function UplatnicaCheckout({
 
   const EUR_RSD_RATE = 117.4;
 
-  // Zvanični podaci za uplatu sa slike
   const COMPANY_INFO = {
     name: "Doroteja Đokić PR 27archviz",
     pib: "114735847",
@@ -22,8 +21,8 @@ export default function UplatnicaCheckout({
     address: "Aleksinačkih rudara 39E, 11070 Beograd-Novi Beograd",
     phone: "+381 66 5934 314",
     email: "studio27.vizz@gmail.com",
-    account: "205-0000000529845-48", // Zamenite sa vašim pravim br. računa iz banke ako se razlikuje
-    code: "289", // Šifra plaćanja (289 - transakcije po nalogu građana)
+    account: "205-0000000529845-48",
+    code: "289",
   };
 
   const handleGoHome = () => (onBack ? onBack() : (window.location.href = "/"));
@@ -43,7 +42,6 @@ export default function UplatnicaCheckout({
         setTotals({ eur, rsd: Math.round(eur * EUR_RSD_RATE) });
       }
       
-      // Generisanje jedinstvenog ID-a narudžbine koji služi kao poziv na broj
       const generatedOrder = `27-${Math.floor(100000 + Math.random() * 900000)}`;
       setOrderId(generatedOrder);
     } catch (err) {
@@ -72,7 +70,6 @@ export default function UplatnicaCheckout({
       const headers = { "Content-Type": "application/json" };
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      // Opciono: Slanje porudžbine na backend kako bi ostala zapamćena na serveru
       if (API_URL) {
         await fetch(`${API_URL}/api/orders/manual`, {
           method: "POST",
@@ -97,10 +94,11 @@ export default function UplatnicaCheckout({
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 flex items-center justify-center p-4 md:p-8 font-sans">
+    /* POZADINA CELOG EKRANA JE SADA BELA (bg-white) */
+    <div className="min-h-screen w-full bg-white flex items-center justify-center p-4 md:p-8 font-sans">
       <div className="w-full max-w-4xl mx-auto">
         
-        {/* GLAVNA KARTICA */}
+        {/* TAMNA KARTICA SAČUVANA U ORIGINALNOM STILU */}
         <div className="bg-slate-900 rounded-3xl shadow-2xl border border-slate-800 overflow-hidden text-slate-100">
 
           {/* HEADER */}
@@ -163,7 +161,7 @@ export default function UplatnicaCheckout({
               </div>
             </div>
 
-            {/* PODACI ZA UPLATNICU (PODACI IZ FIRME) */}
+            {/* PODACI ZA UPLATNICU */}
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-xs font-black uppercase tracking-wider text-slate-400">Podaci za popunjavanje uplatnice</h2>
@@ -230,7 +228,7 @@ export default function UplatnicaCheckout({
               </div>
             </div>
 
-            {/* DIRECT KONTAKT - DOROTEJA ĐOKIĆ */}
+            {/* DIRECT KONTAKT */}
             <div className="bg-slate-950/80 rounded-2xl p-5 border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
                 <p className="text-xs uppercase tracking-wider font-bold text-red-400">Direktan kontakt i podrška</p>
@@ -273,7 +271,7 @@ export default function UplatnicaCheckout({
               {isSubmitting ? "Zapisujem porudžbinu..." : "Potvrdi i preuzmi podatke za uplatu"}
             </button>
 
-            {/* LEGAL FOOTER PODACI SA SLIKE */}
+            {/* LEGAL FOOTER */}
             <div className="pt-4 border-t border-slate-800/60 text-center text-[10px] text-slate-500 space-y-1">
               <p className="font-semibold text-slate-400">©2026 27archviz • SRBIJA PIB: {COMPANY_INFO.pib} • MB: {COMPANY_INFO.mb}</p>
               <p>{COMPANY_INFO.address}</p>
