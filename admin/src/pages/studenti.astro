@@ -5,7 +5,7 @@ import UsersPage from "../react components/UsersPage";
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 // 1. Preuzimanje tokena iz kolačića
-const accessToken = Astro.cookies.get("accessToken")?.value;
+const accessToken = Astro.cookies.get("refreshToken")?.value;
 
 const authHeaders: Record<string, string> = accessToken
   ? { Authorization: `Bearer ${accessToken}` }

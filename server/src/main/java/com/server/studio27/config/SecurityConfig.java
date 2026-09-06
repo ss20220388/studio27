@@ -84,7 +84,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/kursevi").permitAll()
                                                 .requestMatchers("/api/media/**").permitAll()
                                                 .requestMatchers("/api/recenzije").permitAll()
-                                                .requestMatchers("/api/unlock-admin").permitAll()
+                                                .requestMatchers("/api/unlock-device").permitAll()
                                                 .requestMatchers("/api/video/stream").permitAll()
                                                 .requestMatchers("/api/video/stream-protected").permitAll()
                                                 .requestMatchers("/api/radovi").permitAll()

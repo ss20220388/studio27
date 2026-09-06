@@ -39,7 +39,16 @@ interface UsersPageProps {
   token: string;
 }
 
-// Input component
+// Pomoćna funkcija za generisanje Authorization i ostalih zaglavlja
+const getAuthHeaders = (token: string, extraHeaders: Record<string, string> = {}) => {
+  const headers: Record<string, string> = { ...extraHeaders };
+  if (token && token.trim() !== "") {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
+// Input komponenta
 const Input = ({
   label,
   value,
@@ -135,30 +144,38 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
   const [search, setSearch] = useState("");
   const limit = 20;
 
-  const allUsers: User[] = students.map((student) => ({
-    id: student.studentId,
-    ime: student.ime,
-    prezime: student.prezime,
-    email: student.email,
-    telefon: student.brojTelefona ?? "",
-    datumRegistracije: "-",
-    status: (student.active == 1 ? "aktivan" : "neaktivan") as "aktivan" | "neaktivan",
-    deviceId: student.deviceId,
-    deviceInfo: null,
-    kursevi: student.kursevi,
-  }));
+  // Sinhronizacija sa props-ima putem lokalnog stanja
+  const [usersList, setUsersList] = useState<User[]>([]);
+
+  useEffect(() => {
+    if (students && students.length >= 0) {
+      const mapped = students.map((student) => ({
+        id: student.studentId,
+        ime: student.ime,
+        prezime: student.prezime,
+        email: student.email,
+        telefon: student.brojTelefona ?? "",
+        datumRegistracije: "-",
+        status: (student.active == 1 ? "aktivan" : "neaktivan") as "aktivan" | "neaktivan",
+        deviceId: student.deviceId,
+        deviceInfo: null,
+        kursevi: student.kursevi || [],
+      }));
+      setUsersList(mapped);
+    }
+  }, [students]);
 
   // Modals
   const [showAdd, setShowAdd] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deviceUser, setDeviceUser] = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
-  const [selectedCourse, setSelectedCourse] = React.useState("");
+  const [selectedCourse, setSelectedCourse] = useState("");
 
   // Add form
   const [addForm, setAddForm] = useState({ ime: "", prezime: "", email: "", telefon: "" });
 
-  const filtered = allUsers.filter(
+  const filtered = usersList.filter(
     (u) =>
       u.ime.toLowerCase().includes(search.toLowerCase()) ||
       u.prezime.toLowerCase().includes(search.toLowerCase()) ||
@@ -186,12 +203,11 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
 
   async function dodajKorisnikaUBazu() {
     try {
-      await fetch(`${PUBLIC_API_KEY}/api/auth/register-user`, {
+      const res = await fetch(`${PUBLIC_API_KEY}/api/auth/register-user`, {
         method: "POST",
-        headers: {
+        headers: getAuthHeaders(token, {
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + token,
-        },
+        }),
         body: JSON.stringify({
           ime: addForm.ime,
           prezime: addForm.prezime,
@@ -199,7 +215,10 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
           brojTelefona: addForm.telefon,
         }),
       });
-      window.location.reload();
+
+      if (res.ok) {
+        window.location.reload();
+      }
     } catch (error) {
       console.error("Greška prilikom dodavanja korisnika:", error);
     }
@@ -207,48 +226,56 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
 
   async function obrisiKorisnika(studentId: number) {
     try {
-      await fetch(`${PUBLIC_API_KEY}/api/obrisi-studenta`, {
+      const res = await fetch(`${PUBLIC_API_KEY}/api/obrisi-studenta`, {
         method: "DELETE",
-        headers: {
+        headers: getAuthHeaders(token, {
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + token,
-        },
-        body: studentId.toString(),
+        }),
+        body: JSON.stringify(studentId),
       });
-      setDeleteUser(null);
-      window.location.reload();
+
+      if (res.ok) {
+        setUsersList((prev) => prev.filter((u) => u.id !== studentId));
+        setDeleteUser(null);
+      }
     } catch (error) {
       console.error("Greška prilikom brisanja korisnika:", error);
     }
   }
 
-  async function ukloniDeviceId() {
-    if (!deviceUser) return;
-    try {
-      await fetch(`${PUBLIC_API_KEY}/api/unlock-device`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token,
-        },
-        body: JSON.stringify({ email: deviceUser.email }),
-      });
+ async function ukloniDeviceId() {
+  if (!deviceUser) return;
+  try {
+    const res = await fetch(`${PUBLIC_API_KEY}/api/unlock-device`, {
+      method: "POST",
+      headers: getAuthHeaders(token, {
+        "Content-Type": "application/json",
+      }),
+      body: JSON.stringify({
+        studentId: deviceUser.id,
+        email: deviceUser.email,
+      }),
+    });
+
+    if (res.ok) {
+      setUsersList((prev) =>
+        prev.map((u) => (u.id === deviceUser.id ? { ...u, deviceId: null } : u))
+      );
       setDeviceUser(null);
-      window.location.reload();
-    } catch (error) {
-      console.error("Greška prilikom uklanjanja Device ID-a:", error);
     }
+  } catch (error) {
+    console.error("Greška prilikom uklanjanja Device ID-a:", error);
   }
+}
 
   async function editujKorisnika() {
     if (!editUser) return;
     try {
-      await fetch(`${PUBLIC_API_KEY}/api/edit-student-sa-adminom`, {
+      const res = await fetch(`${PUBLIC_API_KEY}/api/edit-student-sa-adminom`, {
         method: "PUT",
-        headers: {
+        headers: getAuthHeaders(token, {
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + token,
-        },
+        }),
         body: JSON.stringify({
           studentId: editUser.id,
           ime: editUser.ime,
@@ -258,8 +285,13 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
           kursevi: editUser.kursevi.map((k) => k.kursId),
         }),
       });
-      setEditUser(null);
-      window.location.reload();
+
+      if (res.ok) {
+        setUsersList((prev) =>
+          prev.map((u) => (u.id === editUser.id ? editUser : u))
+        );
+        setEditUser(null);
+      }
     } catch (error) {
       console.error("Greška prilikom uređivanja korisnika:", error);
     }
@@ -514,7 +546,7 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
                     </button>
                   </div>
                 ))}
-                <div className="flex gap-2 mt-3 items-center">
+                <div className="flex gap-2 mt-3 items-center w-full">
                   <div className="relative flex-1 max-w-[220px]">
                     <select
                       value={selectedCourse}
