@@ -78,7 +78,6 @@ export default function UplatnicaCheckout({
         throw new Error(data.message || "Greška pri kreiranju forme za plaćanje.");
       }
 
-      // Pouzdano kreiranje i slanje HTML forme
       const wrapper = document.createElement("div");
       wrapper.id = "payment-form-wrapper";
       wrapper.innerHTML = data.paymentForm;
@@ -89,7 +88,6 @@ export default function UplatnicaCheckout({
         throw new Error("Forma za plaćanje nije pronađena u odgovoru servera.");
       }
 
-      // Slanje forme ka bankarskom gateway-u
       form.submit();
 
     } catch (err) {
@@ -104,28 +102,28 @@ export default function UplatnicaCheckout({
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-950 flex items-center justify-center p-4 md:p-8">
+    <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center p-4 md:p-8">
       <div className="w-full max-w-3xl mx-auto">
-        <div className="bg-slate-900 rounded-3xl shadow-2xl border border-slate-800 overflow-hidden text-slate-100">
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden text-slate-900">
 
           {/* HEADER */}
-          <div className="bg-slate-950 p-6 md:p-10 border-b border-slate-800">
+          <div className="bg-slate-100 p-6 md:p-10 border-b border-slate-200">
             <div className="flex items-center justify-between mb-8">
               <button
                 type="button"
                 onClick={handleGoHome}
                 disabled={isSubmitting}
-                className="text-xs md:text-sm font-semibold text-slate-400 hover:text-white transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="text-xs md:text-sm font-semibold text-slate-600 hover:text-slate-900 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 <span className="text-lg">←</span> Nazad
               </button>
-              <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest bg-blue-950/80 text-blue-400 px-4 py-2 rounded-full border border-blue-800/50">
+              <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest bg-red-50 text-red-600 px-4 py-2 rounded-full border border-red-200">
                 Bezbedno plaćanje
               </span>
             </div>
-            <p className="text-xs uppercase tracking-widest font-bold text-blue-400 mb-2">Studio 27</p>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-3">Plaćanje karticom</h1>
-            <p className="text-sm md:text-base text-slate-400 max-w-xl leading-relaxed">
+            <p className="text-xs uppercase tracking-widest font-bold text-red-600 mb-2">Studio 27</p>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-slate-900">Plaćanje karticom</h1>
+            <p className="text-sm md:text-base text-slate-600 max-w-xl leading-relaxed">
               Završite kupovinu sigurnim plaćanjem putem platne kartice i ostvarite trenutni, trajni pristup kursevima.
             </p>
           </div>
@@ -134,34 +132,34 @@ export default function UplatnicaCheckout({
           <div className="p-6 md:p-10">
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-black uppercase tracking-wider text-slate-300">Vaša porudžbina</h2>
-                <span className="text-xs font-semibold text-slate-400">
+                <h2 className="text-sm font-black uppercase tracking-wider text-slate-700">Vaša porudžbina</h2>
+                <span className="text-xs font-semibold text-slate-500">
                   {cartList.length} {cartList.length === 1 ? "kurs" : "kurseva"}
                 </span>
               </div>
 
-              <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-950/50">
+              <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50">
                 {cartList.length > 0 ? (
                   <div>
                     {cartList.map((item, idx) => (
                       <div
                         key={item.id || item.kursId || idx}
                         className={`flex items-center justify-between gap-4 p-4 md:p-5 ${
-                          idx !== cartList.length - 1 ? "border-b border-slate-800" : ""
+                          idx !== cartList.length - 1 ? "border-b border-slate-200" : ""
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 border border-slate-700">
-                            <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center shrink-0 border border-red-100">
+                            <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                             </svg>
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-bold text-white truncate">{item.title || item.naslov || item.naziv || "Kurs"}</p>
-                            <p className="text-xs text-emerald-400 font-semibold mt-0.5">Jednokratna kupovina • Trajni pristup</p>
+                            <p className="text-sm font-bold text-slate-900 truncate">{item.title || item.naslov || item.naziv || "Kurs"}</p>
+                            <p className="text-xs text-emerald-600 font-semibold mt-0.5">Jednokratna kupovina • Trajni pristup</p>
                           </div>
                         </div>
-                        <div className="text-sm font-black text-white whitespace-nowrap">
+                        <div className="text-sm font-black text-slate-900 whitespace-nowrap">
                           {formatEur(item.price || item.cena)} EUR
                         </div>
                       </div>
@@ -172,23 +170,23 @@ export default function UplatnicaCheckout({
                 )}
 
                 {/* TOTAL & KURS */}
-                <div className="bg-slate-900/80 border-t border-slate-800 p-5 md:p-6">
+                <div className="bg-slate-100/80 border-t border-slate-200 p-5 md:p-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-4">
                     <div>
-                      <p className="text-xs uppercase tracking-wider font-bold text-slate-400">Iznos u EUR</p>
-                      <p className="text-2xl font-black text-white mt-1">{formatEur(totals.eur)} EUR</p>
+                      <p className="text-xs uppercase tracking-wider font-bold text-slate-500">Iznos u EUR</p>
+                      <p className="text-2xl font-black text-slate-900 mt-1">{formatEur(totals.eur)} EUR</p>
                       <p className="text-xs text-slate-500 mt-1">Informativni prikaz</p>
                     </div>
                     <div className="sm:text-right">
-                      <p className="text-xs uppercase tracking-wider font-bold text-slate-400">Ukupno za naplatu</p>
-                      <p className="text-2xl font-black text-blue-400 mt-1">{formatRsd(totals.rsd)} RSD</p>
+                      <p className="text-xs uppercase tracking-wider font-bold text-slate-500">Ukupno za naplatu</p>
+                      <p className="text-2xl font-black text-red-600 mt-1">{formatRsd(totals.rsd)} RSD</p>
                       <p className="text-xs text-slate-500 mt-1">Zvanična valuta transakcije</p>
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                  <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
                     <span className="font-medium">Primenjeni obračunski kurs:</span>
-                    <span className="font-bold text-slate-200 bg-slate-800 border border-slate-700 px-2.5 py-1 rounded-md">
+                    <span className="font-bold text-slate-800 bg-white border border-slate-200 px-2.5 py-1 rounded-md shadow-sm">
                       1 EUR = {EUR_RSD_RATE} RSD
                     </span>
                   </div>
@@ -198,15 +196,15 @@ export default function UplatnicaCheckout({
 
             {/* PAYMENT METHOD */}
             <div className="mb-8">
-              <h2 className="text-sm font-black uppercase tracking-wider text-slate-300 mb-4">Način plaćanja</h2>
-              <div className="mb-4 bg-slate-950 p-4 rounded-2xl border border-slate-800 flex items-center justify-center">
+              <h2 className="text-sm font-black uppercase tracking-wider text-slate-700 mb-4">Način plaćanja</h2>
+              <div className="mb-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center justify-center">
                 <img src="/images/logo_kartice.svg" alt="Payment Method" className="w-full h-auto rounded-lg max-h-12 object-contain" />
               </div>
 
-              <div className="border border-blue-500/30 rounded-2xl p-5 md:p-6 bg-blue-950/10">
+              <div className="border border-red-200 rounded-2xl p-5 md:p-6 bg-red-50/30">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-600/20">
+                    <div className="w-12 h-12 bg-red-600 text-white rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-red-600/20">
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <rect x="3" y="5" width="18" height="14" rx="2" strokeWidth="2" />
                         <path d="M3 10h18" strokeWidth="2" />
@@ -215,21 +213,21 @@ export default function UplatnicaCheckout({
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-base md:text-lg font-black text-white">Platna kartica</h3>
-                        <span className="text-[9px] uppercase tracking-wider font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">Sigurno</span>
+                        <h3 className="text-base md:text-lg font-black text-slate-900">Platna kartica</h3>
+                        <span className="text-[9px] uppercase tracking-wider font-black bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">Sigurno</span>
                       </div>
-                      <p className="text-xs md:text-sm text-slate-400 mt-1">Visa / Mastercard / DinaCard</p>
+                      <p className="text-xs md:text-sm text-slate-500 mt-1">Visa / Mastercard / DinaCard</p>
                     </div>
                   </div>
 
                   <div className="hidden sm:flex items-center gap-2">
-                    <div className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-[11px] font-black text-slate-300">VISA</div>
-                    <div className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-[11px] font-black text-slate-300">Mastercard</div>
+                    <div className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-black text-slate-700 shadow-sm">VISA</div>
+                    <div className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-black text-slate-700 shadow-sm">Mastercard</div>
                   </div>
                 </div>
 
-                <div className="mt-5 pt-5 border-t border-slate-800">
-                  <p className="text-xs md:text-sm text-slate-400 leading-relaxed">
+                <div className="mt-5 pt-5 border-t border-slate-200">
+                  <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
                     Nakon klika na dugme bićete preusmereni na zaštićeni gateway banke gde bezbedno unosite podatke sa kartice.
                   </p>
                 </div>
@@ -237,15 +235,15 @@ export default function UplatnicaCheckout({
             </div>
 
             {/* CHECKBOX SAGLASNOSTI */}
-            <div className="mb-6 space-y-3 bg-slate-950/60 p-4 rounded-2xl border border-slate-800">
+            <div className="mb-6 space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={termsAccepted}
                   onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-slate-700 bg-slate-900 text-orange-500 focus:ring-orange-500 cursor-pointer"
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 bg-white text-red-600 focus:ring-red-500 cursor-pointer"
                 />
-                <span className="text-xs text-slate-400 leading-normal">
+                <span className="text-xs text-slate-600 leading-normal">
                   Potvrđujem da sam saglasan/na sa uslovima kupovine i da pristup digitalnom sadržaju dobijam odmah nakon uspešne uplate.
                 </span>
               </label>
@@ -253,8 +251,8 @@ export default function UplatnicaCheckout({
 
             {/* ERROR */}
             {error && (
-              <div className="mb-6 p-4 bg-red-950/40 border border-red-800/60 text-red-400 rounded-2xl text-sm font-medium flex items-start gap-3">
-                <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm font-medium flex items-start gap-3">
+                <svg className="w-5 h-5 shrink-0 mt-0.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.2 3 1.73 3z" />
                 </svg>
                 <span>{error}</span>
@@ -266,11 +264,11 @@ export default function UplatnicaCheckout({
               type="button"
               onClick={handleCardPayment}
               disabled={isSubmitting || totals.rsd <= 0 || cartList.length === 0 || !termsAccepted}
-              className="w-full px-6 py-4 md:py-5 bg-orange-600 hover:bg-orange-500 text-white rounded-2xl text-sm md:text-base font-black transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg shadow-orange-600/20 cursor-pointer"
+              className="w-full px-6 py-4 md:py-5 bg-red-600 hover:bg-red-500 text-white rounded-2xl text-sm md:text-base font-black transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-lg shadow-red-600/20 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
-                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 animate-spin text-white" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                   </svg>
@@ -289,21 +287,21 @@ export default function UplatnicaCheckout({
 
             {/* INFO */}
             <div className="mt-5 text-center space-y-2">
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-slate-500">
                 Kupovina je jednokratna. Odabrani kurs ostaje u vašem vlasništvu **trajno**.
               </p>
-              <p className="text-[10px] text-slate-500 leading-normal max-w-lg mx-auto">
+              <p className="text-[10px] text-slate-400 leading-normal max-w-lg mx-auto">
                 *Sva plaćanja biće izvršena u dinarima (RSD) po navedenom kursu (1 EUR = {EUR_RSD_RATE} RSD). Ukoliko se plaća platnim karticama inostranih banaka izdavalaca, dinarski iznos transakcije biće konvertovan u novčanu jedinicu kartice po kursu poslovne banke ili kartičnih organizacija.
               </p>
             </div>
 
             {/* BACK */}
-            <div className="mt-8 pt-6 border-t border-slate-800 flex justify-center">
+            <div className="mt-8 pt-6 border-t border-slate-200 flex justify-center">
               <button
                 type="button"
                 onClick={handleGoHome}
                 disabled={isSubmitting}
-                className="text-xs font-bold text-slate-400 hover:text-white transition cursor-pointer disabled:opacity-50"
+                className="text-xs font-bold text-slate-500 hover:text-slate-900 transition cursor-pointer disabled:opacity-50"
               >
                 ← Vrati se na početnu
               </button>
@@ -311,7 +309,7 @@ export default function UplatnicaCheckout({
           </div>
         </div>
 
-        <p className="text-center text-[11px] text-slate-500 mt-5">
+        <p className="text-center text-[11px] text-slate-400 mt-5">
           Podaci o kartici se unose na sigurnoj stranici platnog sistema banke.
         </p>
       </div>
