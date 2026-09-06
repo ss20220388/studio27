@@ -1,5 +1,6 @@
 package com.server.studio27.routes;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -26,13 +27,7 @@ public class PaymentRoute {
     public PaymentRoute(PaymentService paymentService) {
         this.paymentService = paymentService;
     }
-
-    /**
-     * Telo zahteva sa frontend-a: { "orderId": "...", "courseIds": [7, 3] }
-     * NEMA iznosa — iznos se računa isključivo na serveru iz baze
-     * (videti PaymentService.calculateTotalAmountRsdInCents).
-     */
-    public record PaymentCreateRequest(String orderId, List<Long> courseIds) {
+    public record PaymentCreateRequest(String orderId, List<Long> courseIds, BigDecimal totalAmount) {
     }
 
     @PostMapping("/payment/create")
@@ -50,13 +45,13 @@ public class PaymentRoute {
 
             String paymentForm = paymentService.createPaymentForm(
                     request.orderId(),
-                    request.courseIds()
+                    request.courseIds(),
+                    request.totalAmount()
             );
 
             return ResponseEntity.ok(Map.of("paymentForm", paymentForm));
 
         } catch (IllegalArgumentException e) {
-            // npr. nepostojeći kursId, prazna korpa i sl. — validaciona greška, ne 500.
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();

@@ -11,11 +11,7 @@ export default function UplatnicaCheckout({
   const [totals, setTotals] = useState({ eur: 0, rsd: 0 });
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  // NAPOMENA: ovaj kurs i iznosi ispod se koriste SAMO za prikaz korisniku.
-  // Stvarni iznos za naplatu se računa na backendu iz cena u bazi, na osnovu
-  // ID-jeva kurseva koje šaljemo — klijent više ne šalje gotov iznos, jer bi
-  // ga bilo ko mogao izmeniti pre slanja (npr. kroz DevTools ili menjanjem
-  // localStorage-a) i platiti proizvoljno mali iznos.
+
   const EUR_RSD_RATE = 117.4;
 
   const handleGoHome = () => (onBack ? onBack() : (window.location.href = "/"));
@@ -56,11 +52,6 @@ export default function UplatnicaCheckout({
 
     try {
       const orderId = `ORD-${Date.now()}`;
-
-      // Šaljemo samo ID-jeve kurseva iz korpe — NE i izračunat iznos.
-      // Backend povlači stvarne cene iz baze i sam sabira ukupan iznos,
-      // pa čak i izmenjen localStorage na klijentu ne može da utiče na
-      // to koliko će korisnik zapravo platiti.
       const courseIds = cartList
         .map((item) => item.id || item.kursId)
         .filter(Boolean);
@@ -73,13 +64,14 @@ export default function UplatnicaCheckout({
       if (token) {
         headers.Authorization = `Bearer ${token}`;
       }
-
+      console.log("Slanje zahteva za kreiranje forme za plaćanje:", { orderId, courseIds });
       const response = await fetch(`${API_URL}/api/payment/create`, {
         method: "POST",
         headers,
         body: JSON.stringify({
           orderId,
           courseIds,
+          totalAmount: totals.rsd,
         }),
       });
 

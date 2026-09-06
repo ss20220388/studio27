@@ -1,62 +1,46 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import UsersPage from "../react components/UsersPage";
-import type { AstroCookies } from "astro";
 
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
-const cookies = Astro.cookies as AstroCookies;
-const refreshToken = cookies.get("refreshToken");
-const token = refreshToken?.value;
-const authHeaders: Record<string, string> = token
-  ? {
-      Authorization: `Bearer ${token}`,
-    }
+// 1. Preuzimanje tokena iz kolačića
+const accessToken = Astro.cookies.get("accessToken")?.value;
+
+const authHeaders: Record<string, string> = accessToken
+  ? { Authorization: `Bearer ${accessToken}` }
   : {};
 
 let studentsData = { students: [], count: 0, message: "" };
+let kurseviData = { kursevi: [], message: "" };
 
 try {
-  const studentsResponse = await fetch(`${API_URL}/api/students`, {
-    headers: authHeaders,
-  });
+  const [studentsResponse, kurseviResponse] = await Promise.all([
+    fetch(`${API_URL}/api/students`, { headers: authHeaders }),
+    fetch(`${API_URL}/api/kursevi`, { headers: authHeaders })
+  ]);
 
-  if (!studentsResponse.ok) {
-    console.error(`API Error: ${studentsResponse.status} ${studentsResponse.statusText}`);
-    const errorText = await studentsResponse.text();
-    console.error("Response body:", errorText);
-    studentsData = { students: [], count: 0, message: `API Error: ${studentsResponse.status}` };
-  } else {
+  if (studentsResponse.ok) {
     studentsData = await studentsResponse.json();
+  } else {
+    console.error(`Students API Error: ${studentsResponse.status}`, await studentsResponse.text());
+  }
+
+  if (kurseviResponse.ok) {
+    kurseviData = await kurseviResponse.json();
+  } else {
+    console.error(`Kursevi API Error: ${kurseviResponse.status}`, await kurseviResponse.text());
   }
 } catch (error) {
-  console.error("Greška pri učitavanju studenata:", error);
-  studentsData = { students: [], count: 0, message: `Error: ${error}` };
+  console.error("Greška pri komunikaciji sa API-jem:", error);
 }
-
-let kurseviData = { kursevi: [], message: "" };
-try{
-  const kurseviResponse = await fetch(`${API_URL}/api/kursevi`, {
-    headers: authHeaders,
-  });
-  
-  if (!kurseviResponse.ok) {
-    console.error(`Kursevi API Error: ${kurseviResponse.status}`);
-    const errorText = await kurseviResponse.text();
-    console.error("Kursevi response body:", errorText);
-    kurseviData = { kursevi: [], message: `API Error: ${kurseviResponse.status}` };
-  } else {
-    kurseviData = await kurseviResponse.json();
-  }
-} catch (error){
-    console.error("Greška pri učitavanju kurseva:", error);
-    kurseviData = { kursevi: [], message: `Error: ${error}` };
-}
-
-
-
 ---
 
 <Layout title="Korisnici">
-  <UsersPage students={studentsData.students} token= {token?token : ""} sviKursevi={kurseviData.kursevi} client:load />
+  <UsersPage 
+    students={studentsData.students} 
+    token={accessToken || ""} 
+    sviKursevi={kurseviData.kursevi} 
+    client:load 
+  />
 </Layout>

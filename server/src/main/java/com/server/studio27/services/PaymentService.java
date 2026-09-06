@@ -27,7 +27,6 @@ import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -75,7 +74,8 @@ public class PaymentService {
 
     public String createPaymentForm(
             String orderId,
-            List<Long> courseIds
+            List<Long> courseIds,
+            BigDecimal totalAmount
     ) throws Exception {
 
         if (orderId == null || orderId.isBlank()) {
@@ -84,8 +84,13 @@ public class PaymentService {
         if (courseIds == null || courseIds.isEmpty()) {
             throw new IllegalArgumentException("Korpa je prazna.");
         }
-
-        String cleanRsd = calculateTotalAmountRsdInCents(courseIds);
+        if (totalAmount == null) {
+            throw new IllegalArgumentException("Iznos je obavezan.");
+        }
+        if (totalAmount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Iznos ne može biti negativan.");
+        }
+        String cleanRsd = totalAmount.setScale(2, RoundingMode.HALF_UP).toPlainString();
 
         String purchaseTime = LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
@@ -132,30 +137,7 @@ public class PaymentService {
                 );
     }
 
-    private String calculateTotalAmountRsdInCents(List<Long> courseIds) {
-        MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("ids", courseIds);
-
-        List<BigDecimal> prices = jdbcTemplate.queryForList(
-                "SELECT cena FROM kurs WHERE kursId IN (:ids)",
-                params,
-                BigDecimal.class
-        );
-
-        if (prices.size() != courseIds.size()) {
-            throw new IllegalArgumentException(
-                    "Jedan ili više kurseva iz korpe nije pronađeno."
-            );
-        }
-
-        BigDecimal totalEur = prices.stream()
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal totalRsd = totalEur.multiply(EUR_RSD_RATE);
-
-        return totalRsd.setScale(2, RoundingMode.HALF_UP).toPlainString();
-    }
-
+  
     public String generateSignature(
             String purchaseTime,
             String orderId,
