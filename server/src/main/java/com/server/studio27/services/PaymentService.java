@@ -33,8 +33,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class PaymentService {
 
-    private static final BigDecimal EUR_RSD_RATE = new BigDecimal("117.4");
-
     private final String merchantId;
     private final String terminalId;
     private final String currencyId;
@@ -84,70 +82,92 @@ public class PaymentService {
         if (courseIds == null || courseIds.isEmpty()) {
             throw new IllegalArgumentException("Korpa je prazna.");
         }
-        if (totalAmount == null) {
-            throw new IllegalArgumentException("Iznos je obavezan.");
+        if (totalAmount == null || totalAmount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Iznos mora biti pozitivan.");
         }
-        if (totalAmount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Iznos ne može biti negativan.");
-        }
+
         String cleanRsd = totalAmount.setScale(2, RoundingMode.HALF_UP).toPlainString();
+        String purchaseTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
+        String delay = "1";
 
-        String purchaseTime = LocalDateTime.now()
-                .format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
-
-        String signature = generateSignature(purchaseTime, orderId, cleanRsd);
+        // Generiše potpis sa dodatim Delay poljem
+        String signature = generateSignature(purchaseTime, orderId, delay, cleanRsd);
 
         return """
                 <!DOCTYPE html>
                 <html>
                 <head>
                     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-                    <title>Redirecting to Payment Gateway...</title>
+                    <title>TEST MODE - Payment Gateway Payload</title>
+                    <style>
+                        body { font-family: monospace; background: #0f172a; color: #f8fafc; padding: 20px; }
+                        .card { background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155; }
+                        h2 { color: #f43f5e; margin-top: 0; }
+                        pre { background: #090d16; padding: 15px; border-radius: 6px; overflow-x: auto; color: #38bdf8; }
+                        button { background: #ea580c; color: white; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 15px; }
+                        button:hover { background: #c2410c; }
+                    </style>
                 </head>
                 <body>
 
-                <form id="paymentForm" action="%s" method="POST">
-                    <input name="Version" type="hidden" value="1" />
-                    <input name="MerchantID" type="hidden" value="%s" />
-                    <input name="TerminalID" type="hidden" value="%s" />
-                    <input name="TotalAmount" type="hidden" value="%s" />
-                    <input name="Currency" type="hidden" value="%s" />
-                    <input name="locale" type="hidden" value="%s" />
-                    <input name="PurchaseTime" type="hidden" value="%s" />
-                    <input name="OrderID" type="hidden" value="%s" />
-                    <input name="Signature" type="hidden" value="%s" />
-                </form>
+                <div class="card">
+                    <h2>[TEST MODE] Form Payload Inspection</h2>
+                    <p>Zahtev nije automatski prosleđen na Gateway URL (<code>%s</code>).</p>
+                    
+                    <h3>Podaci koji bi bili poslati:</h3>
+                    <pre>
+&lt;form id="paymentForm" action="%s" method="POST"&gt;
+    &lt;input name="Version" type="hidden" value="1" /&gt;
+    &lt;input name="MerchantID" type="hidden" value="%s" /&gt;
+    &lt;input name="TerminalID" type="hidden" value="%s" /&gt;
+    &lt;input name="TotalAmount" type="hidden" value="%s" /&gt;
+    &lt;input name="Currency" type="hidden" value="%s" /&gt;
+    &lt;input name="locale" type="hidden" value="%s" /&gt;
+    &lt;input name="PurchaseTime" type="hidden" value="%s" /&gt;
+    &lt;input name="OrderID" type="hidden" value="%s" /&gt;
+    &lt;input name="Delay" type="hidden" value="%s" /&gt;
+    &lt;input name="Signature" type="hidden" value="%s" /&gt;
+&lt;/form&gt;
+                    </pre>
 
-                <script>
-                    document.getElementById("paymentForm").submit();
-                </script>
+                    <!-- Prava forma za ručno testiranje slanja -->
+                    <form id="paymentForm" action="%s" method="POST">
+                        <input name="Version" type="hidden" value="1" />
+                        <input name="MerchantID" type="hidden" value="%s" />
+                        <input name="TerminalID" type="hidden" value="%s" />
+                        <input name="TotalAmount" type="hidden" value="%s" />
+                        <input name="Currency" type="hidden" value="%s" />
+                        <input name="locale" type="hidden" value="%s" />
+                        <input name="PurchaseTime" type="hidden" value="%s" />
+                        <input name="OrderID" type="hidden" value="%s" />
+                        <input name="Delay" type="hidden" value="%s" />
+                        <input name="Signature" type="hidden" value="%s" />
+                        <button type="submit">Ručno pošalji na Bank Gateway</button>
+                    </form>
+                </div>
 
                 </body>
                 </html>
                 """.formatted(
                         gatewayUrl,
-                        merchantId,
-                        terminalId,
-                        cleanRsd,
-                        currencyId,
-                        locale,
-                        purchaseTime,
-                        orderId,
-                        signature
+                        gatewayUrl, merchantId, terminalId, cleanRsd, currencyId, locale, purchaseTime, orderId, delay, signature,
+                        gatewayUrl, merchantId, terminalId, cleanRsd, currencyId, locale, purchaseTime, orderId, delay, signature
                 );
     }
 
-  
     public String generateSignature(
             String purchaseTime,
             String orderId,
+            String delay,
             String totalAmountRsd
     ) throws Exception {
 
+        // Format prema dokumentaciji sa Delay parametrom:
+        // MerchantId;TerminalId;PurchaseTime;OrderId,Delay;CurrencyId;Amount;;
         String data = merchantId + ";" +
                 terminalId + ";" +
                 purchaseTime + ";" +
-                orderId + ";" +
+                orderId + "," + delay + ";" +
                 currencyId + ";" +
                 totalAmountRsd + ";;";
 
@@ -166,6 +186,7 @@ public class PaymentService {
             String terminalIdVal = params.getOrDefault("TerminalID", "");
             String purchaseTime = params.getOrDefault("PurchaseTime", "");
             String orderId = params.getOrDefault("OrderID", "");
+            String delay = params.getOrDefault("Delay", "");
             String xid = params.getOrDefault("XID", "");
             String currency = params.getOrDefault("Currency", "");
             String totalAmount = params.getOrDefault("TotalAmount", "");
@@ -180,18 +201,14 @@ public class PaymentService {
                 return false;
             }
 
-            String data = merchantIdVal + ";" +
-                    terminalIdVal + ";" +
-                    purchaseTime + ";" +
-                    orderId + ";" +
-                    xid + ";" +
-                    currency + ";" +
-                    totalAmount + ";" +
-                    sd + ";" +
-                    tranCode + ";" +
-                    approvalCode + ";" +
-                    upcTokenExp + ";" +
-                    upcToken + ";";
+            String orderIdWithDelay = delay.isBlank() ? orderId : orderId + "," + delay;
+
+            String data;
+            if (!upcToken.isBlank()) {
+                data = merchantIdVal + ";" + terminalIdVal + ";" + purchaseTime + ";" + orderIdWithDelay + ";" + xid + ";" + currency + ";" + totalAmount + ";" + sd + ";" + tranCode + ";" + approvalCode + ";" + upcToken + "," + upcTokenExp + ";";
+            } else {
+                data = merchantIdVal + ";" + terminalIdVal + ";" + purchaseTime + ";" + orderIdWithDelay + ";" + xid + ";" + currency + ";" + totalAmount + ";" + sd + ";" + tranCode + ";" + approvalCode + ";";
+            }
 
             byte[] signatureBytes = Base64.getDecoder().decode(signatureBase64);
             PublicKey publicKey = loadBankPublicCertificate();
