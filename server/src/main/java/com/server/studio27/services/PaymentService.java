@@ -92,7 +92,6 @@ public class PaymentService {
         throw new IllegalArgumentException("Iznos mora biti pozitivan i veći od nule.");
     }
 
-    String displayAmount = totalAmount.setScale(2, RoundingMode.HALF_UP).toPlainString();
     String wireAmount = toMinorUnits(totalAmount);
     String purchaseTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
     String delay = "0";
@@ -103,40 +102,15 @@ public class PaymentService {
 
     saveOrder(orderId, courseIds, totalAmount);
 
+    // NOTE: no visible debug/preview UI anymore — that table was only
+    // useful while we were diagnosing the signature bug. The frontend
+    // (PaymentFlow.jsx) reads the hidden <input> values out of this form
+    // itself and passes them straight to the UpcPayment() SDK, so nothing
+    // here needs to be human-readable.
     StringBuilder html = new StringBuilder();
     html.append("<!DOCTYPE html><html><head>")
         .append("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">")
-        .append("<title>Pregled Payment Gateway Zahteva</title>")
-        .append("<style>")
-        .append("body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #f8fafc; padding: 40px 20px; } ")
-        .append(".container { max-width: 700px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 12px; border: 1px solid #334155; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); } ")
-        .append("h2 { color: #38bdf8; margin-top: 0; font-size: 22px; border-bottom: 1px solid #334155; padding-bottom: 12px; } ")
-        .append("p { color: #94a3b8; font-size: 14px; } ")
-        .append("table { width: 100%; border-collapse: collapse; margin: 20px 0; font-family: monospace; font-size: 13px; } ")
-        .append("th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #334155; } ")
-        .append("th { color: #cbd5e1; background: #0f172a; } ")
-        .append("td { color: #f1f5f9; } ")
-        .append(".param-name { color: #f43f5e; font-weight: bold; } ")
-        .append(".param-val { word-break: break-all; } ")
-        .append(".btn-container { margin-top: 25px; text-align: right; } ")
-        .append("button { background: #ea580c; color: white; border: none; padding: 12px 24px; font-weight: bold; cursor: pointer; border-radius: 6px; font-size: 15px; transition: background 0.2s; } ")
-        .append("button:hover { background: #c2410c; } ")
-        .append("</style></head><body>")
-        .append("<div class=\"container\">")
-        .append("<h2>Pregled podataka za Payment Gateway</h2>")
-        .append("<p>Zahtev je spreman (").append(displayAmount).append(" RSD). Ispod su svi parametri i potpis kreirani pre slanja na <code>").append(gatewayUrl).append("</code>.</p>")
-        .append("<table><thead><tr><th>Polje (Field)</th><th>Vrednost (Value)</th></tr></thead><tbody>")
-        .append("<tr><td class=\"param-name\">Version</td><td class=\"param-val\">1</td></tr>")
-        .append("<tr><td class=\"param-name\">MerchantID</td><td class=\"param-val\">").append(merchantId).append("</td></tr>")
-        .append("<tr><td class=\"param-name\">TerminalID</td><td class=\"param-val\">").append(terminalId).append("</td></tr>")
-        .append("<tr><td class=\"param-name\">TotalAmount</td><td class=\"param-val\">").append(wireAmount).append("</td></tr>")
-        .append("<tr><td class=\"param-name\">Currency</td><td class=\"param-val\">").append(currencyId).append("</td></tr>")
-        .append("<tr><td class=\"param-name\">locale</td><td class=\"param-val\">").append(locale).append("</td></tr>")
-        .append("<tr><td class=\"param-name\">PurchaseTime</td><td class=\"param-val\">").append(purchaseTime).append("</td></tr>")
-        .append("<tr><td class=\"param-name\">OrderID</td><td class=\"param-val\">").append(orderId).append("</td></tr>")
-        .append("<tr><td class=\"param-name\">Delay</td><td class=\"param-val\">").append(delay).append("</td></tr>")
-        .append("<tr><td class=\"param-name\">Signature</td><td class=\"param-val\">").append(signature).append("</td></tr>")
-        .append("</tbody></table>")
+        .append("</head><body>")
         .append("<form action=\"").append(gatewayUrl).append("\" method=\"POST\">")
         .append("<input name=\"Version\" type=\"hidden\" value=\"1\" />")
         .append("<input name=\"MerchantID\" type=\"hidden\" value=\"").append(merchantId).append("\" />")
@@ -148,9 +122,8 @@ public class PaymentService {
         .append("<input name=\"OrderID\" type=\"hidden\" value=\"").append(orderId).append("\" />")
         .append("<input name=\"Delay\" type=\"hidden\" value=\"").append(delay).append("\" />")
         .append("<input name=\"Signature\" type=\"hidden\" value=\"").append(signature).append("\" />")
-        .append("<div class=\"btn-container\">")
-        .append("<button type=\"submit\">Potvrdi i pređi na plaćanje &rarr;</button>")
-        .append("</div></form></div></body></html>");
+        .append("<input type=\"submit\" style=\"display:none\" />")
+        .append("</form></body></html>");
 
     return html.toString();
 }
