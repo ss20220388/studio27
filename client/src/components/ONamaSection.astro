@@ -1,6 +1,6 @@
 ---
 import { Image } from "astro:assets";
-import Doroteja from "../assets/Doroteja.jpg";
+import Doroteja from "../assets/Doroteja.webp";
 import DugmeKontakt from "../react-components/DugmeKontakt";
 ---
 
@@ -11,8 +11,9 @@ import DugmeKontakt from "../react-components/DugmeKontakt";
       <div class="h-full w-full">
         <div class="h-full w-full overflow-hidden rounded-3xl">
           <img
-            src={"../src/assets/Doroteja.jpg"}
+            src={"../src/assets/Doroteja.webp"}
             alt="Doroteja Dokić"
+            loading="lazy"
             class="h-full w-full object-cover object-top"
           />
         </div>

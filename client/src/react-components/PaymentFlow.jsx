@@ -1,14 +1,30 @@
-// No changes needed here. This component just POSTs { orderId, courseIds, totalAmount }
-// to /api/payment/create and injects+submits whatever HTML form the backend returns.
-// The bug was entirely on the server side (PaymentService.java): the amount format sent
-// to the bank and the signature field order. Once those are fixed, this file works as-is.
+// Backend endpoint (/api/payment/create) is UNCHANGED — it still returns
+// { paymentForm: "<html>...<form>...</form>..." } exactly like before.
+// The signature is still generated server-side (Java) with the private key,
+// as it must be — the JS SDK below does NOT generate signatures, it only
+// takes the already-signed values and presents the payment page in a modal
+// instead of a full-page redirect.
 //
-// One thing worth double-checking once payments are live: totals.rsd is a JS float
-// (eur * EUR_RSD_RATE). Floating point can occasionally produce values like
-// 45198.999999999996 instead of 45199. That's sent to the backend as JSON, where it
-// becomes a BigDecimal, so it's not corrupted — but if you ever see a signature mismatch
-// that "looks right", check whether the amount value has extra decimal noise before it
-// hits toMinorUnits() on the server.
+// What changed vs. the old version: instead of injecting the returned HTML
+// form into the DOM and calling form.submit() (full page navigation to the
+// bank), we parse the hidden <input> fields out of that same HTML and pass
+// them to window.UpcPayment({...}) from the UPC SDK loaded in pay.astro.
+//
+// IMPORTANT / UNVERIFIED: the UPC SDK is hosted on upc.ua and is documented
+// generically for "UPC e-Commerce Connect" integrations. It is NOT confirmed
+// that Raiffeisen Serbia's white-label deployment (ecommerce.raiffeisenbank.rs)
+// supports this SDK the same way. Test this end-to-end in the bank's test
+// environment before relying on it in production. There is a fallback below
+// (extractFieldsOrFallbackSubmit) that auto-submits the raw form the old way
+// if window.UpcPayment isn't available, so a missing/blocked script doesn't
+// break checkout entirely.
+//
+// One thing worth double-checking once payments are live: totals.rsd is a JS
+// float (eur * EUR_RSD_RATE). Floating point can occasionally produce values
+// like 45198.999999999996 instead of 45199. That's sent to the backend as
+// JSON, where it becomes a BigDecimal, so it's not corrupted — but if you
+// ever see a signature mismatch that "looks right", check whether the amount
+// value has extra decimal noise before it hits toMinorUnits() on the server.
 
 import React, { useState, useEffect } from "react";
 
@@ -16,6 +32,10 @@ export default function UplatnicaCheckout({
   onBack = null,
   API_URL,
   token,
+  // ID ulogovanog studenta — sada uvek stiže kao prop iz pay.astro
+  // (koji ga dobavlja preko /api/auth/me pre nego što se komponenta
+  // uopšte renderuje).
+  studentId,
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -47,6 +67,23 @@ export default function UplatnicaCheckout({
     }
   }, []);
 
+  // Pulls the hidden <input name=... value=...> pairs and the form's
+  // action URL out of the HTML string the backend returns. We don't touch
+  // the backend template, so this just reads what's already there.
+  const parsePaymentForm = (html) => {
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+    const form = wrapper.querySelector("form");
+    if (!form) return null;
+
+    const fields = {};
+    form.querySelectorAll("input[name]").forEach((input) => {
+      fields[input.name] = input.value;
+    });
+
+    return { action: form.getAttribute("action"), fields };
+  };
+
   const handleCardPayment = async () => {
     if (!termsAccepted) {
       return setError("Morate prihvatiti uslove kupovine i potvrditi saglasnost pre nastavka.");
@@ -54,6 +91,10 @@ export default function UplatnicaCheckout({
 
     if (cartList.length === 0) {
       return setError("Korpa je prazna.");
+    }
+
+    if (studentId == null) {
+      return setError("Nije moguće utvrditi korisnika. Osvežite stranicu i pokušajte ponovo, ili se ponovo prijavite.");
     }
 
     setIsSubmitting(true);
@@ -79,6 +120,7 @@ export default function UplatnicaCheckout({
         headers,
         body: JSON.stringify({
           orderId,
+          studentId,
           courseIds,
           totalAmount: totals.rsd,
         }),
@@ -90,17 +132,53 @@ export default function UplatnicaCheckout({
         throw new Error(data.message || "Greška pri kreiranju forme za plaćanje.");
       }
 
-      const wrapper = document.createElement("div");
-      wrapper.id = "payment-form-wrapper";
-      wrapper.innerHTML = data.paymentForm;
-      document.body.appendChild(wrapper);
-
-      const form = wrapper.querySelector("form");
-      if (!form) {
+      const parsed = parsePaymentForm(data.paymentForm);
+      if (!parsed) {
         throw new Error("Forma za plaćanje nije pronađena u odgovoru servera.");
       }
 
-      form.submit();
+      const { action: gatewayUrl, fields } = parsed;
+
+      if (typeof window.UpcPayment === "function") {
+        // NOTE: field values (Signature, PurchaseTime, TotalAmount, ...)
+        // are passed through EXACTLY as the server produced them. Do not
+        // regenerate PurchaseTime with Date.now() or re-format TotalAmount
+        // here — that would no longer match what was signed, and the bank
+        // will reject the signature.
+        window.UpcPayment({
+          url: gatewayUrl,
+          payment: {
+            Version: Number(fields.Version),
+            MerchantID: fields.MerchantID,
+            TerminalID: fields.TerminalID,
+            locale: fields.locale,
+            Signature: fields.Signature,
+            Currency: Number(fields.Currency),
+            TotalAmount: Number(fields.TotalAmount),
+            PurchaseTime: fields.PurchaseTime,
+            OrderID: fields.OrderID,
+          },
+          options: {
+            modal: true,
+            modalWidth: "480px",
+            modalHeight: "640px",
+          },
+        });
+        setIsSubmitting(false);
+      } else {
+        // Fallback: SDK script didn't load (blocked, offline, not
+        // supported for this gateway) — behave like before, full redirect.
+        console.warn("UpcPayment SDK nije dostupan, koristim direktan form submit kao fallback.");
+        const wrapper = document.createElement("div");
+        wrapper.id = "payment-form-wrapper";
+        wrapper.innerHTML = data.paymentForm;
+        document.body.appendChild(wrapper);
+        const form = wrapper.querySelector("form");
+        if (!form) {
+          throw new Error("Forma za plaćanje nije pronađena u odgovoru servera.");
+        }
+        form.submit();
+      }
 
     } catch (err) {
       console.error("Greška pri kartičnom plaćanju:", err);
@@ -130,7 +208,7 @@ export default function UplatnicaCheckout({
               >
                 <span className="text-lg">←</span> Nazad
               </button>
-              <span 
+              <span
                 className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-red-200 px-4 py-2 rounded-full border"
                 style={{ backgroundColor: "rgba(85, 0, 0, 0.4)", borderColor: "#550000" }}
               >
@@ -165,7 +243,7 @@ export default function UplatnicaCheckout({
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div 
+                          <div
                             className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border"
                             style={{ backgroundColor: "rgba(85, 0, 0, 0.3)", borderColor: "#550000" }}
                           >
@@ -220,13 +298,13 @@ export default function UplatnicaCheckout({
                 <img src="/images/logo_kartice.svg" alt="Payment Method" className="w-full h-auto rounded-lg max-h-12 object-contain" />
               </div>
 
-              <div 
+              <div
                 className="border rounded-2xl p-5 md:p-6"
                 style={{ backgroundColor: "rgba(85, 0, 0, 0.15)", borderColor: "rgba(85, 0, 0, 0.5)" }}
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div 
+                    <div
                       className="w-12 h-12 text-white rounded-xl flex items-center justify-center shrink-0 shadow-lg"
                       style={{ backgroundColor: "#550000" }}
                     >
@@ -253,7 +331,7 @@ export default function UplatnicaCheckout({
 
                 <div className="mt-5 pt-5 border-t border-slate-800/80">
                   <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
-                    Nakon klika na dugme bićete preusmereni na zaštićeni gateway banke gde bezbedno unosite podatke sa kartice.
+                    Nakon klika na dugme otvoriće se zaštićeni prozor banke gde bezbedno unosite podatke sa kartice.
                   </p>
                 </div>
               </div>
@@ -298,7 +376,7 @@ export default function UplatnicaCheckout({
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                   </svg>
-                  Preusmeravanje na plaćanje...
+                  Otvaranje forme za plaćanje...
                 </>
               ) : (
                 <>

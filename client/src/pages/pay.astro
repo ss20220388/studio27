@@ -6,6 +6,24 @@ import "../styles/global.css";
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 const cookie = Astro.cookies.get("refreshToken");
 const accessToken = cookie ? cookie.value : null;
+const userRes = await fetch(`${API_URL}/api/auth/me`, {
+		headers: {
+			Authorization: `Bearer ${accessToken}`,
+		},
+		credentials: "include",
+	});
+
+	if (!userRes.ok) {
+		throw new Error(`Auth failed: ${userRes.status} ${userRes.statusText}`);
+	}
+
+	const userData = await userRes.json();
+
+	if (!userData.userId) {
+		throw new Error("userId nije dostupan");
+	}
+console.log("userData:", userData);
+
 ---
 
 <html lang="sr">
@@ -15,6 +33,6 @@ const accessToken = cookie ? cookie.value : null;
     <title>Plaćanje | 27archviz</title>
   </head>
   <body class="bg-[#f4f4f6] min-h-screen flex items-center justify-center p-4 font-sans text-slate-900">
-    <PaymentFlow API_URL={API_URL} token={accessToken} client:only="react" />
+    <PaymentFlow API_URL={API_URL} token={accessToken} client:only="react" studentId={userData.userId} />
   </body>
 </html>

@@ -29,7 +29,8 @@ public class PaymentRoute {
         this.paymentService = paymentService;
     }
 
-    public record PaymentCreateRequest(String orderId, List<Long> courseIds, BigDecimal totalAmount) {
+    // studentId sada dolazi direktno sa frontenda (vec zna ko je ulogovani korisnik)
+    public record PaymentCreateRequest(String orderId, Long studentId, List<Long> courseIds, BigDecimal totalAmount) {
     }
 
     @PostMapping("/payment/create")
@@ -41,12 +42,17 @@ public class PaymentRoute {
                 return ResponseEntity.badRequest().body(Map.of("message", "Order ID je obavezan."));
             }
 
+            if (request.studentId() == null) {
+                return ResponseEntity.badRequest().body(Map.of("message", "StudentID je obavezan."));
+            }
+
             if (request.courseIds() == null || request.courseIds().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Korpa je prazna."));
             }
 
             String paymentForm = paymentService.createPaymentForm(
                     request.orderId(),
+                    request.studentId(),
                     request.courseIds(),
                     request.totalAmount()
             );
@@ -66,7 +72,10 @@ public class PaymentRoute {
         }
     }
 
-    // Ruta koju banka poziva (Server-to-Server) i očekuje format odgovora iz PHP skripte
+    // Ruta koju banka poziva (Server-to-Server) i očekuje format odgovora iz PHP skripte.
+    // Ovo je JEDINO mesto gde upisujemo u uplatnica/pohadja — ovaj poziv dolazi
+    // direktno sa bankinog servera, ne zavisi od korisnikovog browsera, pa je
+    // najpouzdaniji trenutak da znamo da je plaćanje zaista prošlo.
     @PostMapping(value = "/payment/notify", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> paymentNotify(@RequestParam Map<String, String> params) {
         String merchantId = params.getOrDefault("MerchantID", "");
@@ -91,6 +100,19 @@ public class PaymentRoute {
         response.append("PurchaseTime = ").append(purchaseTime).append("\n");
 
         if (signatureValid) {
+            // Upis u uplatnica + pohadja se desava OVDE, tek sada kada je
+            // potpis banke potvrdjen kao ispravan. Ako ovaj upis pukne iz
+            // nekog razloga (npr. baza nedostupna), i dalje odgovaramo
+            // banci sa "approve" — ne zelimo da bankin sistem otkaze
+            // transakciju zbog nase baze. Greska se samo loguje da je
+            // mozemo rucno ispraviti.
+            try {
+                paymentService.recordSuccessfulPayment(orderId);
+            } catch (Exception e) {
+                System.err.println("[PaymentRoute] Upis u uplatnica/pohadja nije uspeo za OrderID=" + orderId + ": " + e.getMessage());
+                e.printStackTrace();
+            }
+
             response.append("Response.action= approve \n");
             response.append("Response.reason= ok \n");
             response.append("Response.forwardUrl= \n");
@@ -113,6 +135,17 @@ public class PaymentRoute {
             return new RedirectView(
                     frontendUrl + "/checkout/failure?orderId=" + orderId + "&reason=invalid_signature"
             );
+        }
+
+        // Rezervni upis, za slučaj da NOTIFY_URL nije podešen kod banke
+        // (ili ne stigne iz nekog drugog razloga). recordSuccessfulPayment
+        // je idempotentan — ako je /payment/notify već obradio ovaj
+        // orderId, ovo je no-op.
+        try {
+            paymentService.recordSuccessfulPayment(orderId);
+        } catch (Exception e) {
+            System.err.println("[PaymentRoute] Upis u uplatnica/pohadja nije uspeo (preko /payment/success) za OrderID=" + orderId + ": " + e.getMessage());
+            e.printStackTrace();
         }
 
         return new RedirectView(

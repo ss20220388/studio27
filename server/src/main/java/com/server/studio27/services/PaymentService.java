@@ -13,12 +13,15 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -34,11 +37,6 @@ public class PaymentService {
     // (para / cent). TotalAmount MUST be sent as an integer in that minor
     // unit, per the gateway's "N1..12" numeric-only format — no decimal
     // point is allowed on the wire.
-    //
-    // FIX: this MUST be 100, not 1. With 1, a 451.99 RSD order was being
-    // sent (and signed) as "452" instead of "45199" — a completely
-    // different number than what the bank's own math expects, which on
-    // its own is enough to make the signature invalid.
     private static final int MINOR_UNIT_FACTOR = 100;
 
     private final String merchantId;
@@ -69,64 +67,64 @@ public class PaymentService {
         this.privateKeyPath = privateKeyPath;
         this.bankPublicKeyPath = bankPublicKeyPath;
         this.gatewayUrl = gatewayUrl;
-        // Docs show lowercase examples (en, rs, bg) — keep it lowercase to
-        // match the spec exactly, including the fallback default.
         this.locale = locale == null ? "rs" : locale.toLowerCase(Locale.ROOT);
         this.resourceLoader = resourceLoader;
         this.jdbcTemplate = jdbcTemplate;
     }
 
     public String createPaymentForm(
-        String orderId,
-        List<Long> courseIds,
-        BigDecimal totalAmount
-) throws Exception {
+            String orderId,
+            Long studentId,
+            List<Long> courseIds,
+            BigDecimal totalAmount
+    ) throws Exception {
 
-    if (orderId == null || orderId.isBlank()) {
-        throw new IllegalArgumentException("OrderID je obavezan.");
+        if (orderId == null || orderId.isBlank()) {
+            throw new IllegalArgumentException("OrderID je obavezan.");
+        }
+        if (studentId == null) {
+            throw new IllegalArgumentException("StudentID je obavezan.");
+        }
+        if (courseIds == null || courseIds.isEmpty()) {
+            throw new IllegalArgumentException("Korpa je prazna.");
+        }
+        if (totalAmount == null || totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Iznos mora biti pozitivan i veći od nule.");
+        }
+
+        String wireAmount = toMinorUnits(totalAmount);
+        String purchaseTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
+        String delay = "0";
+
+        String signature = generateSignature(purchaseTime, orderId, delay, currencyId, wireAmount);
+
+        // Ne upisujemo jos u uplatnica/pohadja ovde — placanje jos NIJE
+        // potvrdjeno (korisnik tek ide na formu banke). Cuvamo samo
+        // studentId + listu kurseva vezanih za ovaj orderId, da bismo
+        // znali sta da upisemo kada banka potvrdi uspesno placanje
+        // (u paymentNotify -> recordSuccessfulPayment()).
+        savePendingOrder(orderId, studentId, courseIds);
+
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head>")
+            .append("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">")
+            .append("</head><body>")
+            .append("<form action=\"").append(gatewayUrl).append("\" method=\"POST\">")
+            .append("<input name=\"Version\" type=\"hidden\" value=\"1\" />")
+            .append("<input name=\"MerchantID\" type=\"hidden\" value=\"").append(merchantId).append("\" />")
+            .append("<input name=\"TerminalID\" type=\"hidden\" value=\"").append(terminalId).append("\" />")
+            .append("<input name=\"TotalAmount\" type=\"hidden\" value=\"").append(wireAmount).append("\" />")
+            .append("<input name=\"Currency\" type=\"hidden\" value=\"").append(currencyId).append("\" />")
+            .append("<input name=\"locale\" type=\"hidden\" value=\"").append(locale).append("\" />")
+            .append("<input name=\"PurchaseTime\" type=\"hidden\" value=\"").append(purchaseTime).append("\" />")
+            .append("<input name=\"OrderID\" type=\"hidden\" value=\"").append(orderId).append("\" />")
+            .append("<input name=\"Delay\" type=\"hidden\" value=\"").append(delay).append("\" />")
+            .append("<input name=\"Signature\" type=\"hidden\" value=\"").append(signature).append("\" />")
+            .append("<input type=\"submit\" style=\"display:none\" />")
+            .append("</form></body></html>");
+
+        return html.toString();
     }
-    if (courseIds == null || courseIds.isEmpty()) {
-        throw new IllegalArgumentException("Korpa je prazna.");
-    }
-    if (totalAmount == null || totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
-        throw new IllegalArgumentException("Iznos mora biti pozitivan i veći od nule.");
-    }
-
-    String wireAmount = toMinorUnits(totalAmount);
-    String purchaseTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
-    String delay = "0";
-
-    // FIX: no XID passed here anymore, and Delay is now included in the
-    // signed string — see generateSignature() below.
-    String signature = generateSignature(purchaseTime, orderId, delay, currencyId, wireAmount);
-
-    saveOrder(orderId, courseIds, totalAmount);
-
-    // NOTE: no visible debug/preview UI anymore — that table was only
-    // useful while we were diagnosing the signature bug. The frontend
-    // (PaymentFlow.jsx) reads the hidden <input> values out of this form
-    // itself and passes them straight to the UpcPayment() SDK, so nothing
-    // here needs to be human-readable.
-    StringBuilder html = new StringBuilder();
-    html.append("<!DOCTYPE html><html><head>")
-        .append("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">")
-        .append("</head><body>")
-        .append("<form action=\"").append(gatewayUrl).append("\" method=\"POST\">")
-        .append("<input name=\"Version\" type=\"hidden\" value=\"1\" />")
-        .append("<input name=\"MerchantID\" type=\"hidden\" value=\"").append(merchantId).append("\" />")
-        .append("<input name=\"TerminalID\" type=\"hidden\" value=\"").append(terminalId).append("\" />")
-        .append("<input name=\"TotalAmount\" type=\"hidden\" value=\"").append(wireAmount).append("\" />")
-        .append("<input name=\"Currency\" type=\"hidden\" value=\"").append(currencyId).append("\" />")
-        .append("<input name=\"locale\" type=\"hidden\" value=\"").append(locale).append("\" />")
-        .append("<input name=\"PurchaseTime\" type=\"hidden\" value=\"").append(purchaseTime).append("\" />")
-        .append("<input name=\"OrderID\" type=\"hidden\" value=\"").append(orderId).append("\" />")
-        .append("<input name=\"Delay\" type=\"hidden\" value=\"").append(delay).append("\" />")
-        .append("<input name=\"Signature\" type=\"hidden\" value=\"").append(signature).append("\" />")
-        .append("<input type=\"submit\" style=\"display:none\" />")
-        .append("</form></body></html>");
-
-    return html.toString();
-}
 
     /**
      * Converts a decimal major-unit amount (e.g. 451.99 RSD) into the
@@ -139,16 +137,108 @@ public class PaymentService {
         return minorUnits.toPlainString();
     }
 
-    private void saveOrder(String orderId, List<Long> courseIds, BigDecimal totalAmount) {
+    /**
+     * Stores what we'll need once the bank confirms payment: WHO paid
+     * (studentId) and WHAT they paid for (courseIds), keyed by orderId.
+     * We can't write to uplatnica/pohadja yet — the customer hasn't
+     * actually paid at this point, they're only about to be sent to the
+     * bank's form.
+     *
+     * REQUIRES this table (create it once, adjust types if your IDs
+     * aren't BIGINT):
+     *
+     *   CREATE TABLE pending_orders (
+     *     order_id   VARCHAR(64) PRIMARY KEY,
+     *     student_id BIGINT NOT NULL,
+     *     course_ids VARCHAR(255) NOT NULL,   -- e.g. "3,7,12"
+     *     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     *     processed  TINYINT(1) NOT NULL DEFAULT 0
+     *   );
+     */
+    private void savePendingOrder(String orderId, Long studentId, List<Long> courseIds) {
+        String courseIdsCsv = courseIds.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        String sql = "INSERT INTO pending_orders (order_id, student_id, course_ids) " +
+                "VALUES (:orderId, :studentId, :courseIds)";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("orderId", orderId)
+                .addValue("studentId", studentId)
+                .addValue("courseIds", courseIdsCsv);
+        jdbcTemplate.update(sql, params);
+    }
+
+    /**
+     * Called once we've verified the bank's signature says payment
+     * succeeded (from PaymentRoute.paymentNotify). For each course in the
+     * order:
+     *   1. looks up its price (kursevi.cena by id) — ADJUST table/column
+     *      name below if yours are named differently
+     *   2. inserts a row into uplatnica
+     *   3. inserts a row into pohadja
+     *
+     * Idempotent: if this orderId was already processed (bank retries the
+     * NOTIFY call, or /payment/success fires too), it's a no-op — so it's
+     * safe to call this from paymentNotify without double-charging/
+     * double-enrolling a student.
+     */
+    public void recordSuccessfulPayment(String orderId) {
+        Map<String, Object> pending;
         try {
-            String sql = "INSERT INTO orders (order_id, amount, status, created_at) VALUES (:orderId, :amount, 'PENDING', NOW())";
-            MapSqlParameterSource params = new MapSqlParameterSource()
-                    .addValue("orderId", orderId)
-                    .addValue("amount", totalAmount);
-            jdbcTemplate.update(sql, params);
+            pending = jdbcTemplate.queryForMap(
+                    "SELECT student_id, course_ids, processed FROM pending_orders WHERE order_id = :orderId",
+                    new MapSqlParameterSource("orderId", orderId)
+            );
         } catch (Exception e) {
-            System.err.println("Greška prilikom upisa narudžbine u bazu: " + e.getMessage());
+            System.err.println("[PaymentService] Nema pending_orders zapisa za orderId=" + orderId + " — preskačem upis.");
+            return;
         }
+
+        boolean alreadyProcessed = ((Number) pending.get("processed")).intValue() == 1;
+        if (alreadyProcessed) {
+            System.out.println("[PaymentService] orderId=" + orderId + " je već obrađen, preskačem duplikat.");
+            return;
+        }
+
+        Long studentId = ((Number) pending.get("student_id")).longValue();
+        String courseIdsCsv = (String) pending.get("course_ids");
+        List<Long> courseIds = Arrays.stream(courseIdsCsv.split(","))
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+
+        LocalDate today = LocalDate.now();
+
+        for (Long kursId : courseIds) {
+            BigDecimal cena = jdbcTemplate.queryForObject(
+                    "SELECT cena FROM kursevi WHERE id = :kursId",
+                    new MapSqlParameterSource("kursId", kursId),
+                    BigDecimal.class
+            );
+
+            jdbcTemplate.update(
+                    "INSERT INTO uplatnica (kursId, studentId, datumPlacanja, cenaPlacanja, tip, status, url) " +
+                            "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', NULL, NULL)",
+                    new MapSqlParameterSource()
+                            .addValue("kursId", kursId)
+                            .addValue("studentId", studentId)
+                            .addValue("datum", today)
+                            .addValue("cena", cena)
+            );
+
+            jdbcTemplate.update(
+                    "INSERT INTO pohadja (studentId, kursId, daLiJeZavrsioKurs, vremePocetka) " +
+                            "VALUES (:studentId, :kursId, NULL, NULL)",
+                    new MapSqlParameterSource()
+                            .addValue("studentId", studentId)
+                            .addValue("kursId", kursId)
+            );
+        }
+
+        jdbcTemplate.update(
+                "UPDATE pending_orders SET processed = 1 WHERE order_id = :orderId",
+                new MapSqlParameterSource("orderId", orderId)
+        );
     }
 
     /**
@@ -156,28 +246,11 @@ public class PaymentService {
      *
      * Per the official docs ("Data Signature - API"):
      *   MerchantId;TerminalId;PurchaseTime;OrderId,Delay;CurrencyId,AltCurrencyId;Amount,AltAmount;SessionData(SD);
-     * Optional sub-fields (Delay, AltCurrencyId, AltAmount) are only comma-
-     * appended to their group WHEN THEY ARE ACTUALLY SENT in the form. We
-     * do send a "Delay" field (value "0") in the form, so it MUST be
-     * comma-joined with OrderID here: "OrderID,Delay". This exactly
-     * matches the bank's own SHA512 reference example, which also always
-     * sends Delay=0 and includes it the same way.
-     *
-     * We don't send AltCurrency/AltAmount, so Currency and Amount stay
-     * plain (no comma). SD is unused, so it's an empty field before the
-     * final semicolon.
-     *
-     * FIX HISTORY on this method:
-     *  1) Removed XID — it doesn't exist yet when we build this outbound
-     *     request (the bank assigns it during the transaction and only
-     *     sends it back in their response — see verifySignature() below,
-     *     a different message with a different field list).
-     *  2) Added Delay into the OrderID group — it was being sent in the
-     *     form but left out of the signed string, so form and signature
-     *     were inconsistent. This was the remaining cause of "Potpis nije
-     *     važeći" (code 405) after the XID and minor-unit fixes.
-     *
-     * Algorithm is SHA256withRSA per the bank's explicit instruction.
+     * Delay is sent in the form (value "0"), so it's comma-joined with
+     * OrderID here: "OrderID,Delay". We don't send AltCurrency/AltAmount,
+     * so Currency and Amount stay plain. SD is unused (empty field before
+     * the final semicolon). Algorithm is SHA256withRSA per the bank's
+     * explicit instruction.
      */
     public String generateSignature(
             String purchaseTime,
