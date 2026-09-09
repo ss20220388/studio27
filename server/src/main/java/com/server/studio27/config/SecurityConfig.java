@@ -52,7 +52,6 @@ public class SecurityConfig {
                 this.jwtService = jwtService;
                 this.userDetailsService = userDetailsService;
                 this.jdbcTemplate = jdbcTemplate;
-
         }
 
         @Bean
@@ -97,21 +96,23 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/kursslika/*").permitAll()
                                                 .requestMatchers("/api/send-code-to-mail").permitAll()
                                                 .requestMatchers("/api/send-mail-to-person").permitAll()
+                                                
+                                                // Platne rute otključane za sve
                                                 .requestMatchers("/api/payment/create").permitAll()
                                                 .requestMatchers("/api/payment/notify").permitAll()
+                                                .requestMatchers("/api/payment/success").permitAll()
+                                                .requestMatchers("/api/payment/failure").permitAll()
                                                 .requestMatchers("/api/payment/return").permitAll()
                                                 .requestMatchers("/api/payment/return/**").permitAll()
+                                                
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth -> oauth
                                                 .successHandler((request, response, authentication) -> {
                                                         try {
-                                                                System.out.println("USAO U GOOGLE SUCCESS HANDLER");
-
                                                                 OAuth2User oauthUser = (OAuth2User) authentication
                                                                                 .getPrincipal();
                                                                 String email = oauthUser.getAttribute("email");
 
-                                                                // Čitaj deviceId iz cookie-ja
                                                                 String deviceId = null;
                                                                 jakarta.servlet.http.Cookie[] cookies = request
                                                                                 .getCookies();
@@ -124,10 +125,7 @@ public class SecurityConfig {
                                                                                 }
                                                                         }
                                                                 }
-                                                                System.out.println(
-                                                                                "Device ID from cookie: " + deviceId);
 
-                                                                // Ako nema deviceId - odbij
                                                                 if (deviceId == null || deviceId.isEmpty()) {
                                                                         ResponseCookie errorCookie = ResponseCookie
                                                                                         .from("losGmail",
@@ -145,14 +143,12 @@ public class SecurityConfig {
                                                                         return;
                                                                 }
 
-                                                                // Proveri da li korisnik postoji
                                                                 Integer count = jdbcTemplate.queryForObject(
                                                                                 "SELECT COUNT(*) FROM user WHERE email = ?",
                                                                                 Integer.class,
                                                                                 email);
 
                                                                 if (count == null || count == 0) {
-                                                                        // Novi korisnik - kreiraj sa ovim deviceId
                                                                         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
                                                                         String randomPassword = passwordEncoder.encode(
                                                                                         java.util.UUID.randomUUID()
@@ -177,12 +173,7 @@ public class SecurityConfig {
                                                                                         oauthUser.getAttribute(
                                                                                                         "family_name"),
                                                                                         "");
-                                                                        System.out.println(
-                                                                                        "New user created with deviceId: "
-                                                                                                        + deviceId);
                                                                 } else {
-                                                                        // Korisnik postoji - proveri deviceId
-
                                                                         String existingDeviceId = jdbcTemplate
                                                                                         .queryForObject(
                                                                                                         "SELECT deviceId FROM user WHERE email = ?",
@@ -213,10 +204,8 @@ public class SecurityConfig {
                                                                                                 "UPDATE user SET deviceId = ? WHERE email = ?",
                                                                                                 deviceId, email);
                                                                         }
-
                                                                 }
 
-                                                                // Ažuriraj loginProvider na GOOGLE za ovog korisnika
                                                                 jdbcTemplate.update(
                                                                                 "UPDATE user SET loginProvider = 'GOOGLE' WHERE email = ?",
                                                                                 email);
