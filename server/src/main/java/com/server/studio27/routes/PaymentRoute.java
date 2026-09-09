@@ -76,14 +76,14 @@ public class PaymentRoute {
 
     @RequestMapping(value = "/payment/notify", method = {RequestMethod.GET, RequestMethod.POST}, produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> paymentNotify(@RequestParam Map<String, String> params) {
-        String merchantId = params.getOrDefault("MerchantID", "");
-        String terminalId = params.getOrDefault("TerminalID", "");
-        String orderId = params.getOrDefault("OrderID", "");
-        String delay = params.getOrDefault("Delay", "");
-        String currency = params.getOrDefault("Currency", "");
-        String totalAmount = params.getOrDefault("TotalAmount", "");
-        String xid = params.getOrDefault("XID", "");
-        String purchaseTime = params.getOrDefault("PurchaseTime", "");
+        String merchantId = getParamCaseInsensitive(params, "MerchantID");
+        String terminalId = getParamCaseInsensitive(params, "TerminalID");
+        String orderId = getParamCaseInsensitive(params, "OrderID");
+        String delay = getParamCaseInsensitive(params, "Delay");
+        String currency = getParamCaseInsensitive(params, "Currency");
+        String totalAmount = getParamCaseInsensitive(params, "TotalAmount");
+        String xid = getParamCaseInsensitive(params, "XID");
+        String purchaseTime = getParamCaseInsensitive(params, "PurchaseTime");
 
         boolean signatureValid = paymentService.verifySignature(params);
 
@@ -117,9 +117,9 @@ public class PaymentRoute {
         }
     }
 
-    @RequestMapping(value = "/payment/success", method = {RequestMethod.GET, RequestMethod.POST})
+    @RequestMapping(value = {"/payment/success", "/payment/return"}, method = {RequestMethod.GET, RequestMethod.POST})
     public RedirectView paymentSuccess(@RequestParam Map<String, String> params) {
-        String orderId = params.getOrDefault("OrderID", "");
+        String orderId = getParamCaseInsensitive(params, "OrderID");
         boolean signatureValid = paymentService.verifySignature(params);
 
         if (!signatureValid) {
@@ -142,7 +142,7 @@ public class PaymentRoute {
 
     @RequestMapping(value = "/payment/failure", method = {RequestMethod.GET, RequestMethod.POST})
     public RedirectView paymentFailure(@RequestParam Map<String, String> params) {
-        String orderId = params.getOrDefault("OrderID", "");
+        String orderId = getParamCaseInsensitive(params, "OrderID");
 
         boolean signatureValid = paymentService.verifySignature(params);
         if (!signatureValid) {
@@ -152,5 +152,16 @@ public class PaymentRoute {
         return new RedirectView(
                 frontendUrl + "/checkout/failure?orderId=" + orderId
         );
+    }
+
+    // Pomoćna metoda za sigurno dohvatanje ključeva nezavisno od malih/velikih slova
+    private String getParamCaseInsensitive(Map<String, String> params, String key) {
+        if (params == null) return "";
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(key)) {
+                return entry.getValue();
+            }
+        }
+        return "";
     }
 }
