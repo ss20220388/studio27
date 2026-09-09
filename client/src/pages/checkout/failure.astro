@@ -1,0 +1,151 @@
+---
+const orderId = Astro.url.searchParams.get("orderId");
+const reason = Astro.url.searchParams.get("reason");
+---
+
+<!doctype html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
+    <meta
+        name="robots"
+        content="noindex, nofollow"
+    />
+
+    <title>Neuspešno plaćanje | Studio 27</title>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-900">
+
+    <main class="flex min-h-screen items-center justify-center px-4 py-12">
+
+        <div class="w-full max-w-lg">
+
+            <!-- CARD -->
+            <div
+                class="rounded-3xl bg-white p-8 text-center shadow-xl shadow-slate-200/60 sm:p-10"
+            >
+
+                <!-- ERROR ICON -->
+                <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
+                    <svg
+                        class="h-10 w-10 text-red-600"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                    >
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M15 9l-6 6" />
+                        <path d="M9 9l6 6" />
+                    </svg>
+                </div>
+
+                <!-- TITLE -->
+                <h1 class="text-3xl font-bold tracking-tight text-slate-900">
+                    Plaćanje nije uspešno
+                </h1>
+
+                <!-- DESCRIPTION -->
+                <p class="mt-4 text-base leading-7 text-slate-600">
+                    Nažalost, plaćanje nije uspešno završeno.
+                    Novac nije naplaćen ili transakcija nije potvrđena.
+                </p>
+
+                <!-- ORDER ID -->
+                {orderId && (
+                    <div class="mt-7 rounded-2xl bg-slate-50 px-5 py-4">
+                        <p class="text-sm text-slate-500">
+                            Broj porudžbine
+                        </p>
+
+                        <p class="mt-1 break-all font-mono text-base font-semibold text-slate-900">
+                            {orderId}
+                        </p>
+                    </div>
+                )}
+
+                <!-- WARNING -->
+                <div class="mt-6 rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-left">
+
+                    <div class="flex gap-3">
+
+                        <svg
+                            class="mt-0.5 h-5 w-5 shrink-0 text-red-600"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 9v4"
+                            />
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M12 17h.01"
+                            />
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M10.3 4.5 2.8 17a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.5a2 2 0 0 0-3.4 0Z"
+                            />
+                        </svg>
+
+                        <p class="text-sm leading-6 text-red-800">
+                            Ako je iznos ipak rezervisan ili skinut sa
+                            vašeg računa, nemojte pokušavati više puta
+                            da izvršite uplatu. Kontaktirajte podršku
+                            kako bismo proverili status transakcije.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <!-- OPTIONAL REASON -->
+                {reason && (
+                    <div class="mt-4 text-xs text-slate-400">
+                        Status: {reason}
+                    </div>
+                )}
+
+                <!-- BUTTONS -->
+                <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+
+                    <a
+                        href="/checkout"
+                        class="inline-flex flex-1 items-center justify-center rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                    >
+                        Pokušaj ponovo
+                    </a>
+
+                    <a
+                        href="/"
+                        class="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
+                    >
+                        Početna strana
+                    </a>
+
+                </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <p class="mt-6 text-center text-sm text-slate-400">
+                Studio 27
+            </p>
+
+        </div>
+
+    </main>
+
+</body>
+</html>
