@@ -10,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -52,6 +53,23 @@ public class SecurityConfig {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    // Ove 4 rute pogadja ISKLJUCIVO banka (cross-site form POST za
+    // success/failure/return, server-to-server za notify) — NIKAD nas
+    // frontend. web.ignoring() im GARANTOVANO iskljucuje CEO Spring
+    // Security filter chain (CorsFilter, CSRF, JwtAuthFilter, sve) — idu
+    // direktno do PaymentRoute kontrolera, bez ikakve provere origin-a.
+    // Ovo je namerno "jace" od CORS/permitAll podesavanja iznad, da ne
+    // zavisimo od uskladjenosti Spring Security <-> Spring MVC CORS izvora.
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers(
+                "/api/payment/notify",
+                "/api/payment/success",
+                "/api/payment/failure",
+                "/api/payment/return"
+        );
     }
 
     @Bean
