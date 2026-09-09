@@ -63,43 +63,31 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login").permitAll()
-                        .requestMatchers("/api/auth/logout").permitAll()
-                        .requestMatchers("/api/auth/register-user").permitAll()
-                        .requestMatchers("/api/auth/register-admin").permitAll()
-                        .requestMatchers("/api/auth/refresh").permitAll()
-                        .requestMatchers("/api/auth/access-token").permitAll()
-                        .requestMatchers("/api/auth/me").permitAll()
-                        .requestMatchers("/api/auth/oauth2").permitAll()
-                        .requestMatchers("/api/auth/zaboravljena-lozinka").permitAll()
-                        .requestMatchers("/api/auth/provera-koda").permitAll()
-                        .requestMatchers("/api/auth/verify-otp-and-reset").permitAll()
-                        .requestMatchers("/login/**").permitAll()
-                        .requestMatchers("/oauth2/authorization/google").permitAll()
-                        .requestMatchers("/oauth2/**").permitAll()
-                        .requestMatchers("/login/oauth2/**").permitAll()
+                        // Autentifikacija
+                        .requestMatchers("/api/auth/login", "/api/auth/logout", "/api/auth/register-user", 
+                                         "/api/auth/register-admin", "/api/auth/refresh", "/api/auth/access-token", 
+                                         "/api/auth/me", "/api/auth/oauth2", "/api/auth/zaboravljena-lozinka", 
+                                         "/api/auth/provera-koda", "/api/auth/verify-otp-and-reset").permitAll()
+                        
+                        // OAuth2 rute
+                        .requestMatchers("/login/**", "/oauth2/**", "/login/oauth2/**").permitAll()
+
+                        // Javne rute za kurseve, radove i mediju
+                        .requestMatchers("/api/kursevi-sa-lekcijama", "/api/kursevi", "/api/kursevi/**").permitAll()
+                        .requestMatchers("/api/media/**", "/api/recenzije", "/api/unlock-device").permitAll()
+                        .requestMatchers("/api/video/stream", "/api/video/stream-protected").permitAll()
+                        .requestMatchers("/api/radovi", "/api/radovi-sa-rasporedom", "/api/upload-hls-hetzner").permitAll()
+                        .requestMatchers("/api/progress-chart/**", "/api/cookies/create-cookie-by-local-storage").permitAll()
+                        .requestMatchers("/api/kursslika", "/api/kursslika/**").permitAll()
+                        .requestMatchers("/api/send-code-to-mail", "/api/send-mail-to-person").permitAll()
+
+                        // Payment rute
+                        .requestMatchers("/api/payment/create", "/api/payment/notify", 
+                                         "/api/payment/return", "/api/payment/return/**", 
+                                         "/api/payment/failure", "/checkout/**").permitAll()
+
+                        // Zaštićene rute
                         .requestMatchers("/api/auth/**").authenticated()
-                        .requestMatchers("/api/kursevi-sa-lekcijama").permitAll()
-                        .requestMatchers("/api/kursevi").permitAll()
-                        .requestMatchers("/api/media/**").permitAll()
-                        .requestMatchers("/api/recenzije").permitAll()
-                        .requestMatchers("/api/unlock-device").permitAll()
-                        .requestMatchers("/api/video/stream").permitAll()
-                        .requestMatchers("/api/video/stream-protected").permitAll()
-                        .requestMatchers("/api/radovi").permitAll()
-                        .requestMatchers("/api/radovi-sa-rasporedom").permitAll()
-                        .requestMatchers("/api/upload-hls-hetzner").permitAll()
-                        .requestMatchers("/api/kursevi/{id}").permitAll()
-                        .requestMatchers("/api/progress-chart/**").permitAll()
-                        .requestMatchers("/api/cookies/create-cookie-by-local-storage").permitAll()
-                        .requestMatchers("/api/kursslika").permitAll()
-                        .requestMatchers("/api/kursslika/*").permitAll()
-                        .requestMatchers("/api/send-code-to-mail").permitAll()
-                        .requestMatchers("/api/send-mail-to-person").permitAll()
-                        .requestMatchers("/api/payment/create").permitAll()
-                        .requestMatchers("/api/payment/notify").permitAll()
-                        .requestMatchers("/api/payment/return").permitAll()
-                        .requestMatchers("/api/payment/return/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth -> oauth
                         .successHandler((request, response, authentication) -> {
