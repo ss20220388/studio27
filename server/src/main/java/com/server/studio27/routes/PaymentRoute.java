@@ -18,7 +18,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import com.server.studio27.services.PaymentService;
 
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"https://27archviz.com", "https://www.27archviz.com", "http://localhost:4321"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/api")
 public class PaymentRoute {
