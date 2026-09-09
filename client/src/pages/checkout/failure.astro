@@ -1,5 +1,7 @@
 ---
 const orderId = Astro.url.searchParams.get("orderId");
+const reason = Astro.url.searchParams.get("reason");
+import "../../styles/global.css";
 ---
 
 <!doctype html>
@@ -15,7 +17,7 @@ const orderId = Astro.url.searchParams.get("orderId");
         content="noindex, nofollow"
     />
 
-    <title>Uspešno plaćanje | Studio 27</title>
+    <title>Neuspešno plaćanje | Studio 27</title>
 </head>
 
 <body class="min-h-screen bg-slate-50 text-slate-900">
@@ -29,10 +31,10 @@ const orderId = Astro.url.searchParams.get("orderId");
                 class="rounded-3xl bg-white p-8 text-center shadow-xl shadow-slate-200/60 sm:p-10"
             >
 
-                <!-- SUCCESS ICON -->
-                <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
+                <!-- FAILURE ICON -->
+                <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-rose-100">
                     <svg
-                        class="h-10 w-10 text-emerald-600"
+                        class="h-10 w-10 text-rose-600"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -40,25 +42,26 @@ const orderId = Astro.url.searchParams.get("orderId");
                         stroke-linecap="round"
                         stroke-linejoin="round"
                     >
-                        <path d="M20 6L9 17l-5-5" />
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                 </div>
 
                 <!-- TITLE -->
                 <h1 class="text-3xl font-bold tracking-tight text-slate-900">
-                    Plaćanje je uspešno!
+                    Plaćanje nije uspelo
                 </h1>
 
                 <!-- DESCRIPTION -->
                 <p class="mt-4 text-base leading-7 text-slate-600">
-                    Hvala vam na kupovini. Vaša transakcija je uspešno obrađena i vaši kursevi su sada dostupni na vašem nalogu.
+                    Nažalost, došla je do greške prilikom obrade vaše transakcije. Vaša kartica nije zadužena ili je transakcija otkazana.
                 </p>
 
                 <!-- ORDER ID -->
                 {orderId && (
                     <div class="mt-7 rounded-2xl bg-slate-50 px-5 py-4">
                         <p class="text-sm text-slate-500">
-                            Broj porudžbine
+                            Broj pokušane porudžbine
                         </p>
 
                         <p class="mt-1 break-all font-mono text-base font-semibold text-slate-900">
@@ -68,10 +71,10 @@ const orderId = Astro.url.searchParams.get("orderId");
                 )}
 
                 <!-- INFO BOX -->
-                <div class="mt-6 rounded-2xl border border-emerald-100 bg-emerald-50/50 px-5 py-4 text-left">
+                <div class="mt-6 rounded-2xl border border-rose-100 bg-rose-50/50 px-5 py-4 text-left">
                     <div class="flex gap-3">
                         <svg
-                            class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
+                            class="mt-0.5 h-5 w-5 shrink-0 text-rose-600"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -80,25 +83,18 @@ const orderId = Astro.url.searchParams.get("orderId");
                             stroke-linejoin="round"
                         >
                             <circle cx="12" cy="12" r="10" />
-                            <path d="M12 16v-4" />
-                            <path d="M12 8h.01" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
                         </svg>
 
-                        <p class="text-sm leading-6 text-emerald-900">
-                            Potvrdu o izvršenoj uplati poslali smo na vašu e-mail adresu. Možete odmah početi sa praćenjem kursa.
+                        <p class="text-sm leading-6 text-rose-900">
+                            Proverite stanje na računu, ispravnost unetih podataka sa kartice ili pokušajte sa drugom karticom. Ako se problem nastavi, kontaktirajte vašu banku.
                         </p>
                     </div>
                 </div>
 
                 <!-- BUTTONS -->
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-
-                    <a
-                        href="/moji-kursevi"
-                        class="inline-flex flex-1 items-center justify-center rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-                    >
-                        Moji kursevi
-                    </a>
 
                     <a
                         href="/"

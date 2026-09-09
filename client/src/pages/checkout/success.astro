@@ -1,5 +1,6 @@
 ---
 const orderId = Astro.url.searchParams.get("orderId");
+import "../../styles/global.css";
 ---
 
 <!doctype html>
@@ -86,13 +87,6 @@ const orderId = Astro.url.searchParams.get("orderId");
                         class="inline-flex flex-1 items-center justify-center rounded-xl bg-slate-900 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800"
                     >
                         Početna strana
-                    </a>
-
-                    <a
-                        href="/courses"
-                        class="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-50"
-                    >
-                        Moji kursevi
                     </a>
                 </div>
 
