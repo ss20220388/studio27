@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
@@ -30,16 +29,8 @@ public class PaymentRoute {
         this.paymentService = paymentService;
     }
 
-    // ============================================================
-    // PAYMENT CREATE
-    // ============================================================
-
-    public record PaymentCreateRequest(
-            String orderId,
-            Long studentId,
-            List<Long> courseIds,
-            BigDecimal totalAmount
-    ) {
+    // studentId sada dolazi direktno sa frontenda (vec zna ko je ulogovani korisnik)
+    public record PaymentCreateRequest(String orderId, Long studentId, List<Long> courseIds, BigDecimal totalAmount) {
     }
 
     @PostMapping("/payment/create")
@@ -47,23 +38,16 @@ public class PaymentRoute {
             @RequestBody PaymentCreateRequest request
     ) {
         try {
-
             if (request.orderId() == null || request.orderId().isBlank()) {
-                return ResponseEntity.badRequest().body(
-                        Map.of("message", "Order ID je obavezan.")
-                );
+                return ResponseEntity.badRequest().body(Map.of("message", "Order ID je obavezan."));
             }
 
             if (request.studentId() == null) {
-                return ResponseEntity.badRequest().body(
-                        Map.of("message", "StudentID je obavezan.")
-                );
+                return ResponseEntity.badRequest().body(Map.of("message", "StudentID je obavezan."));
             }
 
             if (request.courseIds() == null || request.courseIds().isEmpty()) {
-                return ResponseEntity.badRequest().body(
-                        Map.of("message", "Korpa je prazna.")
-                );
+                return ResponseEntity.badRequest().body(Map.of("message", "Korpa je prazna."));
             }
 
             String paymentForm = paymentService.createPaymentForm(
@@ -73,56 +57,27 @@ public class PaymentRoute {
                     request.totalAmount()
             );
 
-            return ResponseEntity.ok(
-                    Map.of("paymentForm", paymentForm)
-            );
+            return ResponseEntity.ok(Map.of("paymentForm", paymentForm));
 
         } catch (IllegalArgumentException e) {
-
-            return ResponseEntity.badRequest().body(
-                    Map.of("message", e.getMessage())
-            );
-
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
-
             e.printStackTrace();
-
             return ResponseEntity.internalServerError().body(
                     Map.of(
-                            "message",
-                            "Greška prilikom kreiranja forme za plaćanje.",
-                            "error",
-                            e.getMessage() == null
-                                    ? "Unknown error"
-                                    : e.getMessage()
+                            "message", "Greška prilikom kreiranja forme za plaćanje.",
+                            "error", e.getMessage() == null ? "Unknown error" : e.getMessage()
                     )
             );
         }
     }
 
-    // ============================================================
-    // PAYMENT NOTIFY
-    // ============================================================
-    //
-    // OVO JE SERVER-TO-SERVER CALLBACK BANKE.
-    //
-    // Banka poziva:
-    //
-    // POST https://api.27archviz.com/api/payment/notify
-    //
-    // Ovde proveravamo potpis banke i ovde jedino upisujemo
-    // uspešno plaćanje u bazu.
-    //
-    // ============================================================
-
-    @PostMapping(
-            value = "/payment/notify",
-            produces = MediaType.TEXT_PLAIN_VALUE
-    )
-    public ResponseEntity<String> paymentNotify(
-            @RequestParam Map<String, String> params
-    ) {
-
+    // Ruta koju banka poziva (Server-to-Server) i očekuje format odgovora iz PHP skripte.
+    // Ovo je JEDINO mesto gde upisujemo u uplatnica/pohadja — ovaj poziv dolazi
+    // direktno sa bankinog servera, ne zavisi od korisnikovog browsera, pa je
+    // najpouzdaniji trenutak da znamo da je plaćanje zaista prošlo.
+    @PostMapping(value = "/payment/notify", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> paymentNotify(@RequestParam Map<String, String> params) {
         String merchantId = params.getOrDefault("MerchantID", "");
         String terminalId = params.getOrDefault("TerminalID", "");
         String orderId = params.getOrDefault("OrderID", "");
@@ -135,176 +90,75 @@ public class PaymentRoute {
         boolean signatureValid = paymentService.verifySignature(params);
 
         StringBuilder response = new StringBuilder();
-
-        response.append("MerchantID = ")
-                .append(merchantId)
-                .append("\n");
-
-        response.append("TerminalID = ")
-                .append(terminalId)
-                .append("\n");
-
-        response.append("OrderID = ")
-                .append(orderId)
-                .append("\n");
-
-        response.append("Delay = ")
-                .append(delay)
-                .append("\n");
-
-        response.append("Currency = ")
-                .append(currency)
-                .append("\n");
-
-        response.append("TotalAmount = ")
-                .append(totalAmount)
-                .append("\n");
-
-        response.append("XID = ")
-                .append(xid)
-                .append("\n");
-
-        response.append("PurchaseTime = ")
-                .append(purchaseTime)
-                .append("\n");
-
-        // --------------------------------------------------------
-        // VALIDAN POTPIS
-        // --------------------------------------------------------
+        response.append("MerchantID = ").append(merchantId).append("\n");
+        response.append("TerminalID = ").append(terminalId).append("\n");
+        response.append("OrderID = ").append(orderId).append("\n");
+        response.append("Delay = ").append(delay).append("\n");
+        response.append("Currency = ").append(currency).append("\n");
+        response.append("TotalAmount = ").append(totalAmount).append("\n");
+        response.append("XID = ").append(xid).append("\n");
+        response.append("PurchaseTime = ").append(purchaseTime).append("\n");
 
         if (signatureValid) {
-
+            // Upis u uplatnica + pohadja se desava OVDE, tek sada kada je
+            // potpis banke potvrdjen kao ispravan. Ako ovaj upis pukne iz
+            // nekog razloga (npr. baza nedostupna), i dalje odgovaramo
+            // banci sa "approve" — ne zelimo da bankin sistem otkaze
+            // transakciju zbog nase baze. Greska se samo loguje da je
+            // mozemo rucno ispraviti.
             try {
-
-                /*
-                 * BITNO:
-                 *
-                 * Ovde se jedino upisuje uspešno plaćanje.
-                 *
-                 * SUCCESS ruta više NE radi ovaj upis.
-                 */
                 paymentService.recordSuccessfulPayment(orderId);
-
             } catch (Exception e) {
-
-                System.err.println(
-                        "[PaymentRoute] Upis u uplatnica/pohadja nije uspeo "
-                                + "za OrderID=" + orderId
-                                + ": "
-                                + e.getMessage()
-                );
-
+                System.err.println("[PaymentRoute] Upis u uplatnica/pohadja nije uspeo za OrderID=" + orderId + ": " + e.getMessage());
                 e.printStackTrace();
-
-                /*
-                 * Banki i dalje vraćamo approve.
-                 *
-                 * Ovo je ostavljeno prema tvojoj postojećoj logici.
-                 */
             }
 
             response.append("Response.action= approve \n");
             response.append("Response.reason= ok \n");
             response.append("Response.forwardUrl= \n");
-
+            return ResponseEntity.ok(response.toString());
+        } else {
+            response.append("Response.action= reverse \n");
+            response.append("Response.reason= something goes wrong \n");
+            response.append("Response.forwardUrl= \n");
             return ResponseEntity.ok(response.toString());
         }
-
-        // --------------------------------------------------------
-        // NEVALIDAN POTPIS
-        // --------------------------------------------------------
-
-        response.append("Response.action= reverse \n");
-        response.append("Response.reason= something goes wrong \n");
-        response.append("Response.forwardUrl= \n");
-
-        return ResponseEntity.ok(response.toString());
     }
 
-    // ============================================================
-    // PAYMENT SUCCESS
-    // ============================================================
-    //
-    // OVO JE USER BROWSER CALLBACK.
-    //
-    // Banka korisnika vraća na:
-    //
-    // https://api.27archviz.com/api/payment/success
-    //
-    // Ova ruta NE UPISUJE ništa u bazu.
-    //
-    // Notify je taj koji potvrđuje uplatu.
-    //
-    // Posle toga korisnika preusmeravamo na Astro:
-    //
-    // https://27archviz.com/checkout/success
-    //
-    // ============================================================
-
-    @RequestMapping(
-            value = "/payment/success",
-            method = {RequestMethod.GET, RequestMethod.POST}
-    )
-    public RedirectView paymentSuccess(
-            @RequestParam Map<String, String> params
-    ) {
-
+    @PostMapping("/payment/success")
+    public RedirectView paymentSuccess(@RequestParam Map<String, String> params) {
         String orderId = params.getOrDefault("OrderID", "");
+        boolean signatureValid = paymentService.verifySignature(params);
 
-        System.out.println(
-                "[PaymentRoute] SUCCESS callback received. OrderID="
-                        + orderId
+        if (!signatureValid) {
+            System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/success za OrderID=" + orderId);
+            return new RedirectView(
+                    frontendUrl + "/checkout/failure?orderId=" + orderId + "&reason=invalid_signature"
+            );
+        }
+        try {
+            paymentService.recordSuccessfulPayment(orderId);
+        } catch (Exception e) {
+            System.err.println("[PaymentRoute] Upis u uplatnica/pohadja nije uspeo (preko /payment/success) za OrderID=" + orderId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return new RedirectView(
+                frontendUrl + "/checkout/success?orderId=" + orderId
         );
-
-        /*
-         * VAŽNO:
-         *
-         * Ne radimo:
-         *
-         * paymentService.recordSuccessfulPayment(orderId);
-         *
-         * jer je to već urađeno preko /payment/notify.
-         */
-
-        String redirectUrl =
-                frontendUrl
-                        + "/checkout/success?orderId="
-                        + orderId;
-
-        return new RedirectView(redirectUrl);
     }
 
-    // ============================================================
-    // PAYMENT FAILURE
-    // ============================================================
-    //
-    // User browser callback za neuspešno plaćanje.
-    //
-    // Podržavamo i GET i POST jer payment gateway može koristiti
-    // jedan od ta dva načina za vraćanje korisnika.
-    //
-    // ============================================================
-
-    @RequestMapping(
-            value = "/payment/failure",
-            method = {RequestMethod.GET, RequestMethod.POST}
-    )
-    public RedirectView paymentFailure(
-            @RequestParam Map<String, String> params
-    ) {
-
+    @PostMapping("/payment/failure")
+    public RedirectView paymentFailure(@RequestParam Map<String, String> params) {
         String orderId = params.getOrDefault("OrderID", "");
 
-        System.out.println(
-                "[PaymentRoute] FAILURE callback received. OrderID="
-                        + orderId
+        boolean signatureValid = paymentService.verifySignature(params);
+        if (!signatureValid) {
+            System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/failure za OrderID=" + orderId);
+        }
+
+        return new RedirectView(
+                frontendUrl + "/checkout/failure?orderId=" + orderId
         );
-
-        String redirectUrl =
-                frontendUrl
-                        + "/checkout/failure?orderId="
-                        + orderId;
-
-        return new RedirectView(redirectUrl);
     }
 }
