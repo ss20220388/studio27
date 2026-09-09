@@ -82,8 +82,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/send-code-to-mail", "/api/send-mail-to-person").permitAll()
 
                         // Payment rute
-                        .requestMatchers("/api/payment/create", "/api/payment/notify", 
-                                         "/api/payment/return", "/api/payment/return/**", 
+                        .requestMatchers("/api/payment/create", "/api/payment/notify",
+                                         "/api/payment/success", "/api/payment/return", "/api/payment/return/**",
                                          "/api/payment/failure", "/checkout/**").permitAll()
 
                         // Zaštićene rute
