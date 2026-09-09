@@ -18,7 +18,6 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import com.server.studio27.services.PaymentService;
 
-@CrossOrigin(origins = {"https://27archviz.com", "https://www.27archviz.com", "http://localhost:4321"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/api")
 public class PaymentRoute {
@@ -35,6 +34,10 @@ public class PaymentRoute {
     public record PaymentCreateRequest(String orderId, Long studentId, List<Long> courseIds, BigDecimal totalAmount) {
     }
 
+    // CORS ovde je namerno OSTAO — ovu rutu zove nas SOPSTVENI frontend
+    // (fetch/XHR sa 27archviz.com), pa joj CORS provera treba i treba da
+    // prolazi samo sa naseg domena.
+    @CrossOrigin(origins = {"https://27archviz.com", "https://www.27archviz.com", "http://localhost:4321"}, allowCredentials = "true")
     @PostMapping("/payment/create")
     public ResponseEntity<?> createPayment(
             @RequestBody PaymentCreateRequest request
