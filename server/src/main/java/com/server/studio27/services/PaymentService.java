@@ -210,7 +210,18 @@ public class PaymentService {
             return;
         }
 
-        boolean alreadyProcessed = ((Number) pending.get("processed")).intValue() == 1;
+        // Kolona "processed" moze doci kao Boolean (ako je TINYINT(1)/BOOLEAN
+        // u bazi) ili kao Number (ako je INT) — zavisi od drajvera/tipa
+        // kolone, pa moramo da podrzimo oba, inace puca ClassCastException.
+        Object processedObj = pending.get("processed");
+        boolean alreadyProcessed;
+        if (processedObj instanceof Boolean) {
+            alreadyProcessed = (Boolean) processedObj;
+        } else if (processedObj instanceof Number) {
+            alreadyProcessed = ((Number) processedObj).intValue() == 1;
+        } else {
+            alreadyProcessed = false;
+        }
         if (alreadyProcessed) {
             System.out.println("[PaymentService] orderId=" + orderId + " je već obrađen, preskačem duplikat.");
             return;
@@ -328,6 +339,14 @@ public class PaymentService {
             String tranCode = getParamCI(params, "TranCode");
             String approvalCode = getParamCI(params, "ApprovalCode");
             String delay = getParamCI(params, "Delay");
+            if (delay.isBlank()) {
+                // Delay ume da izostane iz odgovora na /success i /failure
+                // (za razliku od /notify gde stize kao "0"), ali banka svejedno
+                // racuna potpis kao da je Delay="0" (jer mi UVEK saljemo
+                // Delay=0 u originalnom zahtevu - ne koristimo preautorizaciju).
+                // Zato moramo da defaultujemo na "0", ne na prazan string.
+                delay = "0";
+            }
             String signatureBase64 = getParamCI(params, "Signature");
 
             if (signatureBase64.isBlank()) {
