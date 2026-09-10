@@ -155,7 +155,7 @@ public class PaymentRoute {
 
         String orderId = getParamCaseInsensitive(params, "OrderID");
 
-        boolean signatureValid = paymentService.verifySignature(params);
+        boolean signatureValid = paymentService.verifySignatureFailure(params);
         System.out.println("[PaymentRoute][DEBUG] /payment/failure signatureValid=" + signatureValid + " za OrderID=" + orderId);
         if (!signatureValid) {
             System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/failure za OrderID=" + orderId);

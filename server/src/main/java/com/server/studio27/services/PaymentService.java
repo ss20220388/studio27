@@ -287,6 +287,9 @@ public class PaymentService {
 
         PrivateKey privateKey = loadPrivateKey();
 
+        // Banka (Raiffeisen Srbija) je eksplicitno potvrdila mejlom da je
+        // algoritam SHA256withRSA (ne SHA1 iz opste UPC dokumentacije za
+        // Ukrajinu — njihova implementacija je ocigledno customizovana).
         Signature signature = Signature.getInstance("SHA256withRSA");
         signature.initSign(privateKey);
         signature.update(data.getBytes(StandardCharsets.UTF_8));
@@ -294,11 +297,25 @@ public class PaymentService {
         return Base64.getEncoder().encodeToString(signature.sign());
     }
 
-    // Verifikacija niza identično kao iz PHP primera banke (NOTIFY_URL / success / failure).
-    // Ovo je već ispravno — format polja ovde se poklapa sa dokumentacijom.
-    // Ovo je format ODGOVORA banke (drugačiji od onoga što MI potpisujemo iznad) —
-    // namerno se razlikuju, to nije greška, ne diraj ovo.
+    // Verifikacija potpisa prema ZVANICNOJ UPC eCommerceConnect dokumentaciji.
+    // KLJUCNO: format NIJE isti za sve rute!
+    //
+    // Za SUCCESS_URL / NOTIFY_URL:
+    //   MerchantId;TerminalId;PurchaseTime;OrderId,Delay;Xid;CurrencyId,AltCurrencyId;Amount,AltAmount;SessionData;TranCode;ApprovalCode;
+    // Za FAILURE_URL (kraci, drugaciji format - BEZ SessionData i ApprovalCode):
+    //   MerchantId;TerminalId;PurchaseTime;OrderId;Delay;Xid;CurrencyId;Amount;TranCode;
+    //
+    // Mi ne saljemo AltCurrency/AltAmount pa ta polja uvek izostaju (bez zareza).
     public boolean verifySignature(Map<String, String> params) {
+        return verifySignatureInternal(params, false);
+    }
+
+    // Koristiti ISKLJUCIVO za /payment/failure — format je drugaciji od success/notify.
+    public boolean verifySignatureFailure(Map<String, String> params) {
+        return verifySignatureInternal(params, true);
+    }
+
+    private boolean verifySignatureInternal(Map<String, String> params, boolean isFailureFormat) {
         try {
             String merchantIdVal = getParamCI(params, "MerchantID");
             String terminalIdVal = getParamCI(params, "TerminalID");
@@ -310,8 +327,7 @@ public class PaymentService {
             String sd = getParamCI(params, "SD");
             String tranCode = getParamCI(params, "TranCode");
             String approvalCode = getParamCI(params, "ApprovalCode");
-            String upcTokenExp = getParamCI(params, "UPCTokenExp");
-            String upcToken = getParamCI(params, "UPCToken");
+            String delay = getParamCI(params, "Delay");
             String signatureBase64 = getParamCI(params, "Signature");
 
             if (signatureBase64.isBlank()) {
@@ -319,20 +335,32 @@ public class PaymentService {
                 return false;
             }
 
-            String data = merchantIdVal + ";" +
-                    terminalIdVal + ";" +
-                    purchaseTime + ";" +
-                    orderId + ";" +
-                    xid + ";" +
-                    currency + ";" +
-                    totalAmount + ";" +
-                    sd + ";" +
-                    tranCode + ";" +
-                    approvalCode + ";" +
-                    upcTokenExp + ";" +
-                    upcToken + ";";
+            String data;
+            if (isFailureFormat) {
+                data = merchantIdVal + ";" +
+                        terminalIdVal + ";" +
+                        purchaseTime + ";" +
+                        orderId + ";" +
+                        delay + ";" +
+                        xid + ";" +
+                        currency + ";" +
+                        totalAmount + ";" +
+                        tranCode + ";";
+            } else {
+                String orderPart = delay.isBlank() ? orderId : (orderId + "," + delay);
+                data = merchantIdVal + ";" +
+                        terminalIdVal + ";" +
+                        purchaseTime + ";" +
+                        orderPart + ";" +
+                        xid + ";" +
+                        currency + ";" +
+                        totalAmount + ";" +
+                        sd + ";" +
+                        tranCode + ";" +
+                        approvalCode + ";";
+            }
 
-            System.out.println("[PaymentService][DEBUG] verifySignature - string koji proveravamo: " + data);
+            System.out.println("[PaymentService][DEBUG] verifySignature (" + (isFailureFormat ? "FAILURE format" : "SUCCESS/NOTIFY format") + ") - string koji proveravamo: " + data);
             System.out.println("[PaymentService][DEBUG] verifySignature - Signature koji je banka poslala (prvih 30 karaktera): "
                     + (signatureBase64.length() > 30 ? signatureBase64.substring(0, 30) + "..." : signatureBase64));
 
