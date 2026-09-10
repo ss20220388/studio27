@@ -98,6 +98,21 @@ public class PaymentService {
 
         String signature = generateSignature(purchaseTime, orderId, delay, currencyId, wireAmount);
 
+        System.out.println("[PaymentService][DEBUG] Slanje ka banci -> MerchantID=" + merchantId
+                + " TerminalID=" + terminalId
+                + " OrderID=" + orderId
+                + " Delay=" + delay
+                + " Currency=" + currencyId
+                + " TotalAmount(wire)=" + wireAmount
+                + " PurchaseTime=" + purchaseTime
+                + " originalAmount=" + totalAmount
+                + " gatewayUrl=" + gatewayUrl
+                + " locale=" + locale);
+        System.out.println("[PaymentService][DEBUG] Potpisan string (pre potpisa): "
+                + merchantId + ";" + terminalId + ";" + purchaseTime + ";" + orderId + "," + delay + ";" + currencyId + ";" + wireAmount + ";;");
+        System.out.println("[PaymentService][DEBUG] Generisan Signature (base64, prvih 30 karaktera): "
+                + (signature != null && signature.length() > 30 ? signature.substring(0, 30) + "..." : signature));
+
         // Ne upisujemo jos u uplatnica/pohadja ovde — placanje jos NIJE
         // potvrdjeno (korisnik tek ide na formu banke). Cuvamo samo
         // studentId + listu kurseva vezanih za ovaj orderId, da bismo
@@ -285,21 +300,22 @@ public class PaymentService {
     // namerno se razlikuju, to nije greška, ne diraj ovo.
     public boolean verifySignature(Map<String, String> params) {
         try {
-            String merchantIdVal = params.getOrDefault("MerchantID", "");
-            String terminalIdVal = params.getOrDefault("TerminalID", "");
-            String purchaseTime = params.getOrDefault("PurchaseTime", "");
-            String orderId = params.getOrDefault("OrderID", "");
-            String xid = params.getOrDefault("XID", "");
-            String currency = params.getOrDefault("Currency", "");
-            String totalAmount = params.getOrDefault("TotalAmount", "");
-            String sd = params.getOrDefault("SD", "");
-            String tranCode = params.getOrDefault("TranCode", "");
-            String approvalCode = params.getOrDefault("ApprovalCode", "");
-            String upcTokenExp = params.getOrDefault("UPCTokenExp", "");
-            String upcToken = params.getOrDefault("UPCToken", "");
-            String signatureBase64 = params.getOrDefault("Signature", "");
+            String merchantIdVal = getParamCI(params, "MerchantID");
+            String terminalIdVal = getParamCI(params, "TerminalID");
+            String purchaseTime = getParamCI(params, "PurchaseTime");
+            String orderId = getParamCI(params, "OrderID");
+            String xid = getParamCI(params, "XID");
+            String currency = getParamCI(params, "Currency");
+            String totalAmount = getParamCI(params, "TotalAmount");
+            String sd = getParamCI(params, "SD");
+            String tranCode = getParamCI(params, "TranCode");
+            String approvalCode = getParamCI(params, "ApprovalCode");
+            String upcTokenExp = getParamCI(params, "UPCTokenExp");
+            String upcToken = getParamCI(params, "UPCToken");
+            String signatureBase64 = getParamCI(params, "Signature");
 
             if (signatureBase64.isBlank()) {
+                System.out.println("[PaymentService][DEBUG] verifySignature: nema Signature parametra uopste. Primljeni parametri: " + params);
                 return false;
             }
 
@@ -316,15 +332,37 @@ public class PaymentService {
                     upcTokenExp + ";" +
                     upcToken + ";";
 
+            System.out.println("[PaymentService][DEBUG] verifySignature - string koji proveravamo: " + data);
+            System.out.println("[PaymentService][DEBUG] verifySignature - Signature koji je banka poslala (prvih 30 karaktera): "
+                    + (signatureBase64.length() > 30 ? signatureBase64.substring(0, 30) + "..." : signatureBase64));
+
             byte[] signatureBytes = Base64.getDecoder().decode(signatureBase64);
             PublicKey publicKey = loadBankPublicKey();
 
-            return verifyWithAlgorithm(data, signatureBytes, publicKey, "SHA256withRSA");
+            boolean valid = verifyWithAlgorithm(data, signatureBytes, publicKey, "SHA256withRSA");
+            System.out.println("[PaymentService][DEBUG] verifySignature rezultat: " + valid);
+            return valid;
 
         } catch (Exception e) {
+            System.err.println("[PaymentService][DEBUG] verifySignature izuzetak: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
+    }
+
+    // Isti case-insensitive lookup kao u PaymentRoute.getParamCaseInsensitive —
+    // banka ume da posalje nazive parametara sa razlicitim velikim/malim
+    // slovima, pa ovde MORA da se koristi isti pristup, inace se potpis
+    // nikad ne poklapa (polja ispadnu prazna) i validna uplata se
+    // pogresno tretira kao neuspesna.
+    private String getParamCI(Map<String, String> params, String key) {
+        if (params == null) return "";
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(key)) {
+                return entry.getValue() == null ? "" : entry.getValue();
+            }
+        }
+        return "";
     }
 
     private boolean verifyWithAlgorithm(String data, byte[] signatureBytes, PublicKey publicKey, String algorithm) throws Exception {
