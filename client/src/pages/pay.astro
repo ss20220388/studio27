@@ -30,7 +30,7 @@ if (accessToken) {
       isAuthError = true;
     }
   } catch (err) {
-    console.error("Greška pri dohvaćanju korisnika:", err);
+    console.error("Greška pri verifikaciji korisnika:", err);
     isAuthError = true;
   }
 } else {
@@ -47,16 +47,16 @@ if (accessToken) {
   <body class="bg-[#f4f4f6] min-h-screen flex items-center justify-center p-4 font-sans text-slate-900">
     {isAuthError || !userData ? (
       <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center max-w-md w-full">
-        <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">
+        <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl flex items-center justify-center">
           !
         </div>
         <h1 class="text-xl font-bold mb-2 text-slate-800">Pristup nije dozvoljen</h1>
         <p class="text-slate-600 text-sm mb-6">
-          Niste ulogovani ili nemate stavki u korpi za plaćanje.
+          Niste ulogovani ili nemate ništa u korpi. Nemate pristup ovoj stranici.
         </p>
         <a 
           href="/" 
-          class="inline-block w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+          class="inline-block w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-xl transition-colors text-center"
         >
           Vrati se na početnu stranicu
         </a>
