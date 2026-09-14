@@ -46,6 +46,7 @@ public class PaymentService {
     private final String bankPublicKeyPath;
     private final String gatewayUrl;
     private final String locale;
+    private final String signatureAlgorithm;
 
     private final ResourceLoader resourceLoader;
     private final NamedParameterJdbcTemplate jdbcTemplate;
@@ -58,6 +59,7 @@ public class PaymentService {
             @Value("${payment.bank-public-key}") String bankPublicKeyPath,
             @Value("${payment.gateway-url}") String gatewayUrl,
             @Value("${payment.locale:rs}") String locale,
+            @Value("${payment.signature-algorithm:SHA256withRSA}") String signatureAlgorithm,
             ResourceLoader resourceLoader,
             NamedParameterJdbcTemplate jdbcTemplate
     ) {
@@ -68,6 +70,7 @@ public class PaymentService {
         this.bankPublicKeyPath = bankPublicKeyPath;
         this.gatewayUrl = gatewayUrl;
         this.locale = locale == null ? "rs" : locale.toLowerCase(Locale.ROOT);
+        this.signatureAlgorithm = signatureAlgorithm == null ? "SHA256withRSA" : signatureAlgorithm;
         this.resourceLoader = resourceLoader;
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -188,8 +191,7 @@ public class PaymentService {
      * Called once we've verified the bank's signature says payment
      * succeeded (from PaymentRoute.paymentNotify). For each course in the
      * order:
-     *   1. looks up its price (kursevi.cena by id) — ADJUST table/column
-     *      name below if yours are named differently
+     *   1. looks up its price (kurs.cena by kursId)
      *   2. inserts a row into uplatnica
      *   3. inserts a row into pohadja
      *
@@ -237,7 +239,7 @@ public class PaymentService {
 
         for (Long kursId : courseIds) {
             BigDecimal cena = jdbcTemplate.queryForObject(
-                    "SELECT cena FROM kursevi WHERE id = :kursId",
+                    "SELECT cena FROM kurs WHERE kursId = :kursId",
                     new MapSqlParameterSource("kursId", kursId),
                     BigDecimal.class
             );
@@ -301,7 +303,7 @@ public class PaymentService {
         // Banka (Raiffeisen Srbija) je eksplicitno potvrdila mejlom da je
         // algoritam SHA256withRSA (ne SHA1 iz opste UPC dokumentacije za
         // Ukrajinu — njihova implementacija je ocigledno customizovana).
-        Signature signature = Signature.getInstance("SHA256withRSA");
+        Signature signature = Signature.getInstance(signatureAlgorithm);
         signature.initSign(privateKey);
         signature.update(data.getBytes(StandardCharsets.UTF_8));
 
@@ -386,7 +388,7 @@ public class PaymentService {
             byte[] signatureBytes = Base64.getDecoder().decode(signatureBase64);
             PublicKey publicKey = loadBankPublicKey();
 
-            boolean valid = verifyWithAlgorithm(data, signatureBytes, publicKey, "SHA256withRSA");
+            boolean valid = verifyWithAlgorithm(data, signatureBytes, publicKey, signatureAlgorithm);
             System.out.println("[PaymentService][DEBUG] verifySignature rezultat: " + valid);
             return valid;
 
