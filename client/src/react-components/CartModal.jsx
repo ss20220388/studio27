@@ -6,8 +6,7 @@ export default function CartModal({ accessToken: initialToken }) {
   const [cart, setCart] = useState([]);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
   const [user, setUser] = useState(null);
-  
-  // Novi state-ovi za hendlovanje grešaka i učitavanja
+
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -111,12 +110,24 @@ export default function CartModal({ accessToken: initialToken }) {
     const res = await fetch(`${API_URL}/api/auth/register-user`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include", // Važno radi postavljanja cookie-ja ako backend to radi
+      credentials: "include",
       body: JSON.stringify(payload),
     });
 
     const data = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, data };
+  };
+
+  const loginUser = async (email, password) => {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, data };
   };
 
   const handleSubmit = async (e) => {
@@ -152,44 +163,66 @@ export default function CartModal({ accessToken: initialToken }) {
     };
 
     try {
-      const response = await registerUser(payload);
+      // 1. Registracija korisnika
+      const regResponse = await registerUser(payload);
 
-      if (response.ok) {
-        // Registracija uspela - slanje maila
-        const mailPayload = {
-          to: payload.email,
-          subject: "Dobrodošli! Vaši podaci za prijavu",
-          subText: `Zdravo ${payload.ime}, vaš nalog je uspešno kreiran.`,
-          body: `Vaša privremena lozinka za prijavu je: ${pass}\n\nMolimo vas da je promenite nakon prve prijave.`,
-        };
+      if (regResponse.ok) {
+        // 2. Automatska prijava (Login) nakon registracije
+        const loginResponse = await loginUser(payload.email, pass);
 
-        await fetch(`${API_URL}/api/send-mail-to-person`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(mailPayload),
-        });
+        if (loginResponse.ok) {
+          if (loginResponse.data?.token) {
+            localStorage.setItem("accessToken", loginResponse.data.token);
+          }
 
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            userEmail: payload.email,
-            naziv: naziv,
-            cena: cena,
-          })
-        );
+          // Obaveštenje za DropDownMenu/Header komponente
+          window.dispatchEvent(
+            new CustomEvent("user-logged-in", {
+              detail: loginResponse.data?.user || loginResponse.data,
+            })
+          );
 
-        // Preusmeravanje na plaćanje
-        window.location.href = "/pay";
+          // 3. Slanje e-maila sa pristupnim podacima
+          const mailPayload = {
+            to: payload.email,
+            subject: "Dobrodošli! Vaši podaci za prijavu",
+            subText: `Zdravo ${payload.ime}, vaš nalog je uspešno kreiran.`,
+            body: `Vaša privremena lozinka za prijavu je: ${pass}\n\nMolimo vas da je promenite nakon prve prijave.`,
+          };
+
+          await fetch(`${API_URL}/api/send-mail-to-person`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(mailPayload),
+          });
+
+          // 4. Čuvanje podataka za checkout i preusmeravanje
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              userEmail: payload.email,
+              naziv: naziv,
+              cena: cena,
+            })
+          );
+
+          window.location.href = "/pay";
+        } else {
+          setErrorMessage(
+            "Nalog je kreiran, ali automatska prijava nije uspela. Molimo prijavite se ručno."
+          );
+        }
       } else {
-        // Ako mail već postoji u bazi
-        if (response.status === 400 || response.status === 409) {
+        if (regResponse.status === 400 || regResponse.status === 409) {
           setErrorMessage("Nalog sa ovom e-mail adresom već postoji. Molimo prijavite se.");
         } else {
-          setErrorMessage(response.data?.message || "Došlo je do greške pri registraciji. Pokušajte ponovo.");
+          setErrorMessage(
+            regResponse.data?.message || "Došlo je do greške pri registraciji. Pokušajte ponovo."
+          );
         }
       }
     } catch (error) {
-      console.error("Greška tokom procesa registracije:", error);
+      console.error("Greška tokom procesa registracije i prijave:", error);
       setErrorMessage("Mrežna greška. Proverite internet konekciju.");
     } finally {
       setIsLoading(false);
@@ -198,6 +231,7 @@ export default function CartModal({ accessToken: initialToken }) {
 
   return (
     <div>
+      {/* Fiksirano dugme za otvaranje korpe */}
       {!isOpen && (
         <button
           type="button"
@@ -207,7 +241,7 @@ export default function CartModal({ accessToken: initialToken }) {
             fetchUser();
             setIsOpen(true);
           }}
-          className="fixed bottom-6 right-6 sm:bottom-auto sm:top-40 sm:right-8 z-[80] w-14 h-14 bg-zinc-900 sm:bg-[#e5e7eb] text-white sm:text-black rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
+          className="fixed bottom-6 right-6 z-[80] w-14 h-14 bg-zinc-900 text-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
         >
           <svg
             className="w-6 h-6 stroke-[1.5]"
@@ -222,15 +256,16 @@ export default function CartModal({ accessToken: initialToken }) {
             />
           </svg>
           {totalItems > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-600 text-white font-bold text-xs rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-white sm:border-black">
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white font-bold text-xs rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-white">
               {totalItems}
             </span>
           )}
         </button>
       )}
 
+      {/* Modal prozora korpe */}
       {isOpen && (
-        <div className="fixed inset-0 z-10002 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 overflow-hidden">
+        <div className="fixed inset-0 z-[10002] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 overflow-hidden">
           <div className="relative w-full sm:max-w-[480px] bg-white text-black p-5 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-none font-sans">
             <button
               type="button"
@@ -287,7 +322,6 @@ export default function CartModal({ accessToken: initialToken }) {
               <span className="text-lg">{totalPrice.toLocaleString()} €</span>
             </div>
 
-            {/* Prikaz poruke o grešci (npr. e-mail postoji) */}
             {errorMessage && (
               <div className="bg-red-50 border border-red-200 p-3.5 rounded text-xs text-red-700 mb-5 flex flex-col gap-2">
                 <p className="font-semibold">{errorMessage}</p>
