@@ -244,11 +244,12 @@ public class PaymentService {
                     BigDecimal.class
             );
 
-            // Tabela se zove "platio" (ne "uplatnica"). Kolona "tip" prihvata
-            // ili 'UPLATNICA' (rucni/admin unos) ili 'KARTICA' (placeno preko
-            // Raiffeisen gateway-a, kao ovde). "status" kod postojecih redova
-            // stoji na 0, pa to zadrzavamo umesto NULL. "url" ostaje NULL jer
-            // nema skrinsota/dokaza uplate za karticno placanje.
+            // Tabela se zove "platio" (ne "uplatnica" — ta tabela ne postoji
+            // u bazi). Kolona "tip" prihvata ili 'UPLATNICA' (rucni/admin
+            // unos) ili 'KARTICA' (placeno preko Raiffeisen gateway-a, kao
+            // ovde). "status" kod postojecih redova stoji na 0, pa to
+            // zadrzavamo umesto NULL. "url" ostaje NULL jer nema
+            // skrinsota/dokaza uplate za karticno placanje.
             jdbcTemplate.update(
                     "INSERT INTO platio (kursId, studentId, datumPlacanja, cenaPlacanja, tip, status, url) " +
                             "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', 0, NULL)",
