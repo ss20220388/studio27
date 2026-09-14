@@ -6,24 +6,36 @@ import "../styles/global.css";
 const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 const cookie = Astro.cookies.get("refreshToken");
 const accessToken = cookie ? cookie.value : null;
-const userRes = await fetch(`${API_URL}/api/auth/me`, {
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-		},
-		credentials: "include",
-	});
 
-	if (!userRes.ok) {
-		throw new Error(`Auth failed: ${userRes.status} ${userRes.statusText}`);
-	}
+let userData = null;
+let isAuthError = false;
 
-	const userData = await userRes.json();
+if (accessToken) {
+  try {
+    const userRes = await fetch(`${API_URL}/api/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      credentials: "include",
+    });
 
-	if (!userData.userId) {
-		throw new Error("userId nije dostupan");
-	}
-console.log("userData:", userData);
-
+    if (userRes.ok) {
+      const data = await userRes.json();
+      if (data.userId) {
+        userData = data;
+      } else {
+        isAuthError = true;
+      }
+    } else {
+      isAuthError = true;
+    }
+  } catch (err) {
+    console.error("Greška pri dohvaćanju korisnika:", err);
+    isAuthError = true;
+  }
+} else {
+  isAuthError = true;
+}
 ---
 
 <html lang="sr">
@@ -33,6 +45,24 @@ console.log("userData:", userData);
     <title>Plaćanje | 27archviz</title>
   </head>
   <body class="bg-[#f4f4f6] min-h-screen flex items-center justify-center p-4 font-sans text-slate-900">
-    <PaymentFlow API_URL={API_URL} token={accessToken} client:only="react" studentId={userData.userId} />
+    {isAuthError || !userData ? (
+      <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center max-w-md w-full">
+        <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">
+          !
+        </div>
+        <h1 class="text-xl font-bold mb-2 text-slate-800">Pristup nije dozvoljen</h1>
+        <p class="text-slate-600 text-sm mb-6">
+          Niste ulogovani ili nemate stavki u korpi za plaćanje.
+        </p>
+        <a 
+          href="/" 
+          class="inline-block w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+        >
+          Vrati se na početnu stranicu
+        </a>
+      </div>
+    ) : (
+      <PaymentFlow API_URL={API_URL} token={accessToken} client:only="react" studentId={userData.userId} />
+    )}
   </body>
 </html>
