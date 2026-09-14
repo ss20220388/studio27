@@ -22,6 +22,15 @@ import com.server.studio27.services.PaymentService;
 @RequestMapping("/api")
 public class PaymentRoute {
 
+    // Kod transakcije koji banka salje kad je transakcija STVARNO odobrena.
+    // SVAKI drugi TranCode (npr. "404" = greska autentikacije/3-D Secure,
+    // ili bilo koji drugi decline kod) znaci da transakcija NIJE prosla —
+    // cak i kada je poruka koju je banka poslala ispravno potpisana, jer
+    // banka potpisuje i odbijene transakcije, ne samo odobrene. Zato
+    // signatureValid SAM PO SEBI nikad ne sme da bude jedini uslov za upis
+    // uplate — mora da se doda i provera TranCode-a.
+    private static final String APPROVED_TRAN_CODE = "00";
+
     private final PaymentService paymentService;
 
     @Value("${app.frontend.url}")
@@ -89,9 +98,24 @@ public class PaymentRoute {
         String totalAmount = getParamCaseInsensitive(params, "TotalAmount");
         String xid = getParamCaseInsensitive(params, "XID");
         String purchaseTime = getParamCaseInsensitive(params, "PurchaseTime");
+        String tranCode = getParamCaseInsensitive(params, "TranCode");
 
         boolean signatureValid = paymentService.verifySignature(params);
-        System.out.println("[PaymentRoute][DEBUG] /payment/notify signatureValid=" + signatureValid + " za OrderID=" + orderId);
+
+        // KLJUCNO: signatureValid SAMO potvrdjuje da je poruku stvarno
+        // poslala banka (nije falsifikovana) — ne govori nista o tome da
+        // li je transakcija odobrena ili odbijena. Banka salje validno
+        // potpisan notify i za odbijene transakcije (npr. neuspesan 3-D
+        // Secure/autentikacija, TranCode="404"). Zato moramo eksplicitno
+        // da proverimo i TranCode pre nego sto upisemo uplatu — u
+        // suprotnom cak i propala transakcija upisuje studenta kao da je
+        // platio.
+        boolean transactionApproved = signatureValid && APPROVED_TRAN_CODE.equals(tranCode);
+
+        System.out.println("[PaymentRoute][DEBUG] /payment/notify signatureValid=" + signatureValid
+                + " TranCode=" + tranCode
+                + " transactionApproved=" + transactionApproved
+                + " za OrderID=" + orderId);
 
         StringBuilder response = new StringBuilder();
         response.append("MerchantID = ").append(merchantId).append("\n");
@@ -103,11 +127,11 @@ public class PaymentRoute {
         response.append("XID = ").append(xid).append("\n");
         response.append("PurchaseTime = ").append(purchaseTime).append("\n");
 
-        if (signatureValid) {
+        if (transactionApproved) {
             try {
                 paymentService.recordSuccessfulPayment(orderId);
             } catch (Exception e) {
-                System.err.println("[PaymentRoute] Upis u uplatnica/pohadja nije uspeo za OrderID=" + orderId + ": " + e.getMessage());
+                System.err.println("[PaymentRoute] Upis u platio/pohadja nije uspeo za OrderID=" + orderId + ": " + e.getMessage());
                 e.printStackTrace();
             }
 
@@ -116,6 +140,16 @@ public class PaymentRoute {
             response.append("Response.forwardUrl= \n");
             return ResponseEntity.ok(response.toString());
         } else {
+            if (signatureValid) {
+                // Potpis je validan (poruka je stvarno od banke), ali
+                // transakcija nije odobrena (TranCode != "00") — ovo NIJE
+                // pokusaj falsifikovanja, samo normalna odbijena uplata
+                // (npr. neuspesna autentikacija, nedovoljno sredstava, itd).
+                System.out.println("[PaymentRoute] Transakcija ODBIJENA (validan potpis, TranCode=" + tranCode + ") za OrderID=" + orderId + " — ne upisujem uplatu.");
+            } else {
+                System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/notify za OrderID=" + orderId);
+            }
+
             response.append("Response.action= reverse \n");
             response.append("Response.reason= something goes wrong \n");
             response.append("Response.forwardUrl= \n");
@@ -128,8 +162,20 @@ public class PaymentRoute {
         System.out.println("[PaymentRoute][DEBUG] /payment/success SVI parametri koje je banka poslala: " + params);
 
         String orderId = getParamCaseInsensitive(params, "OrderID");
+        String tranCode = getParamCaseInsensitive(params, "TranCode");
         boolean signatureValid = paymentService.verifySignature(params);
-        System.out.println("[PaymentRoute][DEBUG] /payment/success signatureValid=" + signatureValid + " za OrderID=" + orderId);
+
+        // Isti razlog kao u paymentNotify: potpis validan != transakcija
+        // odobrena. Banka moze da dovede korisnika na SUCCESS_URL sa
+        // ispravno potpisanom porukom koja ipak opisuje odbijenu
+        // transakciju (TranCode != "00"), pa moramo i to da proverimo pre
+        // nego sto upisemo uplatu i prikazemo korisniku "uspesno placeno".
+        boolean transactionApproved = signatureValid && APPROVED_TRAN_CODE.equals(tranCode);
+
+        System.out.println("[PaymentRoute][DEBUG] /payment/success signatureValid=" + signatureValid
+                + " TranCode=" + tranCode
+                + " transactionApproved=" + transactionApproved
+                + " za OrderID=" + orderId);
 
         if (!signatureValid) {
             System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/success za OrderID=" + orderId);
@@ -137,10 +183,18 @@ public class PaymentRoute {
                     frontendUrl + "/checkout/failure?orderId=" + orderId + "&reason=invalid_signature"
             );
         }
+
+        if (!transactionApproved) {
+            System.out.println("[PaymentRoute] Transakcija ODBIJENA (validan potpis, TranCode=" + tranCode + ") na /payment/success za OrderID=" + orderId + " — ne upisujem uplatu.");
+            return new RedirectView(
+                    frontendUrl + "/checkout/failure?orderId=" + orderId + "&reason=transaction_declined"
+            );
+        }
+
         try {
             paymentService.recordSuccessfulPayment(orderId);
         } catch (Exception e) {
-            System.err.println("[PaymentRoute] Upis u uplatnica/pohadja nije uspeo (preko /payment/success) za OrderID=" + orderId + ": " + e.getMessage());
+            System.err.println("[PaymentRoute] Upis u platio/pohadja nije uspeo (preko /payment/success) za OrderID=" + orderId + ": " + e.getMessage());
             e.printStackTrace();
         }
 
