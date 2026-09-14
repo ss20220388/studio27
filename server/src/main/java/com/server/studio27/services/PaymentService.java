@@ -251,13 +251,14 @@ public class PaymentService {
             // zadrzavamo umesto NULL. "url" ostaje NULL jer nema
             // skrinsota/dokaza uplate za karticno placanje.
             // "status" je char(1) sa CHECK constraint-om koji dozvoljava
-            // SAMO 'P', 'O' ili 'C' (platio_chk_2) — broj 0 nije validna
-            // vrednost i zato je prethodni insert pucao. Svi postojeci
-            // redovi u tabeli (bez obzira na tip) imaju status='O', pa
-            // koristimo istu vrednost i za karticna placanja.
+            // SAMO 'P' (Prihvaceno), 'O' (Odbijeno) ili 'C' (na Cekanju).
+            // Ovde smo vec prosli TranCode proveru u PaymentRoute
+            // (transactionApproved) pre nego sto se uopste pozove ova
+            // metoda, pa je uplata SIGURNO prihvacena — status mora da
+            // bude 'P', ne 'O' (to bi znacilo odbijeno, sto je pogresno).
             jdbcTemplate.update(
                     "INSERT INTO platio (kursId, studentId, datumPlacanja, cenaPlacanja, tip, status, url) " +
-                            "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', 'O', NULL)",
+                            "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', 'P', NULL)",
                     new MapSqlParameterSource()
                             .addValue("kursId", kursId)
                             .addValue("studentId", studentId)
