@@ -46,7 +46,16 @@ public class PaymentService {
     private final String bankPublicKeyPath;
     private final String gatewayUrl;
     private final String locale;
-    private final String signatureAlgorithm;
+
+    // VAZNO: banka koristi RAZLICIT hash algoritam za dva smera:
+    //   - kada MI potpisujemo odlazni zahtev (formu ka banci) -> SHA512withRSA
+    //   - kada MI proveravamo potpis koji banka vraca (notify/success/failure) -> SHA256withRSA
+    // Ranije je postojalo samo jedno "signatureAlgorithm" polje koje se
+    // koristilo na oba mesta, sto je garantovano lomilo jednu od dve strane
+    // (ili banka odbija nas zahtev kao "los merchant" jer ocekuje 512, ili
+    // nasa provera njihovog odgovora pada jer smo proverili sa 512 umesto 256).
+    private final String requestSignatureAlgorithm;
+    private final String responseSignatureAlgorithm;
 
     private final ResourceLoader resourceLoader;
     private final NamedParameterJdbcTemplate jdbcTemplate;
@@ -59,7 +68,8 @@ public class PaymentService {
             @Value("${payment.bank-public-key}") String bankPublicKeyPath,
             @Value("${payment.gateway-url}") String gatewayUrl,
             @Value("${payment.locale:rs}") String locale,
-            @Value("${payment.signature-algorithm:SHA256withRSA}") String signatureAlgorithm,
+            @Value("${payment.request-signature-algorithm:SHA512withRSA}") String requestSignatureAlgorithm,
+            @Value("${payment.response-signature-algorithm:SHA256withRSA}") String responseSignatureAlgorithm,
             ResourceLoader resourceLoader,
             NamedParameterJdbcTemplate jdbcTemplate
     ) {
@@ -70,7 +80,8 @@ public class PaymentService {
         this.bankPublicKeyPath = bankPublicKeyPath;
         this.gatewayUrl = gatewayUrl;
         this.locale = locale == null ? "rs" : locale.toLowerCase(Locale.ROOT);
-        this.signatureAlgorithm = signatureAlgorithm == null ? "SHA256withRSA" : signatureAlgorithm;
+        this.requestSignatureAlgorithm = requestSignatureAlgorithm == null ? "SHA512withRSA" : requestSignatureAlgorithm;
+        this.responseSignatureAlgorithm = responseSignatureAlgorithm == null ? "SHA256withRSA" : responseSignatureAlgorithm;
         this.resourceLoader = resourceLoader;
         this.jdbcTemplate = jdbcTemplate;
     }
@@ -110,7 +121,8 @@ public class PaymentService {
                 + " PurchaseTime=" + purchaseTime
                 + " originalAmount=" + totalAmount
                 + " gatewayUrl=" + gatewayUrl
-                + " locale=" + locale);
+                + " locale=" + locale
+                + " requestSignatureAlgorithm=" + requestSignatureAlgorithm);
         System.out.println("[PaymentService][DEBUG] Potpisan string (pre potpisa): "
                 + merchantId + ";" + terminalId + ";" + purchaseTime + ";" + orderId + "," + delay + ";" + currencyId + ";" + wireAmount + ";;");
         System.out.println("[PaymentService][DEBUG] Generisan Signature (base64, prvih 30 karaktera): "
@@ -244,9 +256,15 @@ public class PaymentService {
                     BigDecimal.class
             );
 
+            // Tabela se zove "platio" (ne "uplatnica"). Kolona "tip" prihvata
+            // ili 'UPLATNICA' (rucni/admin unos, npr. uplata na racun) ili
+            // 'KARTICA' (kad je placeno preko Raiffeisen gateway-a, kao ovde).
+            // "status" kod postojecih redova stoji na 0, pa to zadrzavamo i
+            // ovde umesto NULL. "url" ostaje NULL jer nema skrinsota/dokaza
+            // uplate za karticno placanje.
             jdbcTemplate.update(
-                    "INSERT INTO uplatnica (kursId, studentId, datumPlacanja, cenaPlacanja, tip, status, url) " +
-                            "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', NULL, NULL)",
+                    "INSERT INTO platio (kursId, studentId, datumPlacanja, cenaPlacanja, tip, status, url) " +
+                            "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', 0, NULL)",
                     new MapSqlParameterSource()
                             .addValue("kursId", kursId)
                             .addValue("studentId", studentId)
@@ -277,8 +295,14 @@ public class PaymentService {
      * Delay is sent in the form (value "0"), so it's comma-joined with
      * OrderID here: "OrderID,Delay". We don't send AltCurrency/AltAmount,
      * so Currency and Amount stay plain. SD is unused (empty field before
-     * the final semicolon). Algorithm is SHA256withRSA per the bank's
-     * explicit instruction.
+     * the final semicolon).
+     *
+     * Algorithm: banka je eksplicitno potvrdila da odlazni (request) potpis
+     * MORA da bude SHA512withRSA — ovo je DRUGACIJI algoritam od onog kojim
+     * mi proveravamo njihov odgovor (vidi verifyWithAlgorithm/responseSignatureAlgorithm,
+     * SHA256withRSA). Ako se ovde greskom koristi 256, banka odbija zahtev
+     * kao nevalidan (npr. "los merchant" gresku), jer njihova strana racuna
+     * MAC sa 512 i poredi sa onim sto smo mi poslali sa 256.
      */
     public String generateSignature(
             String purchaseTime,
@@ -300,10 +324,7 @@ public class PaymentService {
 
         PrivateKey privateKey = loadPrivateKey();
 
-        // Banka (Raiffeisen Srbija) je eksplicitno potvrdila mejlom da je
-        // algoritam SHA256withRSA (ne SHA1 iz opste UPC dokumentacije za
-        // Ukrajinu — njihova implementacija je ocigledno customizovana).
-        Signature signature = Signature.getInstance(signatureAlgorithm);
+        Signature signature = Signature.getInstance(requestSignatureAlgorithm);
         signature.initSign(privateKey);
         signature.update(data.getBytes(StandardCharsets.UTF_8));
 
@@ -319,6 +340,10 @@ public class PaymentService {
     //   MerchantId;TerminalId;PurchaseTime;OrderId;Delay;Xid;CurrencyId;Amount;TranCode;
     //
     // Mi ne saljemo AltCurrency/AltAmount pa ta polja uvek izostaju (bez zareza).
+    //
+    // Algoritam: za proveru bankinog odgovora koristi se responseSignatureAlgorithm
+    // (SHA256withRSA) — NAMERNO drugaciji od requestSignatureAlgorithm (SHA512withRSA)
+    // koji se koristi u generateSignature(). Ne mesati ova dva!
     public boolean verifySignature(Map<String, String> params) {
         return verifySignatureInternal(params, false);
     }
@@ -382,13 +407,14 @@ public class PaymentService {
             }
 
             System.out.println("[PaymentService][DEBUG] verifySignature (" + (isFailureFormat ? "FAILURE format" : "SUCCESS/NOTIFY format") + ") - string koji proveravamo: " + data);
+            System.out.println("[PaymentService][DEBUG] verifySignature - responseSignatureAlgorithm=" + responseSignatureAlgorithm);
             System.out.println("[PaymentService][DEBUG] verifySignature - Signature koji je banka poslala (prvih 30 karaktera): "
                     + (signatureBase64.length() > 30 ? signatureBase64.substring(0, 30) + "..." : signatureBase64));
 
             byte[] signatureBytes = Base64.getDecoder().decode(signatureBase64);
             PublicKey publicKey = loadBankPublicKey();
 
-            boolean valid = verifyWithAlgorithm(data, signatureBytes, publicKey, signatureAlgorithm);
+            boolean valid = verifyWithAlgorithm(data, signatureBytes, publicKey, responseSignatureAlgorithm);
             System.out.println("[PaymentService][DEBUG] verifySignature rezultat: " + valid);
             return valid;
 
