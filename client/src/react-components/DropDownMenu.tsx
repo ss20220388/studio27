@@ -1,419 +1,166 @@
-import React, { useState, useEffect, useCallback } from "react";
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+import React, { useEffect, useState, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
-export default function CartModal({ accessToken: initialToken }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [cart, setCart] = useState([]);
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "" });
-  const [user, setUser] = useState(null);
-  
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+type User = {
+    ime?: string
+    prezime?: string
+    email?: string
+    role?: string
+}
 
-  const getCookieToken = () => {
-    if (typeof document === "undefined") return null;
-    const match = document.cookie.match(new RegExp("(^| )token=([^;]+)"));
-    return match ? match[2] : null;
-  };
+type DropDownMenuProps = {
+    publicAppUrl: string
+    publicAdminUrl: string
+    publicApiUrl: string
+}
 
-  const fetchUser = useCallback(async () => {
-    const token = getCookieToken() || initialToken;
+const DropDownMenu: React.FC<DropDownMenuProps> = ({ publicAppUrl, publicAdminUrl, publicApiUrl }) => {
+    const [open, setOpen] = useState(false)
+    const [user, setUser] = useState<User | null>(null)
+    const dropdownRef = useRef<HTMLDivElement>(null)
 
-    if (!token) {
-      setUser(null);
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        setUser(null);
-        return;
-      }
-
-      const data = await res.json();
-      setUser(data);
-    } catch (e) {
-      setUser(null);
-    }
-  }, [initialToken]);
-
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
-
-  const loadCart = () => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("cart_items");
-        const items = saved ? JSON.parse(saved) : [];
-        const normalized = items.map((item) => ({ ...item, quantity: 1 }));
-        setCart(normalized);
-      } catch (e) {
-        setCart([]);
-      }
-    }
-  };
-
-  useEffect(() => {
-    loadCart();
-
-    const handleCartUpdate = (e) => {
-      if (e?.detail) {
-        const normalized = e.detail.map((item) => ({ ...item, quantity: 1 }));
-        setCart(normalized);
-      } else {
-        loadCart();
-      }
-      setIsOpen(true);
-    };
-
-    const handleOpen = () => {
-      loadCart();
-      fetchUser();
-      setIsOpen(true);
-    };
-
-    window.addEventListener("cart-updated", handleCartUpdate);
-    window.addEventListener("open-cart", handleOpen);
-
-    return () => {
-      window.removeEventListener("cart-updated", handleCartUpdate);
-      window.removeEventListener("open-cart", handleOpen);
-    };
-  }, [fetchUser]);
-
-  const totalItems = cart.length;
-  const totalPrice = cart.reduce(
-    (acc, item) => acc + (Number(item.price || item.cena) || 0),
-    0
-  );
-
-  const removeItem = (id) => {
-    const updated = cart.filter((item) => item.id !== id);
-    setCart(updated);
-    localStorage.setItem("cart_items", JSON.stringify(updated));
-    window.dispatchEvent(new CustomEvent("cart-updated", { detail: updated }));
-  };
-
-  const openLoginModal = () => {
-    setIsOpen(false);
-    setErrorMessage("");
-    window.dispatchEvent(new CustomEvent("open-login"));
-  };
-
-  const registerUser = async (payload) => {
-    const res = await fetch(`${API_URL}/api/auth/register-user`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    });
-
-    const data = await res.json().catch(() => ({}));
-    return { ok: res.ok, status: res.status, data };
-  };
-
-  const loginUser = async (email, password) => {
-    const res = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json().catch(() => ({}));
-    return { ok: res.ok, data };
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage("");
-    setIsLoading(true);
-
-    const finalData = user?.email
-      ? { ...user, isGuest: false }
-      : { ...formData, isGuest: true };
-
-    const currentCourse = cart?.[0] || {};
-    const naziv = currentCourse.naziv || currentCourse.naslov || currentCourse.title || "";
-    const cena = currentCourse.cena || currentCourse.price || 0;
-
-    if (!finalData.isGuest) {
-      localStorage.setItem("userEmail", finalData.email);
-      window.location.href = "/pay";
-      return;
-    }
-
-    const name = formData.name.trim();
-    const surname = name.split(" ").slice(1).join(" ") || " ";
-    const firstName = name.split(" ")[0] || " ";
-    const pass = Math.random().toString(36).slice(-8);
-
-    const payload = {
-      email: formData.email.trim(),
-      password: pass,
-      ime: firstName,
-      prezime: surname,
-      brojTelefona: formData.phone.trim(),
-    };
-
-    try {
-      // 1. Registracija
-      const regResponse = await registerUser(payload);
-
-      if (regResponse.ok) {
-        // 2. Automatsko logovanje odmah po registraciji
-        const loginResponse = await loginUser(payload.email, pass);
-
-        if (loginResponse.ok) {
-          if (loginResponse.data?.token) {
-            localStorage.setItem("accessToken", loginResponse.data.token);
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+          if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            setOpen(false)
           }
-          // Obaveštavanje DropDownMenu-a da se korisnik ulogovao
-          window.dispatchEvent(
-            new CustomEvent("user-logged-in", { detail: loginResponse.data?.user || loginResponse.data })
-          );
-
-          // 3. Slanje maila sa pristupnim podacima
-          const mailPayload = {
-            to: payload.email,
-            subject: "Dobrodošli! Vaši podaci za prijavu",
-            subText: `Zdravo ${payload.ime}, vaš nalog je uspešno kreiran.`,
-            body: `Vaša privremena lozinka za prijavu je: ${pass}\n\nMolimo vas da je promenite nakon prve prijave.`,
-          };
-
-          await fetch(`${API_URL}/api/send-mail-to-person`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(mailPayload),
-          });
-
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              userEmail: payload.email,
-              naziv: naziv,
-              cena: cena,
-            })
-          );
-
-          // 4. Preusmeravanje na plaćanje
-          window.location.href = "/pay";
-        } else {
-          setErrorMessage("Nalog je kreiran, ali automatska prijava nije uspela. Molimo prijavite se ručno.");
         }
-      } else {
-        if (regResponse.status === 400 || regResponse.status === 409) {
-          setErrorMessage("Nalog sa ovom e-mail adresom već postoji. Molimo prijavite se.");
+        if (open) {
+          document.addEventListener('mousedown', handleClickOutside)
         } else {
-          setErrorMessage(regResponse.data?.message || "Došlo je do greške pri registraciji. Pokušajte ponovo.");
+          document.removeEventListener('mousedown', handleClickOutside)
         }
-      }
-    } catch (error) {
-      console.error("Greška tokom procesa registracije i prijave:", error);
-      setErrorMessage("Mrežna greška. Proverite internet konekciju.");
-    } finally {
-      setIsLoading(false);
+        return () => {
+          document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [open])
+
+    useEffect(() => {
+        fetch(`${publicApiUrl}/api/auth/me`, { credentials: 'include' })
+        .then(r => r.ok ? r.json() : null)
+        .then(u => { if (u && !u.error) setUser(u); else setUser(null); })
+        .catch(() => setUser(null));
+        const handler = (e: CustomEvent) => setUser(e.detail)
+        window.addEventListener('user-logged-in', handler as EventListener)
+        return () => window.removeEventListener('user-logged-in', handler as EventListener)
+    }, [publicApiUrl])
+
+
+    const handleLogout = async () => {
+        try {
+            await fetch(`${publicApiUrl}/api/auth/logout`, { method: 'POST', credentials: 'include' })
+        } catch (error) { /* ignore */ }
+        
+        localStorage.removeItem('accessToken')
+        
+        setUser(null)
+        setOpen(false)
+        window.dispatchEvent(new CustomEvent('user-logged-out'))
+        if (window.navigation) {
+            window.navigation.reload()
+        } else {
+            window.location.reload()
+        }
     }
-  };
 
-  return (
-    <>
-      {/* Fiksirano dugme za otvaranje korpe */}
-      {!isOpen && (
-        <button
-          type="button"
-          aria-label="Otvori korpu"
-          onClick={() => {
-            loadCart();
-            fetchUser();
-            setIsOpen(true);
-          }}
-          className="fixed bottom-6 right-6 z-[80] w-14 h-14 bg-zinc-900 text-white rounded-full flex items-center justify-center shadow-2xl transition-all duration-200 transform hover:scale-105 active:scale-95 cursor-pointer"
-        >
-          <svg
-            className="w-6 h-6 stroke-[1.5]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-            />
-          </svg>
-          {totalItems > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-600 text-white font-bold text-xs rounded-full h-5 min-w-[20px] px-1 flex items-center justify-center border-2 border-white">
-              {totalItems}
-            </span>
-          )}
-        </button>
-      )}
-
-      {/* Modal prozora korpe i forme za registraciju */}
-      {isOpen && (
-        <div className="fixed inset-0 z-[10002] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm p-0 sm:p-4 overflow-hidden">
-          <div className="relative w-full sm:max-w-[480px] bg-white text-black p-5 sm:p-8 shadow-2xl max-h-[90vh] sm:max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-none font-sans">
+    if (!user) {
+        return (
             <button
-              type="button"
-              aria-label="Zatvori korpu"
-              onClick={() => setIsOpen(false)}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-zinc-400 hover:text-black text-2xl font-light p-2 cursor-pointer leading-none transition-colors"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-login'))}
+                className="inline-block no-underline hover:text-gray-400 cursor-pointer p-1"
+                aria-label="Uloguj se"
             >
-              ✕
+                <svg className="fill-current text-white hover:text-gray-300" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <circle fill="none" cx="12" cy="7" r="3" />
+                    <path d="M12 2C9.243 2 7 4.243 7 7s2.243 5 5 5 5-2.243 5-5S14.757 2 12 2zM12 10c-1.654 0-3-1.346-3-3s1.346-3 3-3 3 1.346 3 3S13.654 10 12 10zM21 21v-1c0-3.859-3.141-7-7-7h-4c-3.86 0-7 3.141-7 7v1h2v-1c0-2.757 2.243-5 5-5h4c2.757 0 5 2.243 5 5v1H21z" />
+                </svg>
+            </button>
+        )
+    }
+
+    const fullName = `${user.ime || ''} ${user.prezime || ''}`.trim() || 'Korisnik'
+    const firstTwoWords = fullName.split(' ').slice(0, 2).join(' ')
+    const displayName = firstTwoWords.length > 20 ? firstTwoWords.substring(0, 18) + '...' : firstTwoWords
+    const initials = `${(user.ime || '')[0] || ''}${(user.prezime || '')[0] || ''}`.toUpperCase() || 'K'
+
+    return (
+        <div className="relative z-[9999]" ref={dropdownRef}>
+            <button
+                onClick={() => setOpen(!open)}
+                className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors cursor-pointer py-1 px-2 rounded-md hover:bg-white/5"
+            >
+                <span className="text-sm font-medium truncate max-w-[120px] sm:max-w-[150px]">{displayName}</span>
+                <svg width="12" height="12" className={`h-3 w-3 fill-current transition-transform ${open ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048">
+                    <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z" />
+                </svg>
             </button>
 
-            <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-black tracking-tight border-b border-zinc-100 pb-3 pr-8">
-              Vaša porudžbina
-            </h2>
-
-            <div className="space-y-4 sm:space-y-6 pb-4 sm:pb-6 border-b border-zinc-200">
-              {cart.length === 0 ? (
-                <p className="text-zinc-500 text-center py-6 text-sm">
-                  Vaša korpa je trenutno prazna.
-                </p>
-              ) : (
-                cart.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between gap-3 text-xs sm:text-sm">
-                    {item.image && (
-                      <img
-                        src={API_URL + "/api/uploaded-images" + item.image}
-                        alt={item.title || item.naslov || item.naziv}
-                        className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded flex-shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-black uppercase tracking-wide leading-tight text-xs sm:text-sm line-clamp-2">
-                        {item.title || item.naslov || item.naziv}
-                      </h3>
-                      <div className="text-zinc-700 font-semibold mt-1">
-                        {Number(item.price || item.cena || 0).toLocaleString()} €
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      aria-label="Ukloni iz korpe"
-                      onClick={() => removeItem(item.id)}
-                      className="text-zinc-400 hover:text-red-600 p-1 transition-colors"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="flex justify-between items-center py-4 font-bold text-base text-black border-b border-zinc-100 mb-4">
-              <span>Ukupno:</span>
-              <span className="text-lg">{totalPrice.toLocaleString()} €</span>
-            </div>
-
-            {errorMessage && (
-              <div className="bg-red-50 border border-red-200 p-3.5 rounded text-xs text-red-700 mb-5 flex flex-col gap-2">
-                <p className="font-semibold">{errorMessage}</p>
-                {errorMessage.includes("već postoji") && (
-                  <button
-                    type="button"
-                    onClick={openLoginModal}
-                    className="self-start text-xs font-bold underline text-red-900 hover:text-black cursor-pointer"
-                  >
-                    Prijavite se ovde →
-                  </button>
-                )}
-              </div>
-            )}
-
-            {!user?.email ? (
-              <div className="bg-amber-50 border border-amber-200 p-3.5 rounded text-xs text-amber-900 mb-5">
-                <p className="font-semibold mb-1 text-sm">Nemate nalog?</p>
-                <p className="text-amber-800 leading-relaxed mb-2">
-                  Popunite polja ispod. Nakon uplate, šaljemo pristupne podatke na vaš e-mail.
-                </p>
-                <p className="text-zinc-600 border-t border-amber-200/60 pt-2">
-                  Već imate nalog?{" "}
-                  <button
-                    type="button"
-                    onClick={openLoginModal}
-                    className="underline font-bold text-black hover:text-orange-600 cursor-pointer"
-                  >
-                    Prijavite se ovde
-                  </button>
-                </p>
-              </div>
-            ) : (
-              <div className="bg-zinc-100 p-3 border border-zinc-200 rounded text-xs text-zinc-800 mb-5">
-                Prijavljeni ste kao:{" "}
-                <span className="font-bold text-black">{user.email || user.name}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              {!user?.email && (
+            <AnimatePresence>
+            {open && (
                 <>
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">
-                      Ime i prezime
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Petar Petrović"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3 py-2 sm:py-2.5 border border-zinc-300 focus:border-black focus:outline-none text-xs sm:text-sm text-black bg-white rounded-none"
-                    />
-                  </div>
+                    {/* Popravljen z-index overlay-a sa ispravnim Tailwind formatom */}
+                    <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
 
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">
-                      Email adresa
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="primer@email.com"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-3 py-2 sm:py-2.5 border border-zinc-300 focus:border-black focus:outline-none text-xs sm:text-sm text-black placeholder-zinc-400 bg-white rounded-none"
-                    />
-                  </div>
+                    <motion.div 
+                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="absolute right-0 mt-2 z-[9999] w-72 rounded-xl bg-neutral-900 border border-neutral-700/80 shadow-2xl overflow-hidden backdrop-blur-xl"
+                    >
+                        {/* Ime, prezime, email */}
+                        <div className="flex items-center space-x-3 p-4 border-b border-neutral-800">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 text-white text-xs font-bold shadow-inner border border-neutral-600/50">
+                                {initials}
+                            </div>
+                            <div className="flex flex-col truncate">
+                                <span className="text-sm font-semibold text-gray-100 truncate">{fullName}</span>
+                                {user.email && <span className="text-xs text-neutral-400 truncate">{user.email}</span>}
+                            </div>
+                        </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-zinc-700 mb-1">
-                      Broj telefona
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="+381 6X XXX XXX"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full px-3 py-2 sm:py-2.5 border border-zinc-300 focus:border-black focus:outline-none text-xs sm:text-sm text-black placeholder-zinc-400 bg-white rounded-none"
-                    />
-                  </div>
+                        <nav className="py-2 px-2 flex flex-col gap-1">
+                            <a 
+                                aria-label="Idi na web aplikaciju"
+                                href={publicAppUrl} className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-neutral-800 transition-all duration-150">
+                                <svg className="w-5 h-5 text-neutral-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21" />
+                                </svg>
+                                <span>Web aplikacija</span>
+                            </a>
+                            {user.role === "ADMIN" && (
+                                <a 
+                                    aria-label="Idi na admin aplikaciju"
+                                    href={publicAdminUrl} className="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:text-white hover:bg-neutral-800 transition-all duration-150">
+                                    <svg className="w-5 h-5 text-neutral-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.204-.107-.397.165-.71.505-.78.929l-.15.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span>Admin aplikacija</span>
+                                </a>
+                            )}
+                        </nav>
+
+                        <div className="h-px w-full bg-neutral-800 my-1"></div>
+
+                        <div className="py-2 px-2">
+                            <button
+                                type="button"
+                                onClick={handleLogout}
+                                className="flex w-full items-center space-x-3 px-3 py-2.5 rounded-lg text-sm text-red-400 hover:text-red-300 hover:bg-neutral-800 transition-all duration-150 cursor-pointer"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                                </svg>
+                                <span>Odjavi se</span>
+                            </button>
+                        </div>
+                    </motion.div>
                 </>
-              )}
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={cart.length === 0 || isLoading}
-                  className="w-full py-3 sm:py-3.5 bg-black hover:bg-zinc-800 disabled:bg-zinc-300 text-white font-bold transition-colors uppercase tracking-wider text-xs sm:text-sm cursor-pointer"
-                >
-                  {isLoading ? "Obrada..." : "Nastavi na Plaćanje"}
-                </button>
-              </div>
-            </form>
-          </div>
+            )}
+            </AnimatePresence>
         </div>
-      )}
-    </>
-  );
+    )
 }
+
+export default DropDownMenu
