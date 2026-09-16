@@ -45,7 +45,6 @@ public class KursController {
                     """;
 
             Map<String, Object> result = jdbcTemplate.queryForMap(SQL, studentId);
-            System.out.println("Query result: " + result);
             Map<String, Object> response = new HashMap<>();
             response.put("brojKurseva", ((Number) result.get("brojKurseva")).intValue());
 
@@ -215,10 +214,9 @@ public class KursController {
                      WHERE k.kursId = ?
                      
                     """;
-            System.out.println("Executing SQL: " + SQL + " with id: " + id);
+            
 
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL, id);
-            System.out.println("Query returned " + rows.size() + " rows");
 
             if (rows.isEmpty()) {
                 return ResponseEntity.badRequest().build();
@@ -234,7 +232,7 @@ public class KursController {
                             (String) row.get("opisLekcije")));
                 }
             }
-            System.out.println("Parsed " + lekcije.size() + " lekcije for kursId: " + id);
+            
 
             Map<String, Object> first = rows.get(0);
 
@@ -251,7 +249,7 @@ public class KursController {
                     (String) first.get("komentarSredina"),
                     (String) first.get("komentarGore"),
                     lekcije);
-            System.out.println("Constructed Kurs object: " + kurs.getNaziv() + " with " + lekcije.size() + " lekcije");
+            
 
             return ResponseEntity.ok(kurs);
 
@@ -322,7 +320,7 @@ public class KursController {
                     for (Map<String, Object> videoRow : videoRows) {
                         urls.add((String) videoRow.get("url"));
                     }
-                    System.out.println("Adding lekcija with ID: " + lekcijaId + " and " + urls.size() + " video URLs");
+                   
 
                     lekcije.add(new Lekcija(
                             lekcijaId,
@@ -340,8 +338,7 @@ public class KursController {
                     for (Map<String, Object> videoRow : videoRows) {
                         urls.add((String) videoRow.get("url"));
                     }
-                    System.out.println("Adding lekcija with ID: " + lekcijaId + " and " + urls.size()
-                            + " video URLs to existing kurs ID: " + currentKursId);
+                   
                     lekcije.add(new Lekcija(
                             lekcijaId,
                             (String) row.get("nazivLekcije"),
