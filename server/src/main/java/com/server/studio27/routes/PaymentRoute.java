@@ -23,18 +23,6 @@ import com.server.studio27.services.PaymentService;
 @RequestMapping("/api")
 public class PaymentRoute {
 
-    // Kodovi transakcije koje banka salje kad je transakcija STVARNO odobrena.
-    // VAZNO: Raiffeisen salje "000" (TRI nule), ne "00" — potvrdjeno iz
-    // stvarnog notify loga uspesne transakcije (uz ApprovalCode i Rrn, koje
-    // banka salje samo za odobrene transakcije). Drzimo oba oblika radi
-    // sigurnosti, jer neki gateway-i normalizuju kod na dve cifre.
-    //
-    // SVAKI drugi TranCode (npr. "404" = greska autentikacije/3-D Secure,
-    // "503" = reversal/storno, ili bilo koji drugi decline kod) znaci da
-    // transakcija NIJE prosla — cak i kada je poruka koju je banka poslala
-    // ispravno potpisana, jer banka potpisuje i odbijene transakcije, ne
-    // samo odobrene. Zato signatureValid SAM PO SEBI nikad ne sme da bude
-    // jedini uslov za upis uplate — mora da se doda i provera TranCode-a.
     private static final Set<String> APPROVED_TRAN_CODES = Set.of("000", "00");
 
     private static boolean isApprovedTranCode(String tranCode) {
@@ -53,9 +41,6 @@ public class PaymentRoute {
     public record PaymentCreateRequest(String orderId, Long studentId, List<Long> courseIds, BigDecimal totalAmount) {
     }
 
-    // CORS ovde je namerno OSTAO — ovu rutu zove nas SOPSTVENI frontend
-    // (fetch/XHR sa 27archviz.com), pa joj CORS provera treba i treba da
-    // prolazi samo sa naseg domena.
     @CrossOrigin(origins = {"https://27archviz.com", "https://www.27archviz.com", "http://localhost:4321"}, allowCredentials = "true")
     @PostMapping("/payment/create")
     public ResponseEntity<?> createPayment(
@@ -111,15 +96,6 @@ public class PaymentRoute {
         String tranCode = getParamCaseInsensitive(params, "TranCode");
 
         boolean signatureValid = paymentService.verifySignature(params);
-
-        // KLJUCNO: signatureValid SAMO potvrdjuje da je poruku stvarno
-        // poslala banka (nije falsifikovana) — ne govori nista o tome da
-        // li je transakcija odobrena ili odbijena. Banka salje validno
-        // potpisan notify i za odbijene transakcije (npr. neuspesan 3-D
-        // Secure/autentikacija, TranCode="404"). Zato moramo eksplicitno
-        // da proverimo i TranCode pre nego sto upisemo uplatu — u
-        // suprotnom cak i propala transakcija upisuje studenta kao da je
-        // platio.
         boolean transactionApproved = signatureValid && isApprovedTranCode(tranCode);
 
         System.out.println("[PaymentRoute][DEBUG] /payment/notify signatureValid=" + signatureValid
@@ -138,12 +114,7 @@ public class PaymentRoute {
         response.append("PurchaseTime = ").append(purchaseTime).append("\n");
 
         if (transactionApproved) {
-            try {
-                paymentService.recordSuccessfulPayment(orderId);
-            } catch (Exception e) {
-                System.err.println("[PaymentRoute] Upis u platio/pohadja nije uspeo za OrderID=" + orderId + ": " + e.getMessage());
-                e.printStackTrace();
-            }
+            recordPaymentIfValid(orderId, "/payment/notify");
 
             response.append("Response.action= approve \n");
             response.append("Response.reason= ok \n");
@@ -151,11 +122,6 @@ public class PaymentRoute {
             return ResponseEntity.ok(response.toString());
         } else {
             if (signatureValid) {
-                // Potpis je validan (poruka je stvarno od banke), ali
-                // transakcija nije odobrena (TranCode nije odobravajuci) —
-                // ovo NIJE pokusaj falsifikovanja, samo normalna odbijena
-                // uplata (npr. neuspesna autentikacija, nedovoljno
-                // sredstava, itd).
                 System.out.println("[PaymentRoute] Transakcija ODBIJENA (validan potpis, TranCode=" + tranCode + ") za OrderID=" + orderId + " — ne upisujem uplatu.");
             } else {
                 System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/notify za OrderID=" + orderId);
@@ -175,12 +141,6 @@ public class PaymentRoute {
         String orderId = getParamCaseInsensitive(params, "OrderID");
         String tranCode = getParamCaseInsensitive(params, "TranCode");
         boolean signatureValid = paymentService.verifySignature(params);
-
-        // Isti razlog kao u paymentNotify: potpis validan != transakcija
-        // odobrena. Banka moze da dovede korisnika na SUCCESS_URL sa
-        // ispravno potpisanom porukom koja ipak opisuje odbijenu
-        // transakciju, pa moramo i to da proverimo pre nego sto upisemo
-        // uplatu i prikazemo korisniku "uspesno placeno".
         boolean transactionApproved = signatureValid && isApprovedTranCode(tranCode);
 
         System.out.println("[PaymentRoute][DEBUG] /payment/success signatureValid=" + signatureValid
@@ -202,12 +162,7 @@ public class PaymentRoute {
             );
         }
 
-        try {
-            paymentService.recordSuccessfulPayment(orderId);
-        } catch (Exception e) {
-            System.err.println("[PaymentRoute] Upis u platio/pohadja nije uspeo (preko /payment/success) za OrderID=" + orderId + ": " + e.getMessage());
-            e.printStackTrace();
-        }
+        recordPaymentIfValid(orderId, "/payment/success");
 
         return new RedirectView(
                 frontendUrl + "/checkout/success?orderId=" + orderId
@@ -231,7 +186,15 @@ public class PaymentRoute {
         );
     }
 
-    // Pomoćna metoda za sigurno dohvatanje ključeva nezavisno od malih/velikih slova
+    private void recordPaymentIfValid(String orderId, String endpointSource) {
+        try {
+            paymentService.recordSuccessfulPayment(orderId);
+        } catch (Exception e) {
+            System.err.println("[PaymentRoute] Upis u platio/pohadja nije uspeo (preko " + endpointSource + ") za OrderID=" + orderId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private String getParamCaseInsensitive(Map<String, String> params, String key) {
         if (params == null) return "";
         for (Map.Entry<String, String> entry : params.entrySet()) {
