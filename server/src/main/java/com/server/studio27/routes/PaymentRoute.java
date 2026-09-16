@@ -3,6 +3,7 @@ package com.server.studio27.routes;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -22,14 +23,23 @@ import com.server.studio27.services.PaymentService;
 @RequestMapping("/api")
 public class PaymentRoute {
 
-    // Kod transakcije koji banka salje kad je transakcija STVARNO odobrena.
+    // Kodovi transakcije koje banka salje kad je transakcija STVARNO odobrena.
+    // VAZNO: Raiffeisen salje "000" (TRI nule), ne "00" — potvrdjeno iz
+    // stvarnog notify loga uspesne transakcije (uz ApprovalCode i Rrn, koje
+    // banka salje samo za odobrene transakcije). Drzimo oba oblika radi
+    // sigurnosti, jer neki gateway-i normalizuju kod na dve cifre.
+    //
     // SVAKI drugi TranCode (npr. "404" = greska autentikacije/3-D Secure,
-    // ili bilo koji drugi decline kod) znaci da transakcija NIJE prosla —
-    // cak i kada je poruka koju je banka poslala ispravno potpisana, jer
-    // banka potpisuje i odbijene transakcije, ne samo odobrene. Zato
-    // signatureValid SAM PO SEBI nikad ne sme da bude jedini uslov za upis
-    // uplate — mora da se doda i provera TranCode-a.
-    private static final String APPROVED_TRAN_CODE = "00";
+    // "503" = reversal/storno, ili bilo koji drugi decline kod) znaci da
+    // transakcija NIJE prosla — cak i kada je poruka koju je banka poslala
+    // ispravno potpisana, jer banka potpisuje i odbijene transakcije, ne
+    // samo odobrene. Zato signatureValid SAM PO SEBI nikad ne sme da bude
+    // jedini uslov za upis uplate — mora da se doda i provera TranCode-a.
+    private static final Set<String> APPROVED_TRAN_CODES = Set.of("000", "00");
+
+    private static boolean isApprovedTranCode(String tranCode) {
+        return tranCode != null && APPROVED_TRAN_CODES.contains(tranCode.trim());
+    }
 
     private final PaymentService paymentService;
 
@@ -110,7 +120,7 @@ public class PaymentRoute {
         // da proverimo i TranCode pre nego sto upisemo uplatu — u
         // suprotnom cak i propala transakcija upisuje studenta kao da je
         // platio.
-        boolean transactionApproved = signatureValid && APPROVED_TRAN_CODE.equals(tranCode);
+        boolean transactionApproved = signatureValid && isApprovedTranCode(tranCode);
 
         System.out.println("[PaymentRoute][DEBUG] /payment/notify signatureValid=" + signatureValid
                 + " TranCode=" + tranCode
@@ -142,9 +152,10 @@ public class PaymentRoute {
         } else {
             if (signatureValid) {
                 // Potpis je validan (poruka je stvarno od banke), ali
-                // transakcija nije odobrena (TranCode != "00") — ovo NIJE
-                // pokusaj falsifikovanja, samo normalna odbijena uplata
-                // (npr. neuspesna autentikacija, nedovoljno sredstava, itd).
+                // transakcija nije odobrena (TranCode nije odobravajuci) —
+                // ovo NIJE pokusaj falsifikovanja, samo normalna odbijena
+                // uplata (npr. neuspesna autentikacija, nedovoljno
+                // sredstava, itd).
                 System.out.println("[PaymentRoute] Transakcija ODBIJENA (validan potpis, TranCode=" + tranCode + ") za OrderID=" + orderId + " — ne upisujem uplatu.");
             } else {
                 System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/notify za OrderID=" + orderId);
@@ -168,9 +179,9 @@ public class PaymentRoute {
         // Isti razlog kao u paymentNotify: potpis validan != transakcija
         // odobrena. Banka moze da dovede korisnika na SUCCESS_URL sa
         // ispravno potpisanom porukom koja ipak opisuje odbijenu
-        // transakciju (TranCode != "00"), pa moramo i to da proverimo pre
-        // nego sto upisemo uplatu i prikazemo korisniku "uspesno placeno".
-        boolean transactionApproved = signatureValid && APPROVED_TRAN_CODE.equals(tranCode);
+        // transakciju, pa moramo i to da proverimo pre nego sto upisemo
+        // uplatu i prikazemo korisniku "uspesno placeno".
+        boolean transactionApproved = signatureValid && isApprovedTranCode(tranCode);
 
         System.out.println("[PaymentRoute][DEBUG] /payment/success signatureValid=" + signatureValid
                 + " TranCode=" + tranCode
