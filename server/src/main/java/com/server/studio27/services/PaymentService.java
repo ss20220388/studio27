@@ -1,169 +1,610 @@
-// === Dodati u PaymentService.java ===
-//
-// Ako PaymentService već nema JdbcTemplate injektovan, dodaj:
-//
-//     @Autowired
-//     private JdbcTemplate jdbcTemplate;
-//
-// (isti pattern kao u SendMail.java)
-//
-// Potrebni importi (ako već ne postoje u fajlu):
-//     import java.util.List;
-//     import java.util.Map;
-//     import org.springframework.jdbc.core.JdbcTemplate;
+package com.server.studio27.services;
 
-public record BuyerInfo(String email, String ime, String prezime) {}
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-/**
- * Parsira course_ids iz pending_orders (pretpostavka: string tipa "3,7", tj. ID-jevi
- * kurseva odvojeni zarezom — isto ono što je poslato kao courseIds u /payment/create).
- * Ako je kod tebe course_ids sačuvan drugačije (npr. JSON niz "[3,7]"), javi pa menjam ovo.
- */
-private List<Long> parseCourseIds(String courseIdsRaw) {
-    List<Long> result = new java.util.ArrayList<>();
-    if (courseIdsRaw == null || courseIdsRaw.isBlank()) {
-        return result;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Service;
+
+@Service
+public class PaymentService {
+
+    // RSD (currency 941) and EUR (978) both use a 2-decimal minor unit
+    // (para / cent). TotalAmount MUST be sent as an integer in that minor
+    // unit, per the gateway's "N1..12" numeric-only format — no decimal
+    // point is allowed on the wire.
+    private static final int MINOR_UNIT_FACTOR = 100;
+
+    private final String merchantId;
+    private final String terminalId;
+    private final String currencyId;
+    private final String privateKeyPath;
+    private final String bankPublicKeyPath;
+    private final String gatewayUrl;
+    private final String locale;
+    private final String signatureAlgorithm;
+
+    private final ResourceLoader resourceLoader;
+    private final NamedParameterJdbcTemplate jdbcTemplate;
+
+    public PaymentService(
+            @Value("${payment.merchant-id}") String merchantId,
+            @Value("${payment.terminal-id}") String terminalId,
+            @Value("${payment.currency-id}") String currencyId,
+            @Value("${payment.private-key}") String privateKeyPath,
+            @Value("${payment.bank-public-key}") String bankPublicKeyPath,
+            @Value("${payment.gateway-url}") String gatewayUrl,
+            @Value("${payment.locale:rs}") String locale,
+            @Value("${payment.signature-algorithm:SHA256withRSA}") String signatureAlgorithm,
+            ResourceLoader resourceLoader,
+            NamedParameterJdbcTemplate jdbcTemplate
+    ) {
+        this.merchantId = merchantId;
+        this.terminalId = terminalId;
+        this.currencyId = currencyId;
+        this.privateKeyPath = privateKeyPath;
+        this.bankPublicKeyPath = bankPublicKeyPath;
+        this.gatewayUrl = gatewayUrl;
+        this.locale = locale == null ? "rs" : locale.toLowerCase(Locale.ROOT);
+        this.signatureAlgorithm = signatureAlgorithm == null ? "SHA256withRSA" : signatureAlgorithm;
+        this.resourceLoader = resourceLoader;
+        this.jdbcTemplate = jdbcTemplate;
     }
-    for (String part : courseIdsRaw.split(",")) {
-        String trimmed = part.trim();
-        if (!trimmed.isEmpty()) {
-            result.add(Long.parseLong(trimmed));
+
+    public String createPaymentForm(
+            String orderId,
+            Long studentId,
+            List<Long> courseIds,
+            BigDecimal totalAmount
+    ) throws Exception {
+
+        if (orderId == null || orderId.isBlank()) {
+            throw new IllegalArgumentException("OrderID je obavezan.");
+        }
+        if (studentId == null) {
+            throw new IllegalArgumentException("StudentID je obavezan.");
+        }
+        if (courseIds == null || courseIds.isEmpty()) {
+            throw new IllegalArgumentException("Korpa je prazna.");
+        }
+        if (totalAmount == null || totalAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Iznos mora biti pozitivan i veći od nule.");
+        }
+
+        String wireAmount = toMinorUnits(totalAmount);
+        String purchaseTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
+        String delay = "0";
+
+        String signature = generateSignature(purchaseTime, orderId, delay, currencyId, wireAmount);
+
+        System.out.println("[PaymentService][DEBUG] Slanje ka banci -> MerchantID=" + merchantId
+                + " TerminalID=" + terminalId
+                + " OrderID=" + orderId
+                + " Delay=" + delay
+                + " Currency=" + currencyId
+                + " TotalAmount(wire)=" + wireAmount
+                + " PurchaseTime=" + purchaseTime
+                + " originalAmount=" + totalAmount
+                + " gatewayUrl=" + gatewayUrl
+                + " locale=" + locale);
+        System.out.println("[PaymentService][DEBUG] Potpisan string (pre potpisa): "
+                + merchantId + ";" + terminalId + ";" + purchaseTime + ";" + orderId + "," + delay + ";" + currencyId + ";" + wireAmount + ";;");
+        System.out.println("[PaymentService][DEBUG] Generisan Signature (base64, prvih 30 karaktera): "
+                + (signature != null && signature.length() > 30 ? signature.substring(0, 30) + "..." : signature));
+
+        // Ne upisujemo jos u uplatnica/pohadja ovde — placanje jos NIJE
+        // potvrdjeno (korisnik tek ide na formu banke). Cuvamo samo
+        // studentId + listu kurseva vezanih za ovaj orderId, da bismo
+        // znali sta da upisemo kada banka potvrdi uspesno placanje
+        // (u paymentNotify -> recordSuccessfulPayment()).
+        savePendingOrder(orderId, studentId, courseIds);
+
+        StringBuilder html = new StringBuilder();
+        html.append("<!DOCTYPE html><html><head>")
+            .append("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">")
+            .append("</head><body>")
+            .append("<form action=\"").append(gatewayUrl).append("\" method=\"POST\">")
+            .append("<input name=\"Version\" type=\"hidden\" value=\"1\" />")
+            .append("<input name=\"MerchantID\" type=\"hidden\" value=\"").append(merchantId).append("\" />")
+            .append("<input name=\"TerminalID\" type=\"hidden\" value=\"").append(terminalId).append("\" />")
+            .append("<input name=\"TotalAmount\" type=\"hidden\" value=\"").append(wireAmount).append("\" />")
+            .append("<input name=\"Currency\" type=\"hidden\" value=\"").append(currencyId).append("\" />")
+            .append("<input name=\"locale\" type=\"hidden\" value=\"").append(locale).append("\" />")
+            .append("<input name=\"PurchaseTime\" type=\"hidden\" value=\"").append(purchaseTime).append("\" />")
+            .append("<input name=\"OrderID\" type=\"hidden\" value=\"").append(orderId).append("\" />")
+            .append("<input name=\"Delay\" type=\"hidden\" value=\"").append(delay).append("\" />")
+            .append("<input name=\"Signature\" type=\"hidden\" value=\"").append(signature).append("\" />")
+            .append("<input type=\"submit\" style=\"display:none\" />")
+            .append("</form></body></html>");
+
+        return html.toString();
+    }
+
+    /**
+     * Converts a decimal major-unit amount (e.g. 451.99 RSD) into the
+     * integer minor-unit string the gateway expects (e.g. "45199").
+     */
+    private String toMinorUnits(BigDecimal amount) {
+        BigDecimal minorUnits = amount
+                .multiply(BigDecimal.valueOf(MINOR_UNIT_FACTOR))
+                .setScale(0, RoundingMode.HALF_UP);
+        return minorUnits.toPlainString();
+    }
+
+    /**
+     * Stores what we'll need once the bank confirms payment: WHO paid
+     * (studentId) and WHAT they paid for (courseIds), keyed by orderId.
+     * We can't write to uplatnica/pohadja yet — the customer hasn't
+     * actually paid at this point, they're only about to be sent to the
+     * bank's form.
+     *
+     * REQUIRES this table (create it once, adjust types if your IDs
+     * aren't BIGINT):
+     *
+     *   CREATE TABLE pending_orders (
+     *     order_id   VARCHAR(64) PRIMARY KEY,
+     *     student_id BIGINT NOT NULL,
+     *     course_ids VARCHAR(255) NOT NULL,   -- e.g. "3,7,12"
+     *     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+     *     processed  TINYINT(1) NOT NULL DEFAULT 0
+     *   );
+     */
+    private void savePendingOrder(String orderId, Long studentId, List<Long> courseIds) {
+        String courseIdsCsv = courseIds.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        String sql = "INSERT INTO pending_orders (order_id, student_id, course_ids) " +
+                "VALUES (:orderId, :studentId, :courseIds)";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("orderId", orderId)
+                .addValue("studentId", studentId)
+                .addValue("courseIds", courseIdsCsv);
+        jdbcTemplate.update(sql, params);
+    }
+
+    /**
+     * Reads studentId + courseIds for a given orderId from pending_orders,
+     * without touching the "processed" flag. Returns null if the orderId
+     * doesn't exist. Shared by recordSuccessfulPayment, recordFailedPayment
+     * and getBuyerInfoByOrderId so they all agree on how to parse the row.
+     */
+    private Map<String, Object> loadPendingOrder(String orderId) {
+        try {
+            return jdbcTemplate.queryForMap(
+                    "SELECT student_id, course_ids, processed FROM pending_orders WHERE order_id = :orderId",
+                    new MapSqlParameterSource("orderId", orderId)
+            );
+        } catch (Exception e) {
+            return null;
         }
     }
-    return result;
-}
 
-/**
- * Nalazi studentId + course_ids u pending_orders za dati orderId, GDE processed = 0
- * (tj. samo ako još nije obrađen — ovo je ono što obezbeđuje idempotentnost: ako banka
- * pošalje /payment/notify više puta za isti orderId, drugi put ovaj SELECT neće naći
- * ništa i metoda će baciti izuzetak, pa PaymentRoute neće poslati mail po drugi put).
- */
-private Map<String, Object> findUnprocessedOrder(String orderId) {
-    String sql = "SELECT student_id, course_ids FROM pending_orders WHERE order_id = ? AND processed = 0";
-    List<Map<String, Object>> results = jdbcTemplate.queryForList(sql, orderId);
-    if (results.isEmpty()) {
-        return null;
-    }
-    return results.get(0);
-}
-
-private void markOrderProcessed(String orderId) {
-    jdbcTemplate.update("UPDATE pending_orders SET processed = 1 WHERE order_id = ?", orderId);
-}
-
-/**
- * Poziva se kad banka POTVRDI uplatu. Za svaki kurs iz pending_orders.course_ids
- * update-uje odgovarajući red u platio sa 'C' (čekanje) na 'P' (prihvaćeno).
- *
- * Baca izuzetak ako orderId nije nađen kao neobrađen (nepostojeći orderId ili
- * duplikat notify poziva) — PaymentRoute to hvata i na osnovu toga zna da ne šalje
- * mail po drugi put.
- */
-public void recordSuccessfulPayment(String orderId) throws Exception {
-    Map<String, Object> order = findUnprocessedOrder(orderId);
-    if (order == null) {
-        throw new IllegalStateException("Nema neobrađene pending_orders stavke za OrderID=" + orderId);
-    }
-
-    Long studentId = ((Number) order.get("student_id")).longValue();
-    List<Long> courseIds = parseCourseIds((String) order.get("course_ids"));
-
-    if (courseIds.isEmpty()) {
-        throw new IllegalStateException("pending_orders.course_ids je prazan za OrderID=" + orderId);
-    }
-
-    for (Long kursId : courseIds) {
-        int updated = jdbcTemplate.update(
-                "UPDATE platio SET status = 'P' WHERE studentId = ? AND kursId = ? AND status = 'C'",
-                studentId, kursId
-        );
-        if (updated == 0) {
-            System.err.println("[PaymentService] UPOZORENJE: nije nađen red u platio (status='C') za studentId="
-                    + studentId + ", kursId=" + kursId + ", OrderID=" + orderId + " — proveri da li je već obrađen.");
+    private boolean isProcessed(Map<String, Object> pending) {
+        // Kolona "processed" moze doci kao Boolean (ako je TINYINT(1)/BOOLEAN
+        // u bazi) ili kao Number (ako je INT) — zavisi od drajvera/tipa
+        // kolone, pa moramo da podrzimo oba, inace puca ClassCastException.
+        Object processedObj = pending.get("processed");
+        if (processedObj instanceof Boolean) {
+            return (Boolean) processedObj;
+        } else if (processedObj instanceof Number) {
+            return ((Number) processedObj).intValue() == 1;
         }
+        return false;
     }
 
-    markOrderProcessed(orderId);
-}
-
-/**
- * Poziva se kad banka ODBIJE uplatu. Za svaki kurs iz pending_orders.course_ids
- * update-uje odgovarajući red u platio sa 'C' na 'O' (odbijeno).
- *
- * Isto kao recordSuccessfulPayment — baca izuzetak ako je orderId već obrađen,
- * radi idempotentnosti (da se mail o neuspehu ne šalje više puta).
- */
-public void recordFailedPayment(String orderId) throws Exception {
-    Map<String, Object> order = findUnprocessedOrder(orderId);
-    if (order == null) {
-        throw new IllegalStateException("Nema neobrađene pending_orders stavke za OrderID=" + orderId);
+    private List<Long> parseCourseIds(String courseIdsCsv) {
+        return Arrays.stream(courseIdsCsv.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
     }
 
-    Long studentId = ((Number) order.get("student_id")).longValue();
-    List<Long> courseIds = parseCourseIds((String) order.get("course_ids"));
+    /**
+     * Called once we've verified the bank's signature says payment
+     * succeeded (from PaymentRoute.paymentNotify). For each course in the
+     * order:
+     *   1. looks up its price (kurs.cena by kursId)
+     *   2. inserts a row into platio (status 'P' = Prihvaceno)
+     *   3. inserts a row into pohadja (enrollment)
+     *
+     * Idempotent: if this orderId was already processed (bank retries the
+     * NOTIFY call, or /payment/success fires too), it's a no-op.
+     *
+     * @return true if THIS call is the one that actually recorded the
+     *         payment (i.e. it's safe/correct to send the "success" email
+     *         now); false if there was nothing to process or it was
+     *         already processed earlier (don't send another email).
+     */
+    public boolean recordSuccessfulPayment(String orderId) {
+        Map<String, Object> pending = loadPendingOrder(orderId);
+        if (pending == null) {
+            System.err.println("[PaymentService] Nema pending_orders zapisa za orderId=" + orderId + " — preskačem upis.");
+            return false;
+        }
 
-    for (Long kursId : courseIds) {
+        if (isProcessed(pending)) {
+            System.out.println("[PaymentService] orderId=" + orderId + " je već obrađen, preskačem duplikat.");
+            return false;
+        }
+
+        Long studentId = ((Number) pending.get("student_id")).longValue();
+        List<Long> courseIds = parseCourseIds((String) pending.get("course_ids"));
+
+        LocalDate today = LocalDate.now();
+
+        for (Long kursId : courseIds) {
+            BigDecimal cena = jdbcTemplate.queryForObject(
+                    "SELECT cena FROM kurs WHERE kursId = :kursId",
+                    new MapSqlParameterSource("kursId", kursId),
+                    BigDecimal.class
+            );
+
+            // Tabela se zove "platio" (ne "uplatnica" — ta tabela ne postoji
+            // u bazi). Kolona "tip" prihvata ili 'UPLATNICA' (rucni/admin
+            // unos) ili 'KARTICA' (placeno preko Raiffeisen gateway-a, kao
+            // ovde). "status" je char(1) sa CHECK constraint-om koji
+            // dozvoljava SAMO 'P' (Prihvaceno), 'O' (Odbijeno) ili 'C' (na
+            // Cekanju). Ovde smo vec prosli TranCode proveru u PaymentRoute
+            // (transactionApproved) pre nego sto se uopste pozove ova
+            // metoda, pa je uplata SIGURNO prihvacena — status mora da
+            // bude 'P'.
+            jdbcTemplate.update(
+                    "INSERT INTO platio (kursId, studentId, datumPlacanja, cenaPlacanja, tip, status, url) " +
+                            "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', 'P', NULL)",
+                    new MapSqlParameterSource()
+                            .addValue("kursId", kursId)
+                            .addValue("studentId", studentId)
+                            .addValue("datum", today)
+                            .addValue("cena", cena)
+            );
+
+            jdbcTemplate.update(
+                    "INSERT INTO pohadja (studentId, kursId, daLiJeZavrsioKurs, vremePocetka) " +
+                            "VALUES (:studentId, :kursId, NULL, NULL)",
+                    new MapSqlParameterSource()
+                            .addValue("studentId", studentId)
+                            .addValue("kursId", kursId)
+            );
+        }
+
         jdbcTemplate.update(
-                "UPDATE platio SET status = 'O' WHERE studentId = ? AND kursId = ? AND status = 'C'",
-                studentId, kursId
+                "UPDATE pending_orders SET processed = 1 WHERE order_id = :orderId",
+                new MapSqlParameterSource("orderId", orderId)
         );
+
+        return true;
     }
 
-    markOrderProcessed(orderId);
-}
+    /**
+     * Called once we've verified the bank's signature says payment was
+     * DECLINED (from PaymentRoute.paymentNotify, transactionApproved =
+     * false but signature still valid). Unlike recordSuccessfulPayment,
+     * this does NOT enroll the student (no pohadja insert) — it only
+     * leaves a record in platio (status 'O' = Odbijeno) so there's an
+     * audit trail of the failed attempt.
+     *
+     * Same idempotency contract as recordSuccessfulPayment: returns true
+     * only if THIS call is the one that recorded it (safe to send the
+     * "failure" email now).
+     */
+    public boolean recordFailedPayment(String orderId) {
+        Map<String, Object> pending = loadPendingOrder(orderId);
+        if (pending == null) {
+            System.err.println("[PaymentService] Nema pending_orders zapisa za orderId=" + orderId + " — preskačem upis odbijene uplate.");
+            return false;
+        }
 
-/**
- * Nalazi email i ime/prezime kupca za dati orderId, preko:
- * pending_orders.student_id -> student.studentId -> user.userId (email)
- *
- * NAPOMENA: ako se ispostavi da tabela sa korisnicima/emailovima nije "user"
- * nego npr. "users", promeni samo naziv tabele u upitu ispod.
- */
-public String getBuyerEmailByOrderId(String orderId) {
-    String sql = "SELECT u.email " +
-            "FROM pending_orders po " +
-            "JOIN student s ON s.studentId = po.student_id " +
-            "JOIN user u ON u.userId = s.studentId " +
-            "WHERE po.order_id = ?";
-    try {
-        List<String> results = jdbcTemplate.query(
-                sql,
-                (rs, rowNum) -> rs.getString("email"),
-                orderId
+        if (isProcessed(pending)) {
+            System.out.println("[PaymentService] orderId=" + orderId + " je već obrađen, preskačem duplikat (odbijena uplata).");
+            return false;
+        }
+
+        Long studentId = ((Number) pending.get("student_id")).longValue();
+        List<Long> courseIds = parseCourseIds((String) pending.get("course_ids"));
+
+        LocalDate today = LocalDate.now();
+
+        for (Long kursId : courseIds) {
+            BigDecimal cena;
+            try {
+                cena = jdbcTemplate.queryForObject(
+                        "SELECT cena FROM kurs WHERE kursId = :kursId",
+                        new MapSqlParameterSource("kursId", kursId),
+                        BigDecimal.class
+                );
+            } catch (Exception e) {
+                cena = null;
+            }
+
+            jdbcTemplate.update(
+                    "INSERT INTO platio (kursId, studentId, datumPlacanja, cenaPlacanja, tip, status, url) " +
+                            "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', 'O', NULL)",
+                    new MapSqlParameterSource()
+                            .addValue("kursId", kursId)
+                            .addValue("studentId", studentId)
+                            .addValue("datum", today)
+                            .addValue("cena", cena)
+            );
+        }
+
+        jdbcTemplate.update(
+                "UPDATE pending_orders SET processed = 1 WHERE order_id = :orderId",
+                new MapSqlParameterSource("orderId", orderId)
         );
-        return results.isEmpty() ? null : results.get(0);
-    } catch (Exception e) {
-        System.err.println("[PaymentService] Greška pri traženju emaila za OrderID=" + orderId + ": " + e.getMessage());
-        e.printStackTrace();
-        return null;
+
+        return true;
     }
-}
 
-/**
- * Isto, ali vraća i ime/prezime — koristi se ako želiš personalizovan mail
- * ("Poštovani/a Petar," umesto "Poštovani/a,").
- */
-public BuyerInfo getBuyerInfoByOrderId(String orderId) {
-    String sql = "SELECT u.email, s.ime, s.prezime " +
-            "FROM pending_orders po " +
-            "JOIN student s ON s.studentId = po.student_id " +
-            "JOIN user u ON u.userId = s.studentId " +
-            "WHERE po.order_id = ?";
-    try {
-        List<BuyerInfo> results = jdbcTemplate.query(
-                sql,
-                (rs, rowNum) -> new BuyerInfo(
-                        rs.getString("email"),
-                        rs.getString("ime"),
-                        rs.getString("prezime")
-                ),
-                orderId
+    public record BuyerInfo(String email, String ime, String prezime) {}
+
+    /**
+     * Nalazi email i ime/prezime kupca za dati orderId, preko:
+     * pending_orders.student_id -> student.studentId -> user.userId (email).
+     *
+     * Namerno NE proverava "processed" — treba da radi i posle obrade
+     * (npr. kad se šalje success/failure mail, pending_orders je već
+     * markiran processed=1 u tom trenutku).
+     *
+     * NAPOMENA: ako se ispostavi da tabela sa emailovima nije "user" nego
+     * npr. "users", promeni samo naziv tabele u upitu ispod.
+     */
+    public BuyerInfo getBuyerInfoByOrderId(String orderId) {
+        try {
+            Long studentId = jdbcTemplate.queryForObject(
+                    "SELECT student_id FROM pending_orders WHERE order_id = :orderId",
+                    new MapSqlParameterSource("orderId", orderId),
+                    Long.class
+            );
+            if (studentId == null) {
+                return null;
+            }
+
+            List<BuyerInfo> results = jdbcTemplate.query(
+                    "SELECT u.email AS email, s.ime AS ime, s.prezime AS prezime " +
+                            "FROM student s " +
+                            "JOIN user u ON u.userId = s.studentId " +
+                            "WHERE s.studentId = :studentId",
+                    new MapSqlParameterSource("studentId", studentId),
+                    (rs, rowNum) -> new BuyerInfo(
+                            rs.getString("email"),
+                            rs.getString("ime"),
+                            rs.getString("prezime")
+                    )
+            );
+            return results.isEmpty() ? null : results.get(0);
+        } catch (Exception e) {
+            System.err.println("[PaymentService] Greška pri traženju kupca za OrderID=" + orderId + ": " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Builds and signs the outbound authorization-request MAC.
+     *
+     * Per the official docs ("Data Signature - API"):
+     *   MerchantId;TerminalId;PurchaseTime;OrderId,Delay;CurrencyId,AltCurrencyId;Amount,AltAmount;SessionData(SD);
+     * Delay is sent in the form (value "0"), so it's comma-joined with
+     * OrderID here: "OrderID,Delay". We don't send AltCurrency/AltAmount,
+     * so Currency and Amount stay plain. SD is unused (empty field before
+     * the final semicolon). Algorithm is SHA256withRSA per the bank's
+     * explicit instruction.
+     */
+    public String generateSignature(
+            String purchaseTime,
+            String orderId,
+            String delay,
+            String currencyIdParam,
+            String totalAmountMinorUnits
+    ) throws Exception {
+
+        String sd = "";    // unused optional session-data field
+
+        String data = merchantId + ";" +
+                terminalId + ";" +
+                purchaseTime + ";" +
+                orderId + "," + delay + ";" +
+                currencyIdParam + ";" +
+                totalAmountMinorUnits + ";" +
+                sd + ";";
+
+        PrivateKey privateKey = loadPrivateKey();
+
+        // Banka (Raiffeisen Srbija) je eksplicitno potvrdila mejlom da je
+        // algoritam SHA256withRSA (ne SHA1 iz opste UPC dokumentacije za
+        // Ukrajinu — njihova implementacija je ocigledno customizovana).
+        Signature signature = Signature.getInstance(signatureAlgorithm);
+        signature.initSign(privateKey);
+        signature.update(data.getBytes(StandardCharsets.UTF_8));
+
+        return Base64.getEncoder().encodeToString(signature.sign());
+    }
+
+    // Verifikacija potpisa prema ZVANICNOJ UPC eCommerceConnect dokumentaciji.
+    // KLJUCNO: format NIJE isti za sve rute!
+    //
+    // Za SUCCESS_URL / NOTIFY_URL:
+    //   MerchantId;TerminalId;PurchaseTime;OrderId,Delay;Xid;CurrencyId,AltCurrencyId;Amount,AltAmount;SessionData;TranCode;ApprovalCode;
+    // Za FAILURE_URL (kraci, drugaciji format - BEZ SessionData i ApprovalCode):
+    //   MerchantId;TerminalId;PurchaseTime;OrderId;Delay;Xid;CurrencyId;Amount;TranCode;
+    //
+    // Mi ne saljemo AltCurrency/AltAmount pa ta polja uvek izostaju (bez zareza).
+    public boolean verifySignature(Map<String, String> params) {
+        return verifySignatureInternal(params, false);
+    }
+
+    // Koristiti ISKLJUCIVO za /payment/failure — format je drugaciji od success/notify.
+    public boolean verifySignatureFailure(Map<String, String> params) {
+        return verifySignatureInternal(params, true);
+    }
+
+    private boolean verifySignatureInternal(Map<String, String> params, boolean isFailureFormat) {
+        try {
+            String merchantIdVal = getParamCI(params, "MerchantID");
+            String terminalIdVal = getParamCI(params, "TerminalID");
+            String purchaseTime = getParamCI(params, "PurchaseTime");
+            String orderId = getParamCI(params, "OrderID");
+            String xid = getParamCI(params, "XID");
+            String currency = getParamCI(params, "Currency");
+            String totalAmount = getParamCI(params, "TotalAmount");
+            String sd = getParamCI(params, "SD");
+            String tranCode = getParamCI(params, "TranCode");
+            String approvalCode = getParamCI(params, "ApprovalCode");
+            String delay = getParamCI(params, "Delay");
+            if (delay.isBlank()) {
+                // Delay ume da izostane iz odgovora na /success i /failure
+                // (za razliku od /notify gde stize kao "0"), ali banka svejedno
+                // racuna potpis kao da je Delay="0" (jer mi UVEK saljemo
+                // Delay=0 u originalnom zahtevu - ne koristimo preautorizaciju).
+                // Zato moramo da defaultujemo na "0", ne na prazan string.
+                delay = "0";
+            }
+            String signatureBase64 = getParamCI(params, "Signature");
+
+            if (signatureBase64.isBlank()) {
+                System.out.println("[PaymentService][DEBUG] verifySignature: nema Signature parametra uopste. Primljeni parametri: " + params);
+                return false;
+            }
+
+            String data;
+            if (isFailureFormat) {
+                data = merchantIdVal + ";" +
+                        terminalIdVal + ";" +
+                        purchaseTime + ";" +
+                        orderId + ";" +
+                        delay + ";" +
+                        xid + ";" +
+                        currency + ";" +
+                        totalAmount + ";" +
+                        tranCode + ";";
+            } else {
+                String orderPart = delay.isBlank() ? orderId : (orderId + "," + delay);
+                data = merchantIdVal + ";" +
+                        terminalIdVal + ";" +
+                        purchaseTime + ";" +
+                        orderPart + ";" +
+                        xid + ";" +
+                        currency + ";" +
+                        totalAmount + ";" +
+                        sd + ";" +
+                        tranCode + ";" +
+                        approvalCode + ";";
+            }
+
+            System.out.println("[PaymentService][DEBUG] verifySignature (" + (isFailureFormat ? "FAILURE format" : "SUCCESS/NOTIFY format") + ") - string koji proveravamo: " + data);
+            System.out.println("[PaymentService][DEBUG] verifySignature - Signature koji je banka poslala (prvih 30 karaktera): "
+                    + (signatureBase64.length() > 30 ? signatureBase64.substring(0, 30) + "..." : signatureBase64));
+
+            byte[] signatureBytes = Base64.getDecoder().decode(signatureBase64);
+            PublicKey publicKey = loadBankPublicKey();
+
+            boolean valid = verifyWithAlgorithm(data, signatureBytes, publicKey, signatureAlgorithm);
+            System.out.println("[PaymentService][DEBUG] verifySignature rezultat: " + valid);
+            return valid;
+
+        } catch (Exception e) {
+            System.err.println("[PaymentService][DEBUG] verifySignature izuzetak: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Isti case-insensitive lookup kao u PaymentRoute.getParamCaseInsensitive —
+    // banka ume da posalje nazive parametara sa razlicitim velikim/malim
+    // slovima, pa ovde MORA da se koristi isti pristup, inace se potpis
+    // nikad ne poklapa (polja ispadnu prazna) i validna uplata se
+    // pogresno tretira kao neuspesna.
+    private String getParamCI(Map<String, String> params, String key) {
+        if (params == null) return "";
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(key)) {
+                return entry.getValue() == null ? "" : entry.getValue();
+            }
+        }
+        return "";
+    }
+
+    private boolean verifyWithAlgorithm(String data, byte[] signatureBytes, PublicKey publicKey, String algorithm) throws Exception {
+        Signature signature = Signature.getInstance(algorithm);
+        signature.initVerify(publicKey);
+        signature.update(data.getBytes(StandardCharsets.UTF_8));
+        return signature.verify(signatureBytes);
+    }
+
+    private PrivateKey loadPrivateKey() throws Exception {
+        byte[] keyBytes = readResourceBytes(privateKeyPath);
+        String keyString = new String(keyBytes, StandardCharsets.UTF_8);
+
+        String cleanedKey = keyString
+                .replace("-----BEGIN PRIVATE KEY-----", "")
+                .replace("-----END PRIVATE KEY-----", "")
+                .replace("-----BEGIN RSA PRIVATE KEY-----", "")
+                .replace("-----END RSA PRIVATE KEY-----", "")
+                .replaceAll("\\s+", "");
+
+        byte[] decodedBytes = Base64.getDecoder().decode(cleanedKey);
+
+        PKCS8EncodedKeySpec privSpec = new PKCS8EncodedKeySpec(decodedBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePrivate(privSpec);
+    }
+
+    private PublicKey loadBankPublicKey() throws Exception {
+        byte[] keyBytes = readResourceBytes(bankPublicKeyPath);
+        String keyString = new String(keyBytes, StandardCharsets.UTF_8);
+
+        if (keyString.contains("-----BEGIN CERTIFICATE-----")) {
+            CertificateFactory fact = CertificateFactory.getInstance("X.509");
+            X509Certificate cert = (X509Certificate) fact.generateCertificate(new ByteArrayInputStream(keyBytes));
+            return cert.getPublicKey();
+        }
+
+        String cleanedKey = keyString
+                .replace("-----BEGIN PUBLIC KEY-----", "")
+                .replace("-----END PUBLIC KEY-----", "")
+                .replace("-----BEGIN RSA PUBLIC KEY-----", "")
+                .replace("-----END RSA PUBLIC KEY-----", "")
+                .replaceAll("\\s+", "");
+
+        byte[] decodedBytes = Base64.getDecoder().decode(cleanedKey);
+
+        X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(decodedBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(pubSpec);
+    }
+
+    private byte[] readResourceBytes(String path) throws Exception {
+        Resource resource = resourceLoader.getResource(
+                path.startsWith("classpath:") ? path : "file:" + path
         );
-        return results.isEmpty() ? null : results.get(0);
-    } catch (Exception e) {
-        System.err.println("[PaymentService] Greška pri traženju kupca za OrderID=" + orderId + ": " + e.getMessage());
-        e.printStackTrace();
-        return null;
+        try (InputStream in = resource.getInputStream()) {
+            return in.readAllBytes();
+        }
     }
 }
