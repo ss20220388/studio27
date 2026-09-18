@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
+import com.server.studio27.services.MailService;
 import com.server.studio27.services.PaymentService;
 
 @RestController
@@ -30,12 +31,14 @@ public class PaymentRoute {
     }
 
     private final PaymentService paymentService;
+    private final MailService mailService;
 
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
-    public PaymentRoute(PaymentService paymentService) {
+    public PaymentRoute(PaymentService paymentService, MailService mailService) {
         this.paymentService = paymentService;
+        this.mailService = mailService;
     }
 
     public record PaymentCreateRequest(String orderId, Long studentId, List<Long> courseIds, BigDecimal totalAmount) {
@@ -114,7 +117,12 @@ public class PaymentRoute {
         response.append("PurchaseTime = ").append(purchaseTime).append("\n");
 
         if (transactionApproved) {
-            recordPaymentIfValid(orderId, "/payment/notify");
+            // recordPaymentIfValid vraća true samo ako je OVO prvi (uspešan) upis za ovaj orderId,
+            // tako da mail ide samo jednom čak i ako banka pošalje notify više puta (retry).
+            boolean firstTimeRecorded = recordPaymentIfValid(orderId, "/payment/notify");
+            if (firstTimeRecorded) {
+                sendPaymentSuccessEmail(orderId);
+            }
 
             response.append("Response.action= approve \n");
             response.append("Response.reason= ok \n");
@@ -123,6 +131,7 @@ public class PaymentRoute {
         } else {
             if (signatureValid) {
                 System.out.println("[PaymentRoute] Transakcija ODBIJENA (validan potpis, TranCode=" + tranCode + ") za OrderID=" + orderId + " — ne upisujem uplatu.");
+                sendPaymentFailureEmail(orderId);
             } else {
                 System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/notify za OrderID=" + orderId);
             }
@@ -147,6 +156,10 @@ public class PaymentRoute {
                 + " TranCode=" + tranCode
                 + " transactionApproved=" + transactionApproved
                 + " za OrderID=" + orderId);
+
+        // Napomena: slanje mailova se namerno NE ponavlja ovde — /payment/notify je
+        // server-to-server poziv banke i tu je autoritativno mesto gde se mail šalje
+        // tačno jednom. Ova ruta samo redirektuje korisnikov browser na odgovarajuću stranicu.
 
         if (!signatureValid) {
             System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/success za OrderID=" + orderId);
@@ -186,11 +199,74 @@ public class PaymentRoute {
         );
     }
 
-    private void recordPaymentIfValid(String orderId, String endpointSource) {
+    /**
+     * @return true ako je uplata SADA prvi put uspešno upisana (znači: treba poslati mail).
+     *         false ako je već ranije upisana (duplikat notify poziva) ili je upis pukao.
+     *
+     * PRETPOSTAVKA: paymentService.recordSuccessfulPayment(orderId) baca izuzetak (npr. zbog
+     * unique constraint-a u bazi) ako je uplata za taj orderId već ranije upisana. Ako to nije
+     * slučaj u tvojoj implementaciji, javi mi pa prilagodim (npr. da recordSuccessfulPayment
+     * sam vraća boolean).
+     */
+    private boolean recordPaymentIfValid(String orderId, String endpointSource) {
         try {
             paymentService.recordSuccessfulPayment(orderId);
+            return true;
         } catch (Exception e) {
             System.err.println("[PaymentRoute] Upis u platio/pohadja nije uspeo (preko " + endpointSource + ") za OrderID=" + orderId + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Koristi PaymentService.getBuyerInfoByOrderId(orderId), koja nalazi email preko
+     * pending_orders.student_id -> student.studentId -> user.userId. Vidi PaymentService_dodatak.java.
+     */
+    private void sendPaymentSuccessEmail(String orderId) {
+        try {
+            PaymentService.BuyerInfo buyer = paymentService.getBuyerInfoByOrderId(orderId);
+            if (buyer == null || buyer.email() == null || buyer.email().isBlank()) {
+                System.err.println("[PaymentRoute] Ne mogu da pošaljem mail o uspešnom plaćanju — nema email adrese za OrderID=" + orderId);
+                return;
+            }
+
+            String greetingName = buyer.ime() != null && !buyer.ime().isBlank() ? " " + buyer.ime() : "";
+            String subject = "Vaša kupovina je uspešna!";
+            String subText = "Broj porudžbine: " + orderId;
+            String body = "<p>Poštovani/a" + greetingName + ",</p>" +
+                    "<p>Vaša uplata je uspešno evidentirana i porudžbina je obrađena. Kurs je sada aktivan na vašem nalogu.</p>" +
+                    "<center><a href='" + mailService.getFrontendUrl() + "' class='btn'>PRIJAVI SE</a></center>";
+
+            mailService.sendHtmlEmail(buyer.email(), subject, subText, body);
+        } catch (Exception e) {
+            System.err.println("[PaymentRoute] Greška pri slanju mejla o uspešnom plaćanju za OrderID=" + orderId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void sendPaymentFailureEmail(String orderId) {
+        try {
+            PaymentService.BuyerInfo buyer = paymentService.getBuyerInfoByOrderId(orderId);
+            if (buyer == null || buyer.email() == null || buyer.email().isBlank()) {
+                System.err.println("[PaymentRoute] Ne mogu da pošaljem mail o neuspešnom plaćanju — nema email adrese za OrderID=" + orderId);
+                return;
+            }
+
+            String subject = "Obaveštenje o neuspešnom plaćanju";
+            String body = "<p>Zdravo,</p>" +
+                    "<p>Primetili smo da ste nedavno pokušali da kupite jedan od naših kurseva putem sajta, " +
+                    "ali da je plaćanje iz nekog razloga bilo onemogućeno.</p>" +
+                    "<p>Molimo vas da nam javite da li ste imali poteškoća sa naše strane, kako bismo mogli da " +
+                    "proverimo u čemu je problem i pomognemo vam da završite prijavu.</p>" +
+                    "<p>Trenutno vršimo određena ažuriranja na sajtu, koji je i dalje aktivan, pa je moguće da " +
+                    "povremeno dolazi do tehničkih poteškoća.</p>" +
+                    "<p>Slobodno nam se javite — rado ćemo vam pomoći.</p>" +
+                    "<p>Srdačan pozdrav,<br>Studio 27</p>";
+
+            mailService.sendHtmlEmail(buyer.email(), subject, null, body);
+        } catch (Exception e) {
+            System.err.println("[PaymentRoute] Greška pri slanju mejla o neuspešnom plaćanju za OrderID=" + orderId + ": " + e.getMessage());
             e.printStackTrace();
         }
     }
