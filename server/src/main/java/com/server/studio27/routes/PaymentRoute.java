@@ -117,8 +117,9 @@ public class PaymentRoute {
         response.append("PurchaseTime = ").append(purchaseTime).append("\n");
 
         if (transactionApproved) {
-            // recordPaymentIfValid vraća true samo ako je OVO prvi (uspešan) upis za ovaj orderId,
-            // tako da mail ide samo jednom čak i ako banka pošalje notify više puta (retry).
+            // recordPaymentIfValid vraća true samo ako je OVO prvi (uspešan) upis za ovaj
+            // orderId, tako da mail ide samo jednom čak i ako banka pošalje notify više
+            // puta (retry).
             boolean firstTimeRecorded = recordPaymentIfValid(orderId, "/payment/notify");
             if (firstTimeRecorded) {
                 sendPaymentSuccessEmail(orderId);
@@ -160,9 +161,11 @@ public class PaymentRoute {
                 + " transactionApproved=" + transactionApproved
                 + " za OrderID=" + orderId);
 
-        // Napomena: slanje mailova se namerno NE ponavlja ovde — /payment/notify je
-        // server-to-server poziv banke i tu je autoritativno mesto gde se mail šalje
-        // tačno jednom. Ova ruta samo redirektuje korisnikov browser na odgovarajuću stranicu.
+        // Napomena: mail se namerno NE šalje ovde — /payment/notify je server-to-server
+        // poziv banke i tu je autoritativno mesto gde se mail šalje tačno jednom. Ova
+        // ruta samo redirektuje korisnikov browser na odgovarajuću stranicu. Upis u
+        // bazu je i dalje pozvan kao "backup" (ako notify iz nekog razloga zakasni/ne
+        // stigne), a idempotentnost (processed flag) sprečava duplirano upisivanje.
 
         if (!signatureValid) {
             System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/success za OrderID=" + orderId);
@@ -195,6 +198,10 @@ public class PaymentRoute {
         System.out.println("[PaymentRoute][DEBUG] /payment/failure signatureValid=" + signatureValid + " za OrderID=" + orderId);
         if (!signatureValid) {
             System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/failure za OrderID=" + orderId);
+        } else {
+            // Isto kao kod paymentSuccess — backup upis, notify je autoritativan i mail
+            // se šalje samo odatle.
+            recordFailureIfValid(orderId, "/payment/failure");
         }
 
         return new RedirectView(
@@ -204,17 +211,12 @@ public class PaymentRoute {
 
     /**
      * @return true ako je uplata SADA prvi put uspešno upisana (znači: treba poslati mail).
-     *         false ako je već ranije upisana (duplikat notify poziva) ili je upis pukao.
-     *
-     * PRETPOSTAVKA: paymentService.recordSuccessfulPayment(orderId) baca izuzetak (npr. zbog
-     * unique constraint-a u bazi) ako je uplata za taj orderId već ranije upisana. Ako to nije
-     * slučaj u tvojoj implementaciji, javi mi pa prilagodim (npr. da recordSuccessfulPayment
-     * sam vraća boolean).
+     *         false ako je već ranije upisana (duplikat notify poziva), orderId ne postoji,
+     *         ili je upis pukao.
      */
     private boolean recordPaymentIfValid(String orderId, String endpointSource) {
         try {
-            paymentService.recordSuccessfulPayment(orderId);
-            return true;
+            return paymentService.recordSuccessfulPayment(orderId);
         } catch (Exception e) {
             System.err.println("[PaymentRoute] Upis u platio/pohadja nije uspeo (preko " + endpointSource + ") za OrderID=" + orderId + ": " + e.getMessage());
             e.printStackTrace();
@@ -225,12 +227,11 @@ public class PaymentRoute {
     /**
      * @return true ako je odbijena uplata SADA prvi put upisana u platio (status 'O')
      *         — znači: treba poslati mail. false ako je već obrađena ranije (duplikat
-     *         notify poziva) ili je upis pukao.
+     *         notify poziva), orderId ne postoji, ili je upis pukao.
      */
     private boolean recordFailureIfValid(String orderId, String endpointSource) {
         try {
-            paymentService.recordFailedPayment(orderId);
-            return true;
+            return paymentService.recordFailedPayment(orderId);
         } catch (Exception e) {
             System.err.println("[PaymentRoute] Upis odbijene uplate u platio nije uspeo (preko " + endpointSource + ") za OrderID=" + orderId + ": " + e.getMessage());
             e.printStackTrace();
@@ -240,7 +241,7 @@ public class PaymentRoute {
 
     /**
      * Koristi PaymentService.getBuyerInfoByOrderId(orderId), koja nalazi email preko
-     * pending_orders.student_id -> student.studentId -> user.userId. Vidi PaymentService_dodatak.java.
+     * pending_orders.student_id -> student.studentId -> user.userId.
      */
     private void sendPaymentSuccessEmail(String orderId) {
         try {
