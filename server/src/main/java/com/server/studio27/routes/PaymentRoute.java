@@ -130,8 +130,11 @@ public class PaymentRoute {
             return ResponseEntity.ok(response.toString());
         } else {
             if (signatureValid) {
-                System.out.println("[PaymentRoute] Transakcija ODBIJENA (validan potpis, TranCode=" + tranCode + ") za OrderID=" + orderId + " — ne upisujem uplatu.");
-                sendPaymentFailureEmail(orderId);
+                System.out.println("[PaymentRoute] Transakcija ODBIJENA (validan potpis, TranCode=" + tranCode + ") za OrderID=" + orderId + " — upisujem status O u platio.");
+                boolean firstTimeRecordedFailure = recordFailureIfValid(orderId, "/payment/notify");
+                if (firstTimeRecordedFailure) {
+                    sendPaymentFailureEmail(orderId);
+                }
             } else {
                 System.out.println("[PaymentRoute] UPOZORENJE: nevažeći potpis na /payment/notify za OrderID=" + orderId);
             }
@@ -214,6 +217,22 @@ public class PaymentRoute {
             return true;
         } catch (Exception e) {
             System.err.println("[PaymentRoute] Upis u platio/pohadja nije uspeo (preko " + endpointSource + ") za OrderID=" + orderId + ": " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * @return true ako je odbijena uplata SADA prvi put upisana u platio (status 'O')
+     *         — znači: treba poslati mail. false ako je već obrađena ranije (duplikat
+     *         notify poziva) ili je upis pukao.
+     */
+    private boolean recordFailureIfValid(String orderId, String endpointSource) {
+        try {
+            paymentService.recordFailedPayment(orderId);
+            return true;
+        } catch (Exception e) {
+            System.err.println("[PaymentRoute] Upis odbijene uplate u platio nije uspeo (preko " + endpointSource + ") za OrderID=" + orderId + ": " + e.getMessage());
             e.printStackTrace();
             return false;
         }
