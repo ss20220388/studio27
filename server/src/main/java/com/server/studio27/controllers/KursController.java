@@ -144,53 +144,6 @@ public class KursController {
         }
     }
 
-    public ResponseEntity<Map<String, Object>> getBrojUTokuKursevi(int studentId) {
-        try {
-            String SQL = """
-                        SELECT COUNT(*) AS brojKursevaUToku
-                        FROM kurs k
-                        JOIN platio p ON k.kursId = p.kursId
-                        WHERE p.studentId = ?
-                          AND (
-                            SELECT COUNT(*)
-                            FROM student_lekcija sl
-                            JOIN lekcija l ON sl.lekcijaId = l.lekcijaId
-                            WHERE sl.studentId = p.studentId
-                              AND l.kursId = k.kursId
-                          ) > 0
-                          AND (
-                            SELECT COUNT(*)
-                            FROM student_lekcija sl
-                            JOIN lekcija l ON sl.lekcijaId = l.lekcijaId
-                            WHERE sl.studentId = p.studentId
-                              AND l.kursId = k.kursId
-                          ) < (
-                            SELECT COUNT(*)
-                            FROM lekcija l
-                            WHERE l.kursId = k.kursId
-                          );
-                          
-                          and p.status = 'P'
-                          
-                          
-                    """;
-
-            Integer broj = jdbcTemplate.queryForObject(SQL, Integer.class, studentId);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("brojUTokuKurseva", broj != null ? broj : 0);
-            response.put("message", "Broj kurseva uspešno preuzet");
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("brojUTokuKurseva", null);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        }
-    }
-
-    // ...existing code...
     public ResponseEntity<Kurs> getKursSaLekcijama(int id) {
         try {
             String SQL = """

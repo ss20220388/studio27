@@ -1,7 +1,6 @@
 package com.server.studio27.routes;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -13,11 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.server.studio27.controllers.UserController;
-import com.server.studio27.models.User;
-
-import org.springframework.web.bind.annotation.RequestParam;
-
-import com.github.sardine.model.Response;
 
 
 @RestController
@@ -25,15 +19,9 @@ import com.github.sardine.model.Response;
 public class UserRoute {
 
     private final UserController userController;
-    private List<User> users;
 
     public UserRoute(UserController userController) {
         this.userController = userController;
-    }
-
-    @GetMapping("/users")
-    public List<User> getUsers() {
-        return userController.getUsers();
     }
 
     @PostMapping("/unlock-device")

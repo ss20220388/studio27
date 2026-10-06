@@ -2,7 +2,6 @@ package com.server.studio27.auth;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -49,10 +48,6 @@ public class AuthController {
     private final UserDetailsService userDetailsService;
     private final JdbcTemplate jdbcTemplate;
     private final PasswordEncoder passwordEncoder;
-    
-    @Autowired
-    private PasswordResetService passwordResetService;
-
 
     public AuthController(
             AuthenticationManager authenticationManager,
@@ -427,23 +422,6 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(401).body(Map.of("error", "Nevalidan refresh token"));
         }
-    }
-
-    @PostMapping("/access-token")
-    public ResponseEntity<?> getAccess(jakarta.servlet.http.HttpServletRequest request) {
-        String accessToken = null;
-        if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
-                if ("accessToken".equals(cookie.getName())) {
-                    accessToken = cookie.getValue();
-                    break;
-                }
-            }
-        }
-        if (accessToken == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Access token nije pronadjen"));
-        }
-        return ResponseEntity.ok(Map.of("accessToken", accessToken, "message", "Access token pronadjen"));
     }
 
     @PostMapping("/logout")

@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import com.server.studio27.models.Student;
-
 @Service
 public class StudentController {
     @Autowired
@@ -81,51 +79,6 @@ public class StudentController {
 
     }
 
-    public List<Student> getActiveStudents() {
-        List<Student> students = new ArrayList<>();
-
-        String SQL = """
-                    SELECT s.studentId, u.email, u.password, s.ime, s.prezime, s.brojTelefona
-                    FROM student s
-                    JOIN Pohadja p ON s.studentId = p.studentId
-                    JOIN user u ON s.studentId = u.userId
-                """;
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL);
-
-        for (Map<String, Object> row : rows) {
-            students.add(new Student(
-                    ((Number) row.get("studentId")).intValue(),
-                    (String) row.get("email"),
-                    (String) row.get("password"),
-                    (String) row.get("ime"),
-                    (String) row.get("prezime"),
-                    (String) row.get("brojTelefona"),
-                    "STUDENT"));
-        }
-
-        return students;
-    }
-
-    public Map<String, Object> addStudent(Map<String,Object> student) {
-        Map<String, Object> result = new HashMap<>();
-        try {
-            String insertUserSQL = "INSERT INTO user (email, password) VALUES (?, ?)";
-            jdbcTemplate.update(insertUserSQL, student.get("email"), student.get("password"));
-
-            String getUserIdSQL = "SELECT userId FROM user WHERE email = ?";
-            Integer userId = jdbcTemplate.queryForObject(getUserIdSQL, new Object[]{student.get("email")}, Integer.class);
-
-            String insertStudentSQL = "INSERT INTO student (studentId, ime, prezime, brojTelefona) VALUES (?, ?, ?, ?)";
-            jdbcTemplate.update(insertStudentSQL, userId, student.get("ime"), student.get("prezime"), student.get("telefon"));
-
-            result.put("message", "Student added successfully");
-            result.put("studentId", userId);
-        } catch (Exception e) {
-            result.put("message", "Error adding student: " + e.getMessage());
-        }
-        return result;
-    }
     public String deleteStudent(int studentId) {
        
         try {

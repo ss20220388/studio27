@@ -1,7 +1,6 @@
 package com.server.studio27.controllers;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,13 +17,10 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
-import com.server.studio27.models.SftpStream;
 import com.server.studio27.services.SftpDownloadStream;
 
 @Component
 public class HetznerAPIController {
-    @Value("${hetzner.api.token}")
-    private String apiToken;
     @Value("${hetzner.host}")
     private String host;
 
@@ -36,37 +32,6 @@ public class HetznerAPIController {
 
     @Value("${hetzner.sftp.port}")
     private int port;
-
-    public void uploadFileStream(String remotePath, InputStream inputStream) throws JSchException, Exception {
-
-        JSch jsch = new JSch();
-        Session session = null;
-        ChannelSftp channel = null;
-
-        try {
-            session = jsch.getSession(user, host, 22);
-            session.setPassword(password);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
-
-            channel = (ChannelSftp) session.openChannel("sftp");
-            channel.connect();
-
-            // Upload fajla
-            channel.put(inputStream, remotePath);
-
-        } finally {
-            if (channel != null && channel.isConnected()) {
-                channel.disconnect();
-            }
-            if (session != null && session.isConnected()) {
-                session.disconnect();
-            }
-            if (inputStream != null) {
-                inputStream.close();
-            }
-        }
-    }
 
     private Session createSession() throws JSchException {
         JSch jsch = new JSch();
@@ -165,31 +130,6 @@ public class HetznerAPIController {
         return fileNames;
     }
 
-    public byte[] downloadFile(String remoteFilePath) {
-        Session session = null;
-        ChannelSftp sftp = null;
-
-        try {
-            session = createSession();
-            sftp = (ChannelSftp) session.openChannel("sftp");
-            sftp.connect();
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            sftp.get(remoteFilePath, baos);
-
-            return baos.toByteArray();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        } finally {
-            if (sftp != null && sftp.isConnected())
-                sftp.disconnect();
-            if (session != null && session.isConnected())
-                session.disconnect();
-        }
-    }
-
     public SftpDownloadStream downloadFileStream(String remoteFilePath) throws Exception {
         Session session = createSession();
         ChannelSftp sftp = (ChannelSftp) session.openChannel("sftp");
@@ -247,36 +187,6 @@ public class HetznerAPIController {
         }
     }
 
-    public long getFileSize(String remoteFilePath) throws Exception {
-        Session session = null;
-        ChannelSftp sftp = null;
-
-        try {
-            session = createSession();
-            sftp = (ChannelSftp) session.openChannel("sftp");
-            sftp.connect();
-
-            return sftp.stat(remoteFilePath).getSize();
-
-        } finally {
-            if (sftp != null && sftp.isConnected())
-                sftp.disconnect();
-            if (session != null && session.isConnected())
-                session.disconnect();
-        }
-    }
-
-    public SftpStream getVideoStream(String remotePath, long start) throws Exception {
-
-        Session session = createSession();
-        ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
-        channel.connect();
-
-        InputStream is = channel.get(remotePath, null, start);
-
-        return new SftpStream(is, session, channel);
-    }
-
     public String uploadEncryptedFile(String remoteFolderPath, String filename, byte[] encryptedData) {
 
         Session session = null;
@@ -303,30 +213,6 @@ public class HetznerAPIController {
         } finally {
             if (sftp != null && sftp.isConnected())
                 sftp.disconnect();
-            if (session != null && session.isConnected())
-                session.disconnect();
-        }
-    }
-
-    public void uploadFile(String remoteFolder, String fileName, byte[] fileBytes) throws JSchException, SftpException {
-        Session session = null;
-        ChannelSftp channel = null;
-        try {
-            JSch jsch = new JSch();
-            session = jsch.getSession(user, host, 22);
-            session.setPassword(password);
-            session.setConfig("StrictHostKeyChecking", "no");
-            session.connect();
-
-            channel = (ChannelSftp) session.openChannel("sftp");
-            channel.connect();
-
-            createFolder(remoteFolder); // kreira folder ako ne postoji
-            channel.put(new ByteArrayInputStream(fileBytes), remoteFolder + "/" + fileName);
-
-        } finally {
-            if (channel != null && channel.isConnected())
-                channel.disconnect();
             if (session != null && session.isConnected())
                 session.disconnect();
         }

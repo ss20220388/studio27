@@ -83,7 +83,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Autentifikacija
                         .requestMatchers("/api/auth/login", "/api/auth/logout", "/api/auth/register-user", 
-                                         "/api/auth/register-admin", "/api/auth/refresh", "/api/auth/access-token", 
+                                         "/api/auth/register-admin", "/api/auth/refresh",
                                          "/api/auth/me", "/api/auth/oauth2", "/api/auth/zaboravljena-lozinka", 
                                          "/api/auth/provera-koda", "/api/auth/verify-otp-and-reset").permitAll()
                         
@@ -93,7 +93,6 @@ public class SecurityConfig {
                         // Javne rute za kurseve, radove i mediju
                         .requestMatchers("/api/kursevi-sa-lekcijama", "/api/kursevi", "/api/kursevi/**").permitAll()
                         .requestMatchers("/api/media/**", "/api/recenzije", "/api/unlock-device").permitAll()
-                        .requestMatchers("/api/video/stream", "/api/video/stream-protected").permitAll()
                         .requestMatchers("/api/radovi", "/api/radovi-sa-rasporedom", "/api/upload-hls-hetzner").permitAll()
                         .requestMatchers("/api/progress-chart/**", "/api/cookies/create-cookie-by-local-storage").permitAll()
                         .requestMatchers("/api/kursslika", "/api/kursslika/**").permitAll()

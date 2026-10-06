@@ -12,35 +12,11 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import com.server.studio27.models.Platio;
-import com.server.studio27.models.Student;
 
 @Service
 public class PlatioController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    public List<Student> getAllStudentsWhoPay(Integer kursId) {
-        List<Student> studenti = new ArrayList<>();
-        String SQL = "SELECT s.* FROM student s JOIN platio p ON s.studentId = p.studentId WHERE p.kursId = ?";
-
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(SQL, kursId);
-
-        for (Map<String, Object> row : rows) {
-            studenti.add(new Student(
-                    ((Number) row.get("studentId")).intValue(),
-                    (String) row.get("ime"),
-                    (String) row.get("prezime"),
-                    (String) row.get("email"),
-                    (String) row.get("password"),
-                    (String) row.get("brojTelefona"),
-                    "STUDENT"
-
-            ));
-
-        }
-
-        return studenti;
-    }
 
     public ResponseEntity<Map<String, Object>> getKupljeniPoslednjih12meseci() {
         try {

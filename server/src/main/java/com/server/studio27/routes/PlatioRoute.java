@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.server.studio27.controllers.PlatioController;
 import com.server.studio27.models.Platio;
-import com.server.studio27.models.Student;
 
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -29,11 +28,6 @@ public class PlatioRoute {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    @GetMapping("/studentsWhoPay")
-    public List<Student> getStudentsWhoPay(Integer kursId) {
-        return platioController.getAllStudentsWhoPay(kursId);
-    }
 
     @GetMapping("/kupljeni-poslednjih-12meseci")
     public ResponseEntity<Map<String, Object>> getKupljeniPoslednjih12meseci() {

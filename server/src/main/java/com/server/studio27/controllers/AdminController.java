@@ -10,8 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import com.server.studio27.models.Admin;
-
 @Service
 public class AdminController {
 
@@ -39,13 +37,6 @@ public class AdminController {
         }
 
         return admins;
-    }
-
-    public String editAdmin(Admin admin) {
-        String SQL = "UPDATE admin SET email = ?, password = ?, ime = ?, prezime = ? WHERE adminId = ?";
-        jdbcTemplate.update(SQL, admin.getEmail(), admin.getPassword(), admin.getIme(), admin.getPrezime(),
-                admin.getUserId());
-        return "Admin updated successfully";
     }
 
     public ResponseEntity<Map<String, Object>> getAdminStats() {

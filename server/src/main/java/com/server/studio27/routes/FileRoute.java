@@ -120,11 +120,6 @@ public class FileRoute {
         }
     }
 
-    @PostMapping("/create-folder")
-    public String postMethodName(@RequestParam String path) {
-        return hetznerapiService.createFolder(path);
-    }
-
     @PostMapping("/upload-hetzner")
     public ResponseEntity<Map<String, String>> postMethodName(@RequestParam String path,
             @RequestParam MultipartFile file) {

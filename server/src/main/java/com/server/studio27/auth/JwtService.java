@@ -2,8 +2,6 @@ package com.server.studio27.auth;
 
 import java.security.Key;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,26 +43,6 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();
-    }
-
-    public String generateValidateVideoToken(String videoPath, UserDetails user) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("videoPath", videoPath);
-        return Jwts.builder()
-                .setSubject("validateVideoURL")
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 *60)) 
-                .signWith(getSignKey(), SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    public boolean isVideoTokenValid(String token, String videoPath) {
-        final String tokenVideoPath = extractAllClaims(token).get("videoPath", String.class);
-        return  tokenVideoPath.equals(videoPath) && !isTokenExpired(token);
-    }
-
-    public String extractVideoPath(String token) {
-        return extractAllClaims(token).get("videoPath", String.class);
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {

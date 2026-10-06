@@ -46,14 +46,6 @@ public class SendMail {
         public String body;
     }
 
-    public static class ReceiptRequest {
-        public String to;
-        public String name;
-        public String itemName;
-        public String amount;
-        public String date;
-    }
-
     private String buildHtmlEmail(String subject, String subText, String bodyContent) {
         String subjectHtml = "";
         if (subject != null && !subject.isEmpty()) {
@@ -160,35 +152,6 @@ public class SendMail {
         }
     }
 
-    @PostMapping(value = {"/send-receipt", "/send-reciept"})
-    public ResponseEntity<String> sendReceipt(@RequestBody ReceiptRequest request) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            
-            helper.setFrom(fromEmail);
-            helper.setTo(request.to);
-            helper.setSubject("Potvrda o plaćanju - 27archviz");
-            
-            String receiptHtml = "<h2>Poštovani/a " + request.name + ",</h2>" +
-                    "<p>Vaša uplata je uspešno evidentirana. Zahvaljujemo Vam se na poverenju!</p>" +
-                    "<div class='invoice-box'>" +
-                    "  <div class='invoice-row'><span><strong>Stavka:</strong></span> <span>" + request.itemName + "</span></div>" +
-                    "  <div class='invoice-row'><span><strong>Datum uplate:</strong></span> <span>" + request.date + "</span></div>" +
-                    "  <div class='invoice-row invoice-total'><span><strong>Ukupno uplaćeno:</strong></span> <span>" + request.amount + " </span></div>" +
-                    "</div>" +
-                    "<p>Vaš kurs ili usluga je sada aktivna. Možete se prijaviti na Vaš nalog kako biste pristupili sadržaju.</p>" +
-                    "<center><a href='" + frontendUrl + "' class='btn'>PRIJAVI SE</a></center>";
-
-            helper.setText(buildHtmlEmail(null, null, receiptHtml), true);
-
-            mailSender.send(message);
-            return ResponseEntity.ok("Račun uspešno poslat korisniku: " + request.to);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Greška pri slanju računa: " + e.getMessage());
-        }
-    }
     @PostMapping("/send-positive-mail-to-client")
     public String sendPositiveMail(@RequestBody MailRequest request) {
         String email = request.to;
