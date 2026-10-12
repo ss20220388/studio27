@@ -44,10 +44,9 @@ const MaterijaliForma = ({ fileInputRef, onSubmit, idKurs }) => {
                         <input
                             ref={fileInputRef}
                             type="file"
-                            accept=".zip,.pdf,.jpg,.jpeg,.png,.doc,.docx,.ppt,.pptx"
                             hidden
                             onChange={(e) =>
-                                setFileName("Postavljeni fajlovi")
+                                setFileName(e.target.files?.[0]?.name || "")
                             }
                         />
                     </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { SharedModal } from "./SharedModal";
-import { set } from "astro:schema";
+
 
 
 
@@ -119,7 +119,7 @@ export default function CourseModals({
 
           const uploadData = await uploadRes.json();
           const filepath = `/uploads/${uploadData.filename}`;
-          const slikaRes = await fetch(`${API_URL}/dodajsliku`, {
+          const slikaRes = await fetch(`${API_URL}/api/dodajsliku`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -133,7 +133,7 @@ export default function CourseModals({
           const idSlika = slikaData.idSlika;
 
           // Poveži sa kursom
-          await fetch(`${API_URL}/dodajkursslika`, {
+          await fetch(`${API_URL}/api/dodajkursslika`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

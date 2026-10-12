@@ -151,9 +151,9 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
     if (students && students.length >= 0) {
       const mapped = students.map((student) => ({
         id: student.studentId,
-        ime: student.ime,
-        prezime: student.prezime,
-        email: student.email,
+        ime: student.ime ?? "",
+        prezime: student.prezime ?? "",
+        email: student.email ?? "",
         telefon: student.brojTelefona ?? "",
         datumRegistracije: "-",
         status: (student.active == 1 ? "aktivan" : "neaktivan") as "aktivan" | "neaktivan",
@@ -202,6 +202,10 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
   }
 
   async function dodajKorisnikaUBazu() {
+    if (!addForm.email.trim()) {
+      alert("Email je obavezan.");
+      return;
+    }
     try {
       const res = await fetch(`${PUBLIC_API_KEY}/api/auth/register-user`, {
         method: "POST",
@@ -211,16 +215,22 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
         body: JSON.stringify({
           ime: addForm.ime,
           prezime: addForm.prezime,
-          email: addForm.email,
+          email: addForm.email.trim(),
           brojTelefona: addForm.telefon,
         }),
       });
 
       if (res.ok) {
+        setShowAdd(false);
+        setAddForm({ ime: "", prezime: "", email: "", telefon: "" });
         window.location.reload();
+      } else {
+        const data = await res.json().catch(() => null);
+        alert(data?.error || "Greška prilikom dodavanja korisnika.");
       }
     } catch (error) {
       console.error("Greška prilikom dodavanja korisnika:", error);
+      alert("Greška prilikom dodavanja korisnika.");
     }
   }
 
@@ -237,9 +247,12 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
       if (res.ok) {
         setUsersList((prev) => prev.filter((u) => u.id !== studentId));
         setDeleteUser(null);
+      } else {
+        alert("Greška prilikom brisanja korisnika.");
       }
     } catch (error) {
       console.error("Greška prilikom brisanja korisnika:", error);
+      alert("Greška prilikom brisanja korisnika.");
     }
   }
 
@@ -262,6 +275,8 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
         prev.map((u) => (u.id === deviceUser.id ? { ...u, deviceId: null } : u))
       );
       setDeviceUser(null);
+    } else {
+      alert("Greška prilikom uklanjanja Device ID-a.");
     }
   } catch (error) {
     console.error("Greška prilikom uklanjanja Device ID-a:", error);
@@ -287,13 +302,21 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
       });
 
       if (res.ok) {
+        // Status prati da li korisnik pohađa bar jedan kurs (isto kao na serveru)
+        const azuriran: User = {
+          ...editUser,
+          status: editUser.kursevi.length > 0 ? "aktivan" : "neaktivan",
+        };
         setUsersList((prev) =>
-          prev.map((u) => (u.id === editUser.id ? editUser : u))
+          prev.map((u) => (u.id === azuriran.id ? azuriran : u))
         );
         setEditUser(null);
+      } else {
+        alert("Greška prilikom čuvanja izmena.");
       }
     } catch (error) {
       console.error("Greška prilikom uređivanja korisnika:", error);
+      alert("Greška prilikom čuvanja izmena.");
     }
   }
 
@@ -501,10 +524,7 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
               Otkaži
             </button>
             <button
-              onClick={() => {
-                dodajKorisnikaUBazu();
-                setShowAdd(false);
-              }}
+              onClick={() => dodajKorisnikaUBazu()}
               className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20"
             >
               Sačuvaj

@@ -155,7 +155,13 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("error", "Korisnik sa ovim email-om vec postoji"));
         }
 
-        String hashedPassword = passwordEncoder.encode(request.getPassword());
+        // Kada admin dodaje korisnika, lozinka se ne salje; korisnik je kasnije
+        // postavlja preko "Zaboravljena lozinka" (bez ovoga encode(null) puca)
+        String rawPassword = request.getPassword();
+        if (rawPassword == null || rawPassword.isBlank()) {
+            rawPassword = java.util.UUID.randomUUID().toString();
+        }
+        String hashedPassword = passwordEncoder.encode(rawPassword);
 
         jdbcTemplate.update("INSERT INTO user (email, password) VALUES (?, ?)",
                 request.getEmail(), hashedPassword);
@@ -171,7 +177,17 @@ public class AuthController {
     }
 
     @PostMapping("/register-admin")
-    public ResponseEntity<?> registerAdmin(@RequestBody RegisterAdminRequest entity) {
+    public ResponseEntity<?> registerAdmin(@RequestBody RegisterAdminRequest entity, Authentication authentication) {
+        // Samo postojeci admin sme da napravi novog admina
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ADMIN".equals(a.getAuthority()));
+        if (!isAdmin) {
+            return ResponseEntity.status(403).body(Map.of("error", "Nemate dozvolu za dodavanje administratora"));
+        }
+        if (entity.getPassword() == null || entity.getPassword().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Lozinka je obavezna"));
+        }
+
         String checkSQL = "SELECT COUNT(*) FROM user WHERE email = ?";
         Integer count = jdbcTemplate.queryForObject(checkSQL, Integer.class, entity.getEmail());
         if (count != null && count > 0) {

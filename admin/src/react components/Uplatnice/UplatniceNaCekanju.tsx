@@ -63,15 +63,21 @@ export default function UplatniceNaCekanju({ uplatnice, token, setSelectedImage,
   }
 
   async function potvrdiAkciju() {
-    if (!modalState.studentId || !modalState.kursId || !modalState.actionTip) return;
-
+    // GRESKA modal nema studentId/kursId, pa se mora zatvoriti pre provere ispod
     if (modalState.actionTip === "GRESKA") {
       zatvoriModal();
       return;
     }
 
+    if (!modalState.studentId || !modalState.kursId || !modalState.actionTip) return;
+
     const isPrihvati = modalState.actionTip === "PRIHVATI";
-    const endpoint = isPrihvati ? "odobri-uplatnicu" : "odbij-uplatnicu";
+    // Red na koji se akcija odnosi (isti student I isti kurs)
+    const uplata = (uplatnice || []).find(
+      (u) => u.studentId === modalState.studentId && u.kursId === modalState.kursId
+    );
+    const emailStudenta = uplata?.email || "";
+    const nazivKursa = uplata?.kursNaziv || uplata?.nazivKursa || "";
 
     try {
       const response = await fetch(`${API_URL}/api/update-payment-status`, {
@@ -117,8 +123,8 @@ export default function UplatniceNaCekanju({ uplatnice, token, setSelectedImage,
             "Authorization": "Bearer " + token
           },
           body: JSON.stringify({
-            to: list.find(u => u.studentId === modalState.studentId)?.email || "",
-            subText: list.find(u => u.kursId === modalState.kursId)?.kursNaziv || list.find(u => u.kursId === modalState.kursId)?.nazivKursa || "",
+            to: emailStudenta,
+            subText: nazivKursa,
           })
         });
       } else {
@@ -129,8 +135,8 @@ export default function UplatniceNaCekanju({ uplatnice, token, setSelectedImage,
             "Authorization": "Bearer " + token
           },
           body: JSON.stringify({
-            to: list.find(u => u.studentId === modalState.studentId)?.email || "",
-            subText: list.find(u => u.kursId === modalState.kursId)?.kursNaziv || list.find(u => u.kursId === modalState.kursId)?.nazivKursa || "",
+            to: emailStudenta,
+            subText: nazivKursa,
           })
         });
       }

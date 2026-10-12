@@ -1,5 +1,7 @@
 package com.server.studio27.controllers;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,6 +10,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -346,7 +350,7 @@ public class KursController {
         try {
             String SQL = "INSERT INTO kurs (naziv, opis, sadrzaj, cena, trajanje, slikaUrl, glavniKurs, komentarDole, komentarSredina, komentarGore) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-            jdbcTemplate.update(SQL,
+            Object[] params = {
                     kursData.get("naziv"),
                     kursData.get("opis"),
                     kursData.get("sadrzaj"),
@@ -356,10 +360,12 @@ public class KursController {
                     kursData.get("glavniKurs"),
                     kursData.get("komentarDole"),
                     kursData.get("komentarSredina"),
-                    kursData.get("komentarGore"));
+                    kursData.get("komentarGore") };
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Kurs uspešno dodat.");
+            // Frontend koristi id novog kursa da poveze sporedne slike
+            response.put("id", insertAndGetId(SQL, params));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
@@ -409,13 +415,12 @@ public class KursController {
         try {
             String SQL = "INSERT INTO lekcija (kursId, naziv, opis) VALUES (?, ?, ?)";
 
-            jdbcTemplate.update(SQL,
-                    kursId,
-                    lekcijaData.get("naziv"),
-                    lekcijaData.get("opis"));
+            Object[] params = { kursId, lekcijaData.get("naziv"), lekcijaData.get("opis") };
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Lekcija uspešno dodata.");
+            // Bez pravog lekcijaId frontend ne moze odmah da doda video u novu lekciju
+            response.put("lekcijaId", insertAndGetId(SQL, params));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
@@ -486,6 +491,19 @@ public class KursController {
             response.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    private Long insertAndGetId(String sql, Object[] params) {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            for (int i = 0; i < params.length; i++) {
+                ps.setObject(i + 1, params[i]);
+            }
+            return ps;
+        }, keyHolder);
+        Number key = keyHolder.getKey();
+        return key != null ? key.longValue() : null;
     }
 
     public ResponseEntity<Map<String, Object>> brisiVideoByUrl(int lekcijaId, String videoUrl) {

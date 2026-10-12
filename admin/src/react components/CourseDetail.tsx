@@ -106,7 +106,7 @@ export default function CourseDetail({
 
 
   const deleteMaterial = async (itemName: string) => {
-
+    if (!window.confirm("Da li ste sigurni da želite da obrišete ovaj materijal?")) return;
 
     try {
       const res1 = await fetch(`${API_URL}/api/delete-file`, {
@@ -118,6 +118,12 @@ export default function CourseDetail({
         body: JSON.stringify({ url: itemName }),
       });
 
+      if (!res1.ok) {
+        throw new Error(`Failed to delete material from database (status: ${res1.status})`);
+      }
+
+      // Odmah ukloni iz liste, bez čekanja na osvežavanje stranice
+      setMaterials((prev) => prev.filter((m) => m.url !== itemName));
 
       const filePath = `${itemName}`;
 
@@ -139,38 +145,55 @@ export default function CourseDetail({
   const handleDodajMaterijal = async () => {
     const file = fileInputRef.current?.files?.[0];
     if (!file) {
+      alert("Izaberite fajl.");
       return;
     }
     const FOLDER_PATH = `/uploads`;
     const formData = new FormData();
     setUploading(true);
-    const response2 = await fetch(`${API_URL}/api/dodajMaterijaluKurs/${selectedKurs?.id}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + accesToken
-      },
-      body: JSON.stringify({
-        url: FOLDER_PATH + "/" + file?.name,
-      })
-    });
+    try {
+      // Prvo upload na storage, pa tek onda upis u bazu, da u bazi ne ostane fajl koji ne postoji
+      formData.append("file", file);
+      formData.append("path", FOLDER_PATH);
+      const response = await fetch(`${API_URL}/api/upload-hetzner`, {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + accesToken
+        },
+        body: formData,
+      });
+      const uploadData = await response.json().catch(() => null);
+      if (!response.ok || String(uploadData?.message || "").startsWith("Greška")) {
+        throw new Error(uploadData?.message || "Upload materijala nije uspeo");
+      }
 
-    formData.append("file", file);
-    formData.append("path", FOLDER_PATH);
-    const response = await fetch(`${API_URL}/api/upload-hetzner`, {
-      method: "POST",
-      headers: {
-        "Authorization": "Bearer " + accesToken
-      },
-      body: formData,
-    });
+      const response2 = await fetch(`${API_URL}/api/dodajMaterijaluKurs/${selectedKurs?.id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + accesToken
+        },
+        body: JSON.stringify({
+          url: FOLDER_PATH + "/" + file.name,
+        })
+      });
+      if (!response2.ok) {
+        throw new Error("Upis materijala u bazu nije uspeo");
+      }
 
-    setUploading(false);
+      await fetchMaterials();
+      setShowAddMaterial(false);
+    } catch (error) {
+      console.error(error);
+      alert("Došlo je do greške prilikom dodavanja materijala.");
+    } finally {
+      setUploading(false);
+    }
   };
-  
+
   const handleSlikaChange = async (url: string, newUrlSlika: string) => {
     try {
-      const response = await fetch(`${API_URL}/api/materijali/addSlika`, {
+      const response = await fetch(`${API_URL}/api/materijali/addUrlSlika`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -183,25 +206,24 @@ export default function CourseDetail({
     }
   }
 
-  useEffect(() => {
+  async function fetchMaterials() {
     if (!selectedKurs?.id) return;
-
-    async function fetchMaterials() {
-      const materialsResponse = await fetch(`${API_URL}/api/materijaliZaKurs/${selectedKurs?.id}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accesToken}`,
-        },
-      }
-      );
-
-      if (materialsResponse.ok) {
-        const materialsData = await materialsResponse.json();
-        setMaterials(materialsData.materijali || []);
-      }
+    const materialsResponse = await fetch(`${API_URL}/api/materijaliZaKurs/${selectedKurs?.id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accesToken}`,
+      },
     }
+    );
 
+    if (materialsResponse.ok) {
+      const materialsData = await materialsResponse.json();
+      setMaterials(materialsData.materijali || []);
+    }
+  }
+
+  useEffect(() => {
     fetchMaterials();
   }, [selectedKurs?.id, accesToken, API_URL]);
 
@@ -209,11 +231,12 @@ export default function CourseDetail({
     if (!videoFiles || showAddVideo === null) return;
 
     setUploadingVideo(true);
+    const lekcijaId = showAddVideo;
     try {
-      for (const videoFile of videoFiles) {
+      for (const videoFile of Array.from(videoFiles)) {
         const formData = new FormData();
         formData.append("file", videoFile);
-        formData.append("lekcijaId", showAddVideo.toString());
+        formData.append("lekcijaId", lekcijaId.toString());
 
         const uploadHeaders: any = {};
         if (accesToken) uploadHeaders["Authorization"] = `Bearer ${accesToken}`;
@@ -230,11 +253,12 @@ export default function CourseDetail({
         const videoId = uploadData.videoId; // Ovo je vraćen folder name / ID na hetzneru
 
 
-        // 2. Osvežavanje UI-ja (dodaj video selektovanoj lekciji)
-        const updatedKurs = {
-          ...selectedKurs,
-          lekcije: selectedKurs.lekcije.map((l: any) => {
-            if (l.lekcijaId === showAddVideo) {
+        // 2. Osvežavanje UI-ja (dodaj video selektovanoj lekciji).
+        // Funkcijski update da se kod više fajlova ne izgubi nijedan video.
+        setSelectedKurs((prev: any) => prev && {
+          ...prev,
+          lekcije: prev.lekcije.map((l: any) => {
+            if (l.lekcijaId === lekcijaId) {
               return {
                 ...l,
                 videoUrls: [...(l.videoUrls || []), videoId]
@@ -242,11 +266,10 @@ export default function CourseDetail({
             }
             return l;
           })
-        };
-        setSelectedKurs(updatedKurs);
-        setShowAddVideo(null);
-        setvideoFiles(null);
+        });
       }
+      setShowAddVideo(null);
+      setvideoFiles(null);
     } catch (e) {
       console.error(e);
       alert("Došlo je do greške prilikom uploada videa.");
@@ -323,7 +346,6 @@ export default function CourseDetail({
         } else {
           console.error("Greška pri brisanju videa", await response.text());
         }
-        window.location.reload();
       }
     } catch (e) {
       console.error(e);
@@ -347,11 +369,13 @@ export default function CourseDetail({
       });
 
       if (response.ok) {
-        // Optimistički update ili ponovno učitavanje
         const data = await response.json();
-        // Backend treba da vrati lekcijaId, pretpostavimo da je u data.lekcijaId ili vraća poruku.
-        // Ako ne vraća lekcijaId, možemo pokušati refetch ili privremeni id
-        const lekcijaId = data.lekcijaId || Date.now();
+        // Server vraća pravi lekcijaId, pa se video može odmah dodati u novu lekciju
+        const lekcijaId = data.lekcijaId;
+        if (!lekcijaId) {
+          window.location.reload();
+          return;
+        }
         const updatedKurs = {
           ...selectedKurs,
           lekcije: [...(selectedKurs.lekcije || []), {

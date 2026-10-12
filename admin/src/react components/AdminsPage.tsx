@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
+const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
 interface Admin {
   userId: number;
   ime: string;
@@ -117,7 +119,7 @@ export default function AdminsPage({ admins, token }: AdminsPageProps) {
 
   async function dodajAdmina() {
     try {
-      const response = await fetch("/api/auth/register-admin", {
+      const response = await fetch(`${API_URL}/api/auth/register-admin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -132,7 +134,9 @@ export default function AdminsPage({ admins, token }: AdminsPageProps) {
       });
 
       if (!response.ok) {
-        console.error("Greška pri dodavanju admina:", await response.text());
+        const data = await response.json().catch(() => null);
+        console.error("Greška pri dodavanju admina:", data);
+        alert(data?.error || "Greška pri dodavanju admina.");
         return;
       }
       

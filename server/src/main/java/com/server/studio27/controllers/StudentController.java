@@ -2,17 +2,25 @@ package com.server.studio27.controllers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import com.server.studio27.services.MailService;
+
 @Service
 public class StudentController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private MailService mailService;
 
     public Map<String, Object> getStudents() {
         try {
@@ -86,6 +94,10 @@ public class StudentController {
             jdbcTemplate.update(deletePohadjaSQL, studentId);
             System.out.println("Deleted from pohadja for studentId: " + studentId);
 
+            // slika.recenzijaId je strani kljuc ka recenziji, pa ga prvo treba osloboditi
+            String unlinkSlikeSQL = "UPDATE slika SET recenzijaId = NULL WHERE recenzijaId IN (SELECT recenzijaId FROM recenzija WHERE studentId = ?)";
+            jdbcTemplate.update(unlinkSlikeSQL, studentId);
+
             String deleteFromRecenzije = "DELETE FROM recenzija WHERE studentId = ?";
             jdbcTemplate.update(deleteFromRecenzije, studentId);
 
@@ -110,26 +122,68 @@ public class StudentController {
 
     public String editStudentAsAdmin(Map<String, Object> studentData) {
         try {
-            String updateUserSQL = "UPDATE user SET email = ?, password = ? WHERE userId = ?";
-            jdbcTemplate.update(updateUserSQL, studentData.get("email"), studentData.get("password"), studentData.get("studentId"));
+            Object studentId = studentData.get("studentId");
+
+            // Lozinka se ovde namerno NE menja (admin forma je i ne salje)
+            String updateUserSQL = "UPDATE user SET email = ? WHERE userId = ?";
+            jdbcTemplate.update(updateUserSQL, studentData.get("email"), studentId);
 
             String updateStudentSQL = "UPDATE student SET ime = ?, prezime = ?, brojTelefona = ? WHERE studentId = ?";
-            jdbcTemplate.update(updateStudentSQL, studentData.get("ime"), studentData.get("prezime"), studentData.get("brojTelefona"), studentData.get("studentId"));
-            
-            String deletePohadjaSQL = "DELETE FROM pohadja WHERE studentId = ?";
-            jdbcTemplate.update(deletePohadjaSQL, studentData.get("studentId"));
-            for (Integer kurs : (List<Integer>) studentData.get("kursevi")) {
-                String checkPohadjaSQL = "SELECT COUNT(*) FROM pohadja WHERE studentId = ? AND kursId = ?";
-                Integer count = jdbcTemplate.queryForObject(checkPohadjaSQL, new Object[]{studentData.get("studentId"), kurs}, Integer.class);
-                if (count == 0) {
-                    String insertPohadjaSQL = "INSERT INTO pohadja (studentId, kursId) VALUES (?, ?)";
-                    jdbcTemplate.update(insertPohadjaSQL, studentData.get("studentId"), kurs);
+            jdbcTemplate.update(updateStudentSQL, studentData.get("ime"), studentData.get("prezime"), studentData.get("brojTelefona"), studentId);
+
+            // Kursevi koje je student imao pre izmene, da znamo kome treba poslati mail
+            Set<Integer> stariKursevi = new HashSet<>(jdbcTemplate.queryForList(
+                    "SELECT kursId FROM pohadja WHERE studentId = ?", Integer.class, studentId));
+
+            Set<Integer> noviKursevi = new LinkedHashSet<>();
+            Object kurseviRaw = studentData.get("kursevi");
+            if (kurseviRaw instanceof List<?> lista) {
+                for (Object kurs : lista) {
+                    if (kurs instanceof Number broj) {
+                        noviKursevi.add(broj.intValue());
+                    }
                 }
             }
-            
+
+            String deletePohadjaSQL = "DELETE FROM pohadja WHERE studentId = ?";
+            jdbcTemplate.update(deletePohadjaSQL, studentId);
+            for (Integer kurs : noviKursevi) {
+                String insertPohadjaSQL = "INSERT INTO pohadja (studentId, kursId) VALUES (?, ?)";
+                jdbcTemplate.update(insertPohadjaSQL, studentId, kurs);
+            }
+
+            for (Integer kurs : noviKursevi) {
+                if (!stariKursevi.contains(kurs)) {
+                    posaljiMailDodatNaKurs((String) studentData.get("email"), (String) studentData.get("ime"), kurs);
+                }
+            }
+
             return "Student updated successfully";
         } catch (Exception e) {
             return "Error updating student: " + e.getMessage();
+        }
+    }
+
+    private void posaljiMailDodatNaKurs(String email, String ime, Integer kursId) {
+        if (email == null || email.isBlank()) {
+            return;
+        }
+        try {
+            List<String> nazivi = jdbcTemplate.queryForList("SELECT naziv FROM kurs WHERE kursId = ?", String.class, kursId);
+            String nazivKursa = nazivi.isEmpty() ? "" : nazivi.get(0);
+
+            String pozdrav = ime != null && !ime.isBlank() ? " " + ime.trim() : "";
+            String subject = "Dodati ste na kurs " + nazivKursa;
+            String body = "<p>Poštovani/a" + pozdrav + ",</p>" +
+                    "<p>Obaveštavamo vas da ste dodati na kurs <strong>" + nazivKursa + "</strong>. " +
+                    "Kurs je sada aktivan na vašem nalogu i možete početi sa učenjem.</p>" +
+                    "<p>Ako još uvek nemate lozinku, na stranici za prijavu kliknite na <em>Zaboravljena lozinka</em> i postavite novu.</p>" +
+                    "<center><a href='" + mailService.getFrontendUrl() + "' class='btn'>PRIJAVI SE</a></center>";
+
+            mailService.sendHtmlEmail(email, subject, null, body);
+        } catch (Exception e) {
+            // Neuspeh slanja maila ne sme da obori izmenu studenta
+            System.err.println("Greška pri slanju maila o dodavanju na kurs " + kursId + " za " + email + ": " + e.getMessage());
         }
     }
     public List<String> getStudentMails(){

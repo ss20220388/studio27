@@ -58,6 +58,19 @@ export default function CoursesPage({accesToken}: {accesToken: string | null}) {
   const [showDeleteCourse, setShowDeleteCourse] = useState(false);
   const [courseToEditOrDelete, setCourseToEditOrDelete] = useState<Kurs | null>(null);
 
+  // Svaka izmena otvorenog kursa (nova lekcija, video...) se odmah upisuje i u listu,
+  // da se po povratku na listu ne prikazuju stari podaci do osvežavanja stranice
+  useEffect(() => {
+    if (!selectedKurs) return;
+    setKursevi((prev) => prev.map((k) => (k.id === selectedKurs.id ? selectedKurs : k)));
+  }, [selectedKurs]);
+
+  // Modal za izmenu kursa sme da osveži detalje samo ako je taj kurs već otvoren,
+  // a ne da otvori detalje kada se kurs menja iz liste
+  const azurirajOtvoreniKurs = (kurs: Kurs | null) => {
+    setSelectedKurs((prev) => (kurs === null ? null : prev && prev.id === kurs.id ? kurs : prev));
+  };
+
   const fetchKursevi = async () => {
     try {
       setLoading(true);
@@ -139,7 +152,7 @@ export default function CoursesPage({accesToken}: {accesToken: string | null}) {
         setShowDeleteModal={setShowDeleteCourse}
         selectedKurs={courseToEditOrDelete}
         onRefresh={fetchKursevi}
-        setSelectedKurs={setSelectedKurs} 
+        setSelectedKurs={azurirajOtvoreniKurs}
         API_URL={API_URL}
         accesToken={accesToken}
       />

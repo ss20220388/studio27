@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,7 +26,13 @@ public class UserRoute {
     }
 
     @PostMapping("/unlock-device")
-    public ResponseEntity<?> unlockDevice(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> unlockDevice(@RequestBody Map<String, String> request, Authentication authentication) {
+        // Otkljucavanje uredjaja sme samo admin (ruta je javna u SecurityConfig)
+        boolean isAdmin = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ADMIN".equals(a.getAuthority()));
+        if (!isAdmin) {
+            return ResponseEntity.status(403).body(Map.of("error", "Nemate dozvolu"));
+        }
         String email = request.get("email");
         userController.unlockDevice(email);
         return ResponseEntity.ok(Map.of("message", "Uredjaj je otkljucan za " + email));

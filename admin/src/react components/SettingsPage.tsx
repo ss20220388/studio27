@@ -19,17 +19,27 @@ export default function SettingsPage({ token, apiUrl,clientUrl }: { token: strin
     const meData = await meResponse.json();
     
     
-     await fetch(`${apiUrl}/api/admin-delete/${meData.userId}`, {
+    // Ruta je DELETE na serveru; ranije je išao GET pa se nalog nikad nije brisao
+    const deleteResponse = await fetch(`${apiUrl}/api/admin-delete/${meData.userId}`, {
+      method: "DELETE",
       headers:{"Authorization": `Bearer ${token}`}
     });
 
     setShowDeleteConfirm(false);
+    if (!deleteResponse.ok) {
+      setInfoMessage({
+        show: true,
+        title: "Greška",
+        text: "Brisanje naloga nije uspelo. Pokušajte ponovo."
+      });
+      return;
+    }
     setInfoMessage({
       show: true,
       title: "Nalog je obrisan",
-      text: "Vaš nalog je uspešno obrisan. U pravoj integraciji bi usledila redirekcija na prijavu."
+      text: "Vaš nalog je uspešno obrisan."
     });
-    await fetch(`${apiUrl}/api/logout`, {headers:{"Authorization": `Bearer ${token}`}});
+    await fetch(`${apiUrl}/api/auth/logout`, { method: "POST", credentials: "include" });
     window.location.replace(clientUrl)
   };
 

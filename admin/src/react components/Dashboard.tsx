@@ -29,7 +29,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         {payload.map((entry: any, i: number) => (
           <p key={i} className="text-sm font-medium" style={{ color: entry.color }}>
             {entry.name === "zarada"
-              ? `${(entry.value).toFixed(0)}$`
+              ? `${(entry.value).toFixed(0)} €`
               : `${entry.value} korisnika`}
           </p>
         ))}
@@ -67,7 +67,7 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
       },
       {
         label: "Prihod ovog meseca",
-        value: stats?.prihodiOvogMeseca ?? "0 $",
+        value: `${stats?.prihodiOvogMeseca ?? 0} €`,
         up: true,
         icon: (
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
@@ -173,7 +173,7 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
                   axisLine={{ stroke: "#262626" }}
                   tickLine={false}
                   tickFormatter={(v: number) =>
-                    chartTab === "zarada" ? `${(v).toFixed(0)}$` : `${v}`
+                    chartTab === "zarada" ? `${(v).toFixed(0)} €` : `${v}`
                   }
                 />
                 <Tooltip content={<CustomTooltip />} />
