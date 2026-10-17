@@ -1,8 +1,8 @@
 ---
+import { API_URL } from "../lib/adrese";
 import Layout from "../layouts/Layout.astro";
 import UsersPage from "../react components/UsersPage";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 // 1. Preuzimanje tokena iz kolačića
 const accessToken = Astro.cookies.get("refreshToken")?.value;

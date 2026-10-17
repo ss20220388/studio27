@@ -1,12 +1,32 @@
 ---
-import Header2 from "../components/Header2.astro";
+import { API_URL } from "../data/sajt";
+import Zaglavlje from "../components/novo/Zaglavlje.astro";
 import Footer from "../components/Footer.astro";
 import ErrorToastNotifier from "../react-components/ErrorToastNotifier";
 import CartModal from "../react-components/CartModal";
+import LoginSectionForm from "../react-components/LoginSectionForm.tsx";
+import KontakModal from "../react-components/KontakModal.tsx";
 import "../styles/global.css";
 
 const accessToken = Astro.cookies.get("refreshToken")?.value;
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+
+// Server odmah prepoznaje ulogovanog korisnika (dugme "Moja aplikacija" u zaglavlju)
+let korisnik: Record<string, unknown> | null = null;
+if (accessToken) {
+  try {
+    const res = await fetch(`${API_URL}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (res.ok) {
+      const podaci = await res.json();
+      if (podaci && !podaci.error) korisnik = podaci;
+    }
+  } catch {
+    korisnik = null;
+  }
+}
+(Astro.locals as any).korisnik = korisnik;
+const imaZaglavlje = Astro.slots.has("zaglavlje");
 
 export interface Props {
   title: string;
@@ -20,6 +40,11 @@ export interface Props {
   articlePublishedTime?: string;
   articleModifiedTime?: string;
 
+  // Novi dizajn: stranica bez zaglavlja/podnožja (mini kviz) i boja pozadine
+  bezZaglavlja?: boolean;
+  bezPodnozja?: boolean;
+  pozadina?: string;
+
   // Strukturirani podaci (Schema.org)
   breadcrumbs?: Array<{ name: string; url: string }>;
   faq?: Array<{ question: string; answer: string }>;
@@ -32,14 +57,18 @@ export interface Props {
     educationalLevel?: string;
     inLanguage?: string;
     courseMode?: string;
+    // cena u evrima (Google prikazuje cenu kursa u rezultatima)
+    cena?: number;
   };
+  // Dodatni JSON-LD objekti koje stranica sama sastavlja (npr. detaljan Course sa recenzijama)
+  schema?: Record<string, unknown>[];
 }
 
 const {
   title,
-  description = "27 archviz – profesionalni kurs 3ds Max i arhitektonske vizualizacije. Naučite 3D modelovanje, renderovanje i archviz od osnova do naprednog nivoa.",
-  image = "/images/default-seo-image.png",
-  imageAlt = "27 archviz – 3ds Max i arhitektonska vizualizacija kurs",
+  description = "Studio 27 – škola arhitektonske vizualizacije. Kursevi 3ds Max + Corona, vizualizacije eksterijera, dizajna enterijera i AI prezentacije, online i uživo.",
+  image = "/images/og-main.webp",
+  imageAlt = "Studio 27 – kursevi 3ds Max i arhitektonske vizualizacije",
   canonicalURL = new URL(Astro.url.pathname, Astro.site || Astro.url.origin),
   keywords = "3ds Max kurs, 3D modelovanje, Corona Render obuka, arhitektonska vizualizacija, archviz kurs Srbija",
   noIndex = false,
@@ -49,6 +78,10 @@ const {
   breadcrumbs = [],
   faq = [],
   course,
+  schema = [],
+  bezZaglavlja = false,
+  bezPodnozja = false,
+  pozadina = "#ffffff",
 } = Astro.props;
 
 // Kolačići i URL priprema
@@ -67,29 +100,36 @@ if (!image.startsWith("http://") && !image.startsWith("https://")) {
 
 const defaultBreadcrumbs = [{ name: "Početna", url: siteURL }, ...breadcrumbs];
 
+const OPIS_ORGANIZACIJE =
+  "Studio 27 – škola arhitektonske vizualizacije i dizajna enterijera. Kursevi 3ds Max + Corona, vizualizacije eksterijera, dizajna enterijera i AI prezentacije, online i uživo.";
+// Dimenzije su poznate samo za podrazumevanu sliku za deljenje
+const podrazumevanaSlika = image === "/images/og-main.webp";
+
 // --- GENERISANJE SCHEMA.ORG JSON-LD PODATAKA ---
 
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "27 archviz",
+  name: "Studio 27 – 27 archviz",
   url: siteURL,
-  logo: new URL("/images/logo.png", siteURL).toString(),
+  logo: new URL("/icon-512.png", siteURL).toString(),
   image: fullImageURL,
-  description,
+  description: OPIS_ORGANIZACIJE,
   address: {
     "@type": "PostalAddress",
+    addressLocality: "Novi Beograd",
     addressCountry: "RS",
   },
+  sameAs: ["https://www.instagram.com/studio27.visualization/"],
 };
 
 const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "27 archviz",
+  name: "Studio 27 – 27 archviz",
   url: siteURL,
   inLanguage: "sr-RS",
-  description,
+  description: OPIS_ORGANIZACIJE,
 };
 
 const breadcrumbSchema =
@@ -132,7 +172,7 @@ const courseSchema = course
       image: course.image || fullImageURL,
       provider: {
         "@type": "Organization",
-        name: course.provider || "27 archviz",
+        name: course.provider || "Studio 27 – 27 archviz",
         sameAs: siteURL,
       },
       educationalLevel: course.educationalLevel || "beginner to advanced",
@@ -142,6 +182,18 @@ const courseSchema = course
         courseMode: course.courseMode || "online",
         courseWorkload: "PT20H",
       },
+      ...(course.cena
+        ? {
+            offers: {
+              "@type": "Offer",
+              price: course.cena,
+              priceCurrency: "EUR",
+              category: "Paid",
+              availability: "https://schema.org/InStock",
+              url: course.url || canonical,
+            },
+          }
+        : {}),
     }
   : null;
 
@@ -173,7 +225,7 @@ const robotsContent = noIndex
     <meta name="title" content={title} />
     <meta name="description" content={description} />
     <meta name="keywords" content={keywords} />
-    <meta name="author" content="27 archviz" />
+    <meta name="author" content="Studio 27" />
     <meta name="language" content="Serbian" />
     <meta name="robots" content={robotsContent} />
     <meta
@@ -189,21 +241,19 @@ const robotsContent = noIndex
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#1a1a1a" />
-    <meta name="msapplication-TileColor" content="#1a1a1a" />
-    <meta name="msapplication-config" content="/browserconfig.xml" />
+    <meta name="theme-color" content="#ffffff" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content={type} />
-    <meta property="og:site_name" content="27 archviz" />
+    <meta property="og:site_name" content="Studio 27 – 27 archviz" />
     <meta property="og:locale" content="sr_RS" />
     <meta property="og:url" content={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={fullImageURL} />
     <meta property="og:image:alt" content={imageAlt} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    {podrazumevanaSlika && <meta property="og:image:width" content="1200" />}
+    {podrazumevanaSlika && <meta property="og:image:height" content="630" />}
 
     {
       articlePublishedTime && (
@@ -221,7 +271,6 @@ const robotsContent = noIndex
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@studio27archviz" />
     <meta name="twitter:url" content={canonical} />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
@@ -262,6 +311,8 @@ const robotsContent = noIndex
       )
     }
 
+    {schema.map((objekat) => <script type="application/ld+json" set:html={JSON.stringify(objekat)} />)}
+
     <!-- Dinamički Preload za primarnu sliku (Poboljšava LCP) -->
     <link rel="preload" as="image" href={fullImageURL} fetchpriority="high" />
 
@@ -269,22 +320,9 @@ const robotsContent = noIndex
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap"
-    />
-    <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap"
-      media="print"
-      onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Poppins:wght@500;600;700;800;900&display=swap"
     />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap"
-      />
-    </noscript>
 
     <!-- Google tag (gtag.js) -->
     <script
@@ -324,18 +362,82 @@ const robotsContent = noIndex
     <!-- End Meta Pixel Code -->
   </head>
 
-  <body class="relative bg-[#18181b]">
+  <body class="relative text-neutral-900" style={`background:${pozadina}`}>
     <ErrorToastNotifier losGmailCookie={losGmailCookie} client:load />
 
-    <div class="fixed top-0 left-0 w-full z-[1000]">
-      <Header2 />
+    <CartModal accessToken={accessToken} client:load />
+    <LoginSectionForm publicApiUrl={API_URL} client:load />
+    <KontakModal bezDugmeta client:idle />
+
+    <div class="w-full overflow-x-clip">
+      {!bezZaglavlja && (imaZaglavlje ? <slot name="zaglavlje" /> : <Zaglavlje />)}
+      <slot />
+      {!bezPodnozja && <Footer />}
     </div>
 
-    <CartModal accessToken={accessToken} client:load />
+    <script>
+      // Elementi sa klasom .pojava se pojavljuju kada uđu u ekran
+      const posmatrac = new IntersectionObserver(
+        (unosi) => {
+          for (const u of unosi) {
+            if (u.isIntersecting) {
+              u.target.classList.add("vidljivo");
+              posmatrac.unobserve(u.target);
+            }
+          }
+        },
+        { threshold: 0.12, rootMargin: "0px 0px -40px 0px" },
+      );
+      document.querySelectorAll(".pojava").forEach((el) => posmatrac.observe(el));
 
-    <main class="pt-[70px] w-screen overflow-hidden">
-      <slot />
-      <Footer />
-    </main>
+      // Zajednička dugmad novog dizajna (bez React-a, radi na svim stranicama)
+      document.addEventListener("click", (e) => {
+        const cilj = e.target as HTMLElement | null;
+        if (!cilj) return;
+
+        // "Kupi kurs" -> dodaj u korpu i otvori CartModal (isti tok plaćanja kao ranije)
+        const kupi = cilj.closest<HTMLElement>("[data-kupi-kurs]");
+        if (kupi) {
+          e.preventDefault();
+          try {
+            const kurs = JSON.parse(kupi.dataset.kupiKurs || "{}");
+            let korpa: any[] = [];
+            try {
+              korpa = JSON.parse(localStorage.getItem("cart_items") || "[]");
+            } catch {
+              korpa = [];
+            }
+            if (!korpa.some((s) => s.id === kurs.id)) {
+              korpa.push({ ...kurs, quantity: 1 });
+            }
+            localStorage.setItem("cart_items", JSON.stringify(korpa));
+            window.dispatchEvent(new CustomEvent("cart-updated", { detail: korpa }));
+          } catch (err) {
+            console.error("Greška pri dodavanju u korpu:", err);
+          }
+          return;
+        }
+
+        if (cilj.closest("[data-otvori-kontakt]")) {
+          e.preventDefault();
+          window.dispatchEvent(new Event("openKontaktModal"));
+          return;
+        }
+
+        if (cilj.closest("[data-otvori-login]")) {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent("open-login"));
+          return;
+        }
+
+        const meniDugme = cilj.closest("[data-meni-dugme]");
+        const meni = document.getElementById("s27-nav-mobilni");
+        if (meniDugme && meni) {
+          meni.classList.toggle("hidden");
+          return;
+        }
+        if (meni && !meni.contains(cilj)) meni.classList.add("hidden");
+      });
+    </script>
   </body>
 </html>

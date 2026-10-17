@@ -1,8 +1,8 @@
 ---
+import { API_URL, CLIENT_URL } from "../../lib/adrese";
 import Layout from "../../layouts/Layout.astro";
 import KursPlayer from "../../react components/KursPlayer";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 const token = Astro.cookies.get("refreshToken")?.value || null;
 let pohadjanje = null;
 let userData = null;
@@ -30,9 +30,10 @@ try {
 } catch (error) {
   console.error("Error fetching data:", error);
 }
-klipIlekcijeData.lekcije.sort((a:any, b:any) => {
-  return a.lekcijaId - b.lekcijaId;
-});
+// Ako API ne vrati lekcije (npr. pogrešan id ili istekla sesija), stranica ne sme da pukne
+if (Array.isArray(klipIlekcijeData?.lekcije)) {
+  klipIlekcijeData.lekcije.sort((a: any, b: any) => a.lekcijaId - b.lekcijaId);
+}
 
 
 
@@ -43,7 +44,7 @@ klipIlekcijeData.lekcije.sort((a:any, b:any) => {
     {
       pohadjanje ? (
         <KursPlayer
-          lekcije={klipIlekcijeData.lekcije}
+          lekcije={klipIlekcijeData.lekcije ?? []}
           materijali={materijaliData}
           token={token}
           API_URL={API_URL}
@@ -51,7 +52,8 @@ klipIlekcijeData.lekcije.sort((a:any, b:any) => {
         />
       ) : (
         <div class="bg-red-900/15 border border-red-900/20 text-red-400 p-4 rounded-xl text-sm">
-          Niste upisani na ovaj kurs.
+          Niste upisani na ovaj kurs.{" "}
+          <a href={CLIENT_URL + "/kurs/" + Astro.params.id} class="underline font-medium">Pogledaj kurs na sajtu</a>
         </div>
       )
     }

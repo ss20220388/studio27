@@ -1,6 +1,6 @@
 ---
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
-const CLIENT_URL = import.meta.env.PUBLIC_CLIENT_URL || "http://studio27.rs";
+import { API_URL, CLIENT_URL } from "../lib/adrese";
+import TemaDugme from "./TemaDugme.astro";
 const token = Astro.cookies.get("refreshToken")?.value || null;
 const response = await fetch(`${API_URL}/api/auth/me`, {
     headers: {
@@ -164,6 +164,7 @@ const navSections = [
         <p class="text-[10px] text-neutral-500">Korisnik</p>
       </div>
     </div>
+    <TemaDugme class="w-full justify-center py-2.5" />
     <!-- Logout -->
     <button
       onclick={`

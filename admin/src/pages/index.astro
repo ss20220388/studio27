@@ -1,70 +1,41 @@
 ---
+import { API_URL } from "../lib/adrese";
 import Layout from "../layouts/Layout.astro";
 import Dashboard from "../react components/Dashboard";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
-
-let students = [];
 const token = Astro.cookies.get("refreshToken")?.value;
+const zaglavlja = token ? { Authorization: `Bearer ${token}` } : {};
 
-try {
-	const sviStudentiRes = await fetch(`${API_URL}/api/students`, {
-		method: "GET",
-		headers: {
-			Authorization: `Bearer ${token}`,
-		},
-		credentials: "include"
-	});
-	
-	if (!sviStudentiRes.ok) {
-		students = [];
-	} else {
-		students = await sviStudentiRes.json();
+// Svaki poziv je zaštićen: ako API vrati grešku, stranica i dalje radi sa praznim podacima
+async function ucitaj(putanja: string): Promise<any> {
+	try {
+		const res = await fetch(`${API_URL}${putanja}`, { headers: zaglavlja });
+		if (!res.ok) {
+			console.error(`Dashboard: ${putanja} vratio ${res.status}`);
+			return null;
+		}
+		return await res.json();
+	} catch (error) {
+		console.error(`Dashboard: greška za ${putanja}`, error);
+		return null;
 	}
-} catch (error) {
-	students = [];
-}
-let prihodi = [];
-try{
-	const prihodiRes = await fetch(`${API_URL}/api/kupljeni-poslednjih-12meseci`, {
-	method: "GET",
-	headers: {
-		Authorization: `Bearer ${token}`,
-	},
-	credentials: "include"
-});
-	prihodi = await prihodiRes.json();
-
-}catch(error){
 }
 
-let kursProdatoOvajMesec = [];
-try{
-	const kursProdatoOvajMesecRes = await fetch(`${API_URL}/api/kurs-prodato-ovaj-mesec`, {
-	method: "GET",
-	headers: {
-		Authorization: `Bearer ${token}`,
-	},
-});
-	kursProdatoOvajMesec = await kursProdatoOvajMesecRes.json();
-}catch(error){
-}
+const [studentiOdg, prihodiOdg, prodatoOdg, statsOdg] = await Promise.all([
+	ucitaj("/api/students"),
+	ucitaj("/api/kupljeni-poslednjih-12meseci"),
+	ucitaj("/api/kurs-prodato-ovaj-mesec"),
+	ucitaj("/api/admin-stats"),
+]);
 
-let stats = []
-
-try{
-	const statsRes = await fetch(`${API_URL}/api/admin-stats`, {
-	method: "GET",
-	headers: {
-		Authorization: `Bearer ${token}`,
-	},
-});
-	stats = await statsRes.json();
-}catch(error){
-}
-
+const niz = (v: unknown) => (Array.isArray(v) ? v : []);
+// Najnoviji korisnici prvi (veći id = kasnije registrovan)
+const students = niz(studentiOdg?.students).sort((a: any, b: any) => Number(b.studentId) - Number(a.studentId));
+const prihodi = niz(prihodiOdg?.data);
+const kursProdato = niz(prodatoOdg?.data);
+const stats = statsOdg && !statsOdg.error ? statsOdg : {};
 ---
 
 <Layout title="Dashboard">
-	<Dashboard client:load students={students.students} prihodi={prihodi.data} kursProdato={kursProdatoOvajMesec.data} stats = {stats} />
+	<Dashboard client:load students={students} prihodi={prihodi} kursProdato={kursProdato} stats={stats} />
 </Layout>

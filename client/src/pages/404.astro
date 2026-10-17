@@ -1,20 +1,17 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout title="404 - Stranica nije pronađena" description="Stranica koju tražite ne postoji.">
-  <main class="min-h-[70vh] flex flex-col items-center justify-center px-4 text-center">
-    <h1 class="text-9xl font-bold text-gray-800 mb-4">404</h1>
-    <h2 class="text-3xl font-semibold text-gray-700 mb-6">Stranica nije pronađena</h2>
-    <p class="text-lg text-gray-600 mb-8 max-w-md">
-      Izgleda da stranica koju tražite ne postoji, premeštena je ili je privremeno nedostupna.
+<Layout title="Stranica nije pronađena | Studio 27" description="Stranica koju tražite ne postoji ili je premeštena." noIndex>
+  <main class="min-h-[70vh] max-w-[1400px] mx-auto px-5 md:px-10 flex flex-col justify-center py-24">
+    <p class="text-[11px] font-medium uppercase tracking-[0.26em] text-neutral-500">Greška 404</p>
+    <h1 class="mt-5 font-serif text-[48px] md:text-[80px] leading-[0.98] tracking-[-0.025em]">Ova stranica ne postoji.</h1>
+    <p class="mt-6 max-w-[480px] text-[16px] leading-relaxed text-neutral-600">
+      Možda je premeštena ili je link pogrešan. Pogledaj naše kurseve ili se vrati na početnu stranu.
     </p>
-    <a 
-      href="/" 
-      aria-label="Vrati se na početnu stranicu"
-      class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors duration-300"
-    >
-      Vrati se na početnu
-    </a>
+    <div class="mt-10 flex flex-wrap gap-3">
+      <a href="/" class="bg-neutral-900 px-8 py-4 text-[13px] font-medium text-white hover:bg-black transition-colors">Početna strana</a>
+      <a href="/#edukacije" class="border border-neutral-900 px-8 py-4 text-[13px] font-medium hover:bg-neutral-900 hover:text-white transition-colors">Kursevi</a>
+    </div>
   </main>
 </Layout>

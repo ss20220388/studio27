@@ -1,3 +1,4 @@
+import { API_URL } from "../lib/adrese";
 import React from "react";
 import KursDetaljiModal from "./KursDetaljiModal";
 
@@ -8,7 +9,6 @@ const ReactKurs = ({
     unpaid = true,
     paid = true,
 }) => {
-    const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
     const [pohadjanje, setPohadjanje] = React.useState(null);
     const [loading, setLoading] = React.useState(true);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -89,7 +89,7 @@ const ReactKurs = ({
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/60 to-black/40" />
 
-                    <div className="relative z-10 h-full flex flex-col justify-between p-6 text-white pointer-events-none">
+                    <div data-preko-slike className="relative z-10 h-full flex flex-col justify-between p-6 text-white pointer-events-none">
                         <div>
                             <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 drop-shadow-md">
                                 {kurs.naziv}
@@ -113,7 +113,7 @@ const ReactKurs = ({
                 </div>
 
                 {!pohadjanje && unpaid && (
-                    <div className="absolute inset-0 rounded-xl cursor-pointer overflow-hidden pointer-events-none" style={{ zIndex: 10 }}
+                    <div data-preko-slike className="absolute inset-0 rounded-xl cursor-pointer overflow-hidden pointer-events-none" style={{ zIndex: 10 }}
                         onClick={() => setIsModalOpen(true)}
                     >
                         <div

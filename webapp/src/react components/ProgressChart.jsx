@@ -9,9 +9,9 @@ import {
 } from "recharts";
 
 const COLORS = [
-    "#34d399",
-    "#7f1d1d",
-    "#525252"
+    "var(--color-emerald-400)",
+    "var(--color-red-900)",
+    "var(--color-neutral-600)"
 ];
 
 export default function ProgressChart({
@@ -52,10 +52,10 @@ export default function ProgressChart({
 
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: "#faf5f5",
-                            border: "1px solid #c7bdbd",
+                            backgroundColor: "var(--color-neutral-900)",
+                            border: "1px solid var(--color-neutral-700)",
                             borderRadius: "8px",
-                            color: "#e5e5e5",
+                            color: "var(--color-neutral-200)",
                             fontSize: "12px",
                         }}
                     />
@@ -64,7 +64,7 @@ export default function ProgressChart({
                         verticalAlign="bottom"
                         height={36}
                         formatter={(value) => (
-                            <span style={{ color: "#a3a3a3", fontSize: "12px" }}>
+                            <span style={{ color: "var(--color-neutral-400)", fontSize: "12px" }}>
                                 {value}
                             </span>
                         )}

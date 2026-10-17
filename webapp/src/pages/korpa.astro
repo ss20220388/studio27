@@ -1,9 +1,9 @@
 ---
+import { API_URL } from "../lib/adrese";
 import Layout from "../layouts/Layout.astro";
 
 import ReactKurs from "../react components/ReactKurs";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
 const token = Astro.cookies.get("refreshToken")?.value || null;
 let kursevi: any[] = [];
 let userData: any = { userId: null };

@@ -1,3 +1,4 @@
+import { API_URL } from "../lib/adrese";
 import React, { useState, useEffect } from "react";
 
 import CourseList from "./CourseList";
@@ -35,7 +36,6 @@ interface Lekcija {
 
 
 export default function CoursesPage({accesToken}: {accesToken: string | null}) {
-  const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
   
   const getImageUrl = (slikaUrl: string | undefined): string | null => {
     if (!slikaUrl) return null;

@@ -1,149 +1,148 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import SectionLearningCurve from "../components/SectionLearningCurve.astro";
-import KurseviSection from "../components/KurseviSection.astro";
 import ONamaSection from "../components/ONamaSection.astro";
-import RecenzijeSection from "../components/RecenzijeSection.astro";
-import AnimateSlika from "../components/AnimateSlika.astro";
+import Zaglavlje from "../components/novo/Zaglavlje.astro";
+import Hero from "../components/pocetna/Hero.astro";
+import Kursevi from "../components/pocetna/Kursevi.astro";
+import KvizPoziv from "../components/pocetna/KvizPoziv.astro";
+import ZastoStudio from "../components/pocetna/ZastoStudio.astro";
+import RadoviIUtisci from "../components/pocetna/RadoviIUtisci.astro";
+import Pitanja from "../components/pocetna/Pitanja.astro";
+import ZavrsniPoziv from "../components/pocetna/ZavrsniPoziv.astro";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
-const SITE_URL = "https://27archviz.com";
+import { CLIENT_URL, imaCenu, lepNaziv, slikaIzBaze, ucitajKurseve, ucitajSporedneSlike } from "../data/sajt";
 
-// Dohvatanje slike glavnog kursa za OpenGraph / SEO kartice
-let primarySeoImage = `${SITE_URL}/images/og-main.webp`;
+const SITE_URL = CLIENT_URL;
 
-try {
-  const res = await fetch(`${API_URL}/api/kursevi/7`);
-  if (res.ok) {
-    const kursData = await res.json();
-    if (kursData?.slikaUrl) {
-      primarySeoImage = kursData.slikaUrl.startsWith("http")
-        ? kursData.slikaUrl
-        : `${API_URL}/api/uploaded-images${kursData.slikaUrl.startsWith("/") ? "" : "/"}${kursData.slikaUrl}`;
-    }
-  }
-} catch (e) {
-  console.error("Greška pri dohvatanju SEO slike za početnu:", e);
+// Svi kursevi i sve njihove slike dolaze iz baze (glavna slika + ostale slike kursa)
+const kursevi = await ucitajKurseve();
+const sporedne = await Promise.all(kursevi.map((k) => ucitajSporedneSlike(k.id)));
+
+// Slajdovi: za svaki kurs prva od ostalih slika (veće su), a ako ih nema, glavna slika
+const slajdovi = kursevi.map((k, i) => ({
+  id: k.id,
+  naziv: lepNaziv(k.naziv),
+  oznaka: k.glavniKurs || "",
+  slika: sporedne[i][0] || slikaIzBaze(k.slikaUrl),
+}));
+
+// Ostale slike svih kurseva, naizmenično po kursu, za sekcije bez posebnog kursa
+const sveSporedne: string[] = [];
+for (let r = 0; r < Math.max(0, ...sporedne.map((s) => s.length)); r++) {
+  sporedne.forEach((s) => s[r + 1] && sveSporedne.push(s[r + 1]));
 }
+const seoSlika = slajdovi[0]?.slika || `${SITE_URL}/images/og-main.webp`;
 
-// Schema.org Edukativna Organizacija i Lista Kurseva za Google Rich Snippets
+const pitanja = [
+  {
+    question: "Da li mi je potrebno prethodno iskustvo?",
+    answer:
+      "Nije. Kursevi 3ds Max + Corona i dizajna enterijera kreću od samih osnova i vode te korak po korak do profesionalnog nivoa. Za kurs eksterijera je poželjno poznavanje osnova 3ds Max-a.",
+  },
+  {
+    question: "Kakvi formati kurseva postoje?",
+    answer:
+      "Nudimo nasnimljene video kurseve sa neograničenim pristupom, vežbama i fajlovima za samostalno učenje, kao i nastavu uživo — individualno (1 na 1) ili u manjim grupama.",
+  },
+  {
+    question: "Koliko dugo imam pristup kursu?",
+    answer: "Pristup nasnimljenim kursevima je neograničen. Lekcije možeš gledati kad god ti odgovara i vraćati im se koliko god puta želiš.",
+  },
+  {
+    question: "Da li dobijam podršku i feedback?",
+    answer:
+      "Da. Svi polaznici imaju podršku u privatnom chatu, feedback na svoje radove i odgovore na pitanja tokom i nakon kursa.",
+  },
+  {
+    question: "Kako se plaća kurs i kada dobijam pristup?",
+    answer:
+      "Kurs možeš platiti karticom online ili uplatnicom. Nakon uspešne uplate kurs se pojavljuje u tvojoj web aplikaciji, gde odmah počinješ sa učenjem.",
+  },
+  {
+    question: "Da li dobijam sertifikat?",
+    answer: "Da, nakon uspešno završenog kursa i urađenog završnog zadatka dobijaš sertifikat Studio 27.",
+  },
+];
+
+// Kursevi za Google (Course schema) – iz baze; cena samo ako je upisana u admin aplikaciji
+const kurseviZaSeo = kursevi.map((k) => ({
+  naziv: `${lepNaziv(k.naziv)}${k.glavniKurs ? ` – ${k.glavniKurs}` : ""}`,
+  opis: (k.opis || k.komentarSredina || "").replace(/s+/g, " ").slice(0, 300).trim(),
+  url: `${SITE_URL}/kurs/${k.id}`,
+  cena: imaCenu(k) ? k.cena : null,
+  uzivo: !!k.komentarGore?.toUpperCase().includes("UŽIVO"),
+}));
+
 const orgSchema = {
   "@context": "https://schema.org",
   "@graph": [
     {
       "@type": "EducationalOrganization",
       "@id": `${SITE_URL}/#organization`,
-      "name": "27 archviz",
-      "url": SITE_URL,
-      "logo": `${SITE_URL}/favicon.ico`,
-      "image": primarySeoImage,
-      "description": "Škola arhitektonske vizuelizacije i dizajna enterijera. Online obuke za 3ds Max, Corona Render, AutoCAD i Photoshop od nule do fotorealističnih rendera.",
-      "sameAs": [
-        "https://www.instagram.com/27archviz/"
-      ]
+      name: "Studio 27 – 27 archviz",
+      alternateName: ["Studio 27", "27archviz"],
+      url: SITE_URL,
+      logo: `${SITE_URL}/favicon.svg`,
+      image: seoSlika,
+      description:
+        "Škola arhitektonske vizualizacije i dizajna enterijera. Online i uživo kursevi 3ds Max, Corona Renderer, AutoCAD i Photoshop.",
+      email: "studio27.vizz@gmail.com",
+      telephone: "+381665934314",
+      founder: { "@type": "Person", name: "Doroteja Dokić", jobTitle: "Dizajner enterijera i 3D vizualizator" },
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Aleksinačkih rudara 39E",
+        postalCode: "11070",
+        addressLocality: "Novi Beograd",
+        addressCountry: "RS",
+      },
+      sameAs: ["https://www.instagram.com/studio27.visualization/"],
     },
     {
       "@type": "ItemList",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "item": {
-            "@type": "Course",
-            "name": "KURS VIZUALIZACIJE EKSTERIJERA",
-            "description": "Kompletan proces izrade profesionalnih eksterijernih vizuelizacija, napredno osvetljenje, okruženje i materijali u 3ds Max-u i Corona Renderu.",
-            "provider": { "@id": `${SITE_URL}/#organization` },
-            "url": `${SITE_URL}/kurs/3`
-          }
+      name: "Kursevi Studio 27",
+      itemListElement: kurseviZaSeo.map((k, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        item: {
+          "@type": "Course",
+          name: k.naziv,
+          description: k.opis,
+          url: k.url,
+          inLanguage: "sr",
+          provider: { "@id": `${SITE_URL}/#organization` },
+          ...(k.cena
+            ? { offers: { "@type": "Offer", price: k.cena, priceCurrency: "EUR", category: "Paid", availability: "https://schema.org/InStock", url: k.url } }
+            : {}),
+          hasCourseInstance: { "@type": "CourseInstance", courseMode: k.uzivo ? "blended" : "online" },
         },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "item": {
-            "@type": "Course",
-            "name": "KURS 3DS MAX + CORONA RENDER (OD 0 DO LEVEL UP-A)",
-            "description": "Individualna ili online obuka uživo 1 na 1. Učenje modelovanja, teksturisanja i renderinga uz direktan rad sa mentorom.",
-            "provider": { "@id": `${SITE_URL}/#organization` },
-            "url": `${SITE_URL}/kurs/5`
-          }
-        },
-        {
-          "@type": "ListItem",
-          "position": 3,
-          "item": {
-            "@type": "Course",
-            "name": "KURS DIZAJNA ENTERIJERA (AUTOCAD + PHOTOSHOP)",
-            "description": "Savladajte osnove dizajna enterijera, razumevanje prostora, tehničko crtanje u AutoCAD-u i prezentaciju projekata.",
-            "provider": { "@id": `${SITE_URL}/#organization` },
-            "url": `${SITE_URL}/kurs/6`
-          }
-        },
-        {
-          "@type": "ListItem",
-          "position": 4,
-          "item": {
-            "@type": "Course",
-            "name": "OD NULE DO PROFESIONALNOG RENDERA",
-            "description": "Sveobuhvatni video kurs 3D arhitektonske vizuelizacije. Unapređeni materijali, vežbe i neograničen pristup snimcima.",
-            "provider": { "@id": `${SITE_URL}/#organization` },
-            "url": `${SITE_URL}/kurs/7`
-          }
-        }
-      ]
-    }
-  ]
+      })),
+    },
+  ],
 };
 ---
 
 <Layout
-  title="Početna | 3ds Max, Corona Render & Dizajn Enterijera | 27 archviz"
-  description="Naučite 3D modelovanje, dizajna enterijera i fotorealističnu vizuelizaciju. Kursevi za 3ds Max, Corona Render, AutoCAD i Photoshop uz neograničen pristup i podršku."
+  title="Kursevi 3ds Max, Corona Render i dizajna enterijera | Studio 27"
+  description="Studio 27 – škola arhitektonske vizualizacije. Online i uživo kursevi 3ds Max + Corona, vizualizacije eksterijera i dizajna enterijera (AutoCAD + Photoshop), uz podršku predavača."
   canonicalURL={`${SITE_URL}/`}
-  image={primarySeoImage}
-  keywords="kurs 3ds max, corona render obuka, dizajn enterijera kurs, autocad obuka, arhitektonska vizuelizacija, 3d modelovanje, archviz tutorijali, rendering kursevi"
-  breadcrumbs={[
-    { name: "Početna", url: `${SITE_URL}/` },
-    { name: "Vizuelizacija Eksterijera", url: `${SITE_URL}/kurs/3` },
-    { name: "3ds Max Od 0 Do Level Up-a", url: `${SITE_URL}/kurs/5` },
-    { name: "Dizajn Enterijera", url: `${SITE_URL}/kurs/6` },
-    { name: "Od Nule Do Profesionalnog Rendera", url: `${SITE_URL}/kurs/7` },
-    { name: "Radovi Studenata", url: `${SITE_URL}/radovi` }
-  ]}
-  faq={[
-    {
-      question: "Šta se sve uči na kursevima arhitektonske vizuelizacije i dizajna?",
-      answer: "Zavisno od obuke, savladava se kompletan proces: od crtanja i uvoza osnova u AutoCAD-u, preko 3D modelovanja u 3ds Max-u i rada sa Corona svetlima/materijalima, do postprodukcije u Photoshopu."
-    },
-    {
-      question: "Kakvi sve formati kurseva postoje?",
-      answer: "Nudimo unapred snimljene video materijale sa neograničenim pristupom i vežbama za samostalno učenje, kao i uživo '1 na 1' online obuke sa mentorom."
-    },
-    {
-      question: "Da li je potrebno prethodno iskustvo u softverima?",
-      answer: "Nije potrebno. Kursevi su koncipirani tako da vas vode korak po korak od potpunog početnika do naprednog nivoa."
-    },
-    {
-      question: "Da li dobijam podršku tokom i nakon obuke?",
-      answer: "Da, svi polaznici imaju obezbeđenu direktnu mentorsku podršku za pregled radova, konsultacije i rešavanje nedoumica u radu."
-    }
-  ]}
+  image={seoSlika}
+  imageAlt="Studio 27 – kursevi arhitektonske vizualizacije"
+  keywords="kurs 3ds max, corona render kurs, kurs vizualizacije enterijera, kurs vizualizacije eksterijera, kurs dizajna enterijera, autocad kurs, arhitektonska vizualizacija, 3d vizualizacija kurs Srbija"
+  faq={pitanja}
 >
-  <!-- Schema.org Organizacijska i ItemList struktura za pretraživače -->
   <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
 
-  <!-- Preload najvažnije SEO slike za LCP brzinu -->
-  <link rel="preload" as="image" href={primarySeoImage} fetchpriority="high" />
+  <Zaglavlje slot="zaglavlje" preko />
 
-  <main class="bg-white text-black min-h-screen">
-    <!-- Skriveni H1 naslov sa ključnim rečima za Google indeksiranje -->
-    <h1 class="sr-only">
-      Kursevi Arhitektonske Vizuelizacije i Dizajna Enterijera – 3ds Max, Corona Render & AutoCAD | 27 archviz
-    </h1>
-
-    <KurseviSection />
-    <AnimateSlika />
-    <SectionLearningCurve />
-    <RecenzijeSection />
+  <main class="bg-white text-neutral-900">
+    <Hero slajdovi={slajdovi} />
+    <Kursevi kursevi={kursevi} />
+    <KvizPoziv />
+    <ZastoStudio slike={sveSporedne.slice(0, 2)} />
+    <RadoviIUtisci />
     <ONamaSection />
+    <Pitanja pitanja={pitanja} />
+    <ZavrsniPoziv slika={sveSporedne[2] || sveSporedne[0]} />
   </main>
 </Layout>

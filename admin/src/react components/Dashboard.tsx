@@ -29,7 +29,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         {payload.map((entry: any, i: number) => (
           <p key={i} className="text-sm font-medium" style={{ color: entry.color }}>
             {entry.name === "zarada"
-              ? `${(entry.value).toFixed(0)} €`
+              ? `${Number(entry.value ?? 0).toFixed(0)} €`
               : `${entry.value} korisnika`}
           </p>
         ))}
@@ -157,30 +157,30 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
               <AreaChart data={prihodi}>
                 <defs>
                   <linearGradient id="gradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#7f1d1d" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#7f1d1d" stopOpacity={0} />
+                    <stop offset="0%" stopColor="var(--color-red-900)" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="var(--color-red-900)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-neutral-800)" />
                 <XAxis
                   dataKey="mesec"
-                  tick={{ fill: "#737373", fontSize: 11 }}
-                  axisLine={{ stroke: "#262626" }}
+                  tick={{ fill: "var(--color-neutral-500)", fontSize: 11 }}
+                  axisLine={{ stroke: "var(--color-neutral-800)" }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: "#737373", fontSize: 11 }}
-                  axisLine={{ stroke: "#262626" }}
+                  tick={{ fill: "var(--color-neutral-500)", fontSize: 11 }}
+                  axisLine={{ stroke: "var(--color-neutral-800)" }}
                   tickLine={false}
                   tickFormatter={(v: number) =>
-                    chartTab === "zarada" ? `${(v).toFixed(0)} €` : `${v}`
+                    chartTab === "zarada" ? `${Number(v ?? 0).toFixed(0)} €` : `${v}`
                   }
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Area
                   type="monotone"
                   dataKey={chartTab}
-                  stroke="#991b1b"
+                  stroke="var(--color-red-800)"
                   strokeWidth={2}
                   fill="url(#gradient)"
                 />
@@ -197,17 +197,17 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart data={kursProdato} layout="vertical" barSize={18}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#262626" horizontal={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-neutral-800)" horizontal={false} />
                 <XAxis
                   type="number"
-                  tick={{ fill: "#737373", fontSize: 11 }}
-                  axisLine={{ stroke: "#262626" }}
+                  tick={{ fill: "var(--color-neutral-500)", fontSize: 11 }}
+                  axisLine={{ stroke: "var(--color-neutral-800)" }}
                   tickLine={false}
                 />
                 <YAxis
                   type="category"
                   dataKey="naziv"
-                  tick={{ fill: "#a3a3a3", fontSize: 11 }}
+                  tick={{ fill: "var(--color-neutral-400)", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                   width={85}
@@ -215,15 +215,15 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
                 <Tooltip
                   cursor={{ fill: "rgba(255,255,255,0.03)" }}
                   contentStyle={{
-                    background: "#262626",
-                    border: "1px solid #404040",
+                    background: "var(--color-neutral-800)",
+                    border: "1px solid var(--color-neutral-700)",
                     borderRadius: "8px",
                     fontSize: "12px",
                   }}
-                  labelStyle={{ color: "#a3a3a3" }}
-                  itemStyle={{ color: "#fff" }}
+                  labelStyle={{ color: "var(--color-neutral-400)" }}
+                  itemStyle={{ color: "var(--color-white)" }}
                 />
-                <Bar dataKey="prodato" fill="#991b1b" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="prodato" fill="var(--color-red-800)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -262,7 +262,14 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
               </tr>
             </thead>
             <tbody>
-              {students.map((u, i) => (
+              {(students ?? []).length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-5 py-8 text-center text-sm text-neutral-500">
+                    Još nema korisnika za prikaz.
+                  </td>
+                </tr>
+              )}
+              {(students ?? []).slice(0, 10).map((u, i) => (
                 <tr
                   key={i}
                   className="border-b border-neutral-800/50 hover:bg-neutral-800/30 transition-colors"
@@ -270,12 +277,15 @@ export default function Dashboard({ students, prihodi, kursProdato, stats }: { s
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-medium text-neutral-300">
-                        {u.ime
+                        {String(u.ime ?? u.email ?? "?")
                           .split(" ")
-                          .map((w: any) => w[0])
-                          .join("")}
+                          .filter(Boolean)
+                          .map((w: string) => w[0])
+                          .join("")
+                          .slice(0, 2)
+                          .toUpperCase()}
                       </div>
-                      <span className="font-medium text-neutral-200">{u.ime}</span>
+                      <span className="font-medium text-neutral-200">{u.ime || "—"}</span>
                     </div>
                   </td>
                   <td className="px-5 py-3 text-neutral-400">{u.email}</td>

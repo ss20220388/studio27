@@ -1,8 +1,8 @@
 ---
+import { API_URL, CLIENT_URL } from "../lib/adrese";
+const { email = "" } = Astro.props as { email?: string };
 const currentPath = Astro.url.pathname;
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
-const CLIENT_URL = import.meta.env.PUBLIC_CLIENT_URL || "http://studio27.rs";
 const navSections = [
   {
     label: "Pregled",
@@ -201,7 +201,7 @@ const navSections = [
         </svg>
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-xs font-medium text-neutral-300 truncate">admin@studio27.rs</p>
+        <p class="text-xs font-medium text-neutral-300 truncate">{email || "Administrator"}</p>
         <p class="text-[10px] text-neutral-500">Administrator</p>
       </div>
     </div>

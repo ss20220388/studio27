@@ -1,7 +1,8 @@
+import { API_URL } from "../lib/adrese";
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-const PUBLIC_API_KEY = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const PUBLIC_API_KEY = API_URL;
 
 interface User {
   id: number;
@@ -23,6 +24,7 @@ interface StudentApiResponse {
   email: string;
   brojTelefona: string;
   deviceId: string | null;
+  datumKreiranjaNaloga?: string | null;
   userId: number;
   active: number;
   kursevi: Kurs[];
@@ -139,7 +141,14 @@ const Modal = ({
   );
 };
 
-export default function UsersPage({ students, sviKursevi, token }: UsersPageProps) {
+// Datum registracije iz baze (YYYY-MM-DD) u formatu 17.10.2026.
+function formatirajDatum(datum?: string | null) {
+  if (!datum) return "Datum registracije nepoznat";
+  const [g, m, d] = datum.slice(0, 10).split("-");
+  return g && m && d ? `Registrovan ${Number(d)}.${Number(m)}.${g}.` : "Datum registracije nepoznat";
+}
+
+export default function UsersPage({ students = [], sviKursevi = [], token }: UsersPageProps) {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const limit = 20;
@@ -155,7 +164,7 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
         prezime: student.prezime ?? "",
         email: student.email ?? "",
         telefon: student.brojTelefona ?? "",
-        datumRegistracije: "-",
+        datumRegistracije: formatirajDatum(student.datumKreiranjaNaloga),
         status: (student.active == 1 ? "aktivan" : "neaktivan") as "aktivan" | "neaktivan",
         deviceId: student.deviceId,
         deviceInfo: null,
@@ -175,7 +184,8 @@ export default function UsersPage({ students, sviKursevi, token }: UsersPageProp
   // Add form
   const [addForm, setAddForm] = useState({ ime: "", prezime: "", email: "", telefon: "" });
 
-  const filtered = usersList.filter(
+  // Najnoviji korisnici prvi (veći id = kasnije registrovan)
+  const filtered = [...usersList].sort((a, b) => Number(b.id) - Number(a.id)).filter(
     (u) =>
       u.ime.toLowerCase().includes(search.toLowerCase()) ||
       u.prezime.toLowerCase().includes(search.toLowerCase()) ||

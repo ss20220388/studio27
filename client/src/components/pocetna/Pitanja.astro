@@ -1,0 +1,46 @@
+---
+// Česta pitanja na početnoj strani (ista pitanja idu i u FAQ schema.org podatke za Google)
+import Ikona from "../novo/Ikona.astro";
+import { whatsappLink } from "../../data/sajt";
+
+interface Props {
+  pitanja: { question: string; answer: string }[];
+}
+const { pitanja } = Astro.props;
+---
+
+<section id="pitanja" class="bg-white py-24 md:py-32 scroll-mt-4">
+  <div class="max-w-[1400px] mx-auto px-5 md:px-10 grid lg:grid-cols-[0.8fr_1.2fr] gap-12 lg:gap-24">
+    <div class="pojava">
+      <p class="text-[11px] font-medium uppercase tracking-[0.26em] text-neutral-500">Česta pitanja</p>
+      <h2 class="mt-4 font-serif text-[40px] md:text-[56px] leading-[1.03] tracking-[-0.02em]">Imaš dodatnih pitanja?</h2>
+      <p class="mt-6 max-w-[400px] text-[15px] leading-relaxed text-neutral-600">
+        Ako ne pronađeš odgovor, piši nam — odgovaramo brzo, obično istog dana.
+      </p>
+      <a
+        href={whatsappLink("Zdravo, imam pitanje u vezi kurseva Studio 27.")}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="group mt-8 inline-flex items-center gap-2 border-b border-neutral-900 pb-1 text-[13px] font-medium"
+      >
+        Pošalji nam poruku na WhatsApp
+        <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+      </a>
+    </div>
+    <div class="pojava border-t border-neutral-200" style="--kasnjenje:0.1s">
+      {
+        pitanja.map((p) => (
+          <details class="s27-faq group border-b border-neutral-200">
+            <summary class="flex items-center justify-between gap-6 py-6 font-serif text-[20px] md:text-[22px] leading-snug">
+              {p.question}
+              <span class="s27-faq-plus shrink-0 w-9 h-9 rounded-full border border-neutral-300 flex items-center justify-center text-[18px] font-light transition-transform duration-300">
+                +
+              </span>
+            </summary>
+            <p class="pb-7 pr-12 text-[15px] leading-relaxed text-neutral-600">{p.answer}</p>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>

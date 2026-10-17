@@ -1,0 +1,145 @@
+---
+// Radovi studenata (beskonačna traka u dva reda) i utisci polaznika (karusel)
+import Ikona from "../novo/Ikona.astro";
+import { API_URL, slikaIzBaze } from "../../data/sajt";
+
+type Rad = { idRad: number; url: string; ime?: string; prezime?: string };
+type Recenzija = {
+  opis: string;
+  ocena: number;
+  student: { ime?: string; prezime?: string } | null;
+  kurs: { naziv?: string } | null;
+};
+
+let radovi: Rad[] = [];
+let recenzije: Recenzija[] = [];
+try {
+  const [r1, r2] = await Promise.all([fetch(`${API_URL}/api/radovi-sa-rasporedom`), fetch(`${API_URL}/api/recenzije`)]);
+  if (r1.ok) radovi = await r1.json();
+  if (r2.ok) recenzije = await r2.json();
+} catch (e) {
+  console.error("Greška pri učitavanju radova i utisaka:", e);
+}
+
+const slike = radovi.filter((r) => r.url).map((r) => slikaIzBaze(r.url));
+const pola = Math.ceil(slike.length / 2);
+const redovi = [slike.slice(0, pola), slike.slice(pola)].filter((r) => r.length > 0);
+recenzije = recenzije.filter((r) => r.opis && r.opis.trim());
+
+const malim = (s?: string) => (s ? s.charAt(0) + s.slice(1).toLowerCase() : "");
+---
+
+<!-- RADOVI STUDENATA -->
+<section id="radovi" class="bg-white py-24 md:py-32 overflow-hidden scroll-mt-4">
+  <div class="max-w-[1400px] mx-auto px-5 md:px-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div class="pojava">
+      <p class="text-[11px] font-medium uppercase tracking-[0.26em] text-neutral-500">Radovi studenata</p>
+      <h2 class="mt-4 font-serif text-[40px] md:text-[56px] leading-[1.03] tracking-[-0.02em]">
+        Od prvog modela do rendera<br class="hidden md:block" /> za portfolio.
+      </h2>
+    </div>
+    <a
+      href="/radovi"
+      class="pojava group inline-flex items-center gap-2 self-start md:self-auto border-b border-neutral-900 pb-1 text-[13px] font-medium"
+      style="--kasnjenje:0.15s"
+    >
+      Pogledaj sve radove
+      <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+    </a>
+  </div>
+
+  {
+    redovi.length > 0 && (
+      <div class="s27-traka-okvir mt-12 md:mt-16 space-y-3 md:space-y-4">
+        {redovi.map((red, ri) => (
+          <div class="overflow-hidden">
+            <div
+              class:list={["s27-traka flex w-max gap-3 md:gap-4", ri === 1 ? "s27-traka-obrnuto" : ""]}
+              style={`--trajanje:${Math.max(40, red.length * 7)}s`}
+            >
+              {[...red, ...red].map((src, i) => (
+                <a href="/radovi" class="block shrink-0 overflow-hidden" tabindex={i >= red.length ? -1 : undefined}>
+                  <img
+                    src={src}
+                    alt={i >= red.length ? "" : "Rad polaznika Studio 27"}
+                    loading="lazy"
+                    class="h-[240px] md:h-[340px] w-auto aspect-[2/3] object-cover transition-transform duration-700 hover:scale-[1.05]"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+</section>
+
+<!-- UTISCI POLAZNIKA -->
+{
+  recenzije.length > 0 && (
+    <section id="recenzije" class="bg-[#151515] text-white py-24 md:py-32">
+      <div class="max-w-[1400px] mx-auto px-5 md:px-10">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div class="pojava">
+            <p class="text-[11px] font-medium uppercase tracking-[0.26em] text-white/50">Utisci polaznika</p>
+            <h2 class="mt-4 font-serif text-[40px] md:text-[56px] leading-[1.03] tracking-[-0.02em]">
+              Iskustva onih koji su<br class="hidden md:block" /> već prošli kroz kurs.
+            </h2>
+          </div>
+          <div class="pojava flex gap-3" style="--kasnjenje:0.15s">
+            <button
+              type="button"
+              data-utisci-nazad
+              class="w-12 h-12 border border-white/30 flex items-center justify-center hover:bg-white hover:text-neutral-900 transition-colors cursor-pointer"
+              aria-label="Prethodni utisak"
+            >
+              <Ikona ime="strelicaLevo" class="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              data-utisci-napred
+              class="w-12 h-12 border border-white/30 flex items-center justify-center hover:bg-white hover:text-neutral-900 transition-colors cursor-pointer"
+              aria-label="Sledeći utisak"
+            >
+              <Ikona ime="strelica" class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div data-utisci class="pojava mt-12 flex gap-5 overflow-x-auto snap-x snap-mandatory pb-2" style="--kasnjenje:0.2s">
+          {recenzije.map((r) => (
+            <figure class="snap-start shrink-0 w-[86%] sm:w-[420px] flex flex-col justify-between border border-white/15 p-8 md:p-10 transition-colors duration-500 hover:border-white/40 hover:bg-white/[0.03]">
+              <div>
+                <span class="block font-serif text-[64px] leading-[0.5] text-white/30">“</span>
+                <blockquote class="mt-4 font-serif text-[19px] md:text-[21px] leading-[1.45] text-white/90">{r.opis}</blockquote>
+              </div>
+              <figcaption class="mt-8 pt-6 border-t border-white/15 flex items-center justify-between gap-4">
+                <span class="text-[11px] uppercase tracking-[0.16em] text-white/60 line-clamp-2">
+                  {malim(r.kurs?.naziv) || "Studio 27"}
+                </span>
+                <span class="shrink-0 text-[13px] tracking-[0.15em] text-[#d8c3a5]" aria-label={`Ocena ${r.ocena || 5} od 5`}>
+                  {"★".repeat(r.ocena || 5)}
+                </span>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<script>
+  // Strelice karusela utisaka
+  const traka = document.querySelector<HTMLElement>("[data-utisci]");
+  if (traka) {
+    const pomeri = (smer: number) => {
+      const kartica = traka.querySelector("figure");
+      const korak = kartica ? kartica.getBoundingClientRect().width + 20 : 400;
+      traka.scrollBy({ left: smer * korak, behavior: "smooth" });
+    };
+    document.querySelector("[data-utisci-nazad]")?.addEventListener("click", () => pomeri(-1));
+    document.querySelector("[data-utisci-napred]")?.addEventListener("click", () => pomeri(1));
+  }
+</script>

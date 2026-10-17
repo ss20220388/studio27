@@ -1,3 +1,4 @@
+import { API_URL } from "../../lib/adrese";
 import React, { useEffect, useState } from "react";
 
 /**
@@ -10,7 +11,6 @@ import React, { useEffect, useState } from "react";
  * @param {TermsTabProps} props
  */
 export default function TermsTab({ token }) {
-  const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
   const FOLDER_PATH = "/pravila";
 
   const [items, setItems] = useState([]);

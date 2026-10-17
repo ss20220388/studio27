@@ -1,9 +1,10 @@
 ---
+import { API_URL } from "../lib/adrese";
 // @ts-nocheck
 import Layout from "../layouts/Layout.astro";
 import ContactFormWebapp from "../react components/ContactFormWebapp.tsx";
 
-const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
+const PUBLIC_API_URL = API_URL;
 ---
 
 <Layout title="Kontakt">

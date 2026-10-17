@@ -1,146 +1,915 @@
 ---
+// Stranica kursa po predlogu dizajna ("Nauči dizajn enterijera od početka").
+// Raspored je isti za sve kurseve, a sav sadržaj se čita iz baze:
+// naziv, glavniKurs, komentarGore (oznake), komentarSredina (uvod), opis, sadržaj (program),
+// lekcije, cena, glavna i ostale slike, recenzije polaznika.
 import Layout from "../../layouts/Layout.astro";
-import KursInfo from "../../react-components/KursInfo.jsx";
-import KursHero from "../../react-components/KursHero.jsx";
-
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
-const APP_URL = import.meta.env.PUBLIC_APP_URL || "http://studio27.rs";
+import Ikona from "../../components/novo/Ikona.astro";
+import KupiDugme from "../../components/novo/KupiDugme.astro";
+import {
+  API_URL,
+  CLIENT_URL,
+  TELEFON,
+  TELEFON_PRIKAZ,
+  imaCenu,
+  lepNaziv,
+  parsirajSadrzaj,
+  slikaIzBaze,
+  ucitajKurseve,
+  ucitajRadove,
+  ucitajSporedneSlike,
+  whatsappLink,
+  type KursIzBaze,
+  type RadPolaznika,
+} from "../../data/sajt";
 
 const { id } = Astro.params;
-
-const accessToken = Astro.cookies.get("refreshToken")?.value;
 const refreshToken = Astro.cookies.get("refreshToken")?.value;
 
-let isLoggedIn = false;
-let hasPurchasedCourse = false;
-let userData = null;
-
-// Provera autentifikacije i provera da li korisnik poseduje OVAJ kurs
-if (accessToken || refreshToken) {
+// Da li ulogovani korisnik već poseduje ovaj kurs (tada dugme vodi u web aplikaciju)
+let kupljen = false;
+if (refreshToken) {
   try {
     const authRes = await fetch(`${API_URL}/api/auth/me`, {
-      headers: {
-        Authorization: `Bearer ${accessToken || refreshToken}`,
-      },
-      credentials: "include",
+      headers: { Authorization: `Bearer ${refreshToken}` },
     });
-
     if (authRes.ok) {
-      userData = await authRes.json();
-      isLoggedIn = true;
-
-      // Provera kupljenih kurseva za ulogovanog korisnika
-      if (userData?.userId) {
-        const mojiKurseviRes = await fetch(`${API_URL}/api/moj-kursevi/${userData.userId}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken || refreshToken}`,
-          },
+      const korisnik = await authRes.json();
+      if (korisnik?.userId) {
+        const mojiRes = await fetch(`${API_URL}/api/moj-kursevi/${korisnik.userId}`, {
+          headers: { Authorization: `Bearer ${refreshToken}` },
         });
-
-        if (mojiKurseviRes.ok) {
-          const mojiKursevi = await mojiKurseviRes.json();
-          // Provera da li se id trenutnog kursa nalazi u kupljenim kursevima
-          const listaKurseva = Array.isArray(mojiKursevi) ? mojiKursevi : mojiKursevi.kursevi || [];
-          hasPurchasedCourse = listaKurseva.some((k: any) => String(k.id || k.kursId) === String(id));
+        if (mojiRes.ok) {
+          const moji = await mojiRes.json();
+          const lista = Array.isArray(moji) ? moji : moji.kursevi || [];
+          kupljen = lista.some((k: any) => String(k.id || k.kursId) === String(id));
         }
       }
     }
   } catch (e) {
-    console.error("Greška pri proveri autentifikacije/kurseva:", e);
+    console.error("Greška pri proveri kupljenih kurseva:", e);
   }
 }
 
-type KursSlika = { url?: string; slikaUrl?: string; putanja?: string };
+type Recenzija = {
+  opis: string;
+  ocena: number;
+  student: { ime?: string; prezime?: string } | null;
+  kurs: { id?: number; naziv?: string } | null;
+};
 
-let kurs: any = null;
-let kursSlike: KursSlika[] = [];
-
-// Paralelno dohvatanje podataka o kursu i slikama
+let kurs: KursIzBaze | null = null;
+let sporedne: string[] = [];
+let sveRecenzije: Recenzija[] = [];
+let radovi: RadPolaznika[] = [];
 try {
-  const [kursRes, slikeRes] = await Promise.all([
+  const [kursRes, slike, recRes, sviRadovi] = await Promise.all([
     fetch(`${API_URL}/api/kursevi/${id}`),
-    fetch(`${API_URL}/api/kursslika/${id}`)
+    ucitajSporedneSlike(Number(id)),
+    fetch(`${API_URL}/api/recenzije`).catch(() => null),
+    ucitajRadove(),
   ]);
-
   if (kursRes.ok) kurs = await kursRes.json();
-  if (slikeRes.ok) {
-    const data = await slikeRes.json();
-    kursSlike = data.kursSlika || [];
-  }
+  sporedne = slike;
+  if (recRes?.ok) sveRecenzije = await recRes.json();
+  radovi = sviRadovi.filter((r) => String(r.idKurs) === String(id));
 } catch (e) {
   console.error("Greška pri dohvatanju podataka o kursu:", e);
 }
 
 if (!kurs) {
-  return Astro.redirect('/404');
+  return Astro.redirect("/404");
 }
 
-// SEO Priprema
-const rawDescription = kurs.opis || kurs.komentarDole || "Naučite arhitektonsku vizualizaciju od nule uz naše stručne kurseve.";
-const seoDescription = rawDescription.replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').slice(0, 155).trim() + "...";
-const seoTitle = `${kurs.naziv}${kurs.glavniKurs ? ` - ${kurs.glavniKurs}` : ''} | 27 archviz`;
-const canonicalUrl = new URL(Astro.url.pathname, Astro.url.origin).toString();
+// ---------- Podaci za prikaz ----------
+const naslov = lepNaziv(kurs.naziv) || "Kurs";
+const glavna = slikaIzBaze(kurs.slikaUrl);
+const sveSlike = [glavna, ...sporedne].filter(Boolean);
+const saCenom = imaCenu(kurs);
+const pasusi = (tekst?: string) => (tekst || "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+const uvod = pasusi(kurs.komentarSredina);
+const opis = pasusi(kurs.opis);
+const program = parsirajSadrzaj(kurs.sadrzaj);
+const lekcije = kurs.lekcije || [];
+const brojVidea = lekcije.reduce((zbir, l) => zbir + (l.videoUrls?.length || 0), 0);
+const naUzivo = !!kurs.komentarGore?.toUpperCase().includes("UŽIVO");
+const porukaZaWhatsApp = `Zdravo, imam pitanje u vezi kursa "${naslov}".`;
+const recenica = (s: string) => lepNaziv(s.trim());
 
-const firstGalleryImage = kursSlike && kursSlike.length > 0 
-  ? (kursSlike[0]?.url || kursSlike[0]?.slikaUrl || kursSlike[0]?.putanja)
-  : null;
+// Oznake iz baze ("ONLINE | UŽIVO | 1 NA 1 SA PREDAVAČEM | ILI U MANJIM GRUPAMA");
+// deo koji počinje sa "ILI" se spaja sa prethodnim
+const oznake = (kurs.komentarGore || "")
+  .split("|")
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .reduce<string[]>((lista, o) => {
+    if (/^ili\s/i.test(o) && lista.length) lista[lista.length - 1] += " " + o;
+    else lista.push(o);
+    return lista;
+  }, []);
 
-const rawImageUrl = firstGalleryImage || kurs.slikaUrl || kurs.slika;
-
-let seoImage: string | undefined = undefined;
-if (rawImageUrl) {
-  if (rawImageUrl.startsWith('http://') || rawImageUrl.startsWith('https://')) {
-    seoImage = rawImageUrl;
-  } else {
-    const cleanPath = rawImageUrl.startsWith('/') ? rawImageUrl : `/${rawImageUrl}`;
-    seoImage = `${API_URL}/api/uploaded-images${cleanPath}`;
-  }
+// Ikonica po ključnoj reči (ista linijska familija kao u predlogu)
+function ikonaZa(tekst: string, i = 0) {
+  const t = tekst.toLowerCase();
+  const pravila: [RegExp, string][] = [
+    [/greš/, "upozorenje"],
+    [/autocad|photoshop|3ds|corona|softver|interfejs|program/, "laptop"],
+    [/video|snim/, "monitorPlay"],
+    [/pristup|neograni/, "beskonacno"],
+    [/feedback|chat|konsult|pitanj|podršk/, "chat"],
+    [/1 na 1|grup|predava|uživo/, "ljudi"],
+    [/online/, "monitorPlay"],
+    [/početn|nule|od 0/, "kapa"],
+    [/boj/, "paleta"],
+    [/stil|nameštaj|kuhinj/, "fotelja"],
+    [/materijal|tekstur|bibliotek/, "slojevi"],
+    [/rasvet|osvetlj|svetl/, "sijalica"],
+    [/proces|podešav|engin|render/, "zupcanik"],
+    [/razmišlj|brend|instagram|freelanc|prospekt/, "grafikon"],
+    [/kadr|aksonometr/, "kamera"],
+    [/vegetac|eksterijer|pejza/, "drvo"],
+    [/noć|vod/, "sunce"],
+    [/bonus|fajl|scen|model/, "folder"],
+    [/prostor|modelov|deo/, "kocka"],
+    [/projek|zadat|vežb/, "slika"],
+  ];
+  const nadjeno = pravila.find(([re]) => re.test(t));
+  const rezerva = ["kocka", "paleta", "fotelja", "slojevi", "sijalica", "zupcanik", "grafikon", "kamera"];
+  return nadjeno ? nadjeno[1] : rezerva[i % rezerva.length];
 }
+
+// Traka ispod naslovne slike: glavni softver + oznake iz baze (najviše 4)
+const traka = [kurs.glavniKurs, ...oznake]
+  .filter((s): s is string => !!s && !!s.trim())
+  .slice(0, 4)
+  .map((s, i) => ({ tekst: recenica(s), ikona: ikonaZa(s, i) }));
+
+// "Šta ćeš naučiti?" – kartice iz polja "sadrzaj".
+// Ako sadržaj ima samo jednu celinu sa spiskom, svaka stavka postaje kartica.
+type Kartica = { naslov: string; opis?: string; stavke: string[] };
+const kartice: Kartica[] =
+  program.length === 1 && program[0].stavke.length >= 3
+    ? program[0].stavke.map((s) => ({ naslov: s, stavke: [] }))
+    : program.map((s) => {
+        const jednaRecenica = s.stavke.length === 1 && s.stavke[0].length > 60;
+        return {
+          naslov: recenica(s.naslov),
+          opis: jednaRecenica ? s.stavke[0] : undefined,
+          stavke: jednaRecenica ? [] : s.stavke,
+        };
+      });
+const naslovKartica = program.length === 1 && program[0].stavke.length >= 3 ? recenica(program[0].naslov) : "Šta ćeš naučiti?";
+
+// "Kako izgleda učenje?" – zavisi od načina održavanja kursa (uživo / video)
+const koraci = naUzivo
+  ? [
+      { naslov: "Lekcije i vežbe", tekst: "Propratni zadaci posle svake lekcije i vežba." },
+      { naslov: "Rad uz podršku", tekst: "Uživo online rad, pitanja, feedback i individualne konsultacije." },
+      { naslov: "Finalni projekat", tekst: "Rad na konkretnom projektu kao završni zadatak." },
+    ]
+  : [
+      {
+        naslov: "Video lekcije i vežbe",
+        tekst: lekcije.length > 0 ? `${lekcije.length} lekcija sa vežbama i propratnim fajlovima.` : "Uz svaki snimak vežba i propratni fajlovi.",
+      },
+      { naslov: "Rad uz podršku", tekst: "Feedback na tvoj rad i odgovori na pitanja u privatnom chatu." },
+      { naslov: "Tvoj rezultat", tekst: "Gotovi renderi koje možeš da pokažeš u portfoliju." },
+    ];
+
+// Spisak "sve što ti je potrebno" u završnoj kartici
+const spisak = [
+  ...oznake.map(recenica),
+  kurs.glavniKurs ? recenica(kurs.glavniKurs) : "",
+  lekcije.length > 0 ? `${lekcije.length} lekcija${brojVidea > 0 ? ` · ${brojVidea} video snimaka` : ""}` : "",
+  program.length > 1 ? `${program.length} celina programa` : "",
+  naUzivo ? "Direktan kontakt sa predavačem" : "Neograničen pristup snimcima",
+  "Podrška tokom celog kursa",
+].filter((s, i, niz) => s && niz.indexOf(s) === i);
+
+// Utisci polaznika: prvo za ovaj kurs, pa ostali (iz baze)
+const recenzije = sveRecenzije
+  .filter((r) => r.opis && r.opis.trim())
+  .sort((a, b) => Number(String(b.kurs?.id) === String(id)) - Number(String(a.kurs?.id) === String(id)))
+  .slice(0, 5);
+
+// "Kurs vizualizacije eksterijera" -> "kurs vizualizacije eksterijera"; "Od nule do..." -> "kurs Od nule do..."
+const nazivUTekstu = /^kurs\b/i.test(naslov) ? naslov.charAt(0).toLowerCase() + naslov.slice(1) : `kurs „${naslov}“`;
+
+const pitanja = [
+  {
+    question: `Za koga je namenjen ${nazivUTekstu}?`,
+    answer: uvod[0] || "Kurs je namenjen svima koji žele da savladaju vizualizaciju, od početnika do naprednih korisnika.",
+  },
+  {
+    question: "Kako se kurs održava?",
+    answer: naUzivo
+      ? "Nastava se održava uživo online, individualno ili u manjim grupama, uz direktnu komunikaciju sa predavačem."
+      : "Nakon uplate kurs se pojavljuje u tvojoj web aplikaciji. Pristup video materijalima je neograničen i možeš ih gledati svojim tempom.",
+  },
+  {
+    question: "Koji softveri se izučavaju na kursu?",
+    answer: kurs.glavniKurs
+      ? `Na kursu se radi u programima ${recenica(kurs.glavniKurs)}.`
+      : "Na kursu se rade vodeći alati za 3D renderovanje i arhitektonsku vizualizaciju.",
+  },
+  {
+    question: "Da li dobijam podršku tokom kursa?",
+    answer: naUzivo
+      ? "Da. Tokom celog kursa postavljaš pitanja u realnom vremenu i dobijaš detaljan feedback na svoj rad."
+      : "Da. Uz snimke imaš podršku u privatnom chatu i feedback na svoje radove.",
+  },
+  {
+    question: "Kako mogu da platim kurs?",
+    answer: saCenom
+      ? "Kurs možeš platiti karticom online ili uplatnicom. Nakon uspešne uplate kurs se odmah pojavljuje u tvojoj web aplikaciji."
+      : `Za cenu i uslove prijave javi nam se na ${TELEFON_PRIKAZ}, putem WhatsApp-a ili kontakt forme.`,
+  },
+];
+
+// ---------- SEO (kanonski URL sa adrese iz .env fajla) ----------
+const canonicalUrl = `${CLIENT_URL}/kurs/${id}`;
+const cistTekst = (t?: string) => (t || "").replace(/<[^>]*>?/gm, "").replace(/\s+/g, " ").trim();
+const prvaRecenica = (t?: string) => {
+  const c = cistTekst(t);
+  return (c.match(/^.*?[.!?](?=\s|$)/)?.[0] || c).trim();
+};
+// skraćuje na celu reč (Google prikazuje ~155–160 znakova)
+const skrati = (t: string, max: number) => (t.length <= max ? t : t.slice(0, t.lastIndexOf(" ", max - 1)).replace(/[,;:–-]$/, "") + "…");
+const glavniLepo = kurs.glavniKurs ? recenica(kurs.glavniKurs) : "";
+
+const opisZaSeo = skrati(
+  [
+    `${naslov}${glavniLepo ? ` (${glavniLepo})` : ""} – ${naUzivo ? "online kurs uživo sa predavačem" : "video kurs uz podršku predavača"}.`,
+    prvaRecenica(uvod[0] || opis[0]),
+    saCenom ? `Cena ${kurs.cena} €.` : "Prijavi se – Studio 27.",
+  ]
+    .filter(Boolean)
+    .join(" "),
+  158,
+);
+
+// Naslov stranice: uvek sadrži reč "kurs" i program; ako je predugačak, skraćuje se
+const nazivSaKursom = /kurs/i.test(naslov) ? naslov : `${naslov} – kurs`;
+const seoNaslovPun = `${nazivSaKursom}${glavniLepo ? ` – ${glavniLepo}` : ""} | Studio 27`;
+const glavniKratko = glavniLepo.replace(/\s+render(er)?\b/i, "");
+const seoNaslov =
+  [
+    seoNaslovPun,
+    glavniLepo && `${naslov} – kurs ${glavniLepo} | Studio 27`,
+    glavniKratko && `${naslov} – kurs ${glavniKratko} | Studio 27`,
+    `${nazivSaKursom} | Studio 27`,
+  ].find((t) => t && t.length <= 70 && (/kurs/i.test(t))) || `${nazivSaKursom} | Studio 27`;
+const kljucneReci = [
+  naslov,
+  kurs.glavniKurs,
+  glavniLepo ? `${glavniLepo} kurs` : "",
+  naUzivo ? "online kurs uživo" : "video kurs",
+  "kurs arhitektonske vizualizacije",
+  "Studio 27",
+]
+  .filter(Boolean)
+  .join(", ");
+
+// Detaljni podaci o kursu za Google (Course + ponuda + program + ocene polaznika ovog kursa)
+const recenzijeOvogKursa = sveRecenzije.filter((r) => r.opis?.trim() && String(r.kurs?.id) === String(id));
+const prosecnaOcena = recenzijeOvogKursa.length
+  ? recenzijeOvogKursa.reduce((z, r) => z + (r.ocena || 5), 0) / recenzijeOvogKursa.length
+  : 0;
+const bezIskustva = /od nule|od početka|od 0|prethodno iskustvo|nemaš nikakvo/i.test(`${kurs.komentarSredina} ${kurs.opis}`);
+const kursSchema: Record<string, unknown> = {
+  "@context": "https://schema.org",
+  "@type": "Course",
+  "@id": `${canonicalUrl}#kurs`,
+  name: naslov,
+  description: skrati(cistTekst([kurs.komentarSredina, kurs.opis].filter(Boolean).join(" ")), 500) || opisZaSeo,
+  url: canonicalUrl,
+  image: sveSlike,
+  inLanguage: "sr",
+  educationalLevel: bezIskustva ? "Početni" : "Srednji",
+  ...(bezIskustva ? { coursePrerequisites: "Nije potrebno prethodno iskustvo." } : {}),
+  ...(kurs.glavniKurs ? { about: glavniLepo } : {}),
+  teaches: kartice
+    .flatMap((k) => (/^\d+\.?\s*deo$/i.test(k.naslov) ? k.stavke : [k.naslov]))
+    .filter((t, i, niz) => t && niz.indexOf(t) === i)
+    .slice(0, 15),
+  syllabusSections: program.slice(0, 15).map((sekcija) => ({
+    "@type": "Syllabus",
+    name: recenica(sekcija.naslov),
+    ...(sekcija.stavke.length ? { description: sekcija.stavke.join(", ") } : {}),
+  })),
+  provider: {
+    "@type": "Organization",
+    name: "Studio 27 – 27 archviz",
+    url: CLIENT_URL,
+    logo: `${CLIENT_URL}/icon-512.png`,
+  },
+  hasCourseInstance: {
+    "@type": "CourseInstance",
+    courseMode: "Online",
+    courseWorkload: "PT20H",
+    instructor: { "@type": "Person", name: "Doroteja Dokić" },
+  },
+  ...(saCenom
+    ? {
+        offers: {
+          "@type": "Offer",
+          price: kurs.cena,
+          priceCurrency: "EUR",
+          category: "Paid",
+          availability: "https://schema.org/InStock",
+          url: canonicalUrl,
+        },
+      }
+    : {}),
+  ...(recenzijeOvogKursa.length
+    ? {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: Math.round(prosecnaOcena * 10) / 10,
+          ratingCount: recenzijeOvogKursa.length,
+          bestRating: 5,
+          worstRating: 1,
+        },
+      }
+    : {}),
+};
+
+// Ostali kursevi iz baze (bez ovog), sa svojim glavnim slikama i cenama
+const ostaliKursevi = (await ucitajKurseve()).filter((k) => String(k.id) !== String(id));
+
+// Slike po sekcijama (samo slike ovog kursa iz baze)
+const slikaUvod = sporedne[0] || glavna;
+const slikaKraj = sporedne.length > 1 ? sporedne[sporedne.length - 1] : glavna;
+
+const eyebrow = "text-[11px] font-medium uppercase tracking-[0.24em] text-neutral-500";
+const naslovSekcije = "font-serif text-[34px] md:text-[46px] leading-[1.05] tracking-[-0.02em]";
+const dugmeCrno =
+  "group inline-flex items-center justify-center gap-3 bg-neutral-900 px-7 py-4 text-[13px] font-medium text-white hover:bg-black transition-colors";
+const dugmeOkvir =
+  "inline-flex items-center justify-center gap-3 border border-neutral-900 bg-white/80 px-7 py-4 text-[13px] font-medium hover:bg-neutral-900 hover:text-white transition-colors";
 ---
 
-<Layout 
-  title={seoTitle}
-  description={seoDescription}
-  image={seoImage}
+<Layout
+  title={seoNaslov}
+  description={opisZaSeo}
+  keywords={kljucneReci}
+  image={sveSlike[0] || undefined}
+  imageAlt={`${naslov} – Studio 27`}
   canonicalURL={canonicalUrl}
   breadcrumbs={[
-    { name: "Početna", url: `${APP_URL}` },
-    { name: "Kursevi", url: `${APP_URL}#kursevi` },
-    { name: kurs.naziv, url: canonicalUrl }
+    { name: "Kursevi", url: `${CLIENT_URL}/#edukacije` },
+    { name: naslov, url: canonicalUrl },
   ]}
-  course={{
-    name: kurs.naziv,
-    description: seoDescription,
-    url: canonicalUrl,
-    image: seoImage
-  }}
-  faq={[
-    {
-      question: `Za koga je namenjen kurs ${kurs.naziv}?`,
-      answer: kurs.komentarGore || "Kurs je namenjen svima koji žele da savladaju vizuelizacije, od početnika do naprednih korisnika."
-    },
-    {
-      question: "Kako se pristupa lekcijama i koliko traje pristup?",
-      answer: "Pristup video materijalima je neograničen i možete ih gledati uvek i svojim tempom."
-    },
-    {
-      question: "Koji softveri se izučavaju na kursu?",
-      answer: kurs.glavniKurs || "Na kursu se rade vodeći alati za 3D renderovanje i arhitektonsku vizualizaciju."
-    }
-  ]} 
+  schema={[kursSchema]}
+  faq={pitanja}
 >
-  <div class="bg-black text-white min-h-screen">
-    <KursHero 
-      kurs={kurs} 
-      kursSlike={kursSlike} 
-      client:load 
-    />
-    <KursInfo 
-      kurs={kurs} 
-      accessToken={accessToken} 
-      isLoggedIn={isLoggedIn}
-      hasPurchasedCourse={hasPurchasedCourse}
-      client:visible 
-    />
-  </div>
+  <main class="bg-white text-neutral-900">
+    <!-- 1. NASLOVNI EKRAN: glavna slika kursa iz baze sa belim prelivom -->
+    <section class="relative overflow-hidden bg-white">
+      {
+        glavna && (
+          <img
+            src={glavna}
+            alt={`${naslov}${glavniLepo ? ` – ${glavniLepo}` : ""}, render iz kursa`}
+            class="s27-zum absolute inset-y-0 right-0 h-full w-full lg:w-[62%] object-cover"
+            fetchpriority="high"
+          />
+        )
+      }
+      <div class="absolute inset-0 bg-gradient-to-r from-white via-white/92 lg:via-white/85 lg:via-[40%] to-white/0 lg:to-[70%]"></div>
+      <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white to-transparent"></div>
+
+      <div class="relative max-w-[1300px] mx-auto px-5 md:px-10 pt-8 pb-16 md:pb-24 min-h-[560px] lg:min-h-[640px] flex flex-col">
+        <nav class="s27-ulaz text-[12px] text-neutral-500" aria-label="Putanja">
+          <a href="/" class="hover:text-neutral-900">Početna</a>
+          <span class="mx-2">/</span>
+          <a href="/#edukacije" class="hover:text-neutral-900">Kursevi</a>
+          <span class="mx-2">/</span>
+          <span class="text-neutral-800">{naslov}</span>
+        </nav>
+
+        <div class="max-w-[560px] my-auto pt-12">
+          {
+            oznake.length > 0 && (
+              <p class="s27-ulaz text-[10.5px] font-medium uppercase tracking-[0.18em] text-neutral-600" style="--kasnjenje:0.1s">
+                {oznake.join("  |  ")}
+              </p>
+            )
+          }
+          <h1 class="s27-ulaz mt-5 font-serif text-[44px] md:text-[62px] leading-[1.02] tracking-[-0.025em]" style="--kasnjenje:0.2s">
+            {naslov}
+          </h1>
+          {
+            kurs.glavniKurs && (
+              <p class="s27-ulaz mt-3 text-[13px] font-medium uppercase tracking-[0.22em] text-neutral-600" style="--kasnjenje:0.25s">
+                {kurs.glavniKurs}
+              </p>
+            )
+          }
+          <div class="s27-ulaz mt-6 space-y-3 text-[15px] md:text-[16px] leading-relaxed text-neutral-700" style="--kasnjenje:0.3s">
+            {uvod.map((p) => <p>{p}</p>)}
+          </div>
+
+          <div class="s27-ulaz mt-8 flex flex-wrap items-center gap-3" style="--kasnjenje:0.4s">
+            <a href="#program" class={dugmeCrno}>
+              Pogledaj program kursa
+              <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </a>
+            <KupiDugme kurs={kurs} kupljen={kupljen} class={dugmeOkvir} />
+          </div>
+          <p class="s27-ulaz mt-5 text-[14px] text-neutral-600" style="--kasnjenje:0.45s">
+            {
+              saCenom ? (
+                <>
+                  Cena kursa: <strong class="font-serif text-[22px] font-normal text-neutral-900">{kurs.cena} €</strong>
+                </>
+              ) : (
+                <>
+                  Za više informacija javite se na{" "}
+                  <a href={`tel:${TELEFON}`} class="font-medium text-neutral-900 underline underline-offset-4">
+                    {TELEFON_PRIKAZ}
+                  </a>{" "}
+                  ili postavite pitanje.
+                </>
+              )
+            }
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. TRAKA: softver i oznake kursa -->
+    {
+      traka.length > 0 && (
+        <section class="border-y border-neutral-200 bg-white">
+          <ul class="max-w-[1300px] mx-auto px-5 md:px-10 grid grid-cols-2 lg:grid-cols-4">
+            {traka.map((t, i) => (
+              <li
+                class:list={[
+                  "flex items-center justify-center gap-3 px-3 py-6 text-[14px] text-neutral-800",
+                  i > 0 && "lg:border-l lg:border-neutral-200",
+                  i % 2 === 1 && "border-l border-neutral-200",
+                  i > 1 && "border-t border-neutral-200 lg:border-t-0",
+                ]}
+              >
+                <Ikona ime={t.ikona} class="w-6 h-6 shrink-0 text-neutral-700" />
+                <span class="max-w-[13rem] leading-snug text-balance">{t.tekst}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <!-- 3. O KURSU: slika iz baze levo, opis desno -->
+    {
+      opis.length > 0 && (
+        <section id="o-kursu" class="bg-white scroll-mt-20">
+          <div class="max-w-[1300px] mx-auto grid lg:grid-cols-2 items-center">
+            {slikaUvod && (
+              <div class="pojava relative h-[320px] md:h-[440px] lg:h-full lg:min-h-[480px] overflow-hidden">
+                <img src={slikaUvod} alt={`${naslov} – primer rendera iz kursa`} loading="lazy" class="absolute inset-0 h-full w-full object-cover" />
+              </div>
+            )}
+            <div class="pojava px-5 md:px-10 lg:px-16 py-14 md:py-20" style="--kasnjenje:0.1s">
+              <p class={eyebrow}>O kursu</p>
+              <h2 class:list={[naslovSekcije, "mt-4"]}>Od prve ideje do gotovog projekta.</h2>
+              <div class="mt-6 space-y-4 text-[15px] leading-relaxed text-neutral-700">
+                {opis.map((p) => <p>{p}</p>)}
+              </div>
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- 4. ŠTA ĆEŠ NAUČITI: kartice iz programa kursa (polje "sadrzaj") -->
+    {
+      kartice.length > 0 && (
+        <section id="program" class="bg-white scroll-mt-20 border-t border-neutral-100">
+          <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24">
+            <h2 class:list={[naslovSekcije, "pojava text-center"]}>{naslovKartica}</h2>
+            <ol class="mt-10 md:mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+              {kartice.map((k, i) => (
+                <li class="pojava bg-[#f4f2ee] p-6 md:p-7" style={`--kasnjenje:${(i % 4) * 0.06}s`}>
+                  <div class="flex items-start gap-5">
+                    <span class="font-serif text-[22px] leading-none text-neutral-400">{String(i + 1).padStart(2, "0")}</span>
+                    <div class="flex-1 min-w-0">
+                      <Ikona ime={ikonaZa(k.naslov, i)} class="w-7 h-7 text-neutral-800" />
+                      <h3 class="mt-3 font-serif text-[18px] leading-snug text-neutral-900">{k.naslov}</h3>
+                      {k.opis && <p class="mt-2 text-[13.5px] leading-relaxed text-neutral-600">{k.opis}</p>}
+                      {k.stavke.length > 0 && (
+                        <ul class="mt-3 space-y-1.5">
+                          {k.stavke.map((s) => (
+                            <li class="flex gap-2 text-[13.5px] leading-snug text-neutral-600">
+                              <span class="mt-[7px] h-px w-2.5 shrink-0 bg-neutral-400" />
+                              {s}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- 5. KAKO IZGLEDA UČENJE -->
+    <section class="bg-[#faf9f7] border-y border-neutral-100">
+      <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-20">
+        <h2 class:list={[naslovSekcije, "pojava text-center"]}>Kako izgleda učenje?</h2>
+        <ol class="mt-10 md:mt-12 grid md:grid-cols-3 gap-8 md:gap-6">
+          {
+            koraci.map((k, i) => (
+              <li class="pojava flex items-start gap-5" style={`--kasnjenje:${i * 0.1}s`}>
+                <span class="shrink-0 w-12 h-12 s27-krug rounded-full border border-neutral-400 flex items-center justify-center font-serif text-[20px]">
+                  {i + 1}
+                </span>
+                <div class="flex-1">
+                  <h3 class="font-serif text-[19px]">{k.naslov}</h3>
+                  <p class="mt-1.5 text-[14px] leading-relaxed text-neutral-600">{k.tekst}</p>
+                </div>
+                {i < koraci.length - 1 && <span class="hidden md:block mt-6 h-px w-12 shrink-0 bg-neutral-300" aria-hidden="true" />}
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </section>
+
+    <!-- LEKCIJE (video kursevi, iz baze) -->
+    {
+      lekcije.length > 0 && (
+        <section class="bg-white">
+          <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24 grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-20">
+            <div class="pojava">
+              <p class={eyebrow}>Struktura kursa</p>
+              <h2 class:list={[naslovSekcije, "mt-4"]}>Lekcije</h2>
+              <p class="mt-4 text-[14px] text-neutral-600">
+                {lekcije.length} lekcija{brojVidea > 0 ? ` · ${brojVidea} video snimaka` : ""} · neograničen pristup
+              </p>
+            </div>
+            <ol class="pojava border-t border-neutral-200" style="--kasnjenje:0.1s">
+              {lekcije.map((l, i) => (
+                <li class="flex items-baseline gap-6 py-4 border-b border-neutral-200">
+                  <span class="w-8 shrink-0 font-serif text-[15px] text-neutral-400">{String(i + 1).padStart(2, "0")}</span>
+                  <span class="flex-1 text-[15px]">{l.naziv}</span>
+                  {(l.videoUrls?.length || 0) > 0 && (
+                    <span class="shrink-0 text-[11px] uppercase tracking-[0.14em] text-neutral-400">
+                      {l.videoUrls!.length} {l.videoUrls!.length === 1 ? "video" : "videa"}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- RADOVI POLAZNIKA OVOG KURSA (tabela radova u bazi, vezani za kurs) -->
+    {
+      radovi.length > 0 && (
+        <section id="radovi-polaznika" class="bg-[#f7f6f3] scroll-mt-20">
+          <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-20">
+            <div class="pojava flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div>
+                <p class={eyebrow}>Radovi polaznika</p>
+                <h2 class:list={[naslovSekcije, "mt-4"]}>Šta su napravili polaznici ovog kursa.</h2>
+              </div>
+              <a href="/radovi" class="group inline-flex items-center gap-2 self-start md:self-auto border-b border-neutral-900 pb-1 text-[13px] font-medium">
+                Svi radovi studenata
+                <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </a>
+            </div>
+            <div class="mt-10 columns-2 md:columns-3 lg:columns-4 gap-3 md:gap-4">
+              {radovi.slice(0, 12).map((r, i) => {
+                const autor = [r.ime, r.prezime].map((x) => (x || "").trim()).filter(Boolean).join(" ");
+                return (
+                  <button
+                    type="button"
+                    data-galerija-slika={i}
+                    class="pojava group relative mb-3 md:mb-4 block w-full overflow-hidden bg-neutral-200 break-inside-avoid cursor-zoom-in"
+                    style={`--kasnjenje:${(i % 4) * 0.06}s`}
+                    aria-label={`Uvećaj rad${autor ? ` – ${autor}` : ""}`}
+                  >
+                    <img
+                      src={slikaIzBaze(r.url)}
+                      alt={`Render polaznika${autor ? ` ${autor}` : ""} (${i + 1}) – ${naslov}${glavniLepo ? `, ${glavniLepo}` : ""}`}
+                      loading="lazy"
+                      decoding="async"
+                      class="w-full h-auto transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
+                    />
+                    {autor && (
+                      <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-3 pb-2.5 pt-8 text-left text-[12px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                        {autor}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- 6. OD POČETNIKA DO REZULTATA: ostale slike kursa iz baze -->
+    {
+      sporedne.length > 0 && (
+        <section class="bg-white border-t border-neutral-100">
+          <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-20">
+            <h2 class:list={[naslovSekcije, "pojava text-center"]}>Od početnika do konkretnog rezultata.</h2>
+            <div class="mt-10 grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+              {sporedne.map((src, i) => (
+                <button
+                  type="button"
+                  data-galerija-slika={i}
+                  class="pojava group relative block aspect-[4/3] overflow-hidden bg-neutral-100 cursor-zoom-in"
+                  style={`--kasnjenje:${(i % 4) * 0.06}s`}
+                  aria-label={`Uvećaj sliku ${i + 1}`}
+                >
+                  <img
+                    src={src}
+                    alt={`${naslov}: render ${i + 1}${glavniLepo ? ` (${glavniLepo})` : ""}`}
+                    loading="lazy"
+                    decoding="async"
+                    class="absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-[1.05]"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- 7. UTISCI POLAZNIKA (recenzije iz baze) -->
+    {
+      recenzije.length > 0 && (
+        <section class="bg-white border-t border-neutral-100">
+          <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-20 grid lg:grid-cols-[0.75fr_2.25fr] gap-10 items-start">
+            <div class="pojava">
+              <h2 class={naslovSekcije}>Utisci naših polaznika</h2>
+              <p class="mt-4 text-[14px] leading-relaxed text-neutral-600">
+                Evo šta kažu polaznici koji su već prošli kroz naše kurseve. Njihova iskustva najbolje govore šta možeš da očekuješ.
+              </p>
+            </div>
+            <ul class="flex lg:grid lg:grid-cols-3 xl:grid-cols-5 gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-5 px-5 lg:mx-0 lg:px-0">
+              {recenzije.map((r, i) => (
+                <li class="pojava snap-start shrink-0 w-[260px] lg:w-auto flex flex-col border border-neutral-200 p-4" style={`--kasnjenje:${i * 0.06}s`}>
+                  <p class="text-[12px] tracking-[0.12em] text-neutral-900" aria-label={`Ocena ${r.ocena || 5} od 5`}>
+                    {"★".repeat(Math.max(1, Math.min(5, r.ocena || 5)))}
+                  </p>
+                  </div>
+                  <p class="mt-3 text-[13px] leading-relaxed text-neutral-700 line-clamp-6 mb-3">{r.opis.trim()}</p>
+                  {r.kurs?.naziv && (
+                    <p class="mt-auto pt-3 border-t border-neutral-200 text-[11px] uppercase tracking-[0.14em] text-neutral-500">
+                      Polaznik kursa:{" "}
+                      {r.kurs.id ? (
+                        <a href={`/kurs/${r.kurs.id}`} class="text-neutral-900 underline underline-offset-2 hover:no-underline">{lepNaziv(r.kurs.naziv)}</a>
+                      ) : (
+                        <span class="text-neutral-900">{lepNaziv(r.kurs.naziv)}</span>
+                      )}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- 8. SVE ŠTO TI JE POTREBNO ZA POČETAK -->
+    <section class="bg-white">
+      <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-10 md:py-14">
+        <div class="pojava relative overflow-hidden bg-[#f4f2ee] grid lg:grid-cols-[1fr_auto_1fr]">
+          <div class="relative z-10 p-8 md:p-12">
+            <p class={eyebrow}>Sve što ti je potrebno za početak</p>
+            <p class="mt-4 font-serif text-[34px] md:text-[42px] leading-[1.05] tracking-[-0.02em]">{naslov}</p>
+            {kurs.glavniKurs && <p class="mt-2 font-serif text-[19px] text-neutral-600">{recenica(kurs.glavniKurs)}</p>}
+            <div class="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
+              {
+                saCenom ? (
+                  <p class="font-serif text-[34px] leading-none">{kurs.cena} €</p>
+                ) : (
+                  <p class="max-w-[260px] text-[13px] leading-relaxed text-neutral-700">
+                    Za više informacija javite se na{" "}
+                    <a href={`tel:${TELEFON}`} class="font-medium underline underline-offset-4">{TELEFON_PRIKAZ}</a> ili postavite pitanje.
+                  </p>
+                )
+              }
+              <KupiDugme kurs={kurs} kupljen={kupljen} class={dugmeCrno} />
+            </div>
+          </div>
+          <div class="hidden lg:block my-10 w-px bg-neutral-300" aria-hidden="true"></div>
+          <div class="relative p-8 md:p-12 lg:pl-14">
+            {
+              glavna && (
+                <img
+                  src={glavna}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  class="absolute inset-y-0 right-0 hidden md:block h-full w-[55%] object-cover opacity-90 [mask-image:linear-gradient(to_right,transparent,black_60%)]"
+                />
+              )
+            }
+            <ul class="relative space-y-2.5">
+              {spisak.map((s) => (
+                <li class="flex items-center gap-3 text-[14px] text-neutral-800">
+                  <Ikona ime="kvacica" class="w-4 h-4 shrink-0" debljina={2} />
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. IMAŠ DODATNIH PITANJA? (+ WhatsApp kao na starom sajtu) -->
+    <section class="bg-white">
+      <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-14 md:py-20 grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-20 items-start">
+        <div class="pojava">
+          <h2 class={naslovSekcije}>Imaš dodatnih pitanja?</h2>
+          <p class="mt-4 text-[14px] leading-relaxed text-neutral-600">Pošalji nam poruku — odgovaramo brzo, obično istog dana.</p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <a
+              href={whatsappLink(porukaZaWhatsApp)}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 bg-[#25D366] px-6 py-3.5 text-[13px] font-semibold text-black hover:bg-[#1ebe5a] transition-colors"
+            >
+              <Ikona ime="chat" class="w-4 h-4" /> WhatsApp poruka
+            </a>
+            <button type="button" data-otvori-kontakt class={`${dugmeOkvir} py-3.5 cursor-pointer`}>
+              Postavi pitanje
+            </button>
+          </div>
+        </div>
+        <div class="pojava border-t border-neutral-200" style="--kasnjenje:0.1s">
+          {
+            pitanja.map((p) => (
+              <details class="s27-faq border-b border-neutral-200">
+                <summary class="flex items-center justify-between gap-6 py-4 text-[15px] leading-snug">
+                  {p.question}
+                  <span class="s27-faq-plus shrink-0 text-[20px] font-light transition-transform duration-300">+</span>
+                </summary>
+                <p class="pb-5 pr-10 text-[14px] leading-relaxed text-neutral-600">{p.answer}</p>
+              </details>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. SERTIFIKAT (kursevi uživo) -->
+    {
+      naUzivo && (
+        <section class="relative overflow-hidden bg-[#f7f6f3]">
+          {slikaKraj && (
+            <img
+              src={slikaKraj}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              class="absolute inset-y-0 right-0 hidden md:block h-full w-[45%] object-cover [mask-image:linear-gradient(to_right,transparent,black_70%)]"
+            />
+          )}
+          <div class="relative max-w-[1300px] mx-auto px-5 md:px-10 py-14 md:py-16">
+            <p class={eyebrow}>Sertifikat</p>
+            <h2 class:list={[naslovSekcije, "mt-3 max-w-[620px]"]}>Dobijaš sertifikat po završetku kursa.</h2>
+            <p class="mt-4 max-w-[480px] text-[15px] leading-relaxed text-neutral-600">
+              Nakon odslušanog kursa i završenog projekta dobijaš sertifikat Studio 27 kao potvrdu stečenog znanja.
+            </p>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- 11. ZAVRŠNI POZIV preko slike kursa -->
+    <section class="relative overflow-hidden">
+      {slikaKraj && <img src={slikaKraj} alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover" />}
+      <div class="absolute inset-0 bg-white/72"></div>
+      <div class="relative max-w-[900px] mx-auto px-5 md:px-10 py-20 md:py-28 text-center">
+        <h2 class:list={[naslovSekcije, "pojava"]}>Započni svoj put uz {nazivUTekstu}.</h2>
+        <p class="pojava mt-4 text-[15px] text-neutral-700" style="--kasnjenje:0.1s">
+          Pridruži se kursu i nauči kako da samostalno razviješ i predstaviš svoj projekat.
+        </p>
+        <div class="pojava mt-8 flex flex-wrap justify-center gap-3" style="--kasnjenje:0.2s">
+          <KupiDugme kurs={kurs} kupljen={kupljen} class={dugmeCrno} />
+          <a href="#program" class={dugmeOkvir}>Pogledaj program kursa</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- OSTALI KURSEVI (iz baze) -->
+    {
+      ostaliKursevi.length > 0 && (
+        <section id="ostali-kursevi" class="bg-[#f7f6f3] scroll-mt-20">
+          <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24">
+            <div class="pojava flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div>
+                <p class={eyebrow}>Još iz ponude</p>
+                <h2 class:list={[naslovSekcije, "mt-4"]}>Pogledaj i ostale kurseve.</h2>
+              </div>
+              <a href="/#edukacije" class="group inline-flex items-center gap-2 self-start md:self-auto border-b border-neutral-900 pb-1 text-[13px] font-medium">
+                Svi kursevi
+                <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </a>
+            </div>
+
+            <div class:list={["mt-10 grid gap-4 md:gap-5", ostaliKursevi.length === 1 ? "md:grid-cols-1" : ostaliKursevi.length === 2 ? "md:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"]}>
+              {ostaliKursevi.map((k, i) => (
+                <a
+                  href={`/kurs/${k.id}`}
+                  class="pojava group relative block overflow-hidden bg-neutral-200 aspect-[4/5] md:aspect-[4/4.6]"
+                  style={`--kasnjenje:${i * 0.1}s`}
+                >
+                  {k.slikaUrl && (
+                    <img
+                      src={slikaIzBaze(k.slikaUrl)}
+                      alt={lepNaziv(k.naziv)}
+                      loading="lazy"
+                      decoding="async"
+                      class="absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-[1.06]"
+                    />
+                  )}
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
+                  <div class="absolute top-5 right-5 border border-white/40 bg-black/25 backdrop-blur-sm px-3 py-1.5 text-[12px] tracking-wide text-white">
+                    {imaCenu(k) ? `${k.cena} €` : "Cena na upit"}
+                  </div>
+                  <div class="absolute inset-x-0 bottom-0 p-6 text-white">
+                    {k.glavniKurs && <p class="text-[11px] uppercase tracking-[0.2em] text-white/75">{k.glavniKurs}</p>}
+                    <div class="mt-2 flex items-end justify-between gap-4">
+                      <h3 class="font-serif text-[26px] md:text-[30px] leading-[1.05] tracking-[-0.015em]">{lepNaziv(k.naziv)}</h3>
+                      <span class="shrink-0 w-11 h-11 border border-white/50 flex items-center justify-center transition-all duration-500 group-hover:bg-white group-hover:text-neutral-900">
+                        <Ikona ime="strelica" class="w-4 h-4 transition-transform duration-500 group-hover:-rotate-45" />
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    <!-- Uvećan prikaz slika -->
+    <div id="s27-lightbox" class="fixed inset-0 z-[2000] hidden items-center justify-center bg-black/95 p-4 md:p-10" role="dialog" aria-modal="true" aria-label="Uvećana slika">
+      <button type="button" data-lb-zatvori class="absolute top-5 right-5 w-12 h-12 flex items-center justify-center text-white/80 hover:text-white text-3xl cursor-pointer" aria-label="Zatvori">&times;</button>
+      <button type="button" data-lb-nazad class="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Prethodna slika">
+        <Ikona ime="strelicaLevo" class="w-5 h-5" />
+      </button>
+      <img id="s27-lb-slika" alt="" class="max-h-[85vh] max-w-full object-contain" />
+      <button type="button" data-lb-napred class="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Sledeća slika">
+        <Ikona ime="strelica" class="w-5 h-5" />
+      </button>
+    </div>
+  </main>
 </Layout>
+
+<script>
+  // Galerija: uvećan prikaz sa strelicama i tastaturom
+  const slike = [...document.querySelectorAll<HTMLButtonElement>("[data-galerija-slika]")].map(
+    (d) => d.querySelector("img")?.getAttribute("src") || "",
+  );
+  const lb = document.getElementById("s27-lightbox");
+  const lbSlika = document.getElementById("s27-lb-slika") as HTMLImageElement | null;
+  let trenutna = 0;
+  const prikazi = (i: number) => {
+    if (!lbSlika || slike.length === 0) return;
+    trenutna = (i + slike.length) % slike.length;
+    lbSlika.src = slike[trenutna];
+  };
+  const zatvori = () => {
+    lb?.classList.add("hidden");
+    lb?.classList.remove("flex");
+    document.body.style.overflow = "";
+  };
+  document.querySelectorAll<HTMLButtonElement>("[data-galerija-slika]").forEach((d, i) =>
+    d.addEventListener("click", () => {
+      prikazi(i);
+      lb?.classList.remove("hidden");
+      lb?.classList.add("flex");
+      document.body.style.overflow = "hidden";
+    }),
+  );
+  lb?.querySelector("[data-lb-zatvori]")?.addEventListener("click", zatvori);
+  lb?.querySelector("[data-lb-nazad]")?.addEventListener("click", () => prikazi(trenutna - 1));
+  lb?.querySelector("[data-lb-napred]")?.addEventListener("click", () => prikazi(trenutna + 1));
+  lb?.addEventListener("click", (e) => e.target === lb && zatvori());
+  document.addEventListener("keydown", (e) => {
+    if (!lb || lb.classList.contains("hidden")) return;
+    if (e.key === "Escape") zatvori();
+    if (e.key === "ArrowLeft") prikazi(trenutna - 1);
+    if (e.key === "ArrowRight") prikazi(trenutna + 1);
+  });
+</script>

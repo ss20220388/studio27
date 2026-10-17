@@ -1,7 +1,7 @@
+import { API_URL } from "../lib/adrese";
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 interface Admin {
   userId: number;

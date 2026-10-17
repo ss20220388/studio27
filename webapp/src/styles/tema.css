@@ -1,0 +1,150 @@
+/*
+  Svetla tema (u stilu sajta 27archviz.com: belo, bež, crni akcenti, serif naslovi).
+
+  Aplikacija je pisana za tamnu pozadinu (neutral-900/800, text-white, red-900 dugmad).
+  Umesto prepravljanja svake komponente, kada je na <html> postavljeno data-tema="svetla",
+  Tailwind 4 promenljive boja se preslikavaju u svetlu paletu:
+  - tamne neutralne nijanse postaju bele/bež, svetle postaju tamne (tekst)
+  - crveni akcenat postaje crn (kao dugmad na sajtu)
+  - "white" postaje tamna boja teksta, osim na tamnim dugmadima i preko slika/videa
+*/
+
+html[data-tema="svetla"] {
+  color-scheme: light;
+
+  --color-neutral-950: #f7f6f3;
+  --color-neutral-900: #ffffff;
+  --color-neutral-800: #ece9e4;
+  --color-neutral-700: #dcd8d1;
+  --color-neutral-600: #a39e97;
+  --color-neutral-500: #77726c;
+  --color-neutral-400: #5c5751;
+  --color-neutral-300: #3d3a36;
+  --color-neutral-200: #262421;
+  --color-neutral-100: #1a1917;
+  --color-neutral-50: #111111;
+
+  --color-zinc-950: #f7f6f3;
+  --color-zinc-900: #ffffff;
+  --color-zinc-800: #ece9e4;
+  --color-zinc-700: #dcd8d1;
+  --color-zinc-600: #a39e97;
+  --color-zinc-500: #77726c;
+  --color-zinc-400: #5c5751;
+  --color-zinc-300: #3d3a36;
+  --color-zinc-200: #262421;
+  --color-zinc-100: #1a1917;
+  --color-zinc-50: #111111;
+
+  /* akcenat: crveno -> crno (greške ostaju čitljivo crvene) */
+  --color-red-950: #111111;
+  --color-red-900: #171717;
+  --color-red-800: #000000;
+  --color-red-500: #b42318;
+  --color-red-400: #b42318;
+  --color-red-300: #9b1c1c;
+  --color-red-200: #7f1d1d;
+
+  /* statusi: tamnije nijanse da budu čitljive na beloj pozadini */
+  --color-emerald-900: #047857;
+  --color-emerald-800: #a7f3d0;
+  --color-emerald-500: #047857;
+  --color-emerald-400: #047857;
+  --color-green-900: #15803d;
+  --color-green-500: #15803d;
+  --color-green-400: #15803d;
+  --color-amber-900: #b45309;
+  --color-amber-800: #fcd34d;
+  --color-amber-500: #b45309;
+  --color-amber-400: #b45309;
+  --color-blue-900: #1d4ed8;
+  --color-blue-500: #1d4ed8;
+  --color-blue-400: #1d4ed8;
+  --color-blue-300: #1e40af;
+  --color-blue-200: #1e3a8a;
+
+  /* "bela" postaje boja teksta */
+  --color-white: #171717;
+}
+
+/* Na tamnim dugmadima, preko slika i videa bela ostaje bela */
+html[data-tema="svetla"]
+  :is(
+    .bg-red-900,
+    .bg-red-800,
+    .bg-red-700,
+    .bg-red-600,
+    .bg-red-500,
+    .bg-black,
+    [class*="bg-black/"],
+    [class*="from-black"],
+    .bg-emerald-500,
+    .bg-emerald-600,
+    .bg-emerald-700,
+    .bg-amber-600,
+    .bg-amber-700,
+    .bg-blue-600,
+    .bg-blue-500
+  ) {
+  --color-white: #ffffff;
+}
+
+/* ...ali paneli (modali, kartice) unutar njih ponovo koriste tamni tekst */
+html[data-tema="svetla"]
+  :is(
+    [class*="bg-neutral-9"],
+    [class*="bg-neutral-8"],
+    [class*="bg-zinc-9"],
+    [class*="bg-zinc-8"]
+  ) {
+  --color-white: #171717;
+}
+
+/* Tekst preko slika (kartice kurseva i sl.) uvek ostaje beo */
+html[data-tema="svetla"] [data-preko-slike] {
+  --color-white: #ffffff;
+  color: #ffffff;
+}
+
+/* Puna tamna dugmad: beli tekst i kada boju nasleđuju od roditelja */
+html[data-tema="svetla"] :is(.bg-red-900, .bg-red-800, .bg-black) {
+  color: #ffffff;
+}
+
+/* Prozirne crvene podloge (info trake, aktivna stavka menija) postaju bež kao na sajtu */
+html[data-tema="svetla"] :is([class^="bg-red-900/"], [class*=" bg-red-900/"], [class^="bg-red-800/"], [class*=" bg-red-800/"]) {
+  background-color: #efebe4;
+}
+html[data-tema="svetla"] :is([class^="border-red-900/"], [class*=" border-red-900/"], [class^="border-red-800/"], [class*=" border-red-800/"]) {
+  border-color: #dcd8d1;
+}
+
+/* Tipografija kao na sajtu: serif naslovi */
+html[data-tema="svetla"] h1,
+html[data-tema="svetla"] h2 {
+  font-family: "Newsreader", "Times New Roman", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+
+/* Četvrtasto kao sajt (krugovi poput avatara i indikatora ostaju okrugli) */
+html[data-tema="svetla"] *:not(.rounded-full),
+html[data-tema="svetla"] *:not(.rounded-full)::before,
+html[data-tema="svetla"] *:not(.rounded-full)::after {
+  border-radius: 0 !important;
+}
+
+html[data-tema="svetla"] body {
+  background: var(--color-neutral-950);
+  color: var(--color-neutral-100);
+}
+
+html[data-tema="svetla"] ::-webkit-scrollbar-track {
+  background: #f7f6f3;
+}
+html[data-tema="svetla"] ::-webkit-scrollbar-thumb {
+  background: #d6d2cb;
+}
+html[data-tema="svetla"] ::-webkit-scrollbar-thumb:hover {
+  background: #a39e97;
+}

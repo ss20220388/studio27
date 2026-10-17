@@ -170,7 +170,7 @@ public class AuthController {
                 "SELECT userId FROM user WHERE email = ?", Integer.class, request.getEmail());
 
         jdbcTemplate.update(
-                "INSERT INTO student (studentId, ime, prezime, brojTelefona) VALUES (?, ?, ?, ?)",
+                "INSERT INTO student (studentId, ime, prezime, brojTelefona, datumKreiranjaNaloga) VALUES (?, ?, ?, ?, CURDATE())",
                 userId, request.getIme(), request.getPrezime(), request.getBrojTelefona());
 
         return ResponseEntity.ok(Map.of("message", "Korisnik uspesno kreiran"));

@@ -1,8 +1,8 @@
 ---
+import { API_URL } from "../lib/adrese";
 import Layout from "../layouts/Layout.astro";
 import RadoviForma from "../react components/RadoviForma.jsx";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 const accessToken = Astro.cookies.get("refreshToken")?.value || null;
 
 let sviKursevi = [];
@@ -19,7 +19,7 @@ try {
 }
 ---
 
-<Layout>
+<Layout title="Radovi studenata">
   <div class="min-h-screen bg-zinc-950 text-zinc-100 py-12 px-4 sm:px-6">
     <div class="max-w-2xl mx-auto">
       

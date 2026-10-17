@@ -1,0 +1,213 @@
+---
+// Mini kviz za odabir kursa – identično fajlu studio27-mini-kviz.html (marketing agencija).
+// Jedina razlika: linkovi na kurseve vode na stranice kurseva ovog sajta.
+// Ne prikuplja niti šalje lične podatke.
+interface Props {
+  // h1 samo na samostalnoj stranici /kviz; na početnoj je h2 (jedan h1 po stranici zbog SEO)
+  naslovTag?: "h1" | "h2";
+}
+const { naslovTag = "h2" } = Astro.props;
+const Naslov = naslovTag;
+---
+
+<section class="s27-root" aria-label="Mini kviz za odabir kursa">
+  <header class="s27-topbar">
+    <div class="s27-brand">Studio 27<small>The art of architectural visualization.</small></div>
+    <div class="s27-topright">EDUKACIJA / MINI KVIZ</div>
+  </header>
+  <div class="s27-main">
+    <aside class="s27-intro">
+      <div class="s27-eyebrow">Studio 27 / Edukacija</div>
+      <Naslov class="s27-naslov">Nisi siguran koji kurs je za tebe?</Naslov>
+      <p>Odgovori na 4 kratka pitanja i saznaj koji program najviše odgovara tvojim interesovanjima, znanju i ciljevima.</p>
+      <div class="s27-facts"><div class="s27-fact"><strong>04</strong><span>kratka pitanja</span></div><div class="s27-fact"><strong>01</strong><span>preporuka za tebe</span></div></div>
+    </aside>
+    <section id="s27-quiz-card" class="s27-card" aria-live="polite"></section>
+  </div>
+  <footer class="s27-footer"><span>© Studio 27 — pronađi svoj sledeći korak.</span><span>Bez registracije i ostavljanja ličnih podataka.</span></footer>
+</section>
+
+<style is:global>
+    .s27-root, .s27-root * {box-sizing: border-box;}
+    .s27-root { background:#f7f6f3; color:#191919; font-family: Inter, Arial, Helvetica, sans-serif; -webkit-font-smoothing:antialiased; }
+    .s27-root button, .s27-root a { -webkit-tap-highlight-color: transparent; }
+    .s27-root button:focus-visible, .s27-root a:focus-visible { outline: 3px solid #b69b81; outline-offset: 3px; }
+    .s27-root {max-width:1080px; margin:0 auto; padding:44px 24px 70px; }
+    .s27-topbar {display:flex; gap:16px; align-items:center; justify-content:space-between; padding-bottom:24px; border-bottom:1px solid #d9d7d3;}
+    .s27-brand {font-size:20px; letter-spacing:-.07em; font-weight:950; line-height:.9; }
+    .s27-brand small {display:block; font-size:8px; letter-spacing:-.01em; line-height:1.4; margin-top:7px; font-weight:650;}
+    .s27-topright {text-transform:uppercase; letter-spacing:.15em; font-size:11px; font-weight:750; color:#74716c; }
+    .s27-main {display:grid; grid-template-columns: .85fr 1.15fr; gap:clamp(22px,5vw,75px); padding-top:70px; align-items:start; }
+    .s27-intro {position:sticky; top:30px;}
+    .s27-eyebrow {display:inline-flex; align-items:center; gap:8px; margin-bottom:18px; font-weight:800; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:#7b695d;}
+    .s27-eyebrow:before {content:""; width:21px; height:1px; background:#8b7565; }
+    .s27-intro h1, .s27-intro .s27-naslov {font-size:clamp(36px,4.8vw,62px); letter-spacing:-.075em; line-height:.98; font-weight:950; text-transform:uppercase; margin:0 0 19px; }
+    .s27-intro p {font-size:16px; line-height:1.65; color:#63615d; max-width:330px; margin:0; }
+    .s27-facts {display:flex; gap:24px; margin-top:42px; padding-top:20px; border-top:1px solid #d9d7d3; }
+    .s27-fact strong {display:block; font-size:24px; letter-spacing:-.06em;}
+    .s27-fact span {font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:#77726d; font-weight:800; }
+    .s27-card {background:white; border:1px solid #e2dfda; box-shadow:0 18px 45px rgba(0,0,0,.035); border-radius:4px; min-height:544px; overflow:hidden; }
+    .s27-progress {display:flex; align-items:center; justify-content:space-between; gap:15px; padding:25px 28px 19px; }
+    .s27-step {font-weight:800; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#7f766f; }
+    .s27-progressline {display:flex; gap:5px; flex:1; max-width:190px; }
+    .s27-progressline span {height:4px; flex:1; background:#eae8e5; border-radius:99px; transition:background .2s ease; }
+    .s27-progressline span.active {background:#1b1b1b;}
+    .s27-inner {padding:15px 28px 26px;}
+    .s27-question-title {font-size:clamp(24px,2.65vw,32px); font-weight:900; line-height:1.1; letter-spacing:-.055em; margin:6px 0 9px; }
+    .s27-question-desc {font-size:14px; color:#79736d; line-height:1.5; margin:0 0 25px; }
+    .s27-options {display:grid; gap:9px; }
+    .s27-option {display:flex; text-align:left; border:1px solid #dedbd7; background:#fff; border-radius:4px; padding:14px 15px; cursor:pointer; width:100%; align-items:center; justify-content:space-between; gap:12px; transition:background .15s,border-color .15s,transform .15s; }
+    .s27-option:hover {background:#f7f6f3; border-color:#97928c; transform:translateY(-1px);}
+    .s27-option.selected {background:#f0ece6; border-color:#1a1a1a;}
+    .s27-option-label {font-size:14px; font-weight:720; line-height:1.38;}
+    .s27-option-desc {display:block; margin-top:3px; font-size:11px; line-height:1.45; color:#817970; font-weight:450;}
+    .s27-circle {width:19px; height:19px; border:1.5px solid #b1aca6; border-radius:50%; flex:none; display:grid; place-items:center;}
+    .s27-selected .s27-circle,.s27-option.selected .s27-circle {background:#171717; border-color:#171717;}
+    .s27-option.selected .s27-circle:after {content:""; background:#fff; width:6px; height:6px; border-radius:50%;}
+    .s27-actions {display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:24px; }
+    .s27-back {border:0; background:transparent; color:#6f6963; padding:12px 0; cursor:pointer; font-size:12px; font-weight:700;}
+    .s27-back:disabled {opacity:.35; cursor:not-allowed;}
+    .s27-next {border:0; border-radius:3px; background:#181818; color:white; padding:14px 21px; font-size:13px; font-weight:800; cursor:pointer; transition:opacity .15s; }
+    .s27-next:hover {opacity:.82;}
+    .s27-next:disabled {background:#d0ceca; cursor:not-allowed;}
+    .s27-result-eyebrow {font-size:11px; text-transform:uppercase; letter-spacing:.12em; font-weight:850; color:#796c60; margin:0 0 14px;}
+    .s27-result-title {font-size:clamp(28px,3.1vw,39px); line-height:1.06; letter-spacing:-.07em; font-weight:950; text-transform:uppercase; margin:0 0 14px;}
+    .s27-result-explain {font-size:14px; line-height:1.6; color:#69635e; margin:0 0 20px;}
+    .s27-result-band {padding:19px 18px; margin:13px 0 18px; background:#f4f2ef; border:1px solid #e4e0db; border-radius:3px; }
+    .s27-result-band small {display:block; text-transform:uppercase; font-weight:800; font-size:10px; letter-spacing:.12em; color:#756f68; margin-bottom:9px;}
+    .s27-price {font-size:33px; line-height:1.1; font-weight:900; letter-spacing:-.065em; margin:4px 0 10px; }
+    .s27-result-band p {font-size:12px; color:#5c5752; line-height:1.6; margin:0; }
+    .s27-result-buttons {display:flex; flex-wrap:wrap; gap:8px; margin:18px 0 10px; }
+    .s27-link {display:inline-flex; text-align:center; text-decoration:none; align-items:center; justify-content:center; border:1px solid #171717; padding:13px 14px; border-radius:3px; font-size:12px; font-weight:800; line-height:1.3; background:#171717; color:#fff; }
+    .s27-link.light {background:#fff; color:#191919; }
+    .s27-link:hover {opacity:.84;}
+    .s27-packs {display:flex; flex-wrap:wrap; gap:6px; margin-top:11px; }
+    .s27-pack {padding:9px 10px; border:1px solid #d6d3cf; border-radius:3px; background:#fff; font-size:11px; font-weight:800; cursor:pointer; }
+    .s27-pack[aria-pressed="true"] {background:#191919; color:#fff; border-color:#191919; }
+    .s27-note {font-size:11px; line-height:1.55; color:#8a8179; margin-top:14px; }
+    .s27-footer {display:flex; justify-content:space-between; gap:20px; margin-top:28px; border-top:1px solid #d9d7d3; padding-top:16px; color:#88817b; font-size:11px; }
+    .s27-restart {font-size:12px; font-weight:800; color:#191919; background:transparent; border:0; padding:10px 0; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+    .s27-alternatives {display:grid; gap:7px; margin-top:13px;}
+    .s27-alt {font:inherit; font-size:13px; font-weight:700; text-align:left; background:#faf9f7; padding:13px 12px; cursor:pointer; border:1px solid #e3dfd9; border-radius:3px; }
+    .s27-alt:hover {background:#f0ece6;}
+    @media(max-width:750px){
+      .s27-root {padding:26px 15px 45px;}
+      .s27-main {display:block; padding-top:38px;}
+      .s27-intro {position:static; margin-bottom:30px;}
+      .s27-intro h1, .s27-intro .s27-naslov {max-width:540px; font-size:clamp(35px,9vw,54px);}
+      .s27-intro p {max-width:500px;}
+      .s27-facts {margin-top:22px;}
+      .s27-card {min-height:0;}
+      .s27-topright {font-size:9px;}
+    }
+    @media(max-width:430px){
+      .s27-progress {padding:19px 17px 10px;}
+      .s27-inner {padding:14px 17px 22px;}
+      .s27-question-title {font-size:26px;}
+      .s27-option {padding:12px;}
+      .s27-result-buttons .s27-link {flex:1; min-width:150px;}
+      .s27-footer {display:block;}
+    }
+    @media(prefers-reduced-motion:reduce){ .s27-root *{scroll-behavior:auto!important;transition:none!important} }
+</style>
+
+<script is:inline>
+(() => {
+  'use strict';
+  const root = document.getElementById('s27-quiz-card');
+  const COURSES = {
+    render: { name: '3ds Max + Corona', title: 'Od nule do profesionalnog rendera', url: '/kurs/7', desc: 'Za one koji žele da nauče 3D modelovanje, materijale, osvetljenje, kadriranje i izradu fotorealističnih enterijera — od osnova do Level Up-a.' },
+    exterior: { name: 'Vizualizacija eksterijera', title: 'Kurs vizualizacije eksterijera', url: '/kurs/3', desc: 'Za one koje privlače spoljašnji prikazi arhitekture: teren, vegetacija, fasade, atmosfersko osvetljenje i realistični eksterijeri.' },
+    design: { name: 'Dizajn enterijera', title: 'Kurs dizajna enterijera', url: '/kurs/6', desc: 'Za one koji žele da projektuju i organizuju prostor, pripremaju tehničke crteže u AutoCAD-u i predstavljaju ideje kroz Photoshop.' },
+    ai: { name: 'AI kurs', title: 'Animacija + AI alati', url: null, desc: 'Za one koje zanimaju animacije, kreativna obrada vizuala, AI postprodukcija i nove mogućnosti predstavljanja arhitektonskih projekata.' }
+  };
+  const questions = [
+    {title:'Šta najviše želiš da kreiraš?',sub:'Izaberi ono što te najviše privlači.', options:[
+      {id:'render', text:'Fotorealistične 3D enterijere',desc:'Materijali, svetlo, kompozicija, renderi',scores:{render:5}},
+      {id:'exterior',text:'Realistične prikaze kuća i eksterijera',desc:'Arhitektura, vegetacija, okruženje',scores:{exterior:5}},
+      {id:'design',text:'Kompletne projekte dizajna enterijera',desc:'Osnove projektovanja, crteži, prezentacije',scores:{design:5}},
+      {id:'ai',text:'AI animacije i kreativne vizuale',desc:'Video, efekti, postprodukcija',scores:{ai:5}},
+      {id:'unsure',text:'Još istražujem šta me zanima',desc:'Pomozi mi da se usmerim',scores:{}}
+    ]},
+    {title:'Koju veštinu želiš najviše da unaprediš?',sub:'Razmisli šta ti je trenutno najvažnije u radu.',options:[
+      {id:'realism',text:'Da moji renderi izgledaju profesionalnije',scores:{render:4}},
+      {id:'environment',text:'Da bolje radim fasade, teren i vegetaciju',scores:{exterior:4}},
+      {id:'drawing',text:'Da naučim tehničke crteže i prezentaciju',scores:{design:4}},
+      {id:'motion',text:'Da od statične slike napravim atraktivan video',scores:{ai:4}},
+      {id:'start',text:'Nemam iskustva i ne znam odakle da počnem',scores:{}}
+    ]},
+    {title:'Koliko trenutno znaš?',sub:'Ne postoji pogrešan odgovor — kursevi su za različite nivoe iskustva.',options:[
+      {id:'beginner',text:'Potpuni sam početnik',scores:{}},
+      {id:'basic3d',text:'Znam osnove 3ds Max-a i Corone',scores:{render:1,exterior:1}},
+      {id:'advanced3d',text:'Već pravim 3D vizualizacije',scores:{render:1,exterior:1}},
+      {id:'cad',text:'Poznajem AutoCAD ili Photoshop',scores:{design:1}},
+      {id:'aitools',text:'Već eksperimentišem sa AI alatima',scores:{ai:1}}
+    ]},
+    {title:'Kako ti najviše odgovara da učiš?',sub:'Za 3ds Max + Corona nudimo tri nivoa podrške.', options:[
+      {id:'self',text:'Samostalno, kroz nasnimljene lekcije',desc:'Učim kada meni odgovara',scores:{}},
+      {id:'review',text:'Samostalno + jedna grupna analiza rada',desc:'Želim da predavač pregleda moju scenu',scores:{}},
+      {id:'mentor',text:'Uživo, uz predavača',desc:'Želim kontinuirano mentorstvo i direktna pitanja',scores:{}},
+      {id:'flex',text:'Nisam još siguran/na',desc:'Prvo želim da pogledam program',scores:{}}
+    ]}
+  ];
+  const packages = {
+    self: {name:'ONLINE / SAMOSTALNO UČENJE',price:'350 €',description:'Kompletan nasnimljeni program 3ds Max + Corona — od nule do Level Up-a. Učiš svojim tempom.',url:'/kurs/7',cta:'Pogledaj program kursa'},
+    review: {name:'ONLINE + GRUPNA ANALIZA',price:'420 €',description:'Isti nasnimljeni program + jedna grupna Zoom sesija na kojoj analiziramo rendere i prolazimo kroz konkretne korekcije.',url:null,cta:'Raspitaj se za paket'},
+    mentor: {name:'MENTORSTVO UŽIVO + AI',price:'800 €',description:'Organizovana nastava sa predavačem, kontinuirani feedback, rad na projektima i AI alati. Trajanje programa: dva meseca.',url:'/kurs/5',cta:'Pogledaj mentorski program'}
+  };
+  const state = {step:0,answers:[null,null,null,null],result:null,selectedPackage:null};
+  const escapeHtml = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const mailto = (subject) => 'mailto:studio27.vizz@gmail.com?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent('Zdravo,\nZanima me '+subject+'. Molim vas za više informacija.\n\nHvala!');
+  const progress = (index, finished) => `<div class="s27-progress"><span class="s27-step">${finished?'TVOJ REZULTAT':'PITANJE '+(index+1)+' / 04'}</span><div class="s27-progressline" aria-hidden="true">${[0,1,2,3].map(i=>`<span class="${finished||i<=index?'active':''}"></span>`).join('')}</div></div>`;
+  function calculateResult(){
+    const scores={render:0,exterior:0,design:0,ai:0};
+    state.answers.forEach((answer,i)=>{
+      const option=questions[i].options.find(o=>o.id===answer);
+      if(option) Object.entries(option.scores||{}).forEach(([k,v])=>scores[k]+=v);
+    });
+    const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+    return sorted[0][1]===0 ? null : sorted[0][0];
+  }
+  function renderQuestion(){
+    const q=questions[state.step];
+    root.innerHTML=progress(state.step,false)+`<div class="s27-inner"><h2 class="s27-question-title">${escapeHtml(q.title)}</h2><p class="s27-question-desc">${escapeHtml(q.sub)}</p><div class="s27-options" role="group" aria-label="Odgovori na pitanje">${q.options.map(o=>`<button type="button" class="s27-option ${state.answers[state.step]===o.id?'selected':''}" data-answer="${escapeHtml(o.id)}" aria-pressed="${state.answers[state.step]===o.id?'true':'false'}"><span><span class="s27-option-label">${escapeHtml(o.text)}</span>${o.desc?`<span class="s27-option-desc">${escapeHtml(o.desc)}</span>`:''}</span><span class="s27-circle" aria-hidden="true"></span></button>`).join('')}</div><div class="s27-actions"><button class="s27-back" type="button" data-back ${state.step===0?'disabled':''}>← Nazad</button><button class="s27-next" type="button" data-next ${!state.answers[state.step]?'disabled':''}>${state.step===questions.length-1?'Pogledaj preporuku →':'Dalje →'}</button></div></div>`;
+    root.querySelectorAll('[data-answer]').forEach(button=>button.addEventListener('click',()=>{state.answers[state.step]=button.dataset.answer;renderQuestion(); const selected=root.querySelector('.s27-option.selected'); selected?.focus();}));
+    root.querySelector('[data-back]').addEventListener('click',()=>{if(state.step>0){state.step--;renderQuestion();}});
+    root.querySelector('[data-next]').addEventListener('click',()=>{
+      if(!state.answers[state.step])return;
+      if(state.step===questions.length-1){state.result=calculateResult();state.selectedPackage=state.answers[3]==='review'?'review':state.answers[3]==='mentor'?'mentor':'self';renderResult();}
+      else {state.step++;renderQuestion();}
+    });
+  }
+  function renderResult(){
+    if(!state.result){
+      root.innerHTML=progress(3,true)+`<div class="s27-inner"><div class="s27-result-eyebrow">Još malo do odluke</div><h2 class="s27-result-title">Hajde da pronađemo pravi smer.</h2><p class="s27-result-explain">Na osnovu izabranih odgovora još ne možemo pouzdano da izdvojimo jednu oblast. Izaberi onu koja te najviše privlači ili se javi studiju za savet.</p><div class="s27-alternatives">${Object.entries(COURSES).map(([k,v])=>`<button type="button" class="s27-alt" data-force="${k}">↗ ${escapeHtml(v.name)}</button>`).join('')}</div><div class="s27-result-buttons"><a class="s27-link" href="${mailto('savet oko izbora kursa')}" target="_blank" rel="noopener">Pitaj Studio 27 za savet ↗</a></div><button class="s27-restart" data-restart type="button">↺ Ponovi kviz</button></div>`;
+      root.querySelectorAll('[data-force]').forEach(b=>b.addEventListener('click',()=>{state.result=b.dataset.force;renderResult();}));
+      root.querySelector('[data-restart]').addEventListener('click',restart);
+      return;
+    }
+    const course=COURSES[state.result];
+    let personal='';
+    const experience=state.answers[2];
+    if(state.result==='render'&&['basic3d','advanced3d'].includes(experience))personal='Pošto već poznaješ 3D softvere, možeš odmah da pređeš na napredne Level Up lekcije, bez ponavljanja osnova.';
+    if(state.result==='exterior'&&experience==='beginner')personal='Ako prvi put ulaziš u 3ds Max i Coronu, možda će ti pre ovog kursa koristiti osnovni program 3ds Max + Corona.';
+    if(state.result==='ai'&&experience==='beginner')personal='Za neke AI zadatke nije obavezno prethodno iskustvo u 3D programima; konkretne preduslove proveri u programu AI kursa.';
+    let extra='';
+    if(state.result==='render'){
+      const p=packages[state.selectedPackage];
+      const link=p.url||mailto('paket Online + Review (420 €)');
+      extra=`<div class="s27-result-band"><small>Preporučeni način učenja</small><strong>${escapeHtml(p.name)}</strong><div class="s27-price">${escapeHtml(p.price)}</div><p>${escapeHtml(p.description)}</p></div><p class="s27-note">Odaberi drugi paket ako želiš da promeniš nivo podrške:</p><div class="s27-packs">${Object.entries(packages).map(([id,one])=>`<button type="button" class="s27-pack" data-pack="${id}" aria-pressed="${id===state.selectedPackage?'true':'false'}">${id==='self'?'Online · 350 €':id==='review'?'Online + review · 420 €':'Uživo + AI · 800 €'}</button>`).join('')}</div><div class="s27-result-buttons"><a class="s27-link" href="${link}" target="_blank" rel="noopener">${escapeHtml(p.cta)} ↗</a>${state.selectedPackage!=='self'?`<a class="s27-link light" href="${COURSES.render.url}" target="_blank" rel="noopener">Sadržaj kursa ↗</a>`:''}</div>`;
+    }else{
+      const isAi=state.result==='ai';
+      const href=course.url||mailto('AI kurs — program i prijava');
+      let formatNote = state.answers[3]==='mentor' && !isAi ? 'Želiš nastavu uživo? Pitaj studio za trenutno dostupne termine i format ovog kursa.' : '';
+      extra=`<div class="s27-result-band"><small>Tvoja preporuka</small><strong>${escapeHtml(course.title)}</strong><p style="margin-top:9px">${escapeHtml(course.desc)}</p></div>${formatNote?`<p class="s27-note">${escapeHtml(formatNote)}</p>`:''}<div class="s27-result-buttons"><a class="s27-link" href="${href}" target="_blank" rel="noopener">${isAi?'Pitaj za AI kurs':'Pogledaj program kursa'} ↗</a>${state.result==='exterior'&&experience==='beginner'?`<a class="s27-link light" href="${COURSES.render.url}" target="_blank" rel="noopener">Pogledaj 3ds Max osnove ↗</a>`:''}</div>`;
+    }
+    root.innerHTML=progress(3,true)+`<div class="s27-inner"><div class="s27-result-eyebrow">Naša preporuka za tebe</div><h2 class="s27-result-title">${escapeHtml(course.name)}</h2><p class="s27-result-explain">${escapeHtml(personal||course.desc)}</p>${extra}<button class="s27-restart" data-restart type="button">↺ Uradi kviz ponovo</button><p class="s27-note">Ovo je orijentaciona preporuka. Potpun program i aktuelne uslove proveri na stranici kursa ili direktno sa Studio 27.</p></div>`;
+    root.querySelectorAll('[data-pack]').forEach(button=>button.addEventListener('click',()=>{state.selectedPackage=button.dataset.pack;renderResult();}));
+    root.querySelector('[data-restart]').addEventListener('click',restart);
+  }
+  function restart(){state.step=0;state.answers=[null,null,null,null];state.result=null;state.selectedPackage=null;renderQuestion();}
+  renderQuestion();
+})();
+</script>

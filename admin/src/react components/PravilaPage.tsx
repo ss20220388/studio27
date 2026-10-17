@@ -1,3 +1,4 @@
+import { API_URL } from "../lib/adrese";
 import React, { useState, useEffect, useRef } from "react";
 import { SharedModal } from "./SharedModal";
 
@@ -6,7 +7,6 @@ interface PravilaPageProps {
 }
 
 export default function PravilaPage({ token }: PravilaPageProps) {
-  const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
   const FOLDER_PATH = "/pravila";
 
   const [items, setItems] = useState<string[]>([]);

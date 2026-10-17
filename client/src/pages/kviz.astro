@@ -1,0 +1,21 @@
+---
+// Samostalna stranica mini kviza (link iz poziva na početnoj strani i sa društvenih mreža)
+import Layout from "../layouts/Layout.astro";
+import MiniKviz from "../components/MiniKviz.astro";
+
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site || Astro.url.origin).toString();
+---
+
+<Layout
+  title="Koji kurs je za tebe? Mini kviz | Studio 27"
+  description="Odgovori na 4 kratka pitanja i saznaj koji kurs Studio 27 ti najviše odgovara — 3ds Max + Corona, vizualizacija eksterijera, dizajn enterijera ili AI prezentacija."
+  canonicalURL={canonicalUrl}
+  image="/images/og-main.webp"
+  keywords="koji kurs 3ds max, kurs vizualizacije, kurs dizajna enterijera, mini kviz studio 27"
+  breadcrumbs={[{ name: "Mini kviz", url: canonicalUrl }]}
+  pozadina="#f7f6f3"
+>
+  <main class="bg-[#f7f6f3]">
+    <MiniKviz naslovTag="h1" />
+  </main>
+</Layout>

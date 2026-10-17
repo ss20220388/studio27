@@ -1,5 +1,5 @@
+import { API_URL } from "../../lib/adrese";
 import React, { useState, useEffect } from "react";
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 export default function PaymentsTab({ token }) {
   const [payments, setPayments] = useState([]);

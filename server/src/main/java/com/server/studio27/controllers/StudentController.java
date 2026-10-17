@@ -27,7 +27,7 @@ public class StudentController {
             List<Map<String, Object>> students = new ArrayList<>();
 
             String SQL = """
-                    SELECT s.studentId, u.email, u.password, s.ime, s.prezime, s.brojTelefona,u.deviceId,
+                    SELECT s.studentId, u.email, s.ime, s.prezime, s.brojTelefona, s.datumKreiranjaNaloga, u.deviceId,
                     (Case
                         when (Select count(studentId) from pohadja where studentId = s.studentId) >0 then true
                         else false
@@ -43,11 +43,12 @@ public class StudentController {
                 Map<String, Object> studentMap = new HashMap<>();
                 studentMap.put("studentId", ((Number) row.get("studentId")).intValue());
                 studentMap.put("email", (String) row.get("email"));
-                studentMap.put("password", (String) row.get("password"));
                 studentMap.put("ime", (String) row.get("ime"));
                 studentMap.put("prezime", (String) row.get("prezime"));
                 studentMap.put("brojTelefona", (String) row.get("brojTelefona"));
                 studentMap.put("deviceId", (String) row.get("deviceId"));
+                Object datumKreiranja = row.get("datumKreiranjaNaloga");
+                studentMap.put("datumKreiranjaNaloga", datumKreiranja != null ? datumKreiranja.toString() : null);
                 studentMap.put("active", (Number) row.get("active"));
                
                 String SQL2 = """

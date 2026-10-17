@@ -1,0 +1,104 @@
+---
+// Zaglavlje sajta. Uvek je vidljivo (lepljivo pri skrolovanju):
+// - podrazumevano belo, na vrhu stranice (kursevi, radovi, kviz...)
+// - "preko": providno preko fotografije na početnoj, a pri skrolovanju postaje belo
+import Ikona from "./Ikona.astro";
+import NalogDugme from "../../react-components/NalogDugme";
+import { API_URL, APP_URL, ADMIN_URL } from "../../data/sajt";
+
+export type Link = { tekst: string; href?: string; kontakt?: boolean };
+
+interface Props {
+  linkovi?: Link[];
+  preko?: boolean;
+}
+
+const {
+  linkovi = [
+    { tekst: "Kursevi", href: "/#edukacije" },
+    { tekst: "Mini kviz", href: "/kviz" },
+    { tekst: "Radovi studenata", href: "/radovi" },
+    { tekst: "O nama", href: "/#onama" },
+    { tekst: "Kontakt", kontakt: true },
+  ],
+  preko = false,
+} = Astro.props;
+
+const korisnik = (Astro.locals as any).korisnik ?? null;
+---
+
+<header
+  data-zaglavlje
+  data-preko={preko ? "da" : undefined}
+  class:list={[
+    "z-50 w-full transition-[background-color,color,box-shadow] duration-500",
+    preko ? "fixed top-0 left-0 text-white" : "sticky top-0 bg-white/95 backdrop-blur-md text-neutral-900 border-b border-neutral-200/70",
+  ]}
+>
+  <div class="mx-auto flex max-w-[1400px] items-center justify-between gap-6 px-5 md:px-10 py-4">
+    <a href="/" class="shrink-0" aria-label="Studio 27 – početna">
+      <span class="block leading-none">
+        <span class="block font-serif text-[26px] tracking-[-0.01em]">Studio 27</span>
+        <span class="hidden sm:block mt-1.5 text-[8.5px] font-medium uppercase tracking-[0.24em] opacity-80">
+          The art of architectural visualization
+        </span>
+      </span>
+    </a>
+
+    <nav class="hidden lg:flex items-center gap-10 ml-auto text-[13px] font-medium tracking-[0.02em]" aria-label="Glavna navigacija">
+      {
+        linkovi.map((l) =>
+          l.kontakt ? (
+            <button type="button" data-otvori-kontakt class="cursor-pointer hover:opacity-60 transition-opacity">
+              {l.tekst}
+            </button>
+          ) : (
+            <a href={l.href} class="hover:opacity-60 transition-opacity">
+              {l.tekst}
+            </a>
+          ),
+        )
+      }
+    </nav>
+
+    <div class="flex items-center gap-5 shrink-0">
+      <NalogDugme client:load apiUrl={API_URL} appUrl={APP_URL} adminUrl={ADMIN_URL} pocetniKorisnik={korisnik} />
+      <button type="button" class="lg:hidden p-1 cursor-pointer" aria-label="Otvori meni" aria-controls="s27-nav-mobilni" data-meni-dugme>
+        <Ikona ime="meni" class="w-6 h-6" />
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobilni meni -->
+  <nav id="s27-nav-mobilni" class="lg:hidden hidden border-t border-neutral-200 bg-white px-5 py-3 text-neutral-900 shadow-lg" aria-label="Mobilna navigacija">
+    {
+      linkovi.map((l) =>
+        l.kontakt ? (
+          <button type="button" data-otvori-kontakt class="block w-full text-left py-3 text-[15px] font-medium border-b border-neutral-100 cursor-pointer">
+            {l.tekst}
+          </button>
+        ) : (
+          <a href={l.href} class="block py-3 text-[15px] font-medium border-b border-neutral-100">
+            {l.tekst}
+          </a>
+        ),
+      )
+    }
+  </nav>
+</header>
+
+<script>
+  // Providno zaglavlje (početna) postaje belo čim se krene sa skrolovanjem
+  const zaglavlje = document.querySelector<HTMLElement>("[data-zaglavlje][data-preko]");
+  if (zaglavlje) {
+    const osvezi = () => {
+      const belo = window.scrollY > 40;
+      zaglavlje.classList.toggle("bg-white", belo);
+      zaglavlje.classList.toggle("text-neutral-900", belo);
+      zaglavlje.classList.toggle("text-white", !belo);
+      zaglavlje.classList.toggle("shadow-[0_1px_0_rgba(0,0,0,0.08)]", belo);
+    };
+    osvezi();
+    window.addEventListener("scroll", osvezi, { passive: true });
+  }
+</script>

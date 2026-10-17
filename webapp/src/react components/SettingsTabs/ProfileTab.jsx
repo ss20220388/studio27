@@ -1,7 +1,7 @@
+import { API_URL } from "../../lib/adrese";
 import React, { useState, useEffect } from "react";
 
 export default function ProfileTab() {
-  const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
   const [user, setUser] = useState({ ime: "", prezime: "", email: "", brojTelefona: "", loginProvider: "" });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

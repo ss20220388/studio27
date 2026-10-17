@@ -1,4 +1,5 @@
 ---
+import { API_URL } from "../lib/adrese";
 import Layout from "../layouts/Layout.astro";
 import FajloviPage from "../react components/FajloviPage";
 import type { AstroCookies } from "astro";
@@ -6,7 +7,6 @@ import type { AstroCookies } from "astro";
 const cookies = Astro.cookies as AstroCookies;
 const refreshToken = cookies.get("refreshToken");
 const token = refreshToken?.value;
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 ---
 

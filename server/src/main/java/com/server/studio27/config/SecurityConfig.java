@@ -167,7 +167,7 @@ public class SecurityConfig {
                                             email);
 
                                     jdbcTemplate.update(
-                                            "INSERT INTO student (studentId, ime, prezime, brojTelefona) VALUES (?, ?, ?, ?)",
+                                            "INSERT INTO student (studentId, ime, prezime, brojTelefona, datumKreiranjaNaloga) VALUES (?, ?, ?, ?, CURDATE())",
                                             userId,
                                             oauthUser.getAttribute("given_name"),
                                             oauthUser.getAttribute("family_name"),

@@ -1,5 +1,5 @@
+import { API_URL } from "../data/sajt";
 import React, { useState, useEffect, useCallback } from "react";
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
 
 export default function CartModal({ accessToken: initialToken }) {
   const [isOpen, setIsOpen] = useState(false);

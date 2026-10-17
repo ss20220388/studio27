@@ -1,10 +1,10 @@
 ---
+import { API_URL } from "../lib/adrese";
 import Layout from "../layouts/Layout.astro";
 import StatsCards from "../components/StatsCards.astro";
 import ProgressChart from "../react components/ProgressChart";
 import ContinueWatching from "../components/ContinueWatching.astro";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://app.studio27.rs";
 
 const refreshToken = Astro.cookies.get("refreshToken")?.value;
 const accessToken = Astro.cookies.get("refreshToken")?.value;

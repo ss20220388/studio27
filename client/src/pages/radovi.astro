@@ -1,8 +1,9 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import Ikona from "../components/novo/Ikona.astro";
+import { API_URL, CLIENT_URL } from "../data/sajt";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://api.studio27.rs";
-const SITE_URL = "https://27archviz.com";
+const SITE_URL = CLIENT_URL;
 
 let radovi: any[] = [];
 try {
@@ -74,6 +75,8 @@ studentGroups.forEach(group => {
   });
 });
 
+const ukupnoRadova = studentGroups.reduce((zbir, g) => zbir + g.works.length, 0);
+
 // SEO Slike za Open Graph & Schema.org ImageGallery
 const allImages = studentGroups.flatMap(g => g.works.map(w => w.fullUrl));
 const primarySeoImage = allImages[0] || `${SITE_URL}/images/default-seo-image.png`;
@@ -82,8 +85,8 @@ const primarySeoImage = allImages[0] || `${SITE_URL}/images/default-seo-image.pn
 const gallerySchema = {
   "@context": "https://schema.org",
   "@type": "ImageGallery",
-  "name": "Galerija Studentskih Radova - 27 archviz",
-  "description": "3D fotorealistični renderi i arhitektonske vizuelizacije polaznika 27 archviz akademije.",
+  "name": "Radovi studenata – Studio 27",
+  "description": "Fotorealistični 3D renderi i vizualizacije enterijera polaznika Studio 27, nastali tokom kurseva 3ds Max + Corona Renderer.",
   "url": `${SITE_URL}/radovi`,
   "image": allImages.slice(0, 10),
   "hasPart": studentGroups.flatMap(group => 
@@ -101,145 +104,165 @@ const gallerySchema = {
 };
 ---
 
-<Layout 
-  title="Radovi Studenata | 3D Arhitektonska Vizuelizacija | 27 archviz"
-  description="Istražite fotorealistične rendere i 3D vizuelizacije naših studenata nastale tokom 3ds Max i Corona Render obuke."
+<Layout
+  title="Radovi studenata – 3D vizualizacije polaznika | Studio 27"
+  description={`Galerija od ${ukupnoRadova} fotorealističnih rendera i 3D vizualizacija enterijera koje su polaznici Studio 27 izradili tokom kurseva 3ds Max + Corona Renderer.`}
   canonicalURL={`${SITE_URL}/radovi`}
   image={primarySeoImage}
-  keywords="radovi studenata, 3ds max renderi, corona render primeri, arhitektonska vizuelizacija portfolio, 3D modelovanje polaznici"
-  breadcrumbs={[{ name: "Radovi Studenata", url: `${SITE_URL}/radovi` }]}
+  imageAlt="Render enterijera – rad polaznika Studio 27"
+  keywords="radovi studenata, 3ds max renderi, corona render primeri, vizualizacija enterijera portfolio, 3d vizualizacija polaznici, studio 27"
+  breadcrumbs={[{ name: "Radovi studenata", url: `${SITE_URL}/radovi` }]}
 >
-  <!-- Schema.org podaci za indeksiranje u Google Slikama -->
   <script type="application/ld+json" set:html={JSON.stringify(gallerySchema)} />
 
-  <main class="min-h-screen bg-white text-zinc-900 py-12 md:py-20 font-sans">
-    
-    <!-- Hero sekcija stranice -->
-    <header class="max-w-7xl mx-auto px-6 mb-16 text-center space-y-4">
-      <h1 class="text-4xl md:text-6xl font-black tracking-tight uppercase text-black">
-        Radovi <span class="text-[#550000]">Studenata</span>
-      </h1>
-      <p class="text-zinc-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed font-medium">
-        Pogledajte galeriju fotorealističnih 3D rendera i projekata koje su naši polaznici izradili tokom i nakon obuke.
-      </p>
-    </header>
+  <main class="bg-white text-neutral-900">
+    <!-- UVOD -->
+    <section class="border-b border-neutral-200">
+      <div class="max-w-[1400px] mx-auto px-5 md:px-10 pt-16 md:pt-24 pb-14 md:pb-20 grid lg:grid-cols-[1.2fr_0.8fr] gap-10 items-end">
+        <div>
+          <p class="s27-ulaz text-[11px] font-medium uppercase tracking-[0.26em] text-neutral-500">Galerija · Studio 27</p>
+          <h1 class="s27-ulaz mt-5 font-serif text-[46px] md:text-[76px] leading-[0.98] tracking-[-0.025em]" style="--kasnjenje:0.15s">
+            Radovi naših<br />polaznika.
+          </h1>
+        </div>
+        <div class="s27-ulaz" style="--kasnjenje:0.3s">
+          <p class="text-[16px] leading-relaxed text-neutral-600 max-w-[440px]">
+            Fotorealistični renderi nastali tokom i nakon kurseva — od prvog modela do slike koja ide u portfolio.
+          </p>
+          <dl class="mt-8 flex gap-12">
+            <div>
+              <dt class="font-serif text-[40px] leading-none">{studentGroups.length}</dt>
+              <dd class="mt-2 text-[11px] uppercase tracking-[0.18em] text-neutral-500">polaznika</dd>
+            </div>
+            <div>
+              <dt class="font-serif text-[40px] leading-none">{ukupnoRadova}</dt>
+              <dd class="mt-2 text-[11px] uppercase tracking-[0.18em] text-neutral-500">rendera</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </section>
 
     {studentGroups.length === 0 ? (
-      <div class="max-w-7xl mx-auto px-6 text-center py-20 text-zinc-400">
-        Trenutno nema dostupnih radova.
-      </div>
+      <p class="max-w-[1400px] mx-auto px-5 md:px-10 py-24 text-neutral-500">Trenutno nema dostupnih radova.</p>
     ) : (
-      <div class="max-w-[1700px] mx-auto px-6 space-y-20 md:space-y-28">
-        {studentGroups.map(({ displayName, works }, gIndex) => {
-          const firstWork = works[0];
-          const kursNaziv = firstWork?.kurs?.naziv || firstWork?.naziv || "3DS MAX + CORONA RENDER";
-
-          return (
-            <section class="student-block space-y-6 opacity-0 translate-y-6 transition-all duration-700 ease-out">
-              
-              <!-- Zaglavlje studenta -->
-              <div class="border-b border-zinc-200 pb-4 flex flex-col md:flex-row md:items-end justify-between gap-2">
-                <div>
-                  <h2 class="text-2xl md:text-4xl font-bold text-black tracking-wide">
-                    {displayName}
-                  </h2>
-                  <p class="text-sm md:text-base text-zinc-600 mt-1">
-                    Kurs: <span class="text-[#550000] font-semibold">{kursNaziv}</span>
-                  </p>
-                </div>
-                <span class="text-xs text-zinc-400 uppercase tracking-widest font-semibold">
-                  {works.length} {works.length === 1 ? "render" : "rendera"}
-                </span>
-              </div>
-
-              <!-- Grid slika sa hover efektom u nijansi #550000 -->
-              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                {works.map((work: any, wIndex: number) => {
-                  const isPriority = gIndex === 0 && wIndex < 4;
-                  return (
-                    <div 
-                      class="gallery-item group relative aspect-square overflow-hidden bg-zinc-100 rounded-lg cursor-pointer border border-zinc-200 hover:border-[#550000] shadow-sm hover:shadow-md transition-all duration-300"
-                      data-full-src={work.fullUrl}
-                      data-author={displayName}
-                    >
-                      <img
-                        src={work.fullUrl}
-                        alt={`3D Arhitektonska vizuelizacija - ${displayName}`}
-                        class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                        loading={isPriority ? "eager" : "lazy"}
-                        fetchpriority={isPriority ? "high" : "auto"}
-                        width="400"
-                        height="400"
-                      />
-                      <div class="absolute inset-0 bg-[#550000]/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-white bg-[#550000] px-3 py-1.5 rounded shadow-lg border border-[#330000]">
-                          Uvećaj
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-            </section>
-          );
-        })}
+      <div class="max-w-[1400px] mx-auto px-5 md:px-10">
+        {studentGroups.map(({ displayName, works }, gIndex) => (
+          <section class="pojava grid lg:grid-cols-[280px_1fr] gap-8 lg:gap-14 py-14 md:py-20 border-b border-neutral-200 last:border-b-0">
+            <header class="lg:sticky lg:top-28 self-start">
+              <p class="font-serif text-[15px] text-neutral-400">{String(gIndex + 1).padStart(2, "0")}</p>
+              <h2 class="mt-2 font-serif text-[32px] md:text-[38px] leading-[1.05] tracking-[-0.015em]">{displayName}</h2>
+              <p class="mt-3 text-[11px] uppercase tracking-[0.18em] text-neutral-500">
+                {works.length} {works.length === 1 ? "render" : "rendera"} · 3ds Max + Corona
+              </p>
+            </header>
+            <div class="columns-2 md:columns-3 gap-3 md:gap-4">
+              {works.map((work: any, wIndex: number) => (
+                <button
+                  type="button"
+                  class="s27-rad group relative mb-3 md:mb-4 block w-full overflow-hidden bg-neutral-100 break-inside-avoid cursor-zoom-in"
+                  data-src={work.fullUrl}
+                  data-autor={displayName}
+                  aria-label={`Uvećaj render – ${displayName}`}
+                >
+                  <img
+                    src={work.fullUrl}
+                    alt={`3D vizualizacija enterijera – rad polaznika ${displayName}`}
+                    class="w-full h-auto transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
+                    loading={gIndex === 0 && wIndex < 3 ? "eager" : "lazy"}
+                    decoding="async"
+                  />
+                  <span class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500"></span>
+                  <span class="absolute right-3 bottom-3 w-10 h-10 rounded-full bg-white/90 flex items-center justify-center opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
+                    <Ikona ime="plus" class="w-4 h-4" debljina={2} />
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     )}
 
-    <!-- Lightbox Modal sa elegantnom tamnom pozadinom -->
-    <div id="lightbox" class="fixed inset-0 z-[2000] bg-black/90 hidden items-center justify-center p-4 backdrop-blur-md transition-opacity duration-300">
-      <button id="close-lightbox" class="absolute top-6 right-6 text-white hover:text-[#ff7777] text-4xl font-bold p-2 z-[2001] transition-colors">&times;</button>
-      <div class="max-w-6xl max-h-[90vh] flex flex-col items-center">
-        <img id="lightbox-img" src="" alt="Uvećani render" class="max-h-[80vh] max-w-full object-contain rounded-lg shadow-2xl border border-zinc-800" />
-        <p id="lightbox-caption" class="text-zinc-200 mt-4 text-lg font-medium text-center"></p>
+    <!-- POZIV -->
+    <section class="bg-[#151515] text-white">
+      <div class="max-w-[1400px] mx-auto px-5 md:px-10 py-20 md:py-28 flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div class="pojava">
+          <p class="text-[11px] font-medium uppercase tracking-[0.26em] text-white/50">Tvoj rad može biti sledeći</p>
+          <h2 class="mt-4 font-serif text-[38px] md:text-[56px] leading-[1.03] tracking-[-0.02em]">Napravi render za svoj portfolio.</h2>
+        </div>
+        <div class="pojava flex flex-wrap gap-3" style="--kasnjenje:0.1s">
+          <a href="/#edukacije" class="group inline-flex items-center gap-3 bg-white px-8 py-4 text-[13px] font-medium text-neutral-900 hover:bg-neutral-100 transition-colors">
+            Pogledaj kurseve <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </a>
+          <a href="/kviz" class="inline-flex items-center gap-3 border border-white/50 px-8 py-4 text-[13px] font-medium hover:bg-white/10 transition-colors">
+            Koji kurs je za mene?
+          </a>
+        </div>
       </div>
-    </div>
+    </section>
 
+    <!-- LIGHTBOX -->
+    <div id="s27-lightbox" class="fixed inset-0 z-[2000] hidden items-center justify-center bg-black/95 p-4 md:p-10" role="dialog" aria-modal="true" aria-label="Uvećan render">
+      <button type="button" data-lb-zatvori class="absolute top-5 right-5 w-12 h-12 flex items-center justify-center text-white/80 hover:text-white text-3xl cursor-pointer" aria-label="Zatvori">&times;</button>
+      <button type="button" data-lb-nazad class="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 w-12 h-12 border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Prethodni render">
+        <Ikona ime="strelicaLevo" class="w-5 h-5" />
+      </button>
+      <figure class="flex flex-col items-center max-w-[1200px]">
+        <img id="s27-lb-slika" alt="" class="max-h-[82vh] max-w-full object-contain" />
+        <figcaption class="mt-5 flex items-center gap-4 text-white/80">
+          <span id="s27-lb-autor" class="font-serif text-[20px] text-white"></span>
+          <span id="s27-lb-broj" class="text-[12px] uppercase tracking-[0.18em]"></span>
+        </figcaption>
+      </figure>
+      <button type="button" data-lb-napred class="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 w-12 h-12 border border-white/30 flex items-center justify-center text-white hover:bg-white hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Sledeći render">
+        <Ikona ime="strelica" class="w-5 h-5" />
+      </button>
+    </div>
   </main>
 </Layout>
 
 <script>
-  // Lazy animacija učitavanja blokova
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.remove('opacity-0', 'translate-y-6');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.05 });
+  // Lightbox sa strelicama i tastaturom (← → Esc)
+  const radovi = [...document.querySelectorAll<HTMLElement>(".s27-rad")];
+  const lb = document.getElementById("s27-lightbox");
+  const slika = document.getElementById("s27-lb-slika") as HTMLImageElement | null;
+  const autor = document.getElementById("s27-lb-autor");
+  const broj = document.getElementById("s27-lb-broj");
+  let trenutni = 0;
 
-  document.querySelectorAll('.student-block').forEach(el => observer.observe(el));
-
-  // Lightbox kôd za otvaranje i zatvaranje slika
-  const lightbox = document.getElementById('lightbox');
-  const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement;
-  const lightboxCaption = document.getElementById('lightbox-caption');
-  const closeBtn = document.getElementById('close-lightbox');
-
-  document.querySelectorAll('.gallery-item').forEach(item => {
-    item.addEventListener('click', () => {
-      const src = item.getAttribute('data-full-src');
-      const author = item.getAttribute('data-author');
-      if (src && lightbox && lightboxImg && lightboxCaption) {
-        lightboxImg.src = src;
-        lightboxCaption.textContent = `Autor: ${author}`;
-        lightbox.classList.remove('hidden');
-        lightbox.classList.add('flex');
-      }
-    });
-  });
-
-  const closeLightbox = () => {
-    if (lightbox) {
-      lightbox.classList.add('hidden');
-      lightbox.classList.remove('flex');
-    }
+  const prikazi = (i: number) => {
+    if (!lb || !slika || radovi.length === 0) return;
+    trenutni = (i + radovi.length) % radovi.length;
+    const rad = radovi[trenutni];
+    slika.src = rad.dataset.src || "";
+    slika.alt = `Render – ${rad.dataset.autor || ""}`;
+    if (autor) autor.textContent = rad.dataset.autor || "";
+    if (broj) broj.textContent = `${trenutni + 1} / ${radovi.length}`;
+  };
+  const otvori = (i: number) => {
+    prikazi(i);
+    lb?.classList.remove("hidden");
+    lb?.classList.add("flex");
+    document.body.style.overflow = "hidden";
+  };
+  const zatvori = () => {
+    lb?.classList.add("hidden");
+    lb?.classList.remove("flex");
+    document.body.style.overflow = "";
   };
 
-  closeBtn?.addEventListener('click', closeLightbox);
-  lightbox?.addEventListener('click', (e) => {
-    if (e.target === lightbox) closeLightbox();
+  radovi.forEach((r, i) => r.addEventListener("click", () => otvori(i)));
+  lb?.querySelector("[data-lb-zatvori]")?.addEventListener("click", zatvori);
+  lb?.querySelector("[data-lb-nazad]")?.addEventListener("click", () => prikazi(trenutni - 1));
+  lb?.querySelector("[data-lb-napred]")?.addEventListener("click", () => prikazi(trenutni + 1));
+  lb?.addEventListener("click", (e) => {
+    if (e.target === lb) zatvori();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (!lb || lb.classList.contains("hidden")) return;
+    if (e.key === "Escape") zatvori();
+    if (e.key === "ArrowLeft") prikazi(trenutni - 1);
+    if (e.key === "ArrowRight") prikazi(trenutni + 1);
   });
 </script>

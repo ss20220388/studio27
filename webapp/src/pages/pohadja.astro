@@ -1,9 +1,9 @@
 ---
+import { API_URL } from "../lib/adrese";
 import React from "react";
 import ReactKurs from "../react components/ReactKurs";
 import Layout from "../layouts/Layout.astro";
 
-const API_URL = import.meta.env.PUBLIC_API_URL || "http://localhost:8080";
 
 interface Kurs {
     id: number;
@@ -34,7 +34,7 @@ try {
         },
     );
     let kurseviData = await kurseviResponse.json();
-    kursevi = kurseviData.kursevi?.filter((kurs: Kurs) => kurs.cena > 0);
+    kursevi = kurseviData.kursevi?.filter((kurs: Kurs) => kurs.cena > 0) ?? [];
 } catch {
     console.error("Greška pri dohvatanju kurseva ili korisničkih podataka.");
 }

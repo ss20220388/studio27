@@ -1,3 +1,4 @@
+import { CLIENT_URL } from "../lib/adrese";
 import React from "react";
 import { createPortal } from "react-dom";
 
@@ -13,7 +14,7 @@ const KursDetaljiModal = ({
 }) => {
     const [komentari, setKomentari] = React.useState([]);
     const [loadingKomentari, setLoadingKomentari] = React.useState(false);
-    const APP_URL = import.meta.env.PUBLIC_CLIENT_URL || "http://studio27.rs";
+    const APP_URL = CLIENT_URL;
 
     React.useEffect(() => {
         if (isOpen) {

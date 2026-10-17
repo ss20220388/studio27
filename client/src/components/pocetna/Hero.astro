@@ -1,0 +1,155 @@
+---
+// Prvi ekran početne strane: slajdšou kroz sve kurseve iz baze (pretapanje + spor zum),
+// stalni naslov levo i kartice kurseva na dnu sa linijom napretka.
+import Ikona from "../novo/Ikona.astro";
+
+export type Slajd = { id: number; naziv: string; oznaka: string; slika: string };
+
+interface Props {
+  slajdovi: Slajd[];
+}
+const slajdovi = Astro.props.slajdovi.filter((s) => s.slika);
+---
+
+<section
+  class="relative min-h-[100svh] md:h-[100svh] md:min-h-[680px] md:max-h-[1000px] overflow-hidden bg-neutral-900 text-white"
+  data-hero
+  aria-label="Kursevi Studio 27"
+>
+  {
+    slajdovi.map((s, i) => (
+      <div
+        class:list={["absolute inset-0 transition-opacity duration-[1600ms] ease-in-out", i === 0 ? "opacity-100" : "opacity-0"]}
+        data-slajd={i}
+        aria-hidden={i === 0 ? "false" : "true"}
+      >
+        <img
+          src={s.slika}
+          alt={s.naziv}
+          class:list={["absolute inset-0 h-full w-full object-cover", i === 0 ? "s27-zum" : ""]}
+          fetchpriority={i === 0 ? "high" : "low"}
+          loading={i === 0 ? "eager" : "lazy"}
+          decoding="async"
+        />
+      </div>
+    ))
+  }
+  <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/45"></div>
+  <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/10 to-transparent"></div>
+
+  <div class="relative min-h-[100svh] md:min-h-0 md:h-full max-w-[1400px] mx-auto px-5 md:px-10 pt-32 pb-10 flex flex-col justify-end">
+    <div class="max-w-[900px]">
+      <p class="s27-ulaz flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.28em] text-white/80" style="--kasnjenje:0.2s">
+        <span class="h-px w-8 bg-white/60"></span>
+        Škola arhitektonske vizualizacije
+      </p>
+      <h1 class="s27-ulaz mt-6 font-serif text-[46px] sm:text-[66px] lg:text-[88px] leading-[0.97] tracking-[-0.025em]" style="--kasnjenje:0.35s">
+        Nauči da kreiraš prostore koji se pamte.
+      </h1>
+      <p class="s27-ulaz mt-6 max-w-[560px] text-[15px] md:text-[17px] leading-relaxed text-white/85" style="--kasnjenje:0.55s">
+        Kursevi 3D vizualizacije i dizajna enterijera — online i uživo, od prvog modela do rendera koji prodaje projekat.
+      </p>
+      <div class="s27-ulaz mt-9 flex flex-wrap gap-3" style="--kasnjenje:0.7s">
+        <a href="#edukacije" class="group inline-flex items-center gap-3 bg-white px-7 py-4 text-[13px] font-medium text-neutral-900 hover:bg-neutral-100 transition-colors">
+          Pogledaj kurseve
+          <Ikona ime="strelica" class="w-4 h-4 rotate-90 transition-transform group-hover:translate-y-0.5" />
+        </a>
+        <a href="#kviz" class="group inline-flex items-center gap-3 border border-white/60 px-7 py-4 text-[13px] font-medium text-white backdrop-blur-sm hover:bg-white/10 transition-colors">
+          Koji kurs je za mene?
+          <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+        </a>
+      </div>
+    </div>
+
+    {
+      slajdovi.length > 1 && (
+        <nav
+          class="s27-ulaz mt-12 md:mt-16 hidden md:grid border-t border-white/20"
+          style={`--kasnjenje:0.9s; grid-template-columns: repeat(${Math.min(slajdovi.length, 4)}, minmax(0, 1fr));`}
+          aria-label="Kursevi"
+        >
+          {slajdovi.slice(0, 4).map((s, i) => (
+            <a href={`/kurs/${s.id}`} data-slajd-dugme={i} class="relative block pt-5 pb-2 pr-6 text-white/55 hover:text-white transition-colors">
+              <span class="absolute left-0 right-6 -top-px h-px">
+                <span class="s27-napredak block h-full w-0 bg-white" />
+              </span>
+              <span class="flex items-baseline gap-3">
+                <span class="font-serif text-[15px]">{String(i + 1).padStart(2, "0")}</span>
+                <span class="font-serif text-[19px] lg:text-[21px] leading-tight">{s.naziv}</span>
+              </span>
+              {s.oznaka && <span class="mt-1 block pl-8 text-[11px] uppercase tracking-[0.18em] opacity-70">{s.oznaka}</span>}
+            </a>
+          ))}
+        </nav>
+      )
+    }
+  </div>
+</section>
+
+<style>
+  [data-slajd-dugme].aktivan {
+    color: #fff;
+  }
+  [data-slajd-dugme].aktivan .s27-napredak {
+    animation: s27-napredak 6s linear forwards;
+  }
+  @keyframes s27-napredak {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-slajd-dugme].aktivan .s27-napredak { animation: none; width: 100%; }
+  }
+</style>
+
+<script>
+  // Automatsko smenjivanje slajdova; prelaz mišem preko naziva kursa prikazuje taj kurs
+  const hero = document.querySelector<HTMLElement>("[data-hero]");
+  if (hero) {
+    const slajdovi = [...hero.querySelectorAll<HTMLElement>("[data-slajd]")];
+    const dugmad = [...hero.querySelectorAll<HTMLElement>("[data-slajd-dugme]")];
+    const bezAnimacije = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let trenutni = 0;
+    let tajmer: number | undefined;
+
+    const prikazi = (i: number) => {
+      if (slajdovi.length === 0) return;
+      trenutni = (i + slajdovi.length) % slajdovi.length;
+      slajdovi.forEach((s, j) => {
+        const aktivan = j === trenutni;
+        s.classList.toggle("opacity-100", aktivan);
+        s.classList.toggle("opacity-0", !aktivan);
+        s.setAttribute("aria-hidden", aktivan ? "false" : "true");
+        const img = s.querySelector("img");
+        if (img && aktivan) {
+          img.classList.remove("s27-zum");
+          void img.offsetWidth;
+          img.classList.add("s27-zum");
+        }
+      });
+      dugmad.forEach((d, j) => {
+        d.classList.remove("aktivan");
+        if (j === trenutni) {
+          void d.offsetWidth;
+          d.classList.add("aktivan");
+        }
+      });
+    };
+    const pokreni = () => {
+      if (bezAnimacije || slajdovi.length < 2) return;
+      window.clearInterval(tajmer);
+      tajmer = window.setInterval(() => prikazi(trenutni + 1), 6000);
+    };
+
+    dugmad.forEach((d, j) => {
+      d.addEventListener("mouseenter", () => {
+        prikazi(j);
+        pokreni();
+      });
+      d.addEventListener("focus", () => prikazi(j));
+    });
+    document.addEventListener("visibilitychange", () => (document.hidden ? window.clearInterval(tajmer) : pokreni()));
+    prikazi(0);
+    pokreni();
+  }
+</script>

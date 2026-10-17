@@ -1,5 +1,5 @@
+import { API_URL } from "../data/sajt";
 import React, { useEffect, useRef, useState } from 'react'
-const API_URL = import.meta.env.PUBLIC_API_URL || 'http://api.studio27.rs'
 
 const backdropStyle: React.CSSProperties = {
   transition: 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
@@ -12,7 +12,8 @@ const panelStyle: React.CSSProperties = {
 const inputBase =
   'w-full h-11 text-sm text-gray-900 placeholder-gray-400 bg-gray-50 border border-gray-200 rounded-xl focus:border-orange-400 focus:bg-white focus:ring-2 focus:ring-orange-100 outline-none px-4 transition-all duration-300'
 
-export default function KontaktModal({textButtona}: {textButtona?: string}) {
+// bezDugmeta: modal se otvara samo preko događaja 'openKontaktModal' (novo zaglavlje)
+export default function KontaktModal({textButtona, bezDugmeta = false}: {textButtona?: string, bezDugmeta?: boolean}) {
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -181,15 +182,17 @@ export default function KontaktModal({textButtona}: {textButtona?: string}) {
         </div>
       )}
 
-      <button
-        className="group inline-flex items-center gap-2 rounded-full bg-transparent px-4 py-2 text-sm font-semibold text-white transition-all duration-300 "
-        onClick={() => setOpen(true)}
-      >
-        {textButtona || "Kontaktirajte nas"}
-        <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
-        </svg>
-      </button>
+      {!bezDugmeta && (
+        <button
+          className="group inline-flex items-center gap-2 rounded-full bg-transparent px-4 py-2 text-sm font-semibold text-white transition-all duration-300 "
+          onClick={() => setOpen(true)}
+        >
+          {textButtona || "Kontaktirajte nas"}
+          <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </button>
+      )}
     </>
   )
 }
