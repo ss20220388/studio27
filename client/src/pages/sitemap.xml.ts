@@ -15,7 +15,15 @@ export const GET: APIRoute = async () => {
   const danas = new Date().toISOString().slice(0, 10);
 
   const adrese: { loc: string; prioritet: string; slike: Slika[] }[] = [
-    { loc: `${CLIENT_URL}/`, prioritet: "1.0", slike: [] },
+    {
+      // početna prikazuje glavne slike kurseva i prvih 15 radova polaznika
+      loc: `${CLIENT_URL}/`,
+      prioritet: "1.0",
+      slike: [
+        ...kursevi.filter((k) => k.slikaUrl).map((k) => ({ loc: slikaIzBaze(k.slikaUrl), naslov: `${lepNaziv(k.naziv)} – Studio 27` })),
+        ...radovi.slice(0, 15).map((r) => ({ loc: slikaIzBaze(r.url), naslov: "Render polaznika – Studio 27" })),
+      ],
+    },
     ...kursevi.map((k, i) => {
       const naziv = lepNaziv(k.naziv);
       const slike: Slika[] = [

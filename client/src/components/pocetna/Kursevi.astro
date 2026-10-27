@@ -1,80 +1,114 @@
 ---
-// Svi kursevi iz baze u "bento" mreži: glavna slika kursa, naziv, oznake i cena.
-// Na hover se slika približi i otkrije opis (komentarSredina iz baze).
+// Četiri kursa iz baze u mreži 2×2 (po skici klijentkinje): velika slika kursa,
+// naslov, softver i kratka poruka preko fotografije, dole cena i poziv na kurs.
 import Ikona from "../novo/Ikona.astro";
 import { imaCenu, lepNaziv, slikaIzBaze, type KursIzBaze } from "../../data/sajt";
 
 interface Props {
   kursevi: KursIzBaze[];
 }
-const { kursevi } = Astro.props;
 
-// Naizmenično široka i uža kartica (7/5, 5/7 ...) da mreža ne bude monotona
-const sirine = ["lg:col-span-7", "lg:col-span-5", "lg:col-span-5", "lg:col-span-7"];
-const prviPasus = (t?: string) => (t || "").split(/\n\s*\n/)[0]?.trim() || "";
+// Tekstovi sa skice; kurs se prepoznaje po nazivu iz baze, pa redosled i slike prate admin aplikaciju
+const PORUKE = {
+  enterijer: {
+    naslov: "Profesionalna vizualizacija enterijera",
+    tekst: "Nauči da kreiraš vizualizacije koje ne samo da prikazuju prostor, već ga i prodaju.",
+  },
+  eksterijer: {
+    naslov: "Profesionalna vizualizacija eksterijera",
+    tekst: "Savladaj umetnost svetla, materijala i atmosfere u arhitektonskoj vizualizaciji.",
+  },
+  dizajn: {
+    naslov: "Kurs dizajna enterijera",
+    tekst: "Pretvori svoje ideje u konkretne projekte — tehnički crteži, osnove, dispozicija nameštaja i prezentacija u Photoshopu.",
+  },
+  ai: {
+    naslov: "Animacija + AI",
+    tekst: "Pretvori statične rendere u vizuelne priče koje ostavljaju utisak — uživo, uz predavača.",
+  },
+} as const;
+type Vrsta = keyof typeof PORUKE;
+const REDOSLED: Vrsta[] = ["enterijer", "eksterijer", "dizajn", "ai"];
+
+const vrsta = (k: KursIzBaze): Vrsta => {
+  const t = `${k.naziv} ${k.glavniKurs}`.toUpperCase();
+  if (t.includes("EKSTERIJER")) return "eksterijer";
+  if (t.includes("DIZAJN")) return "dizajn";
+  if (/\bAI\b/.test(t)) return "ai";
+  return "enterijer";
+};
+
+const kartice = Astro.props.kursevi
+  .map((k) => ({ k, v: vrsta(k) }))
+  .sort((a, b) => REDOSLED.indexOf(a.v) - REDOSLED.indexOf(b.v))
+  .map(({ k, v }) => ({
+    id: k.id,
+    naziv: lepNaziv(k.naziv),
+    softver: k.glavniKurs && !/^OD\s/i.test(k.glavniKurs) ? lepNaziv(k.glavniKurs) : v === "ai" ? "3ds Max + Corona + AI" : "",
+    uzivo: !!k.komentarGore?.toUpperCase().includes("UŽIVO"),
+    cena: imaCenu(k) ? `${k.cena} €` : "",
+    slika: slikaIzBaze(k.slikaUrl),
+    ...PORUKE[v],
+  }));
 ---
 
-<section id="edukacije" class="scroll-mt-20 bg-white">
-  <div class="max-w-[1400px] mx-auto px-5 md:px-10 pt-24 md:pt-32 pb-20">
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
-      <div class="pojava">
+<section id="edukacije" class="scroll-mt-16 bg-white">
+  <div class="max-w-[1400px] mx-auto px-5 md:px-10 pt-20 md:pt-28 pb-16 md:pb-20">
+    <div class="pojava flex flex-col md:flex-row md:items-end justify-between gap-5">
+      <div>
         <p class="text-[11px] font-medium uppercase tracking-[0.26em] text-neutral-500">Edukacije</p>
-        <h2 class="mt-4 font-serif text-[40px] md:text-[60px] leading-[1.02] tracking-[-0.02em]">
-          Izaberi svoj put<br class="hidden md:block" /> u vizualizaciji.
+        <h2 class="mt-4 font-serif text-[38px] md:text-[56px] leading-[1.03] tracking-[-0.02em]">
+          Kursevi 3D vizualizacije<br class="hidden md:block" /> i dizajna enterijera
         </h2>
       </div>
-      <p class="pojava max-w-[420px] text-[15px] leading-relaxed text-neutral-600" style="--kasnjenje:0.15s">
-        Od fotorealističnih enterijera i eksterijera do dizajna prostora — svaki kurs te vodi korak po korak, uz podršku
-        predavača.
+      <p class="max-w-[400px] text-[15px] leading-relaxed text-neutral-600">
+        Online i uživo, od prvog modela do rendera koji prodaje projekat. Izaberi oblast koja te privlači.
       </p>
     </div>
 
     {
-      kursevi.length === 0 ? (
-        <p class="mt-16 text-neutral-500">Trenutno nema dostupnih kurseva.</p>
+      kartice.length === 0 ? (
+        <p class="mt-14 text-neutral-500">Trenutno nema dostupnih kurseva.</p>
       ) : (
-        <div class="mt-12 md:mt-16 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5">
-          {kursevi.map((k, i) => (
+        <div class="mt-10 md:mt-14 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
+          {kartice.map((k, i) => (
             <a
               href={`/kurs/${k.id}`}
-              class:list={[
-                "pojava group relative block overflow-hidden bg-neutral-200 h-[460px] md:h-[560px]",
-                kursevi.length === 1 ? "lg:col-span-12" : sirine[i % sirine.length],
-              ]}
+              class="pojava group relative block overflow-hidden bg-neutral-200 aspect-[4/5] sm:aspect-[5/4] md:aspect-[6/7] lg:aspect-[5/5]"
               style={`--kasnjenje:${(i % 2) * 0.12}s`}
+              aria-label={`${k.naslov} – ${k.naziv}`}
             >
-              {k.slikaUrl && (
+              {k.slika && (
                 <img
-                  src={slikaIzBaze(k.slikaUrl)}
-                  alt={lepNaziv(k.naziv)}
-                  loading="lazy"
-                  class="absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-out group-hover:scale-[1.06]"
+                  src={k.slika}
+                  alt={`${k.naslov} – ${k.naziv}, Studio 27`}
+                  loading={i < 2 ? "eager" : "lazy"}
+                  decoding="async"
+                  class="absolute inset-0 h-full w-full object-cover transition-transform duration-[1600ms] ease-out group-hover:scale-[1.05]"
                 />
               )}
-              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/5" />
+              <div class="absolute inset-0 bg-gradient-to-b from-black/65 via-black/10 to-black/55" />
 
-              <div class="absolute top-5 left-5 right-5 md:top-7 md:left-7 md:right-7 flex items-start justify-between gap-4 text-white">
-                <span class="font-serif text-[22px] opacity-80">{String(i + 1).padStart(2, "0")}</span>
-                <span class="border border-white/40 bg-black/25 backdrop-blur-sm px-3 py-1.5 text-[12px] tracking-wide">
-                  {imaCenu(k) ? `${k.cena} €` : "Cena na upit"}
-                </span>
+              <div class="absolute inset-x-0 top-0 p-6 md:p-8 lg:p-10 text-white">
+                <div class="flex flex-wrap items-center gap-2 text-[10.5px] font-medium uppercase tracking-[0.2em] text-white/80">
+                  {k.softver && <span>{k.softver}</span>}
+                  {k.uzivo && <span class="border border-white/40 px-2 py-0.5 tracking-[0.16em]">Uživo</span>}
+                </div>
+                <h3 class="mt-3 font-serif text-[30px] sm:text-[36px] lg:text-[44px] leading-[1.02] tracking-[-0.02em] max-w-[520px]">
+                  {k.naslov}
+                </h3>
+                <p class="mt-4 max-w-[420px] text-[14px] md:text-[15px] leading-relaxed text-white/85">{k.tekst}</p>
               </div>
 
-              <div class="absolute inset-x-0 bottom-0 p-6 md:p-8 text-white">
-                {k.glavniKurs && <p class="text-[11px] uppercase tracking-[0.22em] text-white/75">{k.glavniKurs}</p>}
-                <div class="mt-3 flex items-end justify-between gap-6">
-                  <h3 class="font-serif text-[30px] md:text-[38px] leading-[1.04] tracking-[-0.02em] max-w-[480px]">{lepNaziv(k.naziv)}</h3>
-                  <span class="shrink-0 w-12 h-12 border border-white/50 flex items-center justify-center transition-all duration-500 group-hover:bg-white group-hover:text-neutral-900">
-                    <Ikona ime="strelica" class="w-5 h-5 transition-transform duration-500 group-hover:-rotate-45" />
-                  </span>
+              <div class="absolute inset-x-0 bottom-0 p-6 md:p-8 lg:p-10 flex items-end justify-between gap-4 text-white">
+                <div>
+                  <p class="text-[11px] uppercase tracking-[0.18em] text-white/70">{k.naziv}</p>
+                  <p class="mt-1.5 font-serif text-[22px]">{k.cena || "Cena na upit"}</p>
                 </div>
-                {prviPasus(k.komentarSredina) && (
-                  <div class="grid transition-all duration-700 ease-out lg:grid-rows-[0fr] lg:group-hover:grid-rows-[1fr]">
-                    <p class="overflow-hidden text-[14px] md:text-[15px] leading-relaxed text-white/85 max-w-[480px] lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-700">
-                      <span class="block pt-3 line-clamp-3">{prviPasus(k.komentarSredina)}</span>
-                    </p>
-                  </div>
-                )}
+                <span class="shrink-0 inline-flex items-center gap-3 border border-white/60 px-5 py-3 text-[12px] font-medium backdrop-blur-sm transition-colors duration-500 group-hover:bg-white group-hover:text-neutral-900">
+                  Pogledaj kurs
+                  <Ikona ime="strelica" class="w-4 h-4 transition-transform duration-500 group-hover:translate-x-1" />
+                </span>
               </div>
             </a>
           ))}

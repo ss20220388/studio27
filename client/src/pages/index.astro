@@ -5,10 +5,9 @@ import Zaglavlje from "../components/novo/Zaglavlje.astro";
 import Hero from "../components/pocetna/Hero.astro";
 import Kursevi from "../components/pocetna/Kursevi.astro";
 import KvizPoziv from "../components/pocetna/KvizPoziv.astro";
-import ZastoStudio from "../components/pocetna/ZastoStudio.astro";
 import RadoviIUtisci from "../components/pocetna/RadoviIUtisci.astro";
 import Pitanja from "../components/pocetna/Pitanja.astro";
-import ZavrsniPoziv from "../components/pocetna/ZavrsniPoziv.astro";
+import SeoTekst from "../components/pocetna/SeoTekst.astro";
 
 import { CLIENT_URL, imaCenu, lepNaziv, slikaIzBaze, ucitajKurseve, ucitajSporedneSlike } from "../data/sajt";
 
@@ -26,11 +25,6 @@ const slajdovi = kursevi.map((k, i) => ({
   slika: sporedne[i][0] || slikaIzBaze(k.slikaUrl),
 }));
 
-// Ostale slike svih kurseva, naizmenično po kursu, za sekcije bez posebnog kursa
-const sveSporedne: string[] = [];
-for (let r = 0; r < Math.max(0, ...sporedne.map((s) => s.length)); r++) {
-  sporedne.forEach((s) => s[r + 1] && sveSporedne.push(s[r + 1]));
-}
 const seoSlika = slajdovi[0]?.slika || `${SITE_URL}/images/og-main.webp`;
 
 const pitanja = [
@@ -67,7 +61,8 @@ const pitanja = [
 // Kursevi za Google (Course schema) – iz baze; cena samo ako je upisana u admin aplikaciji
 const kurseviZaSeo = kursevi.map((k) => ({
   naziv: `${lepNaziv(k.naziv)}${k.glavniKurs ? ` – ${k.glavniKurs}` : ""}`,
-  opis: (k.opis || k.komentarSredina || "").replace(/s+/g, " ").slice(0, 300).trim(),
+  opis: (k.opis || k.komentarSredina || "").replace(/\s+/g, " ").slice(0, 300).trim(),
+  slika: slikaIzBaze(k.slikaUrl),
   url: `${SITE_URL}/kurs/${k.id}`,
   cena: imaCenu(k) ? k.cena : null,
   uzivo: !!k.komentarGore?.toUpperCase().includes("UŽIVO"),
@@ -86,6 +81,18 @@ const orgSchema = {
       image: seoSlika,
       description:
         "Škola arhitektonske vizualizacije i dizajna enterijera. Online i uživo kursevi 3ds Max, Corona Renderer, AutoCAD i Photoshop.",
+      knowsAbout: [
+        "3ds Max",
+        "Corona Renderer",
+        "Arhitektonska vizualizacija",
+        "3D vizualizacija enterijera",
+        "3D vizualizacija eksterijera",
+        "Dizajn enterijera",
+        "AutoCAD",
+        "Photoshop",
+        "AI vizualizacija",
+      ],
+      areaServed: ["RS", "BA", "ME", "HR"],
       email: "studio27.vizz@gmail.com",
       telephone: "+381665934314",
       founder: { "@type": "Person", name: "Doroteja Dokić", jobTitle: "Dizajner enterijera i 3D vizualizator" },
@@ -109,6 +116,7 @@ const orgSchema = {
           name: k.naziv,
           description: k.opis,
           url: k.url,
+          ...(k.slika ? { image: k.slika } : {}),
           inLanguage: "sr",
           provider: { "@id": `${SITE_URL}/#organization` },
           ...(k.cena
@@ -123,12 +131,12 @@ const orgSchema = {
 ---
 
 <Layout
-  title="Kursevi 3ds Max, Corona Render i dizajna enterijera | Studio 27"
-  description="Studio 27 – škola arhitektonske vizualizacije. Online i uživo kursevi 3ds Max + Corona, vizualizacije eksterijera i dizajna enterijera (AutoCAD + Photoshop), uz podršku predavača."
+  title="Kurs 3ds Max i Corona Render, dizajn enterijera | Studio 27"
+  description="Online i uživo kursevi 3ds Max + Corona Renderer, vizualizacije enterijera i eksterijera i dizajna enterijera (AutoCAD + Photoshop). Od početnika do profesionalnog rendera, uz feedback predavača."
   canonicalURL={`${SITE_URL}/`}
   image={seoSlika}
-  imageAlt="Studio 27 – kursevi arhitektonske vizualizacije"
-  keywords="kurs 3ds max, corona render kurs, kurs vizualizacije enterijera, kurs vizualizacije eksterijera, kurs dizajna enterijera, autocad kurs, arhitektonska vizualizacija, 3d vizualizacija kurs Srbija"
+  imageAlt="Studio 27 – kursevi 3ds Max, Corona Render i arhitektonske vizualizacije"
+  keywords="kurs 3ds max, 3ds max kurs online, 3ds max obuka, 3ds max kurs Beograd, kurs 3d max za početnike, corona render kurs, corona renderer obuka, kurs vizualizacije enterijera, 3d vizualizacija enterijera kurs, kurs vizualizacije eksterijera, arhitektonska vizualizacija kurs, archviz kurs, kurs renderovanja, 3d modelovanje kurs, kurs dizajna enterijera, dizajn enterijera kurs online, autocad kurs, autocad za dizajnere enterijera, photoshop za arhitekte, AI za arhitekte, AI vizualizacija, 3d vizualizacija kurs Srbija, tečaj 3ds max, škola 3d vizualizacije, studio 27, 27archviz, Doroteja Dokić"
   faq={pitanja}
 >
   <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
@@ -139,10 +147,9 @@ const orgSchema = {
     <Hero slajdovi={slajdovi} />
     <Kursevi kursevi={kursevi} />
     <KvizPoziv />
-    <ZastoStudio slike={sveSporedne.slice(0, 2)} />
     <RadoviIUtisci />
     <ONamaSection />
     <Pitanja pitanja={pitanja} />
-    <ZavrsniPoziv slika={sveSporedne[2] || sveSporedne[0]} />
+    <SeoTekst kursevi={kursevi} />
   </main>
 </Layout>

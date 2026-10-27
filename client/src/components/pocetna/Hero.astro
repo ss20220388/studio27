@@ -39,12 +39,14 @@ const slajdovi = Astro.props.slajdovi.filter((s) => s.slika);
 
   <div class="relative min-h-[100svh] md:min-h-0 md:h-full max-w-[1400px] mx-auto px-5 md:px-10 pt-32 pb-10 flex flex-col justify-end">
     <div class="max-w-[900px]">
-      <p class="s27-ulaz flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.28em] text-white/80" style="--kasnjenje:0.2s">
-        <span class="h-px w-8 bg-white/60"></span>
-        Škola arhitektonske vizualizacije
-      </p>
-      <h1 class="s27-ulaz mt-6 font-serif text-[46px] sm:text-[66px] lg:text-[88px] leading-[0.97] tracking-[-0.025em]" style="--kasnjenje:0.35s">
-        Nauči da kreiraš prostore koji se pamte.
+      <h1>
+        <span class="s27-ulaz flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.28em] text-white/80" style="--kasnjenje:0.2s">
+          <span class="h-px w-8 bg-white/60"></span>
+          Kursevi 3ds Max, Corona i dizajna enterijera
+        </span>
+        <span class="s27-ulaz block mt-6 font-serif text-[46px] sm:text-[66px] lg:text-[88px] leading-[0.97] tracking-[-0.025em]" style="--kasnjenje:0.35s">
+          Nauči da kreiraš prostore koji se pamte.
+        </span>
       </h1>
       <p class="s27-ulaz mt-6 max-w-[560px] text-[15px] md:text-[17px] leading-relaxed text-white/85" style="--kasnjenje:0.55s">
         Kursevi 3D vizualizacije i dizajna enterijera — online i uživo, od prvog modela do rendera koji prodaje projekat.
@@ -54,7 +56,7 @@ const slajdovi = Astro.props.slajdovi.filter((s) => s.slika);
           Pogledaj kurseve
           <Ikona ime="strelica" class="w-4 h-4 rotate-90 transition-transform group-hover:translate-y-0.5" />
         </a>
-        <a href="#kviz" class="group inline-flex items-center gap-3 border border-white/60 px-7 py-4 text-[13px] font-medium text-white backdrop-blur-sm hover:bg-white/10 transition-colors">
+        <a href="/kviz" data-otvori-kviz class="group inline-flex items-center gap-3 border border-white/60 px-7 py-4 text-[13px] font-medium text-white backdrop-blur-sm hover:bg-white/10 transition-colors">
           Koji kurs je za mene?
           <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </a>

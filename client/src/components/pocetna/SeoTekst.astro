@@ -1,0 +1,76 @@
+---
+// Kratak tekst o kursevima pri dnu početne strane: ključne reči za pretragu (3ds Max kurs, Corona,
+// vizualizacija enterijera/eksterijera, dizajn enterijera, AutoCAD...) i interni linkovi ka kursevima.
+import { lepNaziv, type KursIzBaze } from "../../data/sajt";
+
+interface Props {
+  kursevi: KursIzBaze[];
+}
+const { kursevi } = Astro.props;
+
+const teme = [
+  "Kurs 3ds Max",
+  "Corona Renderer",
+  "Vizualizacija enterijera",
+  "Vizualizacija eksterijera",
+  "Dizajn enterijera",
+  "AutoCAD i Photoshop",
+  "3D modelovanje",
+  "Materijali i osvetljenje",
+  "Arhitektonska vizualizacija",
+  "AI za arhitekte",
+  "Online kurs",
+  "Nastava uživo 1 na 1",
+];
+---
+
+<section class="bg-white border-t border-neutral-200">
+  <div class="max-w-[1400px] mx-auto px-5 md:px-10 py-16 md:py-20 grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-24">
+    <div>
+      <p class="text-[11px] font-medium uppercase tracking-[0.26em] text-neutral-500">Studio 27 · 27archviz</p>
+      <h2 class="mt-4 font-serif text-[30px] md:text-[38px] leading-[1.08] tracking-[-0.02em]">
+        Škola 3D vizualizacije i dizajna enterijera — online i uživo
+      </h2>
+      <ul class="mt-7 flex flex-wrap gap-2">
+        {teme.map((t) => <li class="border border-neutral-200 px-3 py-1.5 text-[12px] text-neutral-600">{t}</li>)}
+      </ul>
+    </div>
+
+    <div class="space-y-5 text-[15px] leading-[1.8] text-neutral-600 columns-1 md:columns-2 gap-10">
+      <p>
+        <strong class="font-medium text-neutral-900">Studio 27</strong> je škola arhitektonske vizualizacije sa sedištem u
+        Novom Beogradu.
+        Kroz <strong class="font-medium text-neutral-900">kurs 3ds Max + Corona Renderer</strong> učiš 3D modelovanje
+        enterijera, materijale, osvetljenje, kadriranje i postprodukciju — od potpunog početnika do fotorealističnog rendera
+        za portfolio i klijente.
+      </p>
+      <p>
+        <strong class="font-medium text-neutral-900">Kurs vizualizacije eksterijera</strong> pokriva fasade, teren,
+        vegetaciju i atmosfersko osvetljenje kuća i stambenih objekata, dok
+        <strong class="font-medium text-neutral-900">kurs dizajna enterijera</strong> kroz AutoCAD i Photoshop vodi od
+        tehničkih crteža i dispozicije nameštaja do profesionalne prezentacije projekta.
+      </p>
+      <p>
+        Nasnimljeni video kursevi imaju neograničen pristup, vežbe, scene i fajlove, a nastava uživo se održava 1 na 1 ili u
+        manjim grupama, uz AI alate za animaciju i prezentaciju. Svi polaznici dobijaju feedback u privatnom chatu i
+        sertifikat po završetku. Kursevi su na srpskom jeziku i dostupni polaznicima iz Srbije, Bosne i Hercegovine, Crne
+        Gore, Hrvatske i dijaspore.
+      </p>
+      {
+        kursevi.length > 0 && (
+          <p>
+            Pogledaj programe:{" "}
+            {kursevi.map((k, i) => (
+              <>
+                <a href={`/kurs/${k.id}`} class="text-neutral-900 underline underline-offset-4 decoration-neutral-300 hover:decoration-neutral-900">
+                  {lepNaziv(k.naziv)}
+                </a>
+                {i < kursevi.length - 1 ? ", " : "."}
+              </>
+            ))}
+          </p>
+        )
+      }
+    </div>
+  </div>
+</section>
