@@ -73,11 +73,11 @@ const ContactFormWebapp: React.FC<Props> = ({ publicApiUrl }) => {
         const email = user?.email || ''
 
         // Formatiraj poruku za WhatsApp
-        const whatsappMessage = `Ime: ${fullName}%0AEmail: ${email}%0ATelefon: ${finalTelefon}%0ANaslov: ${naslov}%0APorukaッ: ${poruka}`
+        const whatsappMessage = `Ime: ${fullName}\nEmail: ${email}\nTelefon: ${finalTelefon}\nNaslov: ${naslov}\nPoruka: ${poruka}`
 
-        // Admin WhatsApp broj
-        const adminNumber = '381612563121'
-        const whatsappUrl = `https://wa.me/${adminNumber}?text=${whatsappMessage}`
+        // Poslovni WhatsApp broj Studio 27 (+381 66 5934314)
+        const adminNumber = '381665934314'
+        const whatsappUrl = `https://wa.me/${adminNumber}?text=${encodeURIComponent(whatsappMessage)}`
 
         window.open(whatsappUrl, '_blank')
 
