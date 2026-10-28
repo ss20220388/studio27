@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
+import useZastitaSnimanja from "./useZastitaSnimanja";
 
 const VideoPlayerHLS = ({ videoId, fileName = "index.m3u8", accessToken, API_URL }) => {
   const videoRef = useRef();
   const reachedCheckpoints = useRef(new Set());
   const [userId, setUserId] = useState(null);
+  const { razlog, poruka, otkljucaj } = useZastitaSnimanja(videoRef);
 
   useEffect(() => {
     async function fetchUser() {
@@ -110,13 +112,32 @@ const VideoPlayerHLS = ({ videoId, fileName = "index.m3u8", accessToken, API_URL
   }
 
   return (
-    <video
-      ref={videoRef}
-      controls
-      playsInline
-      onTimeUpdate={handleTimeUpdate}
-      className="w-full h-full object-contain bg-black"
-    />
+    <div className="relative w-full h-full" onContextMenu={(e) => e.preventDefault()}>
+      <video
+        ref={videoRef}
+        controls={!razlog}
+        playsInline
+        controlsList="nodownload noremoteplayback"
+        disablePictureInPicture
+        onTimeUpdate={handleTimeUpdate}
+        onPlay={() => razlog && videoRef.current.pause()}
+        className={`w-full h-full object-contain bg-black ${razlog ? "invisible" : ""}`}
+      />
+      {razlog && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black px-6 text-center">
+          <p className="text-sm text-neutral-200">{poruka}</p>
+          {razlog !== "devtools" && (
+            <button
+              type="button"
+              onClick={otkljucaj}
+              className="rounded-lg bg-white px-5 py-2 text-sm font-medium text-black hover:bg-neutral-200"
+            >
+              Nastavi gledanje
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 
