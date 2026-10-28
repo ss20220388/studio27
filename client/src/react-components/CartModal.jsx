@@ -1,4 +1,4 @@
-import { API_URL } from "../data/sajt";
+import { API_URL, SLIKE_URL } from "../data/sajt";
 import React, { useState, useEffect, useCallback } from "react";
 
 export default function CartModal({ accessToken: initialToken }) {
@@ -290,7 +290,7 @@ export default function CartModal({ accessToken: initialToken }) {
                   <div key={item.id} className="flex items-center justify-between gap-3 text-xs sm:text-sm">
                     {item.image && (
                       <img
-                        src={API_URL + "/api/uploaded-images" + item.image}
+                        src={SLIKE_URL + "/api/uploaded-images" + item.image}
                         alt={item.title || item.naslov || item.naziv}
                         className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded flex-shrink-0"
                       />

@@ -1,3 +1,4 @@
+import { SLIKE_URL } from "../lib/adrese";
 import React, { useState } from "react";
 import VideoPlayerHLS from "./VideoPlayerHLS";
 
@@ -162,7 +163,7 @@ const KursPlayer = ({ lekcije, token, API_URL, materijali }) => {
                                 >
                                     <div className="aspect-video w-full rounded-xl overflow-hidden border border-neutral-800 group-hover:border-red-600 transition-all duration-300">
                                         <img
-                                            src={`${API_URL}/api/uploaded-images${scena.urlSlika}`}
+                                            src={`${SLIKE_URL}/api/uploaded-images${scena.urlSlika}`}
                                             alt={scena.naziv || "Scena"}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                         />

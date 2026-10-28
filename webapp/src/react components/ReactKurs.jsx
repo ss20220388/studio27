@@ -1,4 +1,4 @@
-import { API_URL } from "../lib/adrese";
+import { API_URL, SLIKE_URL } from "../lib/adrese";
 import React from "react";
 import KursDetaljiModal from "./KursDetaljiModal";
 
@@ -83,7 +83,7 @@ const ReactKurs = ({
                     <div
                         className="absolute inset-0 bg-cover bg-center transform group-hover:scale-110 transition duration-500"
                         style={{
-                            backgroundImage: `url('${API_URL}/api/uploaded-images${kurs.slikaUrl}')`,
+                            backgroundImage: `url('${SLIKE_URL}/api/uploaded-images${kurs.slikaUrl}')`,
                             transform: `scale(1.1)`,
                         }}
                     />
@@ -119,7 +119,7 @@ const ReactKurs = ({
                         <div
                             className="absolute inset-0 bg-cover bg-center scale-105 blur-sm"
                             style={{
-                                backgroundImage: `url(${API_URL}/api/uploaded-images${kurs.slikaUrl})`,
+                                backgroundImage: `url(${SLIKE_URL}/api/uploaded-images${kurs.slikaUrl})`,
                             }}
                         />
                         <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/60 to-black/40" />

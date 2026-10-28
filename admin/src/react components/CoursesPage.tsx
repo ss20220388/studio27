@@ -1,4 +1,4 @@
-import { API_URL } from "../lib/adrese";
+import { API_URL, SLIKE_URL } from "../lib/adrese";
 import React, { useState, useEffect } from "react";
 
 import CourseList from "./CourseList";
@@ -41,7 +41,7 @@ export default function CoursesPage({accesToken}: {accesToken: string | null}) {
     if (!slikaUrl) return null;
     if (slikaUrl.startsWith("http")) return slikaUrl;
     const cleanUrl = slikaUrl.startsWith("/") ? slikaUrl.substring(1) : slikaUrl;
-    return `${API_URL}/api/uploaded-images/${cleanUrl}`;
+    return `${SLIKE_URL}/api/uploaded-images/${cleanUrl}`;
   };
   
   const [kursevi, setKursevi] = useState<Kurs[]>([]);

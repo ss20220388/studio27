@@ -1,3 +1,4 @@
+import { SLIKE_URL } from "../lib/adrese";
 import React, { useEffect, useRef, useState } from "react";
 import VideoPlayerHLS from "./VideoPlayerHLS";
 import { SharedModal } from "./SharedModal";
@@ -63,7 +64,7 @@ export default function CourseDetail({
     if (!imagePath) return "";
     if (/^https?:\/\//i.test(imagePath)) return imagePath;
     const normalizedPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
-    return `${API_URL}/api/uploaded-images/${normalizedPath}`;
+    return `${SLIKE_URL}/api/uploaded-images/${normalizedPath}`;
   };
 
   const handleMaterialNameChange = async (url: string, newName: string) => {

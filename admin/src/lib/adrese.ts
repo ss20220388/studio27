@@ -7,3 +7,5 @@ export const API_URL = bezKosaCrte(import.meta.env.PUBLIC_API_URL);
 export const CLIENT_URL = bezKosaCrte(import.meta.env.PUBLIC_CLIENT_URL);
 export const APP_URL = bezKosaCrte(import.meta.env.PUBLIC_APP_URL);
 export const ADMIN_URL = bezKosaCrte(import.meta.env.PUBLIC_ADMIN_URL);
+// Slike (uploaded-images): podrazumevano sa API-ja; lokalno PUBLIC_SLIKE_URL može da pokazuje na produkciju
+export const SLIKE_URL = bezKosaCrte(import.meta.env.PUBLIC_SLIKE_URL) || API_URL;

@@ -1,4 +1,4 @@
-import { CLIENT_URL } from "../lib/adrese";
+import { CLIENT_URL, SLIKE_URL } from "../lib/adrese";
 import React from "react";
 import { createPortal } from "react-dom";
 
@@ -77,7 +77,7 @@ const KursDetaljiModal = ({
 
                 {/* Desktop slika */}
                 <div className="w-full md:w-[45%] h-64 md:h-auto relative hidden md:block flex-none">
-                    <img src={`${API_URL}/api/uploaded-images${kurs.slikaUrl}`} alt={kurs.naziv} className="w-full h-full object-cover" />
+                    <img src={`${SLIKE_URL}/api/uploaded-images${kurs.slikaUrl}`} alt={kurs.naziv} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-linear-to-t md:bg-linear-to-r from-neutral-900 via-neutral-900/70 to-transparent"></div>
                     
                     <div className="absolute bottom-10 left-10 right-10">
@@ -94,7 +94,7 @@ const KursDetaljiModal = ({
 
                 {/* Mobile slika */}
                 <div className="w-full h-[30vh] min-h-[220px] flex-none relative md:hidden">
-                    <img src={`${API_URL}/api/uploaded-images${kurs.slikaUrl}`} alt={kurs.naziv} className="w-full h-full object-cover" />
+                    <img src={`${SLIKE_URL}/api/uploaded-images${kurs.slikaUrl}`} alt={kurs.naziv} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/20 to-transparent"></div>
                     <h1 className="absolute bottom-4 left-6 right-6 text-3xl font-bold text-white drop-shadow-lg">{kurs.naziv}</h1>
                 </div>

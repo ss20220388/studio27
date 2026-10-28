@@ -1,7 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Ikona from "../components/novo/Ikona.astro";
-import { API_URL, CLIENT_URL } from "../data/sajt";
+import { API_URL, CLIENT_URL, SLIKE_URL } from "../data/sajt";
 
 const SITE_URL = CLIENT_URL;
 
@@ -46,7 +46,7 @@ for (const rad of radovi) {
   let cleanUrl = rad.url || "";
   if (cleanUrl && !cleanUrl.startsWith("http")) {
     cleanUrl = cleanUrl.startsWith("/") ? cleanUrl : `/${cleanUrl}`;
-    cleanUrl = `${API_URL}/api/uploaded-images${cleanUrl}`;
+    cleanUrl = `${SLIKE_URL}/api/uploaded-images${cleanUrl}`;
   }
 
   radoviByStudent[groupKey].works.push({ ...rad, fullUrl: cleanUrl });

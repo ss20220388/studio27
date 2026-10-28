@@ -8,6 +8,8 @@ export const API_URL = bezKosaCrte(import.meta.env.PUBLIC_API_URL);
 export const CLIENT_URL = bezKosaCrte(import.meta.env.PUBLIC_CLIENT_URL);
 export const APP_URL = bezKosaCrte(import.meta.env.PUBLIC_APP_URL);
 export const ADMIN_URL = bezKosaCrte(import.meta.env.PUBLIC_ADMIN_URL);
+// Slike (uploaded-images): podrazumevano sa API-ja; lokalno PUBLIC_SLIKE_URL može da pokazuje na produkciju
+export const SLIKE_URL = bezKosaCrte(import.meta.env.PUBLIC_SLIKE_URL) || API_URL;
 
 // Poslovni WhatsApp / telefon (isti kao u kontakt formi i podnožju)
 export const WHATSAPP_BROJ = "381665934314";
@@ -41,7 +43,7 @@ export type SlikeKursa = { glavna: string; sporedne: string[] };
 export function slikaIzBaze(putanja?: string | null) {
   if (!putanja) return "";
   if (/^https?:\/\//i.test(putanja)) return putanja;
-  return `${API_URL}/api/uploaded-images${putanja.startsWith("/") ? "" : "/"}${putanja}`;
+  return `${SLIKE_URL}/api/uploaded-images${putanja.startsWith("/") ? "" : "/"}${putanja}`;
 }
 
 // Cena se menja kroz admin aplikaciju; 0 znači da cena nije javna (kurs na upit)

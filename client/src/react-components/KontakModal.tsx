@@ -1,4 +1,4 @@
-import { API_URL } from "../data/sajt";
+import { API_URL, SLIKE_URL } from "../data/sajt";
 import React, { useEffect, useRef, useState } from 'react'
 
 const backdropStyle: React.CSSProperties = {
@@ -112,7 +112,7 @@ export default function KontaktModal({textButtona, bezDugmeta = false}: {textBut
               {/* Left image */}
               <div className="relative lg:col-span-2 h-48 lg:h-auto overflow-hidden bg-gray-100">
                 <img
-                  src={`${API_URL}/api/uploaded-images/towebp/slikaenterijer.webp`}
+                  src={`${SLIKE_URL}/api/uploaded-images/towebp/slikaenterijer.webp`}
                   alt="ContactUs"
                   className="w-full h-full object-cover opacity-90"
                   loading="lazy"
