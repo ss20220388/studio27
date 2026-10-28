@@ -5,6 +5,7 @@ import Zaglavlje from "../components/novo/Zaglavlje.astro";
 import Hero from "../components/pocetna/Hero.astro";
 import Kursevi from "../components/pocetna/Kursevi.astro";
 import KvizPoziv from "../components/pocetna/KvizPoziv.astro";
+import ZastoStudio from "../components/pocetna/ZastoStudio.astro";
 import RadoviIUtisci from "../components/pocetna/RadoviIUtisci.astro";
 import Pitanja from "../components/pocetna/Pitanja.astro";
 import SeoTekst from "../components/pocetna/SeoTekst.astro";
@@ -25,6 +26,11 @@ const slajdovi = kursevi.map((k, i) => ({
   slika: sporedne[i][0] || slikaIzBaze(k.slikaUrl),
 }));
 
+// Ostale slike svih kurseva, naizmenično po kursu, za sekciju "Zašto Studio 27"
+const sveSporedne: string[] = [];
+for (let r = 0; r < Math.max(0, ...sporedne.map((s) => s.length)); r++) {
+  sporedne.forEach((s) => s[r + 1] && sveSporedne.push(s[r + 1]));
+}
 const seoSlika = slajdovi[0]?.slika || `${SITE_URL}/images/og-main.webp`;
 
 const pitanja = [
@@ -147,6 +153,7 @@ const orgSchema = {
     <Hero slajdovi={slajdovi} />
     <Kursevi kursevi={kursevi} />
     <KvizPoziv />
+    <ZastoStudio slike={sveSporedne.slice(0, 2)} />
     <RadoviIUtisci />
     <ONamaSection />
     <Pitanja pitanja={pitanja} />
