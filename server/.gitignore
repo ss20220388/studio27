@@ -40,3 +40,12 @@ build/
 
 # Logs
 *.log
+
+### Tajni podaci (kljucevi i sertifikati za placanje, lozinke) - ne idu na GitHub ###
+src/main/resources/*.pem
+src/main/resources/*.zip
+src/main/resources/*.crt
+src/main/resources/*.CRT
+src/main/resources/*.cert
+src/main/resources/*.pub
+src/main/resources/application-local.properties
