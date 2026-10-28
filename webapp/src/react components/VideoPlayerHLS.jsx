@@ -124,8 +124,8 @@ const VideoPlayerHLS = ({ videoId, fileName = "index.m3u8", accessToken, API_URL
         className={`w-full h-full object-contain bg-black ${razlog ? "invisible" : ""}`}
       />
       {razlog && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black px-6 text-center">
-          <p className="text-sm text-neutral-200">{poruka}</p>
+        <div data-preko-slike className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-black px-6 text-center">
+          <p className="text-sm text-white">{poruka}</p>
           {razlog !== "devtools" && (
             <button
               type="button"
