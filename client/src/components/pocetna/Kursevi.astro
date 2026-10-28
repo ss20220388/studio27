@@ -1,40 +1,55 @@
 ---
-// Četiri kursa iz baze u mreži 2×2 (po skici klijentkinje): velika slika kursa,
-// naslov, softver i kratka poruka preko fotografije, dole cena i poziv na kurs.
+// Kursevi iz baze u mreži 2×2 (po skici klijentkinje): velika slika kursa,
+// naslov, softver i kratka poruka preko fotografije, dole poziv na kurs (bez cene).
 import Ikona from "../novo/Ikona.astro";
-import { imaCenu, lepNaziv, slikaIzBaze, type KursIzBaze } from "../../data/sajt";
+import { lepNaziv, slikaIzBaze, type KursIzBaze } from "../../data/sajt";
 
 interface Props {
   kursevi: KursIzBaze[];
 }
 
-// Tekstovi sa skice; kurs se prepoznaje po nazivu iz baze, pa redosled i slike prate admin aplikaciju
+// Tekstovi sa skice; kurs se prepoznaje po nazivu iz baze, pa slike prate admin aplikaciju
 const PORUKE = {
   enterijer: {
     naslov: "Profesionalna vizualizacija enterijera",
     tekst: "Nauči da kreiraš vizualizacije koje ne samo da prikazuju prostor, već ga i prodaju.",
+    istaknuto: "",
   },
   eksterijer: {
     naslov: "Profesionalna vizualizacija eksterijera",
     tekst: "Savladaj umetnost svetla, materijala i atmosfere u arhitektonskoj vizualizaciji.",
+    istaknuto: "",
   },
   dizajn: {
     naslov: "Kurs dizajna enterijera",
     tekst: "Pretvori svoje ideje u konkretne projekte — tehnički crteži, osnove, dispozicija nameštaja i prezentacija u Photoshopu.",
+    istaknuto: "Od prvog projekta do završne prezentacije.",
   },
   ai: {
     naslov: "Animacija + AI",
-    tekst: "Pretvori statične rendere u vizuelne priče koje ostavljaju utisak — uživo, uz predavača.",
+    tekst: "Pretvori statične rendere u vizuelne priče koje ostavljaju utisak.",
+    istaknuto: "",
+  },
+  // kurs 3ds Max + Corona + AI uživo, kada postoji i zaseban (online) AI kurs
+  mentorstvo: {
+    naslov: "3ds Max + Corona + AI uživo",
+    tekst: "Mentorski program sa predavačem, 1 na 1 ili u manjoj grupi — od nule do Level Up-a.",
+    istaknuto: "",
   },
 } as const;
 type Vrsta = keyof typeof PORUKE;
-const REDOSLED: Vrsta[] = ["enterijer", "eksterijer", "dizajn", "ai"];
+const REDOSLED: Vrsta[] = ["enterijer", "eksterijer", "dizajn", "ai", "mentorstvo"];
+
+const uzivo = (k: KursIzBaze) => !!k.komentarGore?.toUpperCase().includes("UŽIVO");
+const imaAi = (k: KursIzBaze) => /\bAI\b/.test(`${k.naziv} ${k.glavniKurs}`.toUpperCase());
+// "Animacija + AI" je online AI kurs; dok on ne postoji u bazi, tu karticu dobija kurs sa AI uživo
+const postojiOnlineAi = Astro.props.kursevi.some((k) => imaAi(k) && !uzivo(k));
 
 const vrsta = (k: KursIzBaze): Vrsta => {
   const t = `${k.naziv} ${k.glavniKurs}`.toUpperCase();
   if (t.includes("EKSTERIJER")) return "eksterijer";
   if (t.includes("DIZAJN")) return "dizajn";
-  if (/\bAI\b/.test(t)) return "ai";
+  if (imaAi(k)) return uzivo(k) && postojiOnlineAi ? "mentorstvo" : "ai";
   return "enterijer";
 };
 
@@ -44,12 +59,12 @@ const kartice = Astro.props.kursevi
   .map(({ k, v }) => ({
     id: k.id,
     naziv: lepNaziv(k.naziv),
-    softver: k.glavniKurs && !/^OD\s/i.test(k.glavniKurs) ? lepNaziv(k.glavniKurs) : v === "ai" ? "3ds Max + Corona + AI" : "",
-    uzivo: !!k.komentarGore?.toUpperCase().includes("UŽIVO"),
-    cena: imaCenu(k) ? `${k.cena} €` : "",
+    softver: k.glavniKurs && !/^OD\s/i.test(k.glavniKurs) ? lepNaziv(k.glavniKurs) : v === "ai" || v === "mentorstvo" ? "3ds Max + Corona + AI" : "",
     slika: slikaIzBaze(k.slikaUrl),
     ...PORUKE[v],
   }));
+// neparan broj kurseva: poslednja kartica ide preko cele širine
+const sirokaPoslednja = kartice.length > 1 && kartice.length % 2 === 1;
 ---
 
 <section id="edukacije" class="scroll-mt-16 bg-white">
@@ -74,7 +89,10 @@ const kartice = Astro.props.kursevi
           {kartice.map((k, i) => (
             <a
               href={`/kurs/${k.id}`}
-              class="pojava group relative block overflow-hidden bg-neutral-200 aspect-[4/5] sm:aspect-[5/4] md:aspect-[6/7] lg:aspect-[5/5]"
+              class:list={[
+                "pojava group relative block overflow-hidden bg-neutral-200 aspect-[4/5] sm:aspect-[5/4]",
+                sirokaPoslednja && i === kartice.length - 1 ? "md:col-span-2 md:aspect-[21/9]" : "md:aspect-[6/7] lg:aspect-[5/5]",
+              ]}
               style={`--kasnjenje:${(i % 2) * 0.12}s`}
               aria-label={`${k.naslov} – ${k.naziv}`}
             >
@@ -87,25 +105,20 @@ const kartice = Astro.props.kursevi
                   class="absolute inset-0 h-full w-full object-cover transition-transform duration-[1600ms] ease-out group-hover:scale-[1.05]"
                 />
               )}
-              <div class="absolute inset-0 bg-gradient-to-b from-black/65 via-black/10 to-black/55" />
+              <div class="absolute inset-0 bg-gradient-to-b from-black/75 via-black/15 to-black/55" />
 
-              <div class="absolute inset-x-0 top-0 p-6 md:p-8 lg:p-10 text-white">
-                <div class="flex flex-wrap items-center gap-2 text-[10.5px] font-medium uppercase tracking-[0.2em] text-white/80">
-                  {k.softver && <span>{k.softver}</span>}
-                  {k.uzivo && <span class="border border-white/40 px-2 py-0.5 tracking-[0.16em]">Uživo</span>}
-                </div>
+              <div class="s27-senka absolute inset-x-0 top-0 p-6 md:p-8 lg:p-10 text-white">
+                {k.softver && <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/90">{k.softver}</p>}
                 <h3 class="mt-3 font-serif text-[30px] sm:text-[36px] lg:text-[44px] leading-[1.02] tracking-[-0.02em] max-w-[520px]">
                   {k.naslov}
                 </h3>
-                <p class="mt-4 max-w-[420px] text-[14px] md:text-[15px] leading-relaxed text-white/85">{k.tekst}</p>
+                <p class="mt-4 max-w-[440px] text-[15px] md:text-[16px] font-medium leading-relaxed text-white">{k.tekst}</p>
+                {k.istaknuto && <p class="mt-3 max-w-[440px] text-[15px] md:text-[16px] font-bold leading-snug text-white">{k.istaknuto}</p>}
               </div>
 
               <div class="absolute inset-x-0 bottom-0 p-6 md:p-8 lg:p-10 flex items-end justify-between gap-4 text-white">
-                <div>
-                  <p class="text-[11px] uppercase tracking-[0.18em] text-white/70">{k.naziv}</p>
-                  <p class="mt-1.5 font-serif text-[22px]">{k.cena || "Cena na upit"}</p>
-                </div>
-                <span class="shrink-0 inline-flex items-center gap-3 border border-white/60 px-5 py-3 text-[12px] font-medium backdrop-blur-sm transition-colors duration-500 group-hover:bg-white group-hover:text-neutral-900">
+                <p class="s27-senka text-[11px] font-medium uppercase tracking-[0.18em] text-white/85">{k.naziv}</p>
+                <span class="shrink-0 inline-flex items-center gap-3 border border-white/70 bg-black/20 px-5 py-3 text-[12px] font-semibold backdrop-blur-sm transition-colors duration-500 group-hover:bg-white group-hover:text-neutral-900">
                   Pogledaj kurs
                   <Ikona ime="strelica" class="w-4 h-4 transition-transform duration-500 group-hover:translate-x-1" />
                 </span>
@@ -117,3 +130,10 @@ const kartice = Astro.props.kursevi
     }
   </div>
 </section>
+
+<style>
+  /* blaga senka da tekst preko svetlih delova fotografije ostane čitljiv */
+  .s27-senka {
+    text-shadow: 0 1px 14px rgba(0, 0, 0, 0.45);
+  }
+</style>

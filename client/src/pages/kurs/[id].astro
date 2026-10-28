@@ -6,6 +6,7 @@
 import Layout from "../../layouts/Layout.astro";
 import Ikona from "../../components/novo/Ikona.astro";
 import KupiDugme from "../../components/novo/KupiDugme.astro";
+import AiHero from "../../components/kurs/AiHero.astro";
 import {
   API_URL,
   CLIENT_URL,
@@ -93,6 +94,8 @@ const program = parsirajSadrzaj(kurs.sadrzaj);
 const lekcije = kurs.lekcije || [];
 const brojVidea = lekcije.reduce((zbir, l) => zbir + (l.videoUrls?.length || 0), 0);
 const naUzivo = !!kurs.komentarGore?.toUpperCase().includes("UŽIVO");
+// Online AI kurs ima poseban tamni naslovni ekran (po skici klijentkinje)
+const aiKurs = /\bAI\b/.test(`${kurs.naziv} ${kurs.glavniKurs}`.toUpperCase()) && !naUzivo;
 const porukaZaWhatsApp = `Zdravo, imam pitanje u vezi kursa "${naslov}".`;
 const recenica = (s: string) => lepNaziv(s.trim());
 
@@ -364,7 +367,10 @@ const dugmeOkvir =
   faq={pitanja}
 >
   <main class="bg-white text-neutral-900">
+    {aiKurs && <AiHero kurs={kurs} slika={glavna} kupljen={kupljen} />}
+
     <!-- 1. NASLOVNI EKRAN: glavna slika kursa iz baze sa belim prelivom -->
+    {!aiKurs && (
     <section class="relative overflow-hidden bg-white">
       {
         glavna && (
@@ -437,6 +443,7 @@ const dugmeOkvir =
         </div>
       </div>
     </section>
+    )}
 
     <!-- 2. TRAKA: softver i oznake kursa -->
     {
@@ -544,7 +551,7 @@ const dugmeOkvir =
     <!-- LEKCIJE (video kursevi, iz baze) -->
     {
       lekcije.length > 0 && (
-        <section class="bg-white">
+        <section id="lekcije" class="bg-white scroll-mt-20">
           <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24 grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-20">
             <div class="pojava">
               <p class={eyebrow}>Struktura kursa</p>

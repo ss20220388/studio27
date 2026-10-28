@@ -1,0 +1,116 @@
+---
+// Naslovni ekran online AI kursa (po skici klijentkinje): fotografija kursa preko celog ekrana,
+// naslov, lekcije kursa kao stavke, cena i "Kupi kurs". Sve dolazi iz baze (naziv, glavna slika,
+// lekcije, cena); ako lekcija još nema, koriste se stavke iz programa kursa.
+import Ikona from "../novo/Ikona.astro";
+import KupiDugme from "../novo/KupiDugme.astro";
+import { imaCenu, lepNaziv, parsirajSadrzaj, type KursIzBaze } from "../../data/sajt";
+
+interface Props {
+  kurs: KursIzBaze;
+  slika: string;
+  kupljen?: boolean;
+}
+const { kurs, slika, kupljen = false } = Astro.props;
+
+const naslov = lepNaziv(kurs.naziv) || "Kurs";
+const stavke = (
+  kurs.lekcije?.length ? kurs.lekcije.map((l) => l.naziv) : parsirajSadrzaj(kurs.sadrzaj).flatMap((s) => s.stavke)
+)
+  // nazivi VELIKIM SLOVIMA se sređuju u rečenicu, ostali ostaju kako su upisani u adminu
+  .map((s) => (s || "").trim())
+  .map((s) => (s === s.toUpperCase() ? lepNaziv(s) : s))
+  .filter(Boolean)
+  .slice(0, 6);
+
+// Ikonica po ključnoj reči iz naziva lekcije
+function ikonaZa(tekst: string, i: number) {
+  const t = tekst.toLowerCase();
+  if (/šetnj|setnj|prostor|\b3d\b/.test(t)) return "kocka";
+  if (/story|prič|telling/.test(t)) return "kamera";
+  if (/namešt|namest|fotelj/.test(t)) return "fotelja";
+  if (/animac|video|film/.test(t)) return "playKrug";
+  if (/svetl|rasvet/.test(t)) return "sijalica";
+  if (/materijal|tekstur/.test(t)) return "slojevi";
+  return ["stapic", "slika", "kamera", "kocka"][i % 4];
+}
+---
+
+<section class="relative overflow-hidden bg-[#1a1512] text-white" aria-label={naslov}>
+  {
+    slika && (
+      <img
+        src={slika}
+        alt={`${naslov} – Studio 27`}
+        class="s27-zum absolute inset-0 h-full w-full object-cover object-[65%_center]"
+        fetchpriority="high"
+      />
+    )
+  }
+  <div class="absolute inset-0 bg-gradient-to-r from-[#140f0c]/90 via-[#140f0c]/55 lg:via-[#140f0c]/35 to-transparent"></div>
+  <div class="absolute inset-0 bg-gradient-to-t from-[#140f0c]/70 via-transparent to-[#140f0c]/30"></div>
+
+  <div class="relative max-w-[1300px] mx-auto px-5 md:px-10 pt-8 pb-16 md:pb-20 min-h-[calc(100svh-74px)] lg:min-h-[720px] flex flex-col">
+    <nav class="s27-ulaz text-[12px] text-white/60" aria-label="Putanja">
+      <a href="/" class="hover:text-white">Početna</a>
+      <span class="mx-2">/</span>
+      <a href="/#edukacije" class="hover:text-white">Edukacije</a>
+      <span class="mx-2">/</span>
+      <span class="text-white/85">{naslov}</span>
+    </nav>
+
+    <div class="max-w-[620px] my-auto pt-12">
+      <p class="s27-ulaz flex items-center gap-4 text-[11px] font-medium uppercase tracking-[0.32em] text-white/80" style="--kasnjenje:0.1s">
+        Praktičan online kurs
+        <span class="h-px w-14 bg-white/50"></span>
+      </p>
+      <h1
+        class="s27-ulaz mt-5 font-poppins font-extrabold uppercase text-[38px] sm:text-[50px] lg:text-[60px] leading-[1.02] tracking-[-0.02em] [text-shadow:0_2px_24px_rgba(0,0,0,0.35)]"
+        style="--kasnjenje:0.2s"
+      >
+        {naslov}
+      </h1>
+
+      {
+        stavke.length > 0 && (
+          <ul class="s27-ulaz mt-8 grid gap-2.5 max-w-[500px]" style="--kasnjenje:0.3s" aria-label="Šta je u kursu">
+            {stavke.map((s, i) => (
+              <li class="flex items-center gap-4 border border-white/15 bg-black/45 backdrop-blur-md px-5 py-3.5 text-[15px] font-semibold">
+                <Ikona ime={ikonaZa(s, i)} class="w-5 h-5 shrink-0 text-white/85" debljina={1.5} />
+                {s}
+              </li>
+            ))}
+          </ul>
+        )
+      }
+
+      {
+        imaCenu(kurs) && (
+          <div class="s27-ulaz mt-8 flex items-center gap-5" style="--kasnjenje:0.4s">
+            <p class="font-poppins font-extrabold text-[48px] md:text-[56px] leading-none tracking-[-0.03em]">{kurs.cena} €</p>
+            <span class="h-12 w-px bg-white/40" />
+            <p class="text-[10.5px] font-medium uppercase leading-[1.7] tracking-[0.2em] text-white/80">
+              Kompletan
+              <br />
+              online kurs
+              <br />
+              sa praktičnim primerima
+            </p>
+          </div>
+        )
+      }
+
+      <div class="s27-ulaz mt-8 flex flex-wrap items-center gap-3" style="--kasnjenje:0.5s">
+        <KupiDugme
+          kurs={kurs}
+          kupljen={kupljen}
+          class="group inline-flex items-center justify-center gap-4 bg-[#ead9c4] px-9 py-4 text-[15px] font-semibold text-neutral-900 hover:bg-[#f3e6d6] transition-colors"
+        />
+        <a href="#program" class="inline-flex items-center gap-2 px-4 py-4 text-[13px] font-medium text-white/85 hover:text-white">
+          Pogledaj program
+          <Ikona ime="strelica" class="w-4 h-4 rotate-90" />
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

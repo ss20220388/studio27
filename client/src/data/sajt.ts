@@ -55,6 +55,7 @@ export function lepNaziv(tekst?: string) {
   const s = tekst.charAt(0) + tekst.slice(1).toLowerCase();
   return s
     .replace(/\b3ds max\b/gi, "3ds Max")
+    .replace(/\b3d\b/gi, "3D")
     .replace(/\bcorona\b/gi, "Corona")
     .replace(/(^|[\s+(])ai(?=$|[\s+).,])/gi, "$1AI")
     .replace(/\bautocad\b/gi, "AutoCAD")
