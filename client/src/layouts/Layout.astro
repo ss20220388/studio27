@@ -60,6 +60,10 @@ export interface Props {
     // cena u evrima (Google prikazuje cenu kursa u rezultatima)
     cena?: number;
   };
+  // Prva velika slika stranice (LCP): preload iste veličine koju će <img srcset> izabrati
+  glavnaSlika?: { src: string; srcset?: string; sizes?: string };
+  // Poppins se učitava samo gde se koristi (AI naslovni ekran)
+  poppins?: boolean;
   // Dodatni JSON-LD objekti koje stranica sama sastavlja (npr. detaljan Course sa recenzijama)
   schema?: Record<string, unknown>[];
 }
@@ -79,6 +83,8 @@ const {
   faq = [],
   course,
   schema = [],
+  glavnaSlika,
+  poppins = false,
   bezZaglavlja = false,
   bezPodnozja = false,
   pozadina = "#ffffff",
@@ -313,15 +319,17 @@ const robotsContent = noIndex
 
     {schema.map((objekat) => <script type="application/ld+json" set:html={JSON.stringify(objekat)} />)}
 
-    <!-- Dinamički Preload za primarnu sliku (Poboljšava LCP) -->
-    <link rel="preload" as="image" href={fullImageURL} fetchpriority="high" />
+    <!-- Preload prve velike slike (LCP) -->
+    {glavnaSlika && (
+      <link rel="preload" as="image" href={glavnaSlika.src} imagesrcset={glavnaSlika.srcset} imagesizes={glavnaSlika.sizes} fetchpriority="high" />
+    )}
 
     <!-- Google Fonts optimizovano učitavanje -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Poppins:wght@500;600;700;800;900&display=swap"
+      href={`https://fonts.googleapis.com/css2?family=Inter:wght@300..900&family=Newsreader:opsz,wght@6..72,400..500${poppins ? "&family=Poppins:wght@500;600;700;800;900" : ""}&display=swap`}
     />
 
     <!-- Google tag (gtag.js) -->
@@ -363,10 +371,10 @@ const robotsContent = noIndex
   </head>
 
   <body class="relative text-neutral-900" style={`background:${pozadina}`}>
-    <ErrorToastNotifier losGmailCookie={losGmailCookie} client:load />
+    <ErrorToastNotifier losGmailCookie={losGmailCookie} client:idle />
 
-    <CartModal accessToken={accessToken} client:load />
-    <LoginSectionForm publicApiUrl={API_URL} client:load />
+    <CartModal accessToken={accessToken} client:idle />
+    <LoginSectionForm publicApiUrl={API_URL} client:idle />
     <KontakModal bezDugmeta client:idle />
 
     <div class="w-full overflow-x-clip">

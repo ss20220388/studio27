@@ -46,6 +46,80 @@ export function slikaIzBaze(putanja?: string | null) {
   return `${SLIKE_URL}/api/uploaded-images${putanja.startsWith("/") ? "" : "/"}${putanja}`;
 }
 
+// Umanjene slike: /slika/... (pages/slika) pravi webp tražene širine i čuva ga na disku.
+// Originali iz baze su i do 1 MB, a telefonu je dovoljna slika od 480–800 px.
+export const SIRINE_SLIKA = [480, 800, 1200, 1600, 2000];
+const PREFIKS_SLIKA = `${SLIKE_URL}/api/uploaded-images/`;
+
+function kodiranaPutanja(putanja: string) {
+  return putanja
+    .split("/")
+    .map((deo) => {
+      try {
+        return encodeURIComponent(decodeURIComponent(deo));
+      } catch {
+        return encodeURIComponent(deo);
+      }
+    })
+    .join("/");
+}
+
+export function manjaSlika(url: string, sirina: number) {
+  if (!url?.startsWith(PREFIKS_SLIKA)) return url;
+  return `/slika/${kodiranaPutanja(url.slice(PREFIKS_SLIKA.length))}?w=${sirina}`;
+}
+
+// srcset za <img>; za slike koje nisu iz baze vraća undefined (atribut se ne ispisuje)
+export function srcsetSlike(url: string, najvise = 2000) {
+  if (!url?.startsWith(PREFIKS_SLIKA)) return undefined;
+  return SIRINE_SLIKA.filter((w) => w <= najvise)
+    .map((w) => `${manjaSlika(url, w)} ${w}w`)
+    .join(", ");
+}
+
+// Adresa kursa sa nazivom (/kurs/7-3ds-max-corona-render) – bolja za Google od samog broja
+export function slugKursa(naziv?: string) {
+  return (naziv || "")
+    .toLowerCase()
+    .replace(/đ/g, "dj")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function kursPutanja(kurs: { id?: number; naziv?: string }) {
+  const slug = slugKursa(kurs.naziv);
+  return `/kurs/${kurs.id}${slug ? `-${slug}` : ""}`;
+}
+
+// Kratak keš odgovora API-ja: svaka poseta ne mora ponovo da čeka bazu (izmene iz admina vide se za najviše minut)
+const KES_MS = 60_000;
+const kes = new Map<string, { vreme: number; podaci: Promise<unknown> }>();
+
+function izKesa<T>(kljuc: string, ucitaj: () => Promise<T>): Promise<T> {
+  const zapis = kes.get(kljuc);
+  if (zapis && Date.now() - zapis.vreme < KES_MS) return zapis.podaci as Promise<T>;
+  const podaci = ucitaj();
+  kes.set(kljuc, { vreme: Date.now(), podaci });
+  return podaci;
+}
+
+// GET na API sa kešom; neuspeh se ne pamti, pa sledeći zahtev pokušava ponovo
+function apiJson(putanja: string): Promise<any> {
+  return izKesa(putanja, async () => {
+    const res = await fetch(`${API_URL}${putanja}`);
+    if (!res.ok) {
+      kes.delete(putanja);
+      throw new Error(`${res.status} ${putanja}`);
+    }
+    return res.json();
+  }).catch((e) => {
+    kes.delete(putanja);
+    throw e;
+  });
+}
+
 // Cena se menja kroz admin aplikaciju; 0 znači da cena nije javna (kurs na upit)
 export function imaCenu(kurs: { cena?: number } | null | undefined) {
   return !!kurs?.cena && kurs.cena > 0;
@@ -67,9 +141,7 @@ export function lepNaziv(tekst?: string) {
 // Svi kursevi sa lekcijama, istim redosledom kao u admin aplikaciji
 export async function ucitajKurseve(): Promise<KursIzBaze[]> {
   try {
-    const res = await fetch(`${API_URL}/api/kursevi-sa-lekcijama`);
-    if (!res.ok) return [];
-    return await res.json();
+    return await apiJson("/api/kursevi-sa-lekcijama");
   } catch {
     return [];
   }
@@ -78,10 +150,18 @@ export async function ucitajKurseve(): Promise<KursIzBaze[]> {
 export async function ucitajSporedneSlike(id: number | null): Promise<string[]> {
   if (!id) return [];
   try {
-    const res = await fetch(`${API_URL}/api/kursslika/${id}`);
-    if (!res.ok) return [];
-    const data = await res.json();
+    const data = await apiJson(`/api/kursslika/${id}`);
     return (data.kursSlika || []).map((s: { url?: string }) => slikaIzBaze(s.url)).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+// Lista sa API-ja (recenzije, radovi sa rasporedom...); prazna lista ako API ne odgovori
+export async function ucitajListu<T = any>(putanja: string): Promise<T[]> {
+  try {
+    const data = await apiJson(putanja);
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }
@@ -92,9 +172,7 @@ export type RadPolaznika = { idRad: number; idKurs?: number; url: string; ime?: 
 
 export async function ucitajRadove(): Promise<RadPolaznika[]> {
   try {
-    const res = await fetch(`${API_URL}/api/radovi`);
-    if (!res.ok) return [];
-    const data = await res.json();
+    const data = await apiJson("/api/radovi");
     return Array.isArray(data) ? data.filter((r: RadPolaznika) => r.url) : [];
   } catch {
     return [];
@@ -104,9 +182,7 @@ export async function ucitajRadove(): Promise<RadPolaznika[]> {
 export async function ucitajKurs(id: number | null): Promise<KursIzBaze | null> {
   if (!id) return null;
   try {
-    const res = await fetch(`${API_URL}/api/kursevi/${id}`);
-    if (!res.ok) return null;
-    return await res.json();
+    return await apiJson(`/api/kursevi/${id}`);
   } catch {
     return null;
   }

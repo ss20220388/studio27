@@ -2,7 +2,7 @@
 // Uz svaki kurs idu i sve njegove slike (glavna, slike kursa i radovi polaznika),
 // da bi se pojavljivale i u Google pretrazi slika.
 import type { APIRoute } from "astro";
-import { CLIENT_URL, lepNaziv, slikaIzBaze, ucitajKurseve, ucitajRadove, ucitajSporedneSlike } from "../data/sajt";
+import { CLIENT_URL, kursPutanja, lepNaziv, slikaIzBaze, ucitajKurseve, ucitajRadove, ucitajSporedneSlike } from "../data/sajt";
 
 type Slika = { loc: string; naslov: string };
 
@@ -38,7 +38,7 @@ export const GET: APIRoute = async () => {
       ];
       // ista slika samo jednom, najviše 1000 po stranici (ograničenje Google-a)
       const jedinstvene = slike.filter((s, j) => s.loc && slike.findIndex((x) => x.loc === s.loc) === j).slice(0, 1000);
-      return { loc: `${CLIENT_URL}/kurs/${k.id}`, prioritet: "0.9", slike: jedinstvene };
+      return { loc: `${CLIENT_URL}${kursPutanja(k)}`, prioritet: "0.9", slike: jedinstvene };
     }),
     {
       loc: `${CLIENT_URL}/radovi`,

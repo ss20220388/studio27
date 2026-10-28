@@ -1,6 +1,5 @@
 ---
 // Sekcija o autorki (Doroteja Dokić) u stilu novog dizajna
-import Doroteja from "../assets/Doroteja.webp";
 import Ikona from "./novo/Ikona.astro";
 import { whatsappLink } from "../data/sajt";
 
@@ -24,7 +23,11 @@ const program = [
     <div class="pojava relative">
       <div class="absolute -left-4 -bottom-4 md:-left-6 md:-bottom-6 w-2/3 h-2/3 bg-bez" aria-hidden="true"></div>
       <img
-        src={Doroteja.src}
+        src="/images/doroteja-800.webp"
+        srcset="/images/doroteja-480.webp 480w, /images/doroteja-800.webp 800w, /images/doroteja-1200.webp 1200w"
+        width="800"
+        height="1200"
+        sizes="(min-width: 1400px) 560px, (min-width: 1024px) 42vw, 100vw"
         alt="Doroteja Dokić, osnivač Studio 27"
         loading="lazy"
         class="relative w-full aspect-[4/5] object-cover object-top"

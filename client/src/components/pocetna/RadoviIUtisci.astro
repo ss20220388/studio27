@@ -1,7 +1,7 @@
 ---
 // Radovi studenata (mreža 5×3 iz baze, po rasporedu iz admin aplikacije) i utisci polaznika (kartice)
 import Ikona from "../novo/Ikona.astro";
-import { API_URL, lepNaziv, slikaIzBaze } from "../../data/sajt";
+import { lepNaziv, manjaSlika, slikaIzBaze, srcsetSlike, ucitajListu } from "../../data/sajt";
 
 type Rad = { idRad: number; url: string; naziv?: string; ime?: string; prezime?: string };
 type Recenzija = {
@@ -10,15 +10,10 @@ type Recenzija = {
   kurs: { naziv?: string } | null;
 };
 
-let radovi: Rad[] = [];
-let recenzije: Recenzija[] = [];
-try {
-  const [r1, r2] = await Promise.all([fetch(`${API_URL}/api/radovi-sa-rasporedom`), fetch(`${API_URL}/api/recenzije`)]);
-  if (r1.ok) radovi = await r1.json();
-  if (r2.ok) recenzije = await r2.json();
-} catch (e) {
-  console.error("Greška pri učitavanju radova i utisaka:", e);
-}
+const [radovi, sveRecenzije] = await Promise.all([
+  ucitajListu<Rad>("/api/radovi-sa-rasporedom"),
+  ucitajListu<Recenzija>("/api/recenzije"),
+]);
 
 const slike = radovi
   .filter((r) => r.url)
@@ -28,7 +23,7 @@ const slike = radovi
     const kurs = lepNaziv(r.naziv) || "kursa 3D vizualizacije";
     return { src: slikaIzBaze(r.url), alt: `Render polaznika${autor ? ` ${autor}` : ""} – ${kurs}, Studio 27` };
   });
-recenzije = recenzije.filter((r) => r.opis && r.opis.trim());
+const recenzije = sveRecenzije.filter((r) => r.opis && r.opis.trim());
 ---
 
 <!-- RADOVI STUDENATA -->
@@ -50,7 +45,9 @@ recenzije = recenzije.filter((r) => r.opis && r.opis.trim());
             class:list={["group relative block overflow-hidden bg-neutral-100", i >= 14 ? "hidden lg:block" : i >= 12 ? "hidden sm:block" : ""]}
           >
             <img
-              src={s.src}
+              src={manjaSlika(s.src, 480)}
+              srcset={srcsetSlike(s.src, 1200)}
+              sizes="(min-width: 1400px) 280px, (min-width: 1024px) 20vw, (min-width: 640px) 33vw, 50vw"
               alt={s.alt}
               loading="lazy"
               decoding="async"

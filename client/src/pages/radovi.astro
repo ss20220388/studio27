@@ -1,17 +1,11 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Ikona from "../components/novo/Ikona.astro";
-import { API_URL, CLIENT_URL, SLIKE_URL } from "../data/sajt";
+import { CLIENT_URL, SLIKE_URL, manjaSlika, srcsetSlike, ucitajListu } from "../data/sajt";
 
 const SITE_URL = CLIENT_URL;
 
-let radovi: any[] = [];
-try {
-  const res = await fetch(`${API_URL}/api/radovi`);
-  if (res.ok) radovi = await res.json();
-} catch (e) {
-  console.error("Greška pri dohvatanju radova:", e);
-}
+const radovi = await ucitajListu("/api/radovi");
 
 // Grupisanje radova po studentu
 const radoviByStudent: Record<string, { displayName: string; redosledOsoba: number | null; works: any[] }> = {};
@@ -166,7 +160,9 @@ const gallerySchema = {
                   aria-label={`Uvećaj render – ${displayName}`}
                 >
                   <img
-                    src={work.fullUrl}
+                    src={manjaSlika(work.fullUrl, 800)}
+                    srcset={srcsetSlike(work.fullUrl, 1200)}
+                    sizes="(min-width: 1400px) 340px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
                     alt={`3D vizualizacija enterijera – rad polaznika ${displayName}`}
                     class="w-full h-auto transition-transform duration-[1200ms] ease-out group-hover:scale-[1.04]"
                     loading={gIndex === 0 && wIndex < 3 ? "eager" : "lazy"}

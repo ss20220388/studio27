@@ -4,7 +4,7 @@
 // lekcije, cena); ako lekcija još nema, koriste se stavke iz programa kursa.
 import Ikona from "../novo/Ikona.astro";
 import KupiDugme from "../novo/KupiDugme.astro";
-import { imaCenu, lepNaziv, parsirajSadrzaj, type KursIzBaze } from "../../data/sajt";
+import { imaCenu, lepNaziv, manjaSlika, parsirajSadrzaj, srcsetSlike, type KursIzBaze } from "../../data/sajt";
 
 interface Props {
   kurs: KursIzBaze;
@@ -40,7 +40,9 @@ function ikonaZa(tekst: string, i: number) {
   {
     slika && (
       <img
-        src={slika}
+        src={manjaSlika(slika, 1600)}
+        srcset={srcsetSlike(slika)}
+        sizes="100vw"
         alt={`${naslov} – Studio 27`}
         class="s27-zum absolute inset-0 h-full w-full object-cover object-[65%_center]"
         fetchpriority="high"

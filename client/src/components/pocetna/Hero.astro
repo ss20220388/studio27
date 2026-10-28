@@ -2,8 +2,9 @@
 // Prvi ekran početne strane: slajdšou kroz sve kurseve iz baze (pretapanje + spor zum),
 // stalni naslov levo i kartice kurseva na dnu sa linijom napretka.
 import Ikona from "../novo/Ikona.astro";
+import { manjaSlika, srcsetSlike } from "../../data/sajt";
 
-export type Slajd = { id: number; naziv: string; oznaka: string; slika: string };
+export type Slajd = { id: number; url: string; naziv: string; oznaka: string; slika: string };
 
 interface Props {
   slajdovi: Slajd[];
@@ -24,7 +25,9 @@ const slajdovi = Astro.props.slajdovi.filter((s) => s.slika);
         aria-hidden={i === 0 ? "false" : "true"}
       >
         <img
-          src={s.slika}
+          src={manjaSlika(s.slika, 1600)}
+          srcset={srcsetSlike(s.slika)}
+          sizes="100vw"
           alt={s.naziv}
           class:list={["absolute inset-0 h-full w-full object-cover", i === 0 ? "s27-zum" : ""]}
           fetchpriority={i === 0 ? "high" : "low"}
@@ -71,7 +74,7 @@ const slajdovi = Astro.props.slajdovi.filter((s) => s.slika);
           aria-label="Kursevi"
         >
           {slajdovi.slice(0, 4).map((s, i) => (
-            <a href={`/kurs/${s.id}`} data-slajd-dugme={i} class="relative block pt-5 pb-2 pr-6 text-white/55 hover:text-white transition-colors">
+            <a href={s.url} data-slajd-dugme={i} class="relative block pt-5 pb-2 pr-6 text-white/55 hover:text-white transition-colors">
               <span class="absolute left-0 right-6 -top-px h-px">
                 <span class="s27-napredak block h-full w-0 bg-white" />
               </span>

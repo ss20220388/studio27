@@ -1,6 +1,7 @@
 ---
 // "Zašto Studio 27": fotografija sa statistikom i četiri prednosti, u stilu stranica kurseva
 import Ikona from "../novo/Ikona.astro";
+import { manjaSlika, srcsetSlike } from "../../data/sajt";
 interface Props {
   // slike kurseva iz baze (ostale slike kurseva); bez njih sekcija ide bez fotografije
   slike: string[];
@@ -26,7 +27,9 @@ const proces = ["Model", "Materijali", "Svetlo", "Kamera", "Render", "Prezentaci
         <div class="pojava relative">
           <div class="overflow-hidden">
             <img
-              src={velika}
+              src={manjaSlika(velika, 1200)}
+              srcset={srcsetSlike(velika, 1600)}
+              sizes="(min-width: 1400px) 650px, (min-width: 1024px) 50vw, 100vw"
               alt="Vizualizacija sa kursa Studio 27"
               loading="lazy"
               class="w-full aspect-[4/3.2] object-cover transition-transform duration-[1600ms] hover:scale-[1.04]"
@@ -34,7 +37,7 @@ const proces = ["Model", "Materijali", "Svetlo", "Kamera", "Render", "Prezentaci
           </div>
           {mala && (
             <div class="absolute -bottom-10 right-4 md:right-[-28px] w-[55%] overflow-hidden border-[10px] border-white shadow-[0_24px_60px_rgba(0,0,0,0.14)] hidden sm:block">
-              <img src={mala} alt="Render sa kursa Studio 27" loading="lazy" class="w-full aspect-[147/100] object-cover" />
+              <img src={manjaSlika(mala, 800)} srcset={srcsetSlike(mala, 1200)} sizes="(min-width: 1024px) 360px, 55vw" alt="Render sa kursa Studio 27" loading="lazy" class="w-full aspect-[147/100] object-cover" />
             </div>
           )}
         </div>

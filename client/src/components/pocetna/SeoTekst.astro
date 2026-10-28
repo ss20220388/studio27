@@ -1,7 +1,7 @@
 ---
 // Kratak tekst o kursevima pri dnu početne strane: ključne reči za pretragu (3ds Max kurs, Corona,
 // vizualizacija enterijera/eksterijera, dizajn enterijera, AutoCAD...) i interni linkovi ka kursevima.
-import { lepNaziv, type KursIzBaze } from "../../data/sajt";
+import { kursPutanja, lepNaziv, type KursIzBaze } from "../../data/sajt";
 
 interface Props {
   kursevi: KursIzBaze[];
@@ -62,7 +62,7 @@ const teme = [
             Pogledaj programe:{" "}
             {kursevi.map((k, i) => (
               <>
-                <a href={`/kurs/${k.id}`} class="text-neutral-900 underline underline-offset-4 decoration-neutral-300 hover:decoration-neutral-900">
+                <a href={kursPutanja(k)} class="text-neutral-900 underline underline-offset-4 decoration-neutral-300 hover:decoration-neutral-900">
                   {lepNaziv(k.naziv)}
                 </a>
                 {i < kursevi.length - 1 ? ", " : "."}

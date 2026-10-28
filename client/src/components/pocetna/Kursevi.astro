@@ -2,7 +2,7 @@
 // Kursevi iz baze u mreži 2×2 (po skici klijentkinje): velika slika kursa,
 // naslov, softver i kratka poruka preko fotografije, dole poziv na kurs (bez cene).
 import Ikona from "../novo/Ikona.astro";
-import { lepNaziv, slikaIzBaze, type KursIzBaze } from "../../data/sajt";
+import { kursPutanja, lepNaziv, manjaSlika, slikaIzBaze, srcsetSlike, type KursIzBaze } from "../../data/sajt";
 
 interface Props {
   kursevi: KursIzBaze[];
@@ -57,7 +57,7 @@ const kartice = Astro.props.kursevi
   .map((k) => ({ k, v: vrsta(k) }))
   .sort((a, b) => REDOSLED.indexOf(a.v) - REDOSLED.indexOf(b.v))
   .map(({ k, v }) => ({
-    id: k.id,
+    url: kursPutanja(k),
     naziv: lepNaziv(k.naziv),
     softver: k.glavniKurs && !/^OD\s/i.test(k.glavniKurs) ? lepNaziv(k.glavniKurs) : v === "ai" || v === "mentorstvo" ? "3ds Max + Corona + AI" : "",
     slika: slikaIzBaze(k.slikaUrl),
@@ -88,7 +88,7 @@ const sirokaPoslednja = kartice.length > 1 && kartice.length % 2 === 1;
         <div class="mt-10 md:mt-14 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
           {kartice.map((k, i) => (
             <a
-              href={`/kurs/${k.id}`}
+              href={k.url}
               class:list={[
                 "pojava group relative block overflow-hidden bg-neutral-200 aspect-[4/5] sm:aspect-[5/4]",
                 sirokaPoslednja && i === kartice.length - 1 ? "md:col-span-2 md:aspect-[21/9]" : "md:aspect-[6/7] lg:aspect-[5/5]",
@@ -98,7 +98,9 @@ const sirokaPoslednja = kartice.length > 1 && kartice.length % 2 === 1;
             >
               {k.slika && (
                 <img
-                  src={k.slika}
+                  src={manjaSlika(k.slika, 1200)}
+                  srcset={srcsetSlike(k.slika)}
+                  sizes={sirokaPoslednja && i === kartice.length - 1 ? "(min-width: 1400px) 1320px, 100vw" : "(min-width: 1400px) 660px, (min-width: 768px) 50vw, 100vw"}
                   alt={`${k.naslov} – ${k.naziv}, Studio 27`}
                   loading={i < 2 ? "eager" : "lazy"}
                   decoding="async"

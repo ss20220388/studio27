@@ -16,7 +16,12 @@ import {
   lepNaziv,
   parsirajSadrzaj,
   slikaIzBaze,
+  kursPutanja,
+  manjaSlika,
+  srcsetSlike,
+  ucitajKurs,
   ucitajKurseve,
+  ucitajListu,
   ucitajRadove,
   ucitajSporedneSlike,
   whatsappLink,
@@ -24,7 +29,9 @@ import {
   type RadPolaznika,
 } from "../../data/sajt";
 
-const { id } = Astro.params;
+// Adresa je /kurs/7-3ds-max-corona-render; broj na početku je id kursa (stari linkovi /kurs/7 se preusmeravaju)
+const parametar = Astro.params.id || "";
+const id = parametar.match(/^\d+/)?.[0] || "";
 const refreshToken = Astro.cookies.get("refreshToken")?.value;
 
 // Da li ulogovani korisnik već poseduje ovaj kurs (tada dugme vodi u web aplikaciju)
@@ -64,22 +71,26 @@ let sporedne: string[] = [];
 let sveRecenzije: Recenzija[] = [];
 let radovi: RadPolaznika[] = [];
 try {
-  const [kursRes, slike, recRes, sviRadovi] = await Promise.all([
-    fetch(`${API_URL}/api/kursevi/${id}`),
+  const [kursIzBaze, slike, recenzije, sviRadovi] = await Promise.all([
+    ucitajKurs(Number(id)),
     ucitajSporedneSlike(Number(id)),
-    fetch(`${API_URL}/api/recenzije`).catch(() => null),
+    ucitajListu<Recenzija>("/api/recenzije"),
     ucitajRadove(),
   ]);
-  if (kursRes.ok) kurs = await kursRes.json();
+  kurs = kursIzBaze;
   sporedne = slike;
-  if (recRes?.ok) sveRecenzije = await recRes.json();
+  sveRecenzije = recenzije;
   radovi = sviRadovi.filter((r) => String(r.idKurs) === String(id));
 } catch (e) {
   console.error("Greška pri dohvatanju podataka o kursu:", e);
 }
 
 if (!kurs) {
-  return Astro.redirect("/404");
+  return Astro.rewrite("/404");
+}
+const putanjaKursa = kursPutanja(kurs);
+if (`/kurs/${parametar}` !== putanjaKursa) {
+  return Astro.redirect(`${putanjaKursa}${Astro.url.search}`, 301);
 }
 
 // ---------- Podaci za prikaz ----------
@@ -230,7 +241,7 @@ const pitanja = [
 ];
 
 // ---------- SEO (kanonski URL sa adrese iz .env fajla) ----------
-const canonicalUrl = `${CLIENT_URL}/kurs/${id}`;
+const canonicalUrl = `${CLIENT_URL}${putanjaKursa}`;
 const cistTekst = (t?: string) => (t || "").replace(/<[^>]*>?/gm, "").replace(/\s+/g, " ").trim();
 const prvaRecenica = (t?: string) => {
   const c = cistTekst(t);
@@ -357,6 +368,8 @@ const dugmeOkvir =
   description={opisZaSeo}
   keywords={kljucneReci}
   image={sveSlike[0] || undefined}
+  glavnaSlika={glavna ? { src: manjaSlika(glavna, 1600), srcset: srcsetSlike(glavna), sizes: aiKurs ? "100vw" : "(min-width: 1024px) 62vw, 100vw" } : undefined}
+  poppins={aiKurs}
   imageAlt={`${naslov} – Studio 27`}
   canonicalURL={canonicalUrl}
   breadcrumbs={[
@@ -375,7 +388,9 @@ const dugmeOkvir =
       {
         glavna && (
           <img
-            src={glavna}
+            src={manjaSlika(glavna, 1600)}
+            srcset={srcsetSlike(glavna)}
+            sizes="(min-width: 1024px) 62vw, 100vw"
             alt={`${naslov}${glavniLepo ? ` – ${glavniLepo}` : ""}, render iz kursa`}
             class="s27-zum absolute inset-y-0 right-0 h-full w-full lg:w-[62%] object-cover"
             fetchpriority="high"
@@ -475,7 +490,7 @@ const dugmeOkvir =
           <div class="max-w-[1300px] mx-auto grid lg:grid-cols-2 items-center">
             {slikaUvod && (
               <div class="pojava relative h-[320px] md:h-[440px] lg:h-full lg:min-h-[480px] overflow-hidden">
-                <img src={slikaUvod} alt={`${naslov} – primer rendera iz kursa`} loading="lazy" class="absolute inset-0 h-full w-full object-cover" />
+                <img src={manjaSlika(slikaUvod, 1200)} srcset={srcsetSlike(slikaUvod, 1600)} sizes="(min-width: 1024px) 650px, 100vw" alt={`${naslov} – primer rendera iz kursa`} loading="lazy" class="absolute inset-0 h-full w-full object-cover" />
               </div>
             )}
             <div class="pojava px-5 md:px-10 lg:px-16 py-14 md:py-20" style="--kasnjenje:0.1s">
@@ -605,7 +620,10 @@ const dugmeOkvir =
                     aria-label={`Uvećaj rad${autor ? ` – ${autor}` : ""}`}
                   >
                     <img
-                      src={slikaIzBaze(r.url)}
+                      src={manjaSlika(slikaIzBaze(r.url), 800)}
+                      srcset={srcsetSlike(slikaIzBaze(r.url), 1200)}
+                      sizes="(min-width: 1300px) 310px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+                      data-puna={slikaIzBaze(r.url)}
                       alt={`Render polaznika${autor ? ` ${autor}` : ""} (${i + 1}) – ${naslov}${glavniLepo ? `, ${glavniLepo}` : ""}`}
                       loading="lazy"
                       decoding="async"
@@ -641,7 +659,10 @@ const dugmeOkvir =
                   aria-label={`Uvećaj sliku ${i + 1}`}
                 >
                   <img
-                    src={src}
+                    src={manjaSlika(src, 800)}
+                    srcset={srcsetSlike(src, 1200)}
+                    sizes="(min-width: 1300px) 310px, (min-width: 1024px) 25vw, 50vw"
+                    data-puna={src}
                     alt={`${naslov}: render ${i + 1}${glavniLepo ? ` (${glavniLepo})` : ""}`}
                     loading="lazy"
                     decoding="async"
@@ -678,7 +699,7 @@ const dugmeOkvir =
                     <p class="mt-auto pt-3 border-t border-neutral-200 text-[11px] uppercase tracking-[0.14em] text-neutral-500">
                       Polaznik kursa:{" "}
                       {r.kurs.id ? (
-                        <a href={`/kurs/${r.kurs.id}`} class="text-neutral-900 underline underline-offset-2 hover:no-underline">{lepNaziv(r.kurs.naziv)}</a>
+                        <a href={kursPutanja(r.kurs)} class="text-neutral-900 underline underline-offset-2 hover:no-underline">{lepNaziv(r.kurs.naziv)}</a>
                       ) : (
                         <span class="text-neutral-900">{lepNaziv(r.kurs.naziv)}</span>
                       )}
@@ -719,7 +740,9 @@ const dugmeOkvir =
             {
               glavna && (
                 <img
-                  src={glavna}
+                  src={manjaSlika(glavna, 1200)}
+                  srcset={srcsetSlike(glavna, 1600)}
+                  sizes="55vw"
                   alt=""
                   loading="lazy"
                   decoding="async"
@@ -782,7 +805,9 @@ const dugmeOkvir =
         <section class="relative overflow-hidden bg-[#f7f6f3]">
           {slikaKraj && (
             <img
-              src={slikaKraj}
+              src={manjaSlika(slikaKraj, 1200)}
+              srcset={srcsetSlike(slikaKraj, 1600)}
+              sizes="45vw"
               alt=""
               loading="lazy"
               decoding="async"
@@ -802,7 +827,7 @@ const dugmeOkvir =
 
     <!-- 11. ZAVRŠNI POZIV preko slike kursa -->
     <section class="relative overflow-hidden">
-      {slikaKraj && <img src={slikaKraj} alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover" />}
+      {slikaKraj && <img src={manjaSlika(slikaKraj, 1600)} srcset={srcsetSlike(slikaKraj)} sizes="100vw" alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover" />}
       <div class="absolute inset-0 bg-white/72"></div>
       <div class="relative max-w-[900px] mx-auto px-5 md:px-10 py-20 md:py-28 text-center">
         <h2 class:list={[naslovSekcije, "pojava"]}>Započni svoj put uz {nazivUTekstu}.</h2>
@@ -835,13 +860,15 @@ const dugmeOkvir =
             <div class:list={["mt-10 grid gap-4 md:gap-5", ostaliKursevi.length === 1 ? "md:grid-cols-1" : ostaliKursevi.length === 2 ? "md:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"]}>
               {ostaliKursevi.map((k, i) => (
                 <a
-                  href={`/kurs/${k.id}`}
+                  href={kursPutanja(k)}
                   class="pojava group relative block overflow-hidden bg-neutral-200 aspect-[4/5] md:aspect-[4/4.6]"
                   style={`--kasnjenje:${i * 0.1}s`}
                 >
                   {k.slikaUrl && (
                     <img
-                      src={slikaIzBaze(k.slikaUrl)}
+                      src={manjaSlika(slikaIzBaze(k.slikaUrl), 800)}
+                      srcset={srcsetSlike(slikaIzBaze(k.slikaUrl), 1200)}
+                      sizes="(min-width: 1024px) 420px, (min-width: 768px) 50vw, 100vw"
                       alt={lepNaziv(k.naziv)}
                       loading="lazy"
                       decoding="async"
@@ -886,7 +913,10 @@ const dugmeOkvir =
 <script>
   // Galerija: uvećan prikaz sa strelicama i tastaturom
   const slike = [...document.querySelectorAll<HTMLButtonElement>("[data-galerija-slika]")].map(
-    (d) => d.querySelector("img")?.getAttribute("src") || "",
+    (d) => {
+      const img = d.querySelector("img");
+      return img?.dataset.puna || img?.getAttribute("src") || "";
+    },
   );
   const lb = document.getElementById("s27-lightbox");
   const lbSlika = document.getElementById("s27-lb-slika") as HTMLImageElement | null;
