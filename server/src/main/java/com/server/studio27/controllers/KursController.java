@@ -322,6 +322,14 @@ public class KursController {
                     lekcije));
         }
 
+        // Broj polaznika po kursu (upisi u pohadja), za admin listu i detalje kursa
+        Map<Integer, Integer> brojPoKursu = new HashMap<>();
+        jdbcTemplate.query("SELECT kursId, COUNT(DISTINCT studentId) AS broj FROM pohadja GROUP BY kursId",
+                rs -> { brojPoKursu.put(rs.getInt("kursId"), rs.getInt("broj")); });
+        for (Kurs kurs : kursevi) {
+            kurs.setBrojStudenata(brojPoKursu.getOrDefault(kurs.getId(), 0));
+        }
+
         return ResponseEntity.ok(kursevi);
     }
 

@@ -13,6 +13,7 @@ public class Kurs {
     private String komentarDole;
     private String komentarSredina;
     private String komentarGore;
+    private int brojStudenata;
     public Kurs() {
 
     }
@@ -146,6 +147,12 @@ public class Kurs {
     }
     public void setKomentarGore(String komentarGore) {
         this.komentarGore = komentarGore;
+    }
+    public int getBrojStudenata() {
+        return brojStudenata;
+    }
+    public void setBrojStudenata(int brojStudenata) {
+        this.brojStudenata = brojStudenata;
     }
     
 }
