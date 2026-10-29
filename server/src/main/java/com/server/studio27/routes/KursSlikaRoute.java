@@ -66,5 +66,14 @@ public class KursSlikaRoute {
         jdbcTemplate.update(SQL, idKurs);
         return "Deleted";
     }
+
+    // brisanje jedne sporedne slike kursa (admin, izmena kursa)
+    @PostMapping("/deletekursslika/{idKurs}/{idSlika}")
+    public ResponseEntity<Map<String, Object>> obrisiJednu(@PathVariable int idKurs, @PathVariable int idSlika) {
+        int obrisano = jdbcTemplate.update("DELETE FROM kursslika WHERE idKurs = ? AND idSlika = ?;", idKurs, idSlika);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", obrisano > 0);
+        return ResponseEntity.ok(response);
+    }
     
 }

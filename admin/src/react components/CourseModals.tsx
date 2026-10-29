@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { SharedModal } from "./SharedModal";
+import { GlavnaSlikaPolje, SporedneSlikePolje, otpremiSliku, type PostojecaSlika } from "./SlikeKursa";
 
 
 
@@ -37,14 +38,21 @@ export default function CourseModals({
   // Add Form State
   const [addForm, setAddForm] = useState({ naziv: "", opis: "", sadrzaj: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
   const [addFile, setAddFile] = useState<File | null>(null);
-  const [addSporedneSlike, setAddSporedneSlike] = useState<FileList | null>(null);
+  const [addSporedneSlike, setAddSporedneSlike] = useState<File[]>([]);
   // Edit Form State
   const [editForm, setEditForm] = useState({ naziv: "", opis: "", sadrzaj: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
   const [editFile, setEditFile] = useState<File | null>(null);
-  const [editSporedneSlike, setEditSporedneSlike] = useState<FileList | null>(null);
+  const [editSporedneSlike, setEditSporedneSlike] = useState<File[]>([]);
 
- const [trenutneSporedneSlike, setTrenutneSporedneSlike] = useState<any[]>([]);
- 
+  const [trenutneSporedneSlike, setTrenutneSporedneSlike] = useState<PostojecaSlika[]>([]);
+  const [zaBrisanje, setZaBrisanje] = useState<Set<number>>(new Set());
+  const [cuvanje, setCuvanje] = useState(false);
+  const [greska, setGreska] = useState("");
+
+  const jsonHeaders = {
+    "Content-Type": "application/json",
+    ...(accesToken ? { Authorization: `Bearer ${accesToken}` } : {})
+  };
 
   useEffect(() => {
     if (selectedKurs && showEditModal) {
@@ -59,37 +67,48 @@ export default function CourseModals({
         komentarSredina: selectedKurs.komentarSredina || "",
         komentarDole: selectedKurs.komentarDole || ""
       });
-      
+      setEditFile(null);
+      setEditSporedneSlike([]);
+      setZaBrisanje(new Set());
+      setGreska("");
+      setTrenutneSporedneSlike([]);
+      fetch(`${API_URL}/api/kursslika/${selectedKurs.id}`)
+        .then((r) => (r.ok ? r.json() : { kursSlika: [] }))
+        .then((d) => setTrenutneSporedneSlike(
+          (d.kursSlika || []).map((s: any) => ({ idSlika: s.idSlika ?? s.slikaId, url: s.url }))
+        ))
+        .catch(() => setTrenutneSporedneSlike([]));
     }
-    
   }, [selectedKurs, showEditModal]);
 
-  const handleAddSubmit = async () => {
-    try {
-      let finalSlikaUrl = "";
-      if (addFile) {
-        const formData = new FormData();
-        formData.append("file", addFile);
-        const headers: any = {};
-        if (accesToken) headers["Authorization"] = `Bearer ${accesToken}`;
+  // Upload sporednih slika i povezivanje sa kursom
+  const dodajSporedneSlike = async (idKurs: number, fajlovi: File[]) => {
+    for (const slika of fajlovi) {
+      const url = await otpremiSliku(API_URL, accesToken, slika);
+      const slikaRes = await fetch(`${API_URL}/api/dodajsliku`, {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({ url })
+      });
+      if (!slikaRes.ok) throw new Error("Greška pri dodavanju slike u bazu.");
+      const { idSlika } = await slikaRes.json();
+      await fetch(`${API_URL}/api/dodajkursslika`, {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({ idKurs, idSlika })
+      });
+    }
+  };
 
-        const uploadRes = await fetch(`${API_URL}/api/upload-local`, {
-          method: "POST",
-          headers,
-          body: formData
-        });
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          finalSlikaUrl = `/uploads/${uploadData.filename}`;
-        }
-      }
+  const handleAddSubmit = async () => {
+    setCuvanje(true);
+    setGreska("");
+    try {
+      const finalSlikaUrl = addFile ? await otpremiSliku(API_URL, accesToken, addFile) : "";
 
       const response = await fetch(`${API_URL}/api/dodaj-kurs`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(accesToken ? { "Authorization": `Bearer ${accesToken}` } : {})
-        },
+        headers: jsonHeaders,
         body: JSON.stringify({
           naziv: addForm.naziv,
           opis: addForm.opis,
@@ -103,107 +122,39 @@ export default function CourseModals({
           komentarDole: addForm.komentarDole
         })
       });
-      if (response.ok) {
-        const kurs = await response.json();
-        const idKurs = kurs.id;
-        for (const slika of addSporedneSlike || []) {
-          const formData = new FormData();
-          formData.append("file", slika);
-          const headers: any = {};
-          if (accesToken) headers["Authorization"] = `Bearer ${accesToken}`;
-          const uploadRes = await fetch(`${API_URL}/api/upload-local`, {
-            method: "POST",
-            headers,
-            body: formData
-          });
+      if (!response.ok) throw new Error("Greška pri dodavanju kursa");
 
-          const uploadData = await uploadRes.json();
-          const filepath = `/uploads/${uploadData.filename}`;
-          const slikaRes = await fetch(`${API_URL}/api/dodajsliku`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(accesToken && { Authorization: `Bearer ${accesToken}` })
-            },
-            body: JSON.stringify({
-              url: filepath
-            })
-          });
-          const slikaData = await slikaRes.json();
-          const idSlika = slikaData.idSlika;
+      const kurs = await response.json();
+      await dodajSporedneSlike(kurs.id, addSporedneSlike);
 
-          // Poveži sa kursom
-          await fetch(`${API_URL}/api/dodajkursslika`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(accesToken && { Authorization: `Bearer ${accesToken}` })
-            },
-            body: JSON.stringify({
-              idKurs: idKurs,
-              idSlika: idSlika
-            })
-
-          });
-        }
-
-        setShowAddModal(false);
-        setAddForm({ naziv: "", opis: "", sadrzaj: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
-        setAddFile(null);
-        setAddSporedneSlike(null);
-        if (onRefresh) onRefresh();
-      } else {
-        console.error("Greška pri dodavanju kursa");
-      }
-    } catch (e) {
+      setShowAddModal(false);
+      setAddForm({ naziv: "", opis: "", sadrzaj: "", cena: "", trajanje: "", glavniKurs: "", komentarGore: "", komentarSredina: "", komentarDole: "" });
+      setAddFile(null);
+      setAddSporedneSlike([]);
+      if (onRefresh) onRefresh();
+    } catch (e: any) {
       console.error(e);
+      setGreska(e?.message || "Greška pri dodavanju kursa");
+    } finally {
+      setCuvanje(false);
     }
   };
 
   const handleEditSubmit = async () => {
     if (!selectedKurs) return;
+    setCuvanje(true);
+    setGreska("");
 
     try {
-      let finalSlikaUrl = selectedKurs.slikaUrl || "";
-      if (editSporedneSlike && editSporedneSlike.length > 0) {
-        const headers: any = {};
-        if (accesToken) headers["Authorization"] = `Bearer ${accesToken}`;
-        const deleteRes = await fetch(`${API_URL}/api/deletekursslika/${selectedKurs.id}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accesToken}`
-          }
-        });
-      }
-
       // Upload glavne slike ako je promenjena
-      if (editFile) {
-        const formData = new FormData();
-        formData.append("file", editFile);
-
-        const headers: any = {};
-        if (accesToken) headers["Authorization"] = `Bearer ${accesToken}`;
-
-        const uploadRes = await fetch(`${API_URL}/api/upload-local`, {
-          method: "POST",
-          headers,
-          body: formData
-        });
-
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          finalSlikaUrl = `/uploads/${uploadData.filename}`;
-        }
-      }
+      const finalSlikaUrl = editFile
+        ? await otpremiSliku(API_URL, accesToken, editFile)
+        : selectedKurs.slikaUrl || "";
 
       // Izmena kursa
       const response = await fetch(`${API_URL}/api/promeni-kurs/${selectedKurs.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(accesToken ? { Authorization: `Bearer ${accesToken}` } : {})
-        },
+        headers: jsonHeaders,
         body: JSON.stringify({
           naziv: editForm.naziv,
           opis: editForm.opis,
@@ -217,91 +168,44 @@ export default function CourseModals({
           komentarDole: editForm.komentarDole
         })
       });
+      if (!response.ok) throw new Error("Greška pri izmeni kursa");
 
-      if (response.ok) {
-
-
-        for (const slika of editSporedneSlike || []) {
-          const formData = new FormData();
-          formData.append("file", slika);
-
-          const headers: any = {};
-          if (accesToken) headers["Authorization"] = `Bearer ${accesToken}`;
-
-          const uploadRes = await fetch(`${API_URL}/api/upload-local`, {
-            method: "POST",
-            headers,
-            body: formData
-          });
-
-          if (!uploadRes.ok) {
-            console.error(`Greška pri uploadu slike: ${slika.name}`);
-            continue;
-          }
-
-          const uploadData = await uploadRes.json();
-          const filepath = `/uploads/${uploadData.filename}`;
-
-          // Dodaj u tabelu Slika
-          const slikaRes = await fetch(`${API_URL}/api/dodajsliku`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${accesToken}`
-            },
-            body: JSON.stringify({
-              url: filepath
-            })
-          });
-
-          if (!slikaRes.ok) {
-            console.error("Greška pri dodavanju slike u bazu.");
-            continue;
-          }
-
-          const slikaData = await slikaRes.json();
-
-          // Poveži sliku sa kursom
-          await fetch(`${API_URL}/api/dodajkursslika`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${accesToken}`
-            },
-            body: JSON.stringify({
-              idKurs: selectedKurs.id,
-              idSlika: slikaData.idSlika
-            })
-          });
-        }
-
-        setShowEditModal(false);
-        setEditFile(null);
-        setEditSporedneSlike(null);
-
-        if (onRefresh) onRefresh();
-
-        if (setSelectedKurs) {
-          setSelectedKurs({
-            ...selectedKurs,
-            naziv: editForm.naziv,
-            opis: editForm.opis,
-            sadrzaj: editForm.sadrzaj,
-            cena: parseFloat(editForm.cena) || 0,
-            trajanje: parseInt(editForm.trajanje) || 0,
-            slikaUrl: finalSlikaUrl,
-            glavniKurs: editForm.glavniKurs,
-            komentarGore: editForm.komentarGore,
-            komentarSredina: editForm.komentarSredina,
-            komentarDole: editForm.komentarDole
-          });
-        }
-
-      } else {
-        console.error("Greška pri izmeni kursa");
+      // Brisanje označenih sporednih slika, pa dodavanje novih (stare ostaju)
+      for (const idSlika of zaBrisanje) {
+        await fetch(`${API_URL}/api/deletekursslika/${selectedKurs.id}/${idSlika}`, {
+          method: "POST",
+          headers: jsonHeaders
+        });
       }
-    } catch (e) {
+      await dodajSporedneSlike(selectedKurs.id, editSporedneSlike);
+
+      setShowEditModal(false);
+      setEditFile(null);
+      setEditSporedneSlike([]);
+      setZaBrisanje(new Set());
+
+      if (onRefresh) onRefresh();
+
+      if (setSelectedKurs) {
+        setSelectedKurs({
+          ...selectedKurs,
+          naziv: editForm.naziv,
+          opis: editForm.opis,
+          sadrzaj: editForm.sadrzaj,
+          cena: parseFloat(editForm.cena) || 0,
+          trajanje: parseInt(editForm.trajanje) || 0,
+          slikaUrl: finalSlikaUrl,
+          glavniKurs: editForm.glavniKurs,
+          komentarGore: editForm.komentarGore,
+          komentarSredina: editForm.komentarSredina,
+          komentarDole: editForm.komentarDole
+        });
+      }
+    } catch (e: any) {
       console.error(e);
+      setGreska(e?.message || "Greška pri izmeni kursa");
+    } finally {
+      setCuvanje(false);
     }
   };
 
@@ -425,28 +329,12 @@ export default function CourseModals({
               />
             </div>
           </div>
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Slika kursa</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setAddFile(e.target.files?.[0] || null)}
-              className="w-full text-sm text-neutral-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-neutral-300 hover:file:bg-neutral-700 hover:file:cursor-pointer transition-all border border-neutral-700 rounded-lg bg-neutral-900"
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Sporedne slike (opciono)</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => setAddSporedneSlike(e.target.files || null)}
-              className="w-full text-sm text-neutral-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-neutral-300 hover:file:bg-neutral-700 hover:file:cursor-pointer transition-all border border-neutral-700 rounded-lg bg-neutral-900"
-            />
-          </div>
+          <GlavnaSlikaPolje fajl={addFile} onFajl={setAddFile} />
+          <SporedneSlikePolje nove={addSporedneSlike} onNove={setAddSporedneSlike} />
+          {greska && <p className="text-xs text-red-400">{greska}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <button onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">Otkaži</button>
-            <button onClick={handleAddSubmit} className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors">Dodaj kurs</button>
+            <button onClick={handleAddSubmit} disabled={cuvanje} className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors disabled:opacity-60">{cuvanje ? "Čuvanje..." : "Dodaj kurs"}</button>
           </div>
         </div>
       </SharedModal>
@@ -540,28 +428,18 @@ export default function CourseModals({
               />
             </div>
           </div>
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Nova slika kursa (opciono)</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setEditFile(e.target.files?.[0] || null)}
-              className="w-full text-sm text-neutral-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-neutral-300 hover:file:bg-neutral-700 hover:file:cursor-pointer transition-all border border-neutral-700 rounded-lg bg-neutral-900"
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5">Sporedne slike (opciono)</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => setEditSporedneSlike(e.target.files || null)}
-              className="w-full text-sm text-neutral-200 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-neutral-800 file:text-neutral-300 hover:file:bg-neutral-700 hover:file:cursor-pointer transition-all border border-neutral-700 rounded-lg bg-neutral-900"
-            />
-          </div>
+          <GlavnaSlikaPolje trenutnaUrl={selectedKurs?.slikaUrl} fajl={editFile} onFajl={setEditFile} />
+          <SporedneSlikePolje
+            postojece={trenutneSporedneSlike}
+            zaBrisanje={zaBrisanje}
+            onZaBrisanje={setZaBrisanje}
+            nove={editSporedneSlike}
+            onNove={setEditSporedneSlike}
+          />
+          {greska && <p className="text-xs text-red-400">{greska}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <button onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">Otkaži</button>
-            <button onClick={handleEditSubmit} className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors">Sačuvaj izmene</button>
+            <button onClick={handleEditSubmit} disabled={cuvanje} className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-500 transition-colors disabled:opacity-60">{cuvanje ? "Čuvanje..." : "Sačuvaj izmene"}</button>
           </div>
         </div>
       </SharedModal>

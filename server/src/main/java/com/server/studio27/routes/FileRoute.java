@@ -104,12 +104,16 @@ public class FileRoute {
                 uploadDir.mkdirs();
             }
 
+            // jedinstveno ime: nova slika istog naziva ne sme da pregazi staru (i njen keš)
+            String original = Paths.get(String.valueOf(file.getOriginalFilename())).getFileName().toString();
+            String ime = System.currentTimeMillis() + "-" + original.replaceAll("[^A-Za-z0-9._-]", "-");
+
             byte[] bytes = file.getBytes();
-            Path path = Paths.get(UPLOAD_DIR + file.getOriginalFilename());
+            Path path = Paths.get(UPLOAD_DIR + ime);
             Files.write(path, bytes);
 
             response.put("message", "Fajl uspešno postavljen!");
-            response.put("filename", file.getOriginalFilename());
+            response.put("filename", ime);
             response.put("path", path.toString());
 
             return ResponseEntity.ok(response);
