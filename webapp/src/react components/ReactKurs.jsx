@@ -94,6 +94,11 @@ const ReactKurs = ({
                             <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 drop-shadow-md">
                                 {kurs.naziv}
                             </h3>
+                            {kurs.paketNaziv && (
+                                <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur-sm">
+                                    Paket: {kurs.paketNaziv}
+                                </span>
+                            )}
 
                            
                         </div>

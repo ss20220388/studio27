@@ -28,9 +28,11 @@ public class PohadjaController {
          switch (user.getRole()) {
             case "STUDENT" -> {
                System.out.println("Student access - fetching enrolled courses for userId: " + userId);
-               String SQL = "Select kurs.*\r\n" + //
+               // paketNaziv: kupljeni paket kursa (npr. "Online + Review"), prikazuje se u aplikaciji
+               String SQL = "Select kurs.*, pk.naziv AS paketNaziv\r\n" + //
                      " from kurs\r\n" + //
                      " left join pohadja using(kursId)\r\n" + //
+                     " left join paket pk on pk.paketId = pohadja.paketId\r\n" + //
                      " left join student using(studentId)\r\n" + //
                      " where studentId = ?\r\n" + //
                      " ORDER BY kurs.redosled ASC";
@@ -181,8 +183,12 @@ public class PohadjaController {
 
    public void dodajKorisnikaUKurs(Integer studentId, Integer kursId) {
       try {
-         String SQL = "INSERT INTO pohadja (studentId, kursId) VALUES (?, ?)";
-         jdbcTemplate.update(SQL, studentId, kursId);
+         // paket iz poslednje uplate za taj kurs (npr. odobrena uplatnica za "Online + Review")
+         String SQL = """
+               INSERT INTO pohadja (studentId, kursId, paketId)
+               VALUES (?, ?, (SELECT p.paketId FROM platio p WHERE p.studentId = ? AND p.kursId = ? ORDER BY p.id DESC LIMIT 1))
+               """;
+         jdbcTemplate.update(SQL, studentId, kursId, studentId, kursId);
       } catch (Exception e) {
          System.out.println("Error adding user to course: " + e.getMessage());
       }

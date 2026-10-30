@@ -67,7 +67,7 @@ public class PlatioController {
     public List<Platio> getStudentPayments(Integer studentId) {
         List<Platio> platanja = new ArrayList<>();
         String SQL = """
-                SELECT p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, k.naziv,
+                SELECT p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, CONCAT(k.naziv, COALESCE(CONCAT(' — ', pk.naziv), '')) AS naziv,
         case
             when p.status ='P' then 'Placeno'
             when p.status = 'O' then 'Odbijeno'
@@ -76,6 +76,7 @@ public class PlatioController {
         end as status
                 FROM platio p
                 JOIN kurs k ON p.kursId = k.kursId
+                LEFT JOIN paket pk ON pk.paketId = p.paketId
                 WHERE p.studentId = ?
                 ORDER BY p.datumPlacanja DESC
                 """;
@@ -99,9 +100,10 @@ public class PlatioController {
     public ResponseEntity<Map<String, Object>> getSveUplate() {
         try {
             String SQL = """
-                    Select p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, k.naziv,p.status,p.tip,p.url,ime,prezime,email
+                    Select p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, CONCAT(k.naziv, COALESCE(CONCAT(' — ', pk.naziv), '')) AS naziv,p.status,p.tip,p.url,ime,prezime,email
                     FROM platio p
                     JOIN kurs k ON p.kursId = k.kursId
+                    LEFT JOIN paket pk ON pk.paketId = p.paketId
                     join student s ON p.studentId = s.studentId
                     join user u ON s.studentId = u.userId
                     where status='P'
@@ -133,9 +135,10 @@ public class PlatioController {
     public ResponseEntity<Map<String, Object>> getSveOdbijene() {
         try {
             String SQL = """
-                    Select p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, k.naziv,p.status,p.tip,p.url,ime,prezime,email
+                    Select p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, CONCAT(k.naziv, COALESCE(CONCAT(' — ', pk.naziv), '')) AS naziv,p.status,p.tip,p.url,ime,prezime,email
                     FROM platio p
                     JOIN kurs k ON p.kursId = k.kursId
+                    LEFT JOIN paket pk ON pk.paketId = p.paketId
                     join student s ON p.studentId = s.studentId
                     join user u ON s.studentId = u.userId
                     WHERE p.status = 'O'
@@ -167,9 +170,10 @@ public class PlatioController {
     public ResponseEntity<Map<String,Object>> getSveUpriremi(){
         try {
             String SQL = """
-                    Select p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, k.naziv,p.status,p.tip,p.url,ime,prezime,email
+                    Select p.studentId, p.kursId, p.datumPlacanja, p.cenaPlacanja, CONCAT(k.naziv, COALESCE(CONCAT(' — ', pk.naziv), '')) AS naziv,p.status,p.tip,p.url,ime,prezime,email
                     FROM platio p
                     JOIN kurs k ON p.kursId = k.kursId
+                    LEFT JOIN paket pk ON pk.paketId = p.paketId
                     join student s ON p.studentId = s.studentId
                     join user u ON s.studentId = u.userId
                     WHERE p.status = 'C'
@@ -214,10 +218,28 @@ public class PlatioController {
             return ResponseEntity.status(500).body(Map.of("error", "Greška prilikom ažuriranja statusa plaćanja"));
         }
     }
+    // Cena kursa u EUR: cena paketa (ako pripada tom kursu) ili cena kursa
+    public Integer cenaKursa(Integer kursId, Integer paketId) {
+        if (paketId != null) {
+            List<Integer> cena = jdbcTemplate.queryForList("SELECT cena FROM paket WHERE paketId = ? AND kursId = ?", Integer.class, paketId, kursId);
+            if (!cena.isEmpty()) return cena.get(0);
+        }
+        List<Integer> cena = jdbcTemplate.queryForList("SELECT cena FROM kurs WHERE kursId = ?", Integer.class, kursId);
+        return cena.isEmpty() ? null : cena.get(0);
+    }
+
     public ResponseEntity<Map<String,Object>> addNewPayment(Integer studentId,Integer kursId,String datumPlacanja,Integer cenaPlacanja,String status,String tip,String url){
+        return addNewPayment(studentId, kursId, datumPlacanja, cenaPlacanja, status, tip, url, null);
+    }
+
+    public ResponseEntity<Map<String,Object>> addNewPayment(Integer studentId,Integer kursId,String datumPlacanja,Integer cenaPlacanja,String status,String tip,String url,Integer paketId){
         try {
-            String SQL = "INSERT INTO platio (studentId, kursId, datumPlacanja, cenaPlacanja, status, tip, url) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            int rowsAffected = jdbcTemplate.update(SQL, studentId, kursId, datumPlacanja, cenaPlacanja, status, tip, url);
+            // paket se prihvata samo ako pripada tom kursu
+            if (paketId != null && jdbcTemplate.queryForList("SELECT 1 FROM paket WHERE paketId = ? AND kursId = ?", Integer.class, paketId, kursId).isEmpty()) {
+                paketId = null;
+            }
+            String SQL = "INSERT INTO platio (studentId, kursId, datumPlacanja, cenaPlacanja, status, tip, url, paketId) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            int rowsAffected = jdbcTemplate.update(SQL, studentId, kursId, datumPlacanja, cenaPlacanja, status, tip, url, paketId);
 
             if (rowsAffected > 0) {
                 return ResponseEntity.ok(Map.of("message", "Novo plaćanje uspešno dodato"));

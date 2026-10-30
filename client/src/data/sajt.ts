@@ -167,6 +167,23 @@ export async function ucitajListu<T = any>(putanja: string): Promise<T[]> {
   }
 }
 
+// Paketi kursa (npr. Online / Online + Review / Live mentorship + AI), redom iz admina
+export type PaketKursa = { paketId: number; kursId: number; naziv: string; cena: number; opis?: string };
+
+export async function ucitajPakete(kursId: number | null): Promise<PaketKursa[]> {
+  if (!kursId) return [];
+  return ucitajListu<PaketKursa>(`/api/paketi/${kursId}`);
+}
+
+// Potpis recenzije: ime polaznika i Instagram nalog (za utiske sa Instagrama)
+export type PotpisRecenzije = { ime?: string | null; instagram?: string | null; student?: { ime?: string; prezime?: string } | null };
+
+export function potpisRecenzije(r: PotpisRecenzije) {
+  const ime = (r.ime || [r.student?.ime, r.student?.prezime].filter(Boolean).join(" ")).trim();
+  const instagram = (r.instagram || "").trim().replace(/^@/, "");
+  return { ime, instagram, instagramUrl: instagram ? `https://www.instagram.com/${encodeURIComponent(instagram)}/` : "" };
+}
+
 // Radovi polaznika (tabela radova u bazi; svaki rad je vezan za kurs preko idKurs)
 export type RadPolaznika = { idRad: number; idKurs?: number; url: string; ime?: string; prezime?: string };
 

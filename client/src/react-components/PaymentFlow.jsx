@@ -123,6 +123,7 @@ export default function UplatnicaCheckout({
           studentId,
           courseIds,
           totalAmount: totals.rsd,
+          paketi: Object.fromEntries(cartList.filter((item) => item.paketId).map((item) => [item.id || item.kursId, item.paketId])),
         }),
       });
 

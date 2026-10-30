@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseCookie;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -96,6 +97,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/radovi", "/api/radovi-sa-rasporedom", "/api/upload-hls-hetzner").permitAll()
                         .requestMatchers("/api/progress-chart/**", "/api/cookies/create-cookie-by-local-storage").permitAll()
                         .requestMatchers("/api/kursslika", "/api/kursslika/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/paketi/**").permitAll()
                         .requestMatchers("/api/send-code-to-mail", "/api/send-mail-to-person").permitAll()
 
                         // Payment rute

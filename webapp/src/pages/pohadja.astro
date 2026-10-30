@@ -12,6 +12,7 @@ interface Kurs {
     cena: number;
     trajanje: number;
     slikaUrl: string;
+    paketNaziv?: string | null;
 }
 const token = Astro.cookies.get("refreshToken")?.value || null;
 let kursevi: any[] = [];

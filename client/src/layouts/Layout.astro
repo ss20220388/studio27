@@ -415,9 +415,9 @@ const robotsContent = noIndex
             } catch {
               korpa = [];
             }
-            if (!korpa.some((s) => s.id === kurs.id)) {
-              korpa.push({ ...kurs, quantity: 1 });
-            }
+            // isti kurs je u korpi samo jednom: novi izbor (npr. drugi paket) zamenjuje prethodni
+            korpa = korpa.filter((s) => s.id !== kurs.id);
+            korpa.push({ ...kurs, quantity: 1 });
             localStorage.setItem("cart_items", JSON.stringify(korpa));
             window.dispatchEvent(new CustomEvent("cart-updated", { detail: korpa }));
           } catch (err) {

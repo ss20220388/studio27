@@ -93,14 +93,36 @@ public class PlatioRoute {
 
     @PostMapping("/dodaj-placanje")
     public ResponseEntity<Map<String, Object>> dodajPlacanje(@RequestBody Map<String, Object> placanjeData) {
-        Integer studentId = (Integer) placanjeData.get("studentId");
-        Integer kursId = (Integer) placanjeData.get("kursId");
+        Integer studentId = ((Number) placanjeData.get("studentId")).intValue();
         String datumPlacanja = (String) placanjeData.get("datumPlacanja");
-        Integer cenaPlacanja = (Integer) placanjeData.get("cenaPlacanja");
+        Number cena = (Number) placanjeData.get("cenaPlacanja");
+        Integer cenaPlacanja = cena == null ? null : cena.intValue();
         String status = (String) placanjeData.get("status");
         String tip = (String) placanjeData.get("tip");
         String url = (String) placanjeData.get("url");
-        return platioController.addNewPayment(studentId, kursId, datumPlacanja, cenaPlacanja, status, tip, url);
+        // paketi: { "kursId": paketId } za kurseve kupljene u paketu
+        Map<Integer, Integer> paketi = new java.util.HashMap<>();
+        if (placanjeData.get("paketi") instanceof Map<?, ?> mapa) {
+            mapa.forEach((k, v) -> {
+                if (k != null && v instanceof Number p) paketi.put(Integer.parseInt(k.toString()), p.intValue());
+            });
+        }
+
+        // kursId je jedan broj ili lista (više kurseva u korpi)
+        Object kursevi = placanjeData.get("kursId");
+        if (kursevi instanceof List<?> lista) {
+            ResponseEntity<Map<String, Object>> poslednji = ResponseEntity.badRequest().body(Map.of("error", "Nema kurseva"));
+            for (Object k : lista) {
+                Integer kursId = ((Number) k).intValue();
+                // za više kurseva u jednoj uplatnici cena se upisuje po kursu (paket ili kurs, EUR)
+                poslednji = platioController.addNewPayment(studentId, kursId, datumPlacanja,
+                        platioController.cenaKursa(kursId, paketi.get(kursId)), status, tip, url, paketi.get(kursId));
+                if (!poslednji.getStatusCode().is2xxSuccessful()) return poslednji;
+            }
+            return poslednji;
+        }
+        Integer kursId = ((Number) kursevi).intValue();
+        return platioController.addNewPayment(studentId, kursId, datumPlacanja, cenaPlacanja, status, tip, url, paketi.get(kursId));
     }
 
 }

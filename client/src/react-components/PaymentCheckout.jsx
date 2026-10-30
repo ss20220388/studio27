@@ -155,6 +155,7 @@ export default function UplatnicaCheckout({ onSuccess = null , onBack= null,API_
           status: "C",
           tip: "UPLATNICA",
           url: `/${uploaded.name}`,
+          paketi: Object.fromEntries(cartList.filter((item) => item.paketId).map((item) => [item.id || item.kursId, item.paketId])),
         }),
       });
 

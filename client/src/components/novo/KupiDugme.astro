@@ -6,14 +6,16 @@ import { APP_URL, imaCenu, type KursIzBaze } from "../../data/sajt";
 // - kupljen kurs   -> otvara web aplikaciju
 // - kurs sa cenom  -> dodaje u korpu (CartModal i isti tok plaćanja)
 // - kurs bez cene  -> otvara kontakt formu ("Postavi pitanje")
+// - kurs sa paketima -> vodi na izbor paketa (#paketi), cena zavisi od paketa
 interface Props {
   kurs: KursIzBaze | null;
   kupljen?: boolean;
   class?: string;
   strelica?: boolean;
+  naPakete?: boolean;
 }
 
-const { kurs, kupljen = false, class: klasa = "", strelica = true } = Astro.props;
+const { kurs, kupljen = false, class: klasa = "", strelica = true, naPakete = false } = Astro.props;
 
 const zaKorpu = imaCenu(kurs)
   ? JSON.stringify({
@@ -31,6 +33,11 @@ const zaKorpu = imaCenu(kurs)
     <a href={APP_URL} class={klasa}>
       Pristupi kursu u aplikaciji
       <Ikona ime="strelica" class="w-4 h-4" />
+    </a>
+  ) : naPakete ? (
+    <a href="#paketi" class={klasa}>
+      Izaberi paket
+      {strelica && <Ikona ime="strelica" class="w-4 h-4" />}
     </a>
   ) : zaKorpu ? (
     <button type="button" class={`cursor-pointer ${klasa}`} data-kupi-kurs={zaKorpu}>

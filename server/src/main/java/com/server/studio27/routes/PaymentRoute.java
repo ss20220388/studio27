@@ -40,7 +40,8 @@ public class PaymentRoute {
         this.mailService = mailService;
     }
 
-    public record PaymentCreateRequest(String orderId, Long studentId, List<Long> courseIds, BigDecimal totalAmount) {
+    // paketi: kursId -> paketId (opciono, za kurseve koji se kupuju u paketu)
+    public record PaymentCreateRequest(String orderId, Long studentId, List<Long> courseIds, BigDecimal totalAmount, Map<Long, Long> paketi) {
     }
 
     @PostMapping("/payment/create")
@@ -64,7 +65,8 @@ public class PaymentRoute {
                     request.orderId(),
                     request.studentId(),
                     request.courseIds(),
-                    request.totalAmount()
+                    request.totalAmount(),
+                    request.paketi() == null ? Map.of() : request.paketi()
             );
 
             return ResponseEntity.ok(Map.of("paymentForm", paymentForm));

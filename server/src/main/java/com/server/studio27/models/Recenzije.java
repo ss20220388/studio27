@@ -9,6 +9,9 @@ public class Recenzije {
     private Date datum;
     private Student student;
     private Kurs kurs;
+    // za recenzije sa Instagrama (bez naloga na sajtu)
+    private String instagram;
+    private String ime;
 
     public Recenzije() {
     }
@@ -68,6 +71,22 @@ public class Recenzije {
 
     public void setKurs(Kurs kurs) {
         this.kurs = kurs;
+    }
+
+    public String getInstagram() {
+        return instagram;
+    }
+
+    public void setInstagram(String instagram) {
+        this.instagram = instagram;
+    }
+
+    public String getIme() {
+        return ime;
+    }
+
+    public void setIme(String ime) {
+        this.ime = ime;
     }
 
     

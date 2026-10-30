@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { SharedModal } from "./SharedModal";
+import PaketiKursa from "./PaketiKursa";
 import { GlavnaSlikaPolje, SporedneSlikePolje, otpremiSliku, type PostojecaSlika } from "./SlikeKursa";
 
 
@@ -436,6 +437,7 @@ export default function CourseModals({
             nove={editSporedneSlike}
             onNove={setEditSporedneSlike}
           />
+          {selectedKurs?.id && <PaketiKursa kursId={selectedKurs.id} API_URL={API_URL} accesToken={accesToken} />}
           {greska && <p className="text-xs text-red-400">{greska}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <button onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors">Otkaži</button>

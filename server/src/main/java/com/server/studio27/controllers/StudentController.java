@@ -146,11 +146,16 @@ public class StudentController {
                 }
             }
 
+            // paketi postojećih upisa se čuvaju i posle izmene liste kurseva
+            Map<Integer, Object> paketPoKursu = new HashMap<>();
+            jdbcTemplate.query("SELECT kursId, paketId FROM pohadja WHERE studentId = ?",
+                    rs -> { paketPoKursu.put(rs.getInt("kursId"), rs.getObject("paketId")); }, studentId);
+
             String deletePohadjaSQL = "DELETE FROM pohadja WHERE studentId = ?";
             jdbcTemplate.update(deletePohadjaSQL, studentId);
             for (Integer kurs : noviKursevi) {
-                String insertPohadjaSQL = "INSERT INTO pohadja (studentId, kursId) VALUES (?, ?)";
-                jdbcTemplate.update(insertPohadjaSQL, studentId, kurs);
+                String insertPohadjaSQL = "INSERT INTO pohadja (studentId, kursId, paketId) VALUES (?, ?, ?)";
+                jdbcTemplate.update(insertPohadjaSQL, studentId, kurs, paketPoKursu.get(kurs));
             }
 
             for (Integer kurs : noviKursevi) {

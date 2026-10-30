@@ -81,6 +81,17 @@ public class PaymentService {
             List<Long> courseIds,
             BigDecimal totalAmount
     ) throws Exception {
+        return createPaymentForm(orderId, studentId, courseIds, totalAmount, Map.of());
+    }
+
+    // paketi: kursId -> paketId za kurseve kupljene u paketu (npr. "Online + Review")
+    public String createPaymentForm(
+            String orderId,
+            Long studentId,
+            List<Long> courseIds,
+            BigDecimal totalAmount,
+            Map<Long, Long> paketi
+    ) throws Exception {
 
         if (orderId == null || orderId.isBlank()) {
             throw new IllegalArgumentException("OrderID je obavezan.");
@@ -121,7 +132,7 @@ public class PaymentService {
         // studentId + listu kurseva vezanih za ovaj orderId, da bismo
         // znali sta da upisemo kada banka potvrdi uspesno placanje
         // (u paymentNotify -> recordSuccessfulPayment()).
-        savePendingOrder(orderId, studentId, courseIds);
+        savePendingOrder(orderId, studentId, courseIds, paketi);
 
         StringBuilder html = new StringBuilder();
         html.append("<!DOCTYPE html><html><head>")
@@ -173,18 +184,56 @@ public class PaymentService {
      *     processed  TINYINT(1) NOT NULL DEFAULT 0
      *   );
      */
-    private void savePendingOrder(String orderId, Long studentId, List<Long> courseIds) {
+    private void savePendingOrder(String orderId, Long studentId, List<Long> courseIds, Map<Long, Long> paketi) {
         String courseIdsCsv = courseIds.stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining(","));
+        // "kursId:paketId,..." samo za kurseve iz korpe koji imaju izabran paket
+        String paketiCsv = paketi == null ? "" : paketi.entrySet().stream()
+                .filter(e -> e.getKey() != null && e.getValue() != null && courseIds.contains(e.getKey()))
+                .map(e -> e.getKey() + ":" + e.getValue())
+                .collect(Collectors.joining(","));
 
-        String sql = "INSERT INTO pending_orders (order_id, student_id, course_ids) " +
-                "VALUES (:orderId, :studentId, :courseIds)";
+        String sql = "INSERT INTO pending_orders (order_id, student_id, course_ids, paket_ids) " +
+                "VALUES (:orderId, :studentId, :courseIds, :paketi)";
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("orderId", orderId)
                 .addValue("studentId", studentId)
-                .addValue("courseIds", courseIdsCsv);
+                .addValue("courseIds", courseIdsCsv)
+                .addValue("paketi", paketiCsv.isEmpty() ? null : paketiCsv);
         jdbcTemplate.update(sql, params);
+    }
+
+    private Map<Long, Long> parsePaketi(Object paketiCsv) {
+        Map<Long, Long> paketi = new java.util.HashMap<>();
+        if (paketiCsv == null) return paketi;
+        for (String par : paketiCsv.toString().split(",")) {
+            String[] delovi = par.trim().split(":");
+            if (delovi.length != 2) continue;
+            try {
+                paketi.put(Long.parseLong(delovi[0].trim()), Long.parseLong(delovi[1].trim()));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return paketi;
+    }
+
+    // Cena i paket za jedan kurs iz narudžbine: cena paketa ako je paket tog kursa, inače cena kursa
+    private record CenaKursa(BigDecimal cena, Long paketId) {}
+
+    private CenaKursa cenaKursa(Long kursId, Long paketId) {
+        if (paketId != null) {
+            List<BigDecimal> cenaPaketa = jdbcTemplate.queryForList(
+                    "SELECT cena FROM paket WHERE paketId = :paketId AND kursId = :kursId",
+                    new MapSqlParameterSource().addValue("paketId", paketId).addValue("kursId", kursId),
+                    BigDecimal.class);
+            if (!cenaPaketa.isEmpty()) return new CenaKursa(cenaPaketa.get(0), paketId);
+        }
+        BigDecimal cena = jdbcTemplate.queryForObject(
+                "SELECT cena FROM kurs WHERE kursId = :kursId",
+                new MapSqlParameterSource("kursId", kursId),
+                BigDecimal.class);
+        return new CenaKursa(cena, null);
     }
 
     /**
@@ -196,7 +245,7 @@ public class PaymentService {
     private Map<String, Object> loadPendingOrder(String orderId) {
         try {
             return jdbcTemplate.queryForMap(
-                    "SELECT student_id, course_ids, processed FROM pending_orders WHERE order_id = :orderId",
+                    "SELECT student_id, course_ids, paket_ids, processed FROM pending_orders WHERE order_id = :orderId",
                     new MapSqlParameterSource("orderId", orderId)
             );
         } catch (Exception e) {
@@ -255,15 +304,13 @@ public class PaymentService {
 
         Long studentId = ((Number) pending.get("student_id")).longValue();
         List<Long> courseIds = parseCourseIds((String) pending.get("course_ids"));
+        Map<Long, Long> paketi = parsePaketi(pending.get("paket_ids"));
 
         LocalDate today = LocalDate.now();
 
         for (Long kursId : courseIds) {
-            BigDecimal cena = jdbcTemplate.queryForObject(
-                    "SELECT cena FROM kurs WHERE kursId = :kursId",
-                    new MapSqlParameterSource("kursId", kursId),
-                    BigDecimal.class
-            );
+            CenaKursa cenaKursa = cenaKursa(kursId, paketi.get(kursId));
+            BigDecimal cena = cenaKursa.cena();
 
             // Tabela se zove "platio" (ne "uplatnica" — ta tabela ne postoji
             // u bazi). Kolona "tip" prihvata ili 'UPLATNICA' (rucni/admin
@@ -275,21 +322,23 @@ public class PaymentService {
             // metoda, pa je uplata SIGURNO prihvacena — status mora da
             // bude 'P'.
             jdbcTemplate.update(
-                    "INSERT INTO platio (kursId, studentId, datumPlacanja, cenaPlacanja, tip, status, url) " +
-                            "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', 'P', NULL)",
+                    "INSERT INTO platio (kursId, studentId, datumPlacanja, cenaPlacanja, tip, status, url, paketId) " +
+                            "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', 'P', NULL, :paketId)",
                     new MapSqlParameterSource()
                             .addValue("kursId", kursId)
                             .addValue("studentId", studentId)
                             .addValue("datum", today)
                             .addValue("cena", cena)
+                            .addValue("paketId", cenaKursa.paketId())
             );
 
             jdbcTemplate.update(
-                    "INSERT INTO pohadja (studentId, kursId, daLiJeZavrsioKurs, vremePocetka) " +
-                            "VALUES (:studentId, :kursId, NULL, NULL)",
+                    "INSERT INTO pohadja (studentId, kursId, daLiJeZavrsioKurs, vremePocetka, paketId) " +
+                            "VALUES (:studentId, :kursId, NULL, NULL, :paketId)",
                     new MapSqlParameterSource()
                             .addValue("studentId", studentId)
                             .addValue("kursId", kursId)
+                            .addValue("paketId", cenaKursa.paketId())
             );
         }
 
@@ -327,29 +376,30 @@ public class PaymentService {
 
         Long studentId = ((Number) pending.get("student_id")).longValue();
         List<Long> courseIds = parseCourseIds((String) pending.get("course_ids"));
+        Map<Long, Long> paketi = parsePaketi(pending.get("paket_ids"));
 
         LocalDate today = LocalDate.now();
 
         for (Long kursId : courseIds) {
             BigDecimal cena;
+            Long paketId = null;
             try {
-                cena = jdbcTemplate.queryForObject(
-                        "SELECT cena FROM kurs WHERE kursId = :kursId",
-                        new MapSqlParameterSource("kursId", kursId),
-                        BigDecimal.class
-                );
+                CenaKursa cenaKursa = cenaKursa(kursId, paketi.get(kursId));
+                cena = cenaKursa.cena();
+                paketId = cenaKursa.paketId();
             } catch (Exception e) {
                 cena = null;
             }
 
             jdbcTemplate.update(
-                    "INSERT INTO platio (kursId, studentId, datumPlacanja, cenaPlacanja, tip, status, url) " +
-                            "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', 'O', NULL)",
+                    "INSERT INTO platio (kursId, studentId, datumPlacanja, cenaPlacanja, tip, status, url, paketId) " +
+                            "VALUES (:kursId, :studentId, :datum, :cena, 'KARTICA', 'O', NULL, :paketId)",
                     new MapSqlParameterSource()
                             .addValue("kursId", kursId)
                             .addValue("studentId", studentId)
                             .addValue("datum", today)
                             .addValue("cena", cena)
+                            .addValue("paketId", paketId)
             );
         }
 

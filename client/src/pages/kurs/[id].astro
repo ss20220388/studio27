@@ -7,6 +7,7 @@ import Layout from "../../layouts/Layout.astro";
 import Ikona from "../../components/novo/Ikona.astro";
 import KupiDugme from "../../components/novo/KupiDugme.astro";
 import AiHero from "../../components/kurs/AiHero.astro";
+import Paketi from "../../components/kurs/Paketi.astro";
 import {
   API_URL,
   CLIENT_URL,
@@ -22,6 +23,9 @@ import {
   ucitajKurs,
   ucitajKurseve,
   ucitajListu,
+  ucitajPakete,
+  potpisRecenzije,
+  type PaketKursa,
   ucitajRadove,
   ucitajSporedneSlike,
   whatsappLink,
@@ -62,6 +66,8 @@ if (refreshToken) {
 type Recenzija = {
   opis: string;
   ocena: number;
+  ime?: string | null;
+  instagram?: string | null;
   student: { ime?: string; prezime?: string } | null;
   kurs: { id?: number; naziv?: string } | null;
 };
@@ -69,17 +75,20 @@ type Recenzija = {
 let kurs: KursIzBaze | null = null;
 let sporedne: string[] = [];
 let sveRecenzije: Recenzija[] = [];
+let paketi: PaketKursa[] = [];
 let radovi: RadPolaznika[] = [];
 try {
-  const [kursIzBaze, slike, recenzije, sviRadovi] = await Promise.all([
+  const [kursIzBaze, slike, recenzije, paketiKursa, sviRadovi] = await Promise.all([
     ucitajKurs(Number(id)),
     ucitajSporedneSlike(Number(id)),
     ucitajListu<Recenzija>("/api/recenzije"),
+    ucitajPakete(Number(id)),
     ucitajRadove(),
   ]);
   kurs = kursIzBaze;
   sporedne = slike;
   sveRecenzije = recenzije;
+  paketi = paketiKursa;
   radovi = sviRadovi.filter((r) => String(r.idKurs) === String(id));
 } catch (e) {
   console.error("Greška pri dohvatanju podataka o kursu:", e);
@@ -97,6 +106,9 @@ if (`/kurs/${parametar}` !== putanjaKursa) {
 const naslov = lepNaziv(kurs.naziv) || "Kurs";
 const glavna = slikaIzBaze(kurs.slikaUrl);
 const sveSlike = [glavna, ...sporedne].filter(Boolean);
+// sa paketima se prikazuje najniža cena paketa ("od 350 €")
+const najnizaCena = paketi.length ? Math.min(...paketi.map((p) => p.cena)) : kurs.cena;
+const cenaTekst = paketi.length > 1 ? `od ${najnizaCena} €` : `${najnizaCena} €`;
 const saCenom = imaCenu(kurs);
 const pasusi = (tekst?: string) => (tekst || "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 const uvod = pasusi(kurs.komentarSredina);
@@ -255,7 +267,7 @@ const opisZaSeo = skrati(
   [
     `${naslov}${glavniLepo ? ` (${glavniLepo})` : ""} – ${naUzivo ? "online kurs uživo sa predavačem" : "video kurs uz podršku predavača"}.`,
     prvaRecenica(uvod[0] || opis[0]),
-    saCenom ? `Cena ${kurs.cena} €.` : "Prijavi se – Studio 27.",
+    saCenom ? `Cena ${cenaTekst}.` : "Prijavi se – Studio 27.",
   ]
     .filter(Boolean)
     .join(" "),
@@ -327,7 +339,7 @@ const kursSchema: Record<string, unknown> = {
     ? {
         offers: {
           "@type": "Offer",
-          price: kurs.cena,
+          price: najnizaCena,
           priceCurrency: "EUR",
           category: "Paid",
           availability: "https://schema.org/InStock",
@@ -436,13 +448,13 @@ const dugmeOkvir =
               Pogledaj program kursa
               <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </a>
-            <KupiDugme kurs={kurs} kupljen={kupljen} class={dugmeOkvir} />
+            <KupiDugme kurs={kurs} kupljen={kupljen} naPakete={paketi.length > 0} class={dugmeOkvir} />
           </div>
           <p class="s27-ulaz mt-5 text-[14px] text-neutral-600" style="--kasnjenje:0.45s">
             {
               saCenom ? (
                 <>
-                  Cena kursa: <strong class="font-serif text-[22px] font-normal text-neutral-900">{kurs.cena} €</strong>
+                  Cena kursa: <strong class="font-serif text-[22px] font-normal text-neutral-900">{cenaTekst}</strong>
                 </>
               ) : (
                 <>
@@ -460,7 +472,10 @@ const dugmeOkvir =
     </section>
     )}
 
-    <!-- 2. TRAKA: softver i oznake kursa -->
+    {/* AI kurs ima samo naslovni ekran (po želji klijentkinje) */}
+    {!aiKurs && (
+    <Fragment>
+    {/* 2. TRAKA: softver i oznake kursa */}
     {
       traka.length > 0 && (
         <section class="border-y border-neutral-200 bg-white">
@@ -483,7 +498,7 @@ const dugmeOkvir =
       )
     }
 
-    <!-- 3. O KURSU: slika iz baze levo, opis desno -->
+    {/* 3. O KURSU: slika iz baze levo, opis desno */}
     {
       opis.length > 0 && (
         <section id="o-kursu" class="bg-white scroll-mt-20">
@@ -505,7 +520,7 @@ const dugmeOkvir =
       )
     }
 
-    <!-- 4. ŠTA ĆEŠ NAUČITI: kartice iz programa kursa (polje "sadrzaj") -->
+    {/* 4. ŠTA ĆEŠ NAUČITI: kartice iz programa kursa (polje "sadrzaj") */}
     {
       kartice.length > 0 && (
         <section id="program" class="bg-white scroll-mt-20 border-t border-neutral-100">
@@ -540,7 +555,7 @@ const dugmeOkvir =
       )
     }
 
-    <!-- 5. KAKO IZGLEDA UČENJE -->
+    {/* 5. KAKO IZGLEDA UČENJE */}
     <section class="bg-[#faf9f7] border-y border-neutral-100">
       <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-20">
         <h2 class:list={[naslovSekcije, "pojava text-center"]}>Kako izgleda učenje?</h2>
@@ -563,7 +578,7 @@ const dugmeOkvir =
       </div>
     </section>
 
-    <!-- LEKCIJE (video kursevi, iz baze) -->
+    {/* LEKCIJE (video kursevi, iz baze) */}
     {
       lekcije.length > 0 && (
         <section id="lekcije" class="bg-white scroll-mt-20">
@@ -593,7 +608,7 @@ const dugmeOkvir =
       )
     }
 
-    <!-- RADOVI POLAZNIKA OVOG KURSA (tabela radova u bazi, vezani za kurs) -->
+    {/* RADOVI POLAZNIKA OVOG KURSA (tabela radova u bazi, vezani za kurs) */}
     {
       radovi.length > 0 && (
         <section id="radovi-polaznika" class="bg-[#f7f6f3] scroll-mt-20">
@@ -643,7 +658,7 @@ const dugmeOkvir =
       )
     }
 
-    <!-- 6. OD POČETNIKA DO REZULTATA: ostale slike kursa iz baze -->
+    {/* 6. OD POČETNIKA DO REZULTATA: ostale slike kursa iz baze */}
     {
       sporedne.length > 0 && (
         <section class="bg-white border-t border-neutral-100">
@@ -676,7 +691,7 @@ const dugmeOkvir =
       )
     }
 
-    <!-- 7. UTISCI POLAZNIKA (recenzije iz baze) -->
+    {/* 7. UTISCI POLAZNIKA (recenzije iz baze) */}
     {
       recenzije.length > 0 && (
         <section class="bg-white border-t border-neutral-100">
@@ -693,7 +708,17 @@ const dugmeOkvir =
                   <p class="text-[12px] tracking-[0.12em] text-neutral-900" aria-label={`Ocena ${r.ocena || 5} od 5`}>
                     {"★".repeat(Math.max(1, Math.min(5, r.ocena || 5)))}
                   </p>
-                  </div>
+                  {(() => {
+                    const potpis = potpisRecenzije(r);
+                    return (potpis.ime || potpis.instagram) && (
+                      <p class="mt-2 text-[12px] font-medium text-neutral-900 truncate">
+                        {potpis.ime}
+                        {potpis.instagram && (
+                          <a href={potpis.instagramUrl} target="_blank" rel="noopener nofollow" class={`text-neutral-500 hover:text-neutral-900 ${potpis.ime ? "ml-1.5" : ""}`}>@{potpis.instagram}</a>
+                        )}
+                      </p>
+                    );
+                  })()}
                   <p class="mt-3 text-[13px] leading-relaxed text-neutral-700 line-clamp-6 mb-3">{r.opis.trim()}</p>
                   {r.kurs?.naziv && (
                     <p class="mt-auto pt-3 border-t border-neutral-200 text-[11px] uppercase tracking-[0.14em] text-neutral-500">
@@ -713,7 +738,10 @@ const dugmeOkvir =
       )
     }
 
-    <!-- 8. SVE ŠTO TI JE POTREBNO ZA POČETAK -->
+    {/* PAKETI I CENE (kursevi sa paketima iz admina) */}
+    {paketi.length > 0 && <Paketi kurs={kurs} paketi={paketi} kupljen={kupljen} />}
+
+    {/* 8. SVE ŠTO TI JE POTREBNO ZA POČETAK */}
     <section class="bg-white">
       <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-10 md:py-14">
         <div class="pojava relative overflow-hidden bg-[#f4f2ee] grid lg:grid-cols-[1fr_auto_1fr]">
@@ -724,7 +752,7 @@ const dugmeOkvir =
             <div class="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
               {
                 saCenom ? (
-                  <p class="font-serif text-[34px] leading-none">{kurs.cena} €</p>
+                  <p class="font-serif text-[34px] leading-none">{cenaTekst}</p>
                 ) : (
                   <p class="max-w-[260px] text-[13px] leading-relaxed text-neutral-700">
                     Za više informacija javite se na{" "}
@@ -732,7 +760,7 @@ const dugmeOkvir =
                   </p>
                 )
               }
-              <KupiDugme kurs={kurs} kupljen={kupljen} class={dugmeCrno} />
+              <KupiDugme kurs={kurs} kupljen={kupljen} naPakete={paketi.length > 0} class={dugmeCrno} />
             </div>
           </div>
           <div class="hidden lg:block my-10 w-px bg-neutral-300" aria-hidden="true"></div>
@@ -763,7 +791,7 @@ const dugmeOkvir =
       </div>
     </section>
 
-    <!-- 9. IMAŠ DODATNIH PITANJA? (+ WhatsApp kao na starom sajtu) -->
+    {/* 9. IMAŠ DODATNIH PITANJA? (+ WhatsApp kao na starom sajtu) */}
     <section class="bg-white">
       <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-14 md:py-20 grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-20 items-start">
         <div class="pojava">
@@ -799,7 +827,7 @@ const dugmeOkvir =
       </div>
     </section>
 
-    <!-- 10. SERTIFIKAT (kursevi uživo) -->
+    {/* 10. SERTIFIKAT (kursevi uživo) */}
     {
       naUzivo && (
         <section class="relative overflow-hidden bg-[#f7f6f3]">
@@ -825,7 +853,7 @@ const dugmeOkvir =
       )
     }
 
-    <!-- 11. ZAVRŠNI POZIV preko slike kursa -->
+    {/* 11. ZAVRŠNI POZIV preko slike kursa */}
     <section class="relative overflow-hidden">
       {slikaKraj && <img src={manjaSlika(slikaKraj, 1600)} srcset={srcsetSlike(slikaKraj)} sizes="100vw" alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover" />}
       <div class="absolute inset-0 bg-white/72"></div>
@@ -835,13 +863,13 @@ const dugmeOkvir =
           Pridruži se kursu i nauči kako da samostalno razviješ i predstaviš svoj projekat.
         </p>
         <div class="pojava mt-8 flex flex-wrap justify-center gap-3" style="--kasnjenje:0.2s">
-          <KupiDugme kurs={kurs} kupljen={kupljen} class={dugmeCrno} />
+          <KupiDugme kurs={kurs} kupljen={kupljen} naPakete={paketi.length > 0} class={dugmeCrno} />
           <a href="#program" class={dugmeOkvir}>Pogledaj program kursa</a>
         </div>
       </div>
     </section>
 
-    <!-- OSTALI KURSEVI (iz baze) -->
+    {/* OSTALI KURSEVI (iz baze) */}
     {
       ostaliKursevi.length > 0 && (
         <section id="ostali-kursevi" class="bg-[#f7f6f3] scroll-mt-20">
@@ -895,6 +923,9 @@ const dugmeOkvir =
         </section>
       )
     }
+
+    </Fragment>
+    )}
 
     <!-- Uvećan prikaz slika -->
     <div id="s27-lightbox" class="fixed inset-0 z-[2000] hidden items-center justify-center bg-black/95 p-4 md:p-10" role="dialog" aria-modal="true" aria-label="Uvećana slika">
