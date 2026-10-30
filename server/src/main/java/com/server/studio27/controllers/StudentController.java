@@ -52,7 +52,7 @@ public class StudentController {
                 studentMap.put("active", (Number) row.get("active"));
                
                 String SQL2 = """
-                                    Select k.kursId,k.naziv, pk.naziv AS paketNaziv
+                                    Select k.kursId,k.naziv, p.paketId, pk.naziv AS paketNaziv
                                     from kurs k
                                     join pohadja p on p.kursId = k.kursId
                                     left join paket pk on pk.paketId = p.paketId
@@ -67,6 +67,8 @@ public class StudentController {
                     kursMap.put("naziv", (String) kursRow.get("naziv"));
                     // kupljeni paket kursa (npr. "Live mentorship + AI"), null ako je kurs bez paketa
                     kursMap.put("paketNaziv", (String) kursRow.get("paketNaziv"));
+                    Object paketId = kursRow.get("paketId");
+                    kursMap.put("paketId", paketId instanceof Number n ? n.intValue() : null);
                     kursevi.add(kursMap);
                 }
                 studentMap.put("kursevi", kursevi);
@@ -153,6 +155,25 @@ public class StudentController {
             Map<Integer, Object> paketPoKursu = new HashMap<>();
             jdbcTemplate.query("SELECT kursId, paketId FROM pohadja WHERE studentId = ?",
                     rs -> { paketPoKursu.put(rs.getInt("kursId"), rs.getObject("paketId")); }, studentId);
+
+            // admin je izabrao paket za kurs: { "kursId": paketId ili null (bez paketa) };
+            // paket se prihvata samo ako pripada tom kursu
+            if (studentData.get("paketi") instanceof Map<?, ?> izabrani) {
+                izabrani.forEach((kljuc, vrednost) -> {
+                    int kursId;
+                    try {
+                        kursId = Integer.parseInt(String.valueOf(kljuc));
+                    } catch (NumberFormatException e) {
+                        return;
+                    }
+                    Integer paketId = vrednost instanceof Number n ? n.intValue() : null;
+                    if (paketId != null && jdbcTemplate.queryForList(
+                            "SELECT 1 FROM paket WHERE paketId = ? AND kursId = ?", Integer.class, paketId, kursId).isEmpty()) {
+                        return;
+                    }
+                    paketPoKursu.put(kursId, paketId);
+                });
+            }
 
             String deletePohadjaSQL = "DELETE FROM pohadja WHERE studentId = ?";
             jdbcTemplate.update(deletePohadjaSQL, studentId);

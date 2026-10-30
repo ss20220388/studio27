@@ -33,7 +33,14 @@ interface StudentApiResponse {
 interface Kurs {
   kursId: number;
   naziv: string;
+  paketId?: number | null;
   paketNaziv?: string | null;
+}
+
+interface PaketKursa {
+  paketId: number;
+  naziv: string;
+  cena: number;
 }
 
 // "OD NULE DO PROFESIONALNOG RENDERA" -> "Od nule do profesionalnog rendera"
@@ -185,6 +192,34 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
   const [deviceUser, setDeviceUser] = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
   const [selectedCourse, setSelectedCourse] = useState("");
+  const [selectedPaket, setSelectedPaket] = useState("");
+
+  // Paketi svakog kursa (npr. Online / Online + Review / Live mentorship + AI), za izbor u izmeni korisnika
+  const [paketiPoKursu, setPaketiPoKursu] = useState<Record<number, PaketKursa[]>>({});
+  useEffect(() => {
+    Promise.all(
+      sviKursevi.map((k) =>
+        fetch(`${PUBLIC_API_KEY}/api/paketi/${k.kursId}`)
+          .then((r) => (r.ok ? r.json() : []))
+          .then((lista) => [k.kursId, Array.isArray(lista) ? lista : []] as const)
+          .catch(() => [k.kursId, []] as const)
+      )
+    ).then((parovi) => setPaketiPoKursu(Object.fromEntries(parovi)));
+  }, [sviKursevi]);
+
+  const paketKursa = (kursId: number, paketId: string) =>
+    (paketiPoKursu[kursId] || []).find((p) => String(p.paketId) === paketId) || null;
+
+  function promeniPaket(kursId: number, paketId: string) {
+    if (!editUser) return;
+    const paket = paketKursa(kursId, paketId);
+    setEditUser({
+      ...editUser,
+      kursevi: editUser.kursevi.map((k) =>
+        k.kursId === kursId ? { ...k, paketId: paket?.paketId ?? null, paketNaziv: paket?.naziv ?? null } : k
+      ),
+    });
+  }
 
   // Add form
   const [addForm, setAddForm] = useState({ ime: "", prezime: "", email: "", telefon: "" });
@@ -213,11 +248,13 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
       setSelectedCourse("");
       return;
     }
+    const paket = paketKursa(kurs.kursId, selectedPaket);
     setEditUser({
       ...editUser,
-      kursevi: [...editUser.kursevi, kurs],
+      kursevi: [...editUser.kursevi, { ...kurs, paketId: paket?.paketId ?? null, paketNaziv: paket?.naziv ?? null }],
     });
     setSelectedCourse("");
+    setSelectedPaket("");
   }
 
   async function dodajKorisnikaUBazu() {
@@ -317,6 +354,8 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
           email: editUser.email,
           brojTelefona: editUser.telefon,
           kursevi: editUser.kursevi.map((k) => k.kursId),
+          // paket za svaki kurs (null = bez paketa)
+          paketi: Object.fromEntries(editUser.kursevi.map((k) => [k.kursId, k.paketId ?? null])),
         }),
       });
 
@@ -604,9 +643,24 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
                 {editUser.kursevi.map((k) => (
                   <div
                     key={k.kursId}
-                    className="flex items-center gap-1 bg-neutral-800 text-neutral-300 text-xs font-medium px-2 py-1 rounded-md max-w-[300px]"
+                    className="flex w-full items-center gap-2 bg-neutral-800 text-neutral-300 text-xs font-medium pl-3 pr-2 py-1.5 rounded-md"
                   >
-                    <span className="truncate">{lepNaziv(k.naziv)}{k.paketNaziv ? ` · ${k.paketNaziv}` : ""}</span>
+                    <span className="min-w-0 flex-1 truncate">{lepNaziv(k.naziv)}</span>
+                    {(paketiPoKursu[k.kursId]?.length || 0) > 0 && (
+                      <select
+                        value={k.paketId ? String(k.paketId) : ""}
+                        onChange={(e) => promeniPaket(k.kursId, e.target.value)}
+                        className="shrink-0 h-8 max-w-[220px] bg-neutral-900 border border-neutral-700 rounded-md px-2 text-xs text-neutral-200 outline-none focus:border-red-900 cursor-pointer"
+                        aria-label={`Paket za kurs ${lepNaziv(k.naziv)}`}
+                      >
+                        <option value="">Bez paketa</option>
+                        {paketiPoKursu[k.kursId].map((p) => (
+                          <option key={p.paketId} value={p.paketId}>
+                            {p.naziv} · {p.cena} €
+                          </option>
+                        ))}
+                      </select>
+                    )}
                     <button
                       onClick={() =>
                         setEditUser({
@@ -624,7 +678,10 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
                   <div className="relative flex-1 max-w-[220px]">
                     <select
                       value={selectedCourse}
-                      onChange={(e) => setSelectedCourse(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedCourse(e.target.value);
+                        setSelectedPaket("");
+                      }}
                       className="w-full appearance-none bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 pr-8 text-sm text-neutral-200 outline-none focus:border-red-900 transition-all duration-200 cursor-pointer"
                     >
                       <option value="" className="bg-neutral-800 text-neutral-500">Izaberi kurs...</option>
@@ -640,6 +697,22 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
                       </svg>
                     </div>
                   </div>
+
+                  {selectedCourse && (paketiPoKursu[Number(selectedCourse)]?.length || 0) > 0 && (
+                    <select
+                      value={selectedPaket}
+                      onChange={(e) => setSelectedPaket(e.target.value)}
+                      className="flex-1 max-w-[220px] bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-200 outline-none focus:border-red-900 cursor-pointer"
+                      aria-label="Paket kursa"
+                    >
+                      <option value="">Bez paketa</option>
+                      {paketiPoKursu[Number(selectedCourse)].map((p) => (
+                        <option key={p.paketId} value={p.paketId}>
+                          {p.naziv} · {p.cena} €
+                        </option>
+                      ))}
+                    </select>
+                  )}
 
                   <button
                     onClick={() => handleAddCourse()}
