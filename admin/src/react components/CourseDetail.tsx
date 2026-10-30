@@ -63,7 +63,8 @@ export default function CourseDetail({
   const resolveImageSrc = (imagePath: string) => {
     if (!imagePath) return "";
     if (/^https?:\/\//i.test(imagePath)) return imagePath;
-    const normalizedPath = imagePath.startsWith("/") ? imagePath : `/${imagePath}`;
+    // bez dvostruke kose crte (/api/uploaded-images//towebp/...): nginx je toleriše, lokalni server ne
+    const normalizedPath = imagePath.replace(/^\/+/, "");
     return `${SLIKE_URL}/api/uploaded-images/${normalizedPath}`;
   };
 

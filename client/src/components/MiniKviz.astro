@@ -1,6 +1,7 @@
 ---
 // Mini kviz za odabir kursa – identično fajlu studio27-mini-kviz.html (marketing agencija).
-// Jedina razlika: linkovi na kurseve vode na stranice kurseva ovog sajta.
+// Jedina razlika: linkovi na kurseve vode na stranice kurseva ovog sajta (paketi -> /kurs/7#paketi,
+// AI kurs -> /kurs/5), pa se ne šalje mejl za upit.
 // Ne prikuplja niti šalje lične podatke.
 interface Props {
   // h1 samo na samostalnoj stranici /kviz; na početnoj je h2 (jedan h1 po stranici zbog SEO)
@@ -119,7 +120,7 @@ const Naslov = naslovTag;
     render: { name: '3ds Max + Corona', title: 'Od nule do profesionalnog rendera', url: '/kurs/7', desc: 'Za one koji žele da nauče 3D modelovanje, materijale, osvetljenje, kadriranje i izradu fotorealističnih enterijera — od osnova do Level Up-a.' },
     exterior: { name: 'Vizualizacija eksterijera', title: 'Kurs vizualizacije eksterijera', url: '/kurs/3', desc: 'Za one koje privlače spoljašnji prikazi arhitekture: teren, vegetacija, fasade, atmosfersko osvetljenje i realistični eksterijeri.' },
     design: { name: 'Dizajn enterijera', title: 'Kurs dizajna enterijera', url: '/kurs/6', desc: 'Za one koji žele da projektuju i organizuju prostor, pripremaju tehničke crteže u AutoCAD-u i predstavljaju ideje kroz Photoshop.' },
-    ai: { name: 'AI kurs', title: 'Animacija + AI alati', url: null, desc: 'Za one koje zanimaju animacije, kreativna obrada vizuala, AI postprodukcija i nove mogućnosti predstavljanja arhitektonskih projekata.' }
+    ai: { name: 'AI kurs', title: 'Animacija + AI alati', url: '/kurs/5', desc: 'Za one koje zanimaju animacije, kreativna obrada vizuala, AI postprodukcija i nove mogućnosti predstavljanja arhitektonskih projekata.' }
   };
   const questions = [
     {title:'Šta najviše želiš da kreiraš?',sub:'Izaberi ono što te najviše privlači.', options:[
@@ -151,9 +152,9 @@ const Naslov = naslovTag;
     ]}
   ];
   const packages = {
-    self: {name:'ONLINE / SAMOSTALNO UČENJE',price:'350 €',description:'Kompletan nasnimljeni program 3ds Max + Corona — od nule do Level Up-a. Učiš svojim tempom.',url:'/kurs/7',cta:'Pogledaj program kursa'},
-    review: {name:'ONLINE + GRUPNA ANALIZA',price:'420 €',description:'Isti nasnimljeni program + jedna grupna Zoom sesija na kojoj analiziramo rendere i prolazimo kroz konkretne korekcije.',url:null,cta:'Raspitaj se za paket'},
-    mentor: {name:'MENTORSTVO UŽIVO + AI',price:'800 €',description:'Organizovana nastava sa predavačem, kontinuirani feedback, rad na projektima i AI alati. Trajanje programa: dva meseca.',url:'/kurs/5',cta:'Pogledaj mentorski program'}
+    self: {name:'ONLINE / SAMOSTALNO UČENJE',price:'350 €',description:'Kompletan nasnimljeni program 3ds Max + Corona — od nule do Level Up-a. Učiš svojim tempom.',url:'/kurs/7#paketi',cta:'Izaberi paket'},
+    review: {name:'ONLINE + GRUPNA ANALIZA',price:'420 €',description:'Isti nasnimljeni program + jedna grupna Zoom sesija na kojoj analiziramo rendere i prolazimo kroz konkretne korekcije.',url:'/kurs/7#paketi',cta:'Izaberi paket'},
+    mentor: {name:'MENTORSTVO UŽIVO + AI',price:'800 €',description:'Organizovana nastava sa predavačem, kontinuirani feedback, rad na projektima i AI alati. Trajanje programa: dva meseca.',url:'/kurs/7#paketi',cta:'Pogledaj mentorski paket'}
   };
   const state = {step:0,answers:[null,null,null,null],result:null,selectedPackage:null};
   const escapeHtml = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -196,12 +197,12 @@ const Naslov = naslovTag;
     if(state.result==='render'){
       const p=packages[state.selectedPackage];
       const link=p.url||mailto('paket Online + Review (420 €)');
-      extra=`<div class="s27-result-band"><small>Preporučeni način učenja</small><strong>${escapeHtml(p.name)}</strong><div class="s27-price">${escapeHtml(p.price)}</div><p>${escapeHtml(p.description)}</p></div><p class="s27-note">Odaberi drugi paket ako želiš da promeniš nivo podrške:</p><div class="s27-packs">${Object.entries(packages).map(([id,one])=>`<button type="button" class="s27-pack" data-pack="${id}" aria-pressed="${id===state.selectedPackage?'true':'false'}">${id==='self'?'Online · 350 €':id==='review'?'Online + review · 420 €':'Uživo + AI · 800 €'}</button>`).join('')}</div><div class="s27-result-buttons"><a class="s27-link" href="${link}" target="_blank" rel="noopener">${escapeHtml(p.cta)} ↗</a>${state.selectedPackage!=='self'?`<a class="s27-link light" href="${COURSES.render.url}" target="_blank" rel="noopener">Sadržaj kursa ↗</a>`:''}</div>`;
+      extra=`<div class="s27-result-band"><small>Preporučeni način učenja</small><strong>${escapeHtml(p.name)}</strong><div class="s27-price">${escapeHtml(p.price)}</div><p>${escapeHtml(p.description)}</p></div><p class="s27-note">Odaberi drugi paket ako želiš da promeniš nivo podrške:</p><div class="s27-packs">${Object.entries(packages).map(([id,one])=>`<button type="button" class="s27-pack" data-pack="${id}" aria-pressed="${id===state.selectedPackage?'true':'false'}">${id==='self'?'Online · 350 €':id==='review'?'Online + review · 420 €':'Uživo + AI · 800 €'}</button>`).join('')}</div><div class="s27-result-buttons"><a class="s27-link" href="${link}" target="_blank" rel="noopener">${escapeHtml(p.cta)} ↗</a>${state.selectedPackage!=='self'?`<a class="s27-link light" href="${COURSES.render.url}#program" target="_blank" rel="noopener">Sadržaj kursa ↗</a>`:''}</div>`;
     }else{
       const isAi=state.result==='ai';
       const href=course.url||mailto('AI kurs — program i prijava');
       let formatNote = state.answers[3]==='mentor' && !isAi ? 'Želiš nastavu uživo? Pitaj studio za trenutno dostupne termine i format ovog kursa.' : '';
-      extra=`<div class="s27-result-band"><small>Tvoja preporuka</small><strong>${escapeHtml(course.title)}</strong><p style="margin-top:9px">${escapeHtml(course.desc)}</p></div>${formatNote?`<p class="s27-note">${escapeHtml(formatNote)}</p>`:''}<div class="s27-result-buttons"><a class="s27-link" href="${href}" target="_blank" rel="noopener">${isAi?'Pitaj za AI kurs':'Pogledaj program kursa'} ↗</a>${state.result==='exterior'&&experience==='beginner'?`<a class="s27-link light" href="${COURSES.render.url}" target="_blank" rel="noopener">Pogledaj 3ds Max osnove ↗</a>`:''}</div>`;
+      extra=`<div class="s27-result-band"><small>Tvoja preporuka</small><strong>${escapeHtml(course.title)}</strong><p style="margin-top:9px">${escapeHtml(course.desc)}</p></div>${formatNote?`<p class="s27-note">${escapeHtml(formatNote)}</p>`:''}<div class="s27-result-buttons"><a class="s27-link" href="${href}" target="_blank" rel="noopener">${isAi&&!course.url?'Pitaj za AI kurs':'Pogledaj program kursa'} ↗</a>${state.result==='exterior'&&experience==='beginner'?`<a class="s27-link light" href="${COURSES.render.url}" target="_blank" rel="noopener">Pogledaj 3ds Max osnove ↗</a>`:''}</div>`;
     }
     root.innerHTML=progress(3,true)+`<div class="s27-inner"><div class="s27-result-eyebrow">Naša preporuka za tebe</div><h2 class="s27-result-title">${escapeHtml(course.name)}</h2><p class="s27-result-explain">${escapeHtml(personal||course.desc)}</p>${extra}<button class="s27-restart" data-restart type="button">↺ Uradi kviz ponovo</button><p class="s27-note">Ovo je orijentaciona preporuka. Potpun program i aktuelne uslove proveri na stranici kursa ili direktno sa Studio 27.</p></div>`;
     root.querySelectorAll('[data-pack]').forEach(button=>button.addEventListener('click',()=>{state.selectedPackage=button.dataset.pack;renderResult();}));

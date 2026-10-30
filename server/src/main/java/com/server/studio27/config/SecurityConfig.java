@@ -98,6 +98,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/progress-chart/**", "/api/cookies/create-cookie-by-local-storage").permitAll()
                         .requestMatchers("/api/kursslika", "/api/kursslika/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/paketi/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/uploaded-images/**").permitAll()
                         .requestMatchers("/api/send-code-to-mail", "/api/send-mail-to-person").permitAll()
 
                         // Payment rute
