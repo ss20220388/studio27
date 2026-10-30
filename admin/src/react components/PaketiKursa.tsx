@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 
 // Paketi kursa (npr. Online / Online + Review / Live mentorship + AI) u izmeni kursa.
-// Svaki paket ima svoju cenu i stavke (jedna po redu); kupac na sajtu bira paket.
+// Svaki paket ima cenu, podnaslov, kratak opis, istaknut red i stavke (jedna po redu,
+// **tekst** se prikazuje podebljano); kupac na sajtu bira paket.
 // Kurs bez paketa se kupuje po ceni kursa, kao i do sada. Paket se čuva odmah (dugme "Sačuvaj").
 
 interface Paket {
@@ -9,8 +10,14 @@ interface Paket {
   naziv: string;
   cena: string;
   opis: string;
+  podnaslov: string;
+  uvod: string;
+  istaknuto: string;
+  dugme: string;
   izmenjen?: boolean;
 }
+
+const prazanPaket: Paket = { naziv: "", cena: "", opis: "", podnaslov: "", uvod: "", istaknuto: "", dugme: "" };
 
 const poljeClass =
   "w-full px-3 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600";
@@ -32,6 +39,7 @@ export default function PaketiKursa({ kursId, API_URL, accesToken }: {
       const data = await fetch(`${API_URL}/api/paketi/${kursId}`).then((r) => r.json());
       setPaketi((Array.isArray(data) ? data : []).map((p: any) => ({
         paketId: p.paketId, naziv: p.naziv || "", cena: String(p.cena ?? ""), opis: p.opis || "",
+        podnaslov: p.podnaslov || "", uvod: p.uvod || "", istaknuto: p.istaknuto || "", dugme: p.dugme || "",
       })));
     } catch {
       setPoruka("Paketi nisu učitani.");
@@ -55,7 +63,10 @@ export default function PaketiKursa({ kursId, API_URL, accesToken }: {
       const res = await fetch(`${API_URL}/api/paketi${p.paketId ? `/${p.paketId}` : ""}`, {
         method: p.paketId ? "PUT" : "POST",
         headers,
-        body: JSON.stringify({ kursId, naziv: p.naziv, cena: Number(p.cena), opis: p.opis, redosled: i + 1 }),
+        body: JSON.stringify({
+          kursId, naziv: p.naziv, cena: Number(p.cena), opis: p.opis, redosled: i + 1,
+          podnaslov: p.podnaslov, uvod: p.uvod, istaknuto: p.istaknuto, dugme: p.dugme,
+        }),
       });
       if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || "Čuvanje nije uspelo.");
       await ucitaj();
@@ -108,11 +119,37 @@ export default function PaketiKursa({ kursId, API_URL, accesToken }: {
                 className={`${poljeClass} h-9 w-28`}
               />
             </div>
+            <input
+              value={p.podnaslov}
+              onChange={(e) => promeni(i, "podnaslov", e.target.value)}
+              placeholder="Podnaslov, npr. Od nule do Level Up-a + analiza rada"
+              className={`${poljeClass} h-9`}
+            />
+            <input
+              value={p.uvod}
+              onChange={(e) => promeni(i, "uvod", e.target.value)}
+              placeholder="Kratak opis, npr. Uči samostalno, svojim tempom."
+              className={`${poljeClass} h-9`}
+            />
+            <div className="flex gap-2">
+              <input
+                value={p.istaknuto}
+                onChange={(e) => promeni(i, "istaknuto", e.target.value)}
+                placeholder="Istaknuto (crveno), npr. Neograničen pristup"
+                className={`${poljeClass} h-9 flex-1`}
+              />
+              <input
+                value={p.dugme}
+                onChange={(e) => promeni(i, "dugme", e.target.value)}
+                placeholder="Dugme: Kupi kurs"
+                className={`${poljeClass} h-9 w-36`}
+              />
+            </div>
             <textarea
               value={p.opis}
               onChange={(e) => promeni(i, "opis", e.target.value)}
-              placeholder={"Šta paket uključuje, jedna stavka po redu:\nVideo lekcije\nFeedback na rendere"}
-              rows={3}
+              placeholder={"Šta paket uključuje, jedna stavka po redu:\nSve video lekcije\n**Podrška u grupnom chatu** (podebljano)"}
+              rows={5}
               className={`${poljeClass} py-2 resize-y`}
             />
             <div className="flex justify-end gap-2">
@@ -137,7 +174,7 @@ export default function PaketiKursa({ kursId, API_URL, accesToken }: {
         ))}
         <button
           type="button"
-          onClick={() => setPaketi([...paketi, { naziv: "", cena: "", opis: "" }])}
+          onClick={() => setPaketi([...paketi, { ...prazanPaket }])}
           className="cursor-pointer w-full rounded-lg border border-dashed border-neutral-700 py-2.5 text-xs text-neutral-400 hover:border-neutral-500 hover:bg-neutral-800"
         >
           + Dodaj paket

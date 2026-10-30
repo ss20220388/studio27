@@ -49,8 +49,37 @@ public class SemaBaze implements ApplicationRunner {
             "ALTER TABLE recenzija ADD COLUMN instagram VARCHAR(100) NULL",
             "ALTER TABLE recenzija ADD COLUMN ime VARCHAR(100) NULL"
         )),
-        new Korak("2026-10-30-recenzije-sa-instagrama", recenzijeSaInstagrama())
+        new Korak("2026-10-30-recenzije-sa-instagrama", recenzijeSaInstagrama()),
+        new Korak("2026-10-31-paketi-detalji", List.of(
+            "ALTER TABLE paket ADD COLUMN podnaslov VARCHAR(150) NULL",
+            "ALTER TABLE paket ADD COLUMN uvod VARCHAR(255) NULL",
+            "ALTER TABLE paket ADD COLUMN istaknuto VARCHAR(150) NULL",
+            "ALTER TABLE paket ADD COLUMN dugme VARCHAR(40) NULL",
+            // tekstovi paketa kursa 7 sa skice klijentkinje (**tekst** = podebljano); menjaju se u adminu
+            detaljiPaketa("Online", "Od nule do Level Up-a", "Uči samostalno, svojim tempom.", "Neograničen pristup", null,
+                "Sve video lekcije\n**Modelovanje od nule + Level Up**\nPraktične vežbe i projektni fajlovi\n"
+                + "Biblioteka materijala i gotovih scena\nProjekat i sertifikat\n**Podrška u grupnom chatu**"),
+            detaljiPaketa("Online + Review", "Od nule do Level Up-a + analiza rada", "Uči samostalno uz stručno usmeravanje.", "Neograničen pristup", null,
+                "Sve video lekcije\n**Modelovanje od nule + Level Up**\nPraktične vežbe i projektni fajlovi\n"
+                + "Biblioteka materijala i gotovih scena\nProjekat i sertifikat\n**Podrška u grupnom chatu**\n"
+                + "**Jedna grupna sesija uživo (do 5 polaznika)**, na kojoj analiziramo tvoje rendere i 3D scenu i pokazujemo konkretna poboljšanja"),
+            detaljiPaketa("Live mentorship + AI", "Od nule do Level Up-a + AI alati", "Uči direktno uz predavača, korak po korak.", "Snimci sa časova koji vam ostaju", "Prijavi se",
+                "Mesec i po dana organizovane nastave uživo\n**Individualno ili u malim grupama od 2**\nModelovanje od nule + Level Up\n"
+                + "**AI alati za vizualizaciju i animaciju**\nBiblioteka materijala i gotovih scena\nRad na konkretnom projektu\n"
+                + "Renderi spremni za portfolio\nKontinuirano mentorstvo\n**Snimci održanih časova i sertifikat**")
+        ))
     );
+
+    // Popunjava paket kursa 7 samo ako stavke još nisu unete u adminu
+    private static String detaljiPaketa(String naziv, String podnaslov, String uvod, String istaknuto, String dugme, String opis) {
+        return "UPDATE paket SET podnaslov = " + sql(podnaslov) + ", uvod = " + sql(uvod) + ", istaknuto = " + sql(istaknuto)
+             + ", dugme = " + sql(dugme) + ", opis = " + sql(opis)
+             + " WHERE kursId = 7 AND naziv = " + sql(naziv) + " AND (opis IS NULL OR opis = '')";
+    }
+
+    private static String sql(String tekst) {
+        return tekst == null ? "NULL" : "'" + tekst.replace("'", "''") + "'";
+    }
 
     // Utisci polaznika sa Instagrama (snimci poruka koje je poslala klijentkinja)
     private static List<String> recenzijeSaInstagrama() {

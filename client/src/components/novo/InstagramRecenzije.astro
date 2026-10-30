@@ -1,0 +1,122 @@
+---
+// Utisci polaznika sa Instagrama (admin -> Recenzije): kartice kao poruke sa Instagrama,
+// sa imenom i @nalogom, u traci koja se pomera (strelice na računaru, prevlačenje na telefonu).
+import Ikona from "./Ikona.astro";
+import { kursPutanja, lepNaziv, potpisRecenzije, type PotpisRecenzije } from "../../data/sajt";
+
+export type InstagramRecenzija = PotpisRecenzije & {
+  opis: string;
+  kurs?: { id?: number; naziv?: string } | null;
+};
+
+interface Props {
+  recenzije: InstagramRecenzija[];
+  naslov?: string;
+  podnaslov?: string;
+  pozadina?: string;
+  id?: string;
+}
+const {
+  recenzije,
+  naslov = "Utisci naših polaznika",
+  podnaslov = "Poruke koje su nam polaznici poslali na Instagramu posle kursa.",
+  pozadina = "bg-white",
+  id = "recenzije",
+} = Astro.props;
+
+const inicijal = (tekst: string) => (tekst.replace(/[^\p{L}]/gu, "").charAt(0) || "S").toUpperCase();
+---
+
+{
+  recenzije.length > 0 && (
+    <section id={id} class={`${pozadina} border-t border-neutral-100 scroll-mt-20`} data-traka-recenzija>
+      <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24">
+        <div class="pojava flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div class="max-w-[620px]">
+            <p class="flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.24em] text-neutral-500">
+              <Ikona ime="instagram" class="w-4 h-4" />
+              Instagram recenzije
+            </p>
+            <h2 class="mt-4 font-serif text-[34px] md:text-[46px] leading-[1.05] tracking-[-0.02em]">{naslov}</h2>
+            <p class="mt-4 text-[14px] leading-relaxed text-neutral-600">{podnaslov}</p>
+          </div>
+          <div class="hidden md:flex gap-2 shrink-0">
+            <button type="button" data-traka-nazad aria-label="Prethodne recenzije" class="cursor-pointer grid place-items-center w-11 h-11 border border-neutral-300 hover:border-neutral-900 transition-colors">
+              <Ikona ime="strelicaLevo" class="w-4 h-4" />
+            </button>
+            <button type="button" data-traka-napred aria-label="Sledeće recenzije" class="cursor-pointer grid place-items-center w-11 h-11 border border-neutral-300 hover:border-neutral-900 transition-colors">
+              <Ikona ime="strelica" class="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <ul
+          data-traka
+          class="mt-10 md:mt-12 flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth pb-3 -mx-5 px-5 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {recenzije.map((r, i) => {
+            const potpis = potpisRecenzije(r);
+            const ime = potpis.ime || (potpis.instagram ? `@${potpis.instagram}` : "Polaznik Studija 27");
+            return (
+              <li
+                class="pojava snap-start shrink-0 w-[85%] sm:w-[360px] flex flex-col bg-white border border-neutral-200 p-5 md:p-6"
+                style={`--kasnjenje:${Math.min(i, 3) * 0.06}s`}
+              >
+                <div class="flex items-center gap-3">
+                  <span class="s27-krug shrink-0 rounded-full p-[2px] bg-[linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7)]">
+                    <span class="s27-krug grid place-items-center w-10 h-10 rounded-full bg-white border-2 border-white font-serif text-[17px] text-neutral-800">
+                      {inicijal(potpis.ime || potpis.instagram || "S")}
+                    </span>
+                  </span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[14px] font-semibold text-neutral-900 truncate">{ime}</p>
+                    {potpis.instagram && potpis.ime && (
+                      <a href={potpis.instagramUrl} target="_blank" rel="noopener nofollow" class="block text-[12.5px] text-neutral-500 hover:text-neutral-900 truncate">
+                        @{potpis.instagram}
+                      </a>
+                    )}
+                    {potpis.instagram && !potpis.ime && (
+                      <a href={potpis.instagramUrl} target="_blank" rel="noopener nofollow" class="block text-[12.5px] text-neutral-500 hover:text-neutral-900">
+                        Pogledaj profil
+                      </a>
+                    )}
+                  </div>
+                  <Ikona ime="instagram" class="w-5 h-5 shrink-0 text-neutral-400" />
+                </div>
+
+                <p class="mt-4 bg-[#f2f1ee] px-4 py-3 text-[14px] leading-relaxed text-neutral-800">
+                  {r.opis.trim()}
+                </p>
+
+                <p class="mt-auto pt-4 text-[11px] uppercase tracking-[0.14em] text-neutral-500">
+                  <span class="text-[#c49a5a] tracking-[0.18em]" aria-label="Ocena 5 od 5">★★★★★</span>
+                  {r.kurs?.naziv && (
+                    <>
+                      <span class="mx-2 text-neutral-300">·</span>
+                      {r.kurs.id ? (
+                        <a href={kursPutanja(r.kurs)} class="text-neutral-700 hover:text-neutral-900">{lepNaziv(r.kurs.naziv)}</a>
+                      ) : (
+                        lepNaziv(r.kurs.naziv)
+                      )}
+                    </>
+                  )}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </section>
+  )
+}
+
+<script>
+  // Strelice pomeraju traku za otprilike jednu karticu
+  document.querySelectorAll<HTMLElement>("[data-traka-recenzija]").forEach((sekcija) => {
+    const traka = sekcija.querySelector<HTMLElement>("[data-traka]");
+    if (!traka) return;
+    const korak = () => (traka.querySelector("li")?.getBoundingClientRect().width || 360) + 16;
+    sekcija.querySelector("[data-traka-nazad]")?.addEventListener("click", () => traka.scrollBy({ left: -korak() }));
+    sekcija.querySelector("[data-traka-napred]")?.addEventListener("click", () => traka.scrollBy({ left: korak() }));
+  });
+</script>

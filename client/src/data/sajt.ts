@@ -168,7 +168,17 @@ export async function ucitajListu<T = any>(putanja: string): Promise<T[]> {
 }
 
 // Paketi kursa (npr. Online / Online + Review / Live mentorship + AI), redom iz admina
-export type PaketKursa = { paketId: number; kursId: number; naziv: string; cena: number; opis?: string };
+export type PaketKursa = {
+  paketId: number;
+  kursId: number;
+  naziv: string;
+  cena: number;
+  opis?: string; // stavke, jedna po redu; **tekst** je podebljan
+  podnaslov?: string | null;
+  uvod?: string | null;
+  istaknuto?: string | null;
+  dugme?: string | null;
+};
 
 export async function ucitajPakete(kursId: number | null): Promise<PaketKursa[]> {
   if (!kursId) return [];

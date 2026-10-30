@@ -34,7 +34,7 @@ public class PaketRoute {
     @GetMapping("/paketi/{kursId}")
     public List<Map<String, Object>> paketiKursa(@PathVariable long kursId) {
         return jdbcTemplate.queryForList(
-                "SELECT paketId, kursId, naziv, cena, opis, redosled FROM paket WHERE kursId = ? ORDER BY redosled, paketId",
+                "SELECT paketId, kursId, naziv, cena, opis, redosled, podnaslov, uvod, istaknuto, dugme FROM paket WHERE kursId = ? ORDER BY redosled, paketId",
                 kursId);
     }
 
@@ -44,9 +44,10 @@ public class PaketRoute {
         String greska = proveri(podaci);
         if (greska != null) return ResponseEntity.badRequest().body(Map.of("error", greska));
         jdbcTemplate.update(
-                "INSERT INTO paket (kursId, naziv, cena, opis, redosled) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO paket (kursId, naziv, cena, opis, redosled, podnaslov, uvod, istaknuto, dugme) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 broj(podaci.get("kursId")), tekst(podaci.get("naziv")), broj(podaci.get("cena")),
-                tekst(podaci.get("opis")), broj(podaci.get("redosled")));
+                tekst(podaci.get("opis")), broj(podaci.get("redosled")), ili(podaci.get("podnaslov")),
+                ili(podaci.get("uvod")), ili(podaci.get("istaknuto")), ili(podaci.get("dugme")));
         Long paketId = jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
         return ResponseEntity.ok(Map.of("paketId", paketId));
     }
@@ -57,9 +58,10 @@ public class PaketRoute {
         String greska = proveri(podaci);
         if (greska != null) return ResponseEntity.badRequest().body(Map.of("error", greska));
         int izmenjeno = jdbcTemplate.update(
-                "UPDATE paket SET naziv = ?, cena = ?, opis = ?, redosled = ? WHERE paketId = ?",
+                "UPDATE paket SET naziv = ?, cena = ?, opis = ?, redosled = ?, podnaslov = ?, uvod = ?, istaknuto = ?, dugme = ? WHERE paketId = ?",
                 tekst(podaci.get("naziv")), broj(podaci.get("cena")), tekst(podaci.get("opis")),
-                broj(podaci.get("redosled")), paketId);
+                broj(podaci.get("redosled")), ili(podaci.get("podnaslov")), ili(podaci.get("uvod")),
+                ili(podaci.get("istaknuto")), ili(podaci.get("dugme")), paketId);
         return izmenjeno > 0 ? ResponseEntity.ok(Map.of("success", true))
                 : ResponseEntity.status(404).body(Map.of("error", "Paket ne postoji"));
     }
@@ -80,6 +82,12 @@ public class PaketRoute {
 
     private static String tekst(Object o) {
         return o == null ? "" : o.toString().trim();
+    }
+
+    // prazno polje se čuva kao NULL
+    private static String ili(Object o) {
+        String s = tekst(o);
+        return s.isEmpty() ? null : s;
     }
 
     private static long broj(Object o) {

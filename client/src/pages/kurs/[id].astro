@@ -8,6 +8,7 @@ import Ikona from "../../components/novo/Ikona.astro";
 import KupiDugme from "../../components/novo/KupiDugme.astro";
 import AiHero from "../../components/kurs/AiHero.astro";
 import Paketi from "../../components/kurs/Paketi.astro";
+import InstagramRecenzije from "../../components/novo/InstagramRecenzije.astro";
 import {
   API_URL,
   CLIENT_URL,
@@ -115,7 +116,6 @@ const uvod = pasusi(kurs.komentarSredina);
 const opis = pasusi(kurs.opis);
 const program = parsirajSadrzaj(kurs.sadrzaj);
 const lekcije = kurs.lekcije || [];
-const brojVidea = lekcije.reduce((zbir, l) => zbir + (l.videoUrls?.length || 0), 0);
 const naUzivo = !!kurs.komentarGore?.toUpperCase().includes("UŽIVO");
 // Online AI kurs ima poseban tamni naslovni ekran (po skici klijentkinje)
 const aiKurs = /\bAI\b/.test(`${kurs.naziv} ${kurs.glavniKurs}`.toUpperCase()) && !naUzivo;
@@ -173,7 +173,7 @@ const traka = [kurs.glavniKurs, ...oznake]
 // "Šta ćeš naučiti?" – kartice iz polja "sadrzaj".
 // Ako sadržaj ima samo jednu celinu sa spiskom, svaka stavka postaje kartica.
 type Kartica = { naslov: string; opis?: string; stavke: string[] };
-const kartice: Kartica[] =
+const sveKartice: Kartica[] =
   program.length === 1 && program[0].stavke.length >= 3
     ? program[0].stavke.map((s) => ({ naslov: s, stavke: [] }))
     : program.map((s) => {
@@ -184,6 +184,16 @@ const kartice: Kartica[] =
           stavke: jednaRecenica ? [] : s.stavke,
         };
       });
+// Najviše 8 kartica (dva puna reda): izbacuju se celine sa najmanje stavki, redosled ostaje isti
+const NAJVISE_KARTICA = 8;
+const izbacene = new Set(
+  sveKartice
+    .map((k, i) => ({ i, velicina: k.stavke.length + (k.opis ? 1 : 0) }))
+    .sort((a, b) => a.velicina - b.velicina || b.i - a.i)
+    .slice(0, Math.max(0, sveKartice.length - NAJVISE_KARTICA))
+    .map((k) => k.i)
+);
+const kartice = sveKartice.filter((_, i) => !izbacene.has(i));
 const naslovKartica = program.length === 1 && program[0].stavke.length >= 3 ? recenica(program[0].naslov) : "Šta ćeš naučiti?";
 
 // "Kako izgleda učenje?" – zavisi od načina održavanja kursa (uživo / video)
@@ -196,7 +206,7 @@ const koraci = naUzivo
   : [
       {
         naslov: "Video lekcije i vežbe",
-        tekst: lekcije.length > 0 ? `${lekcije.length} lekcija sa vežbama i propratnim fajlovima.` : "Uz svaki snimak vežba i propratni fajlovi.",
+        tekst: "Uz svaki snimak vežba i propratni fajlovi.",
       },
       { naslov: "Rad uz podršku", tekst: "Feedback na tvoj rad i odgovori na pitanja u privatnom chatu." },
       { naslov: "Tvoj rezultat", tekst: "Gotovi renderi koje možeš da pokažeš u portfoliju." },
@@ -206,17 +216,14 @@ const koraci = naUzivo
 const spisak = [
   ...oznake.map(recenica),
   kurs.glavniKurs ? recenica(kurs.glavniKurs) : "",
-  lekcije.length > 0 ? `${lekcije.length} lekcija${brojVidea > 0 ? ` · ${brojVidea} video snimaka` : ""}` : "",
-  program.length > 1 ? `${program.length} celina programa` : "",
   naUzivo ? "Direktan kontakt sa predavačem" : "Neograničen pristup snimcima",
   "Podrška tokom celog kursa",
 ].filter((s, i, niz) => s && niz.indexOf(s) === i);
 
-// Utisci polaznika: prvo za ovaj kurs, pa ostali (iz baze)
+// Utisci polaznika sa Instagrama (recenzije bez naloga na sajtu, iz admina): prvo za ovaj kurs, pa ostali
 const recenzije = sveRecenzije
-  .filter((r) => r.opis && r.opis.trim())
-  .sort((a, b) => Number(String(b.kurs?.id) === String(id)) - Number(String(a.kurs?.id) === String(id)))
-  .slice(0, 5);
+  .filter((r) => !r.student && r.opis && r.opis.trim())
+  .sort((a, b) => Number(String(b.kurs?.id) === String(id)) - Number(String(a.kurs?.id) === String(id)));
 
 // "Kurs vizualizacije eksterijera" -> "kurs vizualizacije eksterijera"; "Od nule do..." -> "kurs Od nule do..."
 const nazivUTekstu = /^kurs\b/i.test(naslov) ? naslov.charAt(0).toLowerCase() + naslov.slice(1) : `kurs „${naslov}“`;
@@ -587,7 +594,7 @@ const dugmeOkvir =
               <p class={eyebrow}>Struktura kursa</p>
               <h2 class:list={[naslovSekcije, "mt-4"]}>Lekcije</h2>
               <p class="mt-4 text-[14px] text-neutral-600">
-                {lekcije.length} lekcija{brojVidea > 0 ? ` · ${brojVidea} video snimaka` : ""} · neograničen pristup
+                Video lekcije · neograničen pristup
               </p>
             </div>
             <ol class="pojava border-t border-neutral-200" style="--kasnjenje:0.1s">
@@ -691,55 +698,11 @@ const dugmeOkvir =
       )
     }
 
-    {/* 7. UTISCI POLAZNIKA (recenzije iz baze) */}
-    {
-      recenzije.length > 0 && (
-        <section class="bg-white border-t border-neutral-100">
-          <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-20 grid lg:grid-cols-[0.75fr_2.25fr] gap-10 items-start">
-            <div class="pojava">
-              <h2 class={naslovSekcije}>Utisci naših polaznika</h2>
-              <p class="mt-4 text-[14px] leading-relaxed text-neutral-600">
-                Evo šta kažu polaznici koji su već prošli kroz naše kurseve. Njihova iskustva najbolje govore šta možeš da očekuješ.
-              </p>
-            </div>
-            <ul class="flex lg:grid lg:grid-cols-3 xl:grid-cols-5 gap-3 overflow-x-auto snap-x snap-mandatory pb-2 -mx-5 px-5 lg:mx-0 lg:px-0">
-              {recenzije.map((r, i) => (
-                <li class="pojava snap-start shrink-0 w-[260px] lg:w-auto flex flex-col border border-neutral-200 p-4" style={`--kasnjenje:${i * 0.06}s`}>
-                  <p class="text-[12px] tracking-[0.12em] text-neutral-900" aria-label={`Ocena ${r.ocena || 5} od 5`}>
-                    {"★".repeat(Math.max(1, Math.min(5, r.ocena || 5)))}
-                  </p>
-                  {(() => {
-                    const potpis = potpisRecenzije(r);
-                    return (potpis.ime || potpis.instagram) && (
-                      <p class="mt-2 text-[12px] font-medium text-neutral-900 truncate">
-                        {potpis.ime}
-                        {potpis.instagram && (
-                          <a href={potpis.instagramUrl} target="_blank" rel="noopener nofollow" class={`text-neutral-500 hover:text-neutral-900 ${potpis.ime ? "ml-1.5" : ""}`}>@{potpis.instagram}</a>
-                        )}
-                      </p>
-                    );
-                  })()}
-                  <p class="mt-3 text-[13px] leading-relaxed text-neutral-700 line-clamp-6 mb-3">{r.opis.trim()}</p>
-                  {r.kurs?.naziv && (
-                    <p class="mt-auto pt-3 border-t border-neutral-200 text-[11px] uppercase tracking-[0.14em] text-neutral-500">
-                      Polaznik kursa:{" "}
-                      {r.kurs.id ? (
-                        <a href={kursPutanja(r.kurs)} class="text-neutral-900 underline underline-offset-2 hover:no-underline">{lepNaziv(r.kurs.naziv)}</a>
-                      ) : (
-                        <span class="text-neutral-900">{lepNaziv(r.kurs.naziv)}</span>
-                      )}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )
-    }
+    {/* 7. UTISCI POLAZNIKA (Instagram recenzije iz admina) */}
+    <InstagramRecenzije recenzije={recenzije} />
 
     {/* PAKETI I CENE (kursevi sa paketima iz admina) */}
-    {paketi.length > 0 && <Paketi kurs={kurs} paketi={paketi} kupljen={kupljen} />}
+    {paketi.length > 0 && <Paketi kurs={kurs} paketi={paketi} kupljen={kupljen} imaProgram={kartice.length > 0} />}
 
     {/* 8. SVE ŠTO TI JE POTREBNO ZA POČETAK */}
     <section class="bg-white">

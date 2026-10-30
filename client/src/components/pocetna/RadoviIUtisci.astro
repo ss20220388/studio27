@@ -1,7 +1,8 @@
 ---
 // Radovi studenata (mreža 5×3 iz baze, po rasporedu iz admin aplikacije) i utisci polaznika (kartice)
 import Ikona from "../novo/Ikona.astro";
-import { lepNaziv, manjaSlika, potpisRecenzije, slikaIzBaze, srcsetSlike, ucitajListu } from "../../data/sajt";
+import InstagramRecenzije from "../novo/InstagramRecenzije.astro";
+import { lepNaziv, manjaSlika, slikaIzBaze, srcsetSlike, ucitajListu } from "../../data/sajt";
 
 type Rad = { idRad: number; url: string; naziv?: string; ime?: string; prezime?: string };
 type Recenzija = {
@@ -26,8 +27,8 @@ const slike = radovi
     const kurs = lepNaziv(r.naziv) || "kursa 3D vizualizacije";
     return { src: slikaIzBaze(r.url), alt: `Render polaznika${autor ? ` ${autor}` : ""} – ${kurs}, Studio 27` };
   });
-// najnovijih šest (sve su na stranicama kurseva)
-const recenzije = sveRecenzije.filter((r) => r.opis && r.opis.trim()).reverse().slice(0, 6);
+// samo utisci sa Instagrama (recenzije bez naloga na sajtu, iz admina), najnoviji prvi
+const recenzije = sveRecenzije.filter((r) => !r.student && r.opis && r.opis.trim()).reverse();
 ---
 
 <!-- RADOVI STUDENATA -->
@@ -72,47 +73,5 @@ const recenzije = sveRecenzije.filter((r) => r.opis && r.opis.trim()).reverse().
   </div>
 </section>
 
-<!-- UTISCI POLAZNIKA -->
-{
-  recenzije.length > 0 && (
-    <section id="recenzije" class="bg-bez py-20 md:py-28">
-      <div class="max-w-[1200px] mx-auto px-5 md:px-10">
-        <div class="pojava text-center">
-          <p class="text-[11px] font-medium uppercase tracking-[0.26em] text-neutral-500">Iskustva</p>
-          <h2 class="mt-4 font-serif text-[40px] md:text-[56px] leading-[1.03] tracking-[-0.02em]">Utisci polaznika</h2>
-          <p class="mt-4 text-[15px] text-neutral-600">Iskustva studenata koji su završili naše kurseve.</p>
-        </div>
-
-        <div class="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-          {recenzije.map((r, i) => (
-            <figure
-              class="pojava flex flex-col justify-between bg-white p-7 md:p-8 shadow-[0_1px_0_rgba(0,0,0,0.04)] transition-shadow duration-500 hover:shadow-[0_18px_45px_rgba(0,0,0,0.07)]"
-              style={`--kasnjenje:${(i % 3) * 0.08}s`}
-            >
-              <div>
-                <span class="block text-[14px] tracking-[0.18em] text-[#c49a5a]" aria-label={`Ocena ${r.ocena || 5} od 5`}>
-                  {"★".repeat(r.ocena || 5)}
-                </span>
-                <blockquote class="mt-5 font-serif text-[18px] leading-[1.5] text-neutral-800">{r.opis.trim()}</blockquote>
-              </div>
-              <figcaption class="mt-7 pt-5 border-t border-neutral-200">
-                {(() => {
-                  const potpis = potpisRecenzije(r);
-                  return (potpis.ime || potpis.instagram) && (
-                    <span class="block mb-2 text-[13px] font-medium text-neutral-900">
-                      {potpis.ime}
-                      {potpis.instagram && (
-                        <a href={potpis.instagramUrl} target="_blank" rel="noopener nofollow" class={`text-neutral-500 hover:text-neutral-900 ${potpis.ime ? "ml-1.5" : ""}`}>@{potpis.instagram}</a>
-                      )}
-                    </span>
-                  );
-                })()}
-                <span class="block text-[10.5px] font-medium uppercase tracking-[0.16em] text-neutral-500">{lepNaziv(r.kurs?.naziv) || "Studio 27"}</span>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
+<!-- UTISCI POLAZNIKA (Instagram recenzije) -->
+<InstagramRecenzije recenzije={recenzije} naslov="Utisci polaznika" pozadina="bg-bez" />
