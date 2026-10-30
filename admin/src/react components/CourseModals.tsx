@@ -340,7 +340,7 @@ export default function CourseModals({
         </div>
       </SharedModal>
 
-      <SharedModal open={showEditModal} onClose={() => setShowEditModal(false)} title="Izmeni kurs">
+      <SharedModal open={showEditModal} onClose={() => setShowEditModal(false)} title="Izmeni kurs" wide>
         <div className="space-y-4">
           <div>
             <p className="text-xs text-neutral-400 mb-2">Trenutno se menja: <span className="text-white font-bold">{selectedKurs?.naziv}</span></p>

@@ -52,9 +52,10 @@ public class StudentController {
                 studentMap.put("active", (Number) row.get("active"));
                
                 String SQL2 = """
-                                    Select k.kursId,k.naziv
+                                    Select k.kursId,k.naziv, pk.naziv AS paketNaziv
                                     from kurs k
                                     join pohadja p on p.kursId = k.kursId
+                                    left join paket pk on pk.paketId = p.paketId
                                     where studentId = ?
                                     """;
                 
@@ -64,6 +65,8 @@ public class StudentController {
                     Map<String, Object> kursMap = new HashMap<>();
                     kursMap.put("kursId", ((Number) kursRow.get("kursId")).intValue());
                     kursMap.put("naziv", (String) kursRow.get("naziv"));
+                    // kupljeni paket kursa (npr. "Live mentorship + AI"), null ako je kurs bez paketa
+                    kursMap.put("paketNaziv", (String) kursRow.get("paketNaziv"));
                     kursevi.add(kursMap);
                 }
                 studentMap.put("kursevi", kursevi);

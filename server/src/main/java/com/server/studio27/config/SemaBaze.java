@@ -62,7 +62,7 @@ public class SemaBaze implements ApplicationRunner {
             detaljiPaketa("Online + Review", "Od nule do Level Up-a + analiza rada", "Uči samostalno uz stručno usmeravanje.", "Neograničen pristup", null,
                 "Sve video lekcije\n**Modelovanje od nule + Level Up**\nPraktične vežbe i projektni fajlovi\n"
                 + "Biblioteka materijala i gotovih scena\nProjekat i sertifikat\n**Podrška u grupnom chatu**\n"
-                + "**Jedna grupna sesija uživo (do 5 polaznika)**, na kojoj analiziramo tvoje rendere i 3D scenu i pokazujemo konkretna poboljšanja"),
+                + "**Jedna grupna sesija uživo (do 5 polaznika)**\nAnaliza tvojih rendera i 3D scene uz konkretna poboljšanja"),
             detaljiPaketa("Live mentorship + AI", "Od nule do Level Up-a + AI alati", "Uči direktno uz predavača, korak po korak.", "Snimci sa časova koji vam ostaju", "Prijavi se",
                 "Mesec i po dana organizovane nastave uživo\n**Individualno ili u malim grupama od 2**\nModelovanje od nule + Level Up\n"
                 + "**AI alati za vizualizaciju i animaciju**\nBiblioteka materijala i gotovih scena\nRad na konkretnom projektu\n"

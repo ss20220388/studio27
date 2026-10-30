@@ -33,7 +33,11 @@ interface StudentApiResponse {
 interface Kurs {
   kursId: number;
   naziv: string;
+  paketNaziv?: string | null;
 }
+
+// "OD NULE DO PROFESIONALNOG RENDERA" -> "Od nule do profesionalnog rendera"
+const lepNaziv = (s: string) => (s === s.toUpperCase() ? s.charAt(0) + s.slice(1).toLowerCase() : s);
 
 interface UsersPageProps {
   students: StudentApiResponse[];
@@ -151,6 +155,7 @@ function formatirajDatum(datum?: string | null) {
 export default function UsersPage({ students = [], sviKursevi = [], token }: UsersPageProps) {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
+  const [paketFilter, setPaketFilter] = useState("");
   const limit = 20;
 
   // Sinhronizacija sa props-ima putem lokalnog stanja
@@ -184,12 +189,16 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
   // Add form
   const [addForm, setAddForm] = useState({ ime: "", prezime: "", email: "", telefon: "" });
 
+  // Svi paketi koje neko sluša (za filter)
+  const sviPaketi = [...new Set(usersList.flatMap((u) => u.kursevi.map((k) => k.paketNaziv).filter(Boolean) as string[]))].sort();
+
   // Najnoviji korisnici prvi (veći id = kasnije registrovan)
   const filtered = [...usersList].sort((a, b) => Number(b.id) - Number(a.id)).filter(
     (u) =>
-      u.ime.toLowerCase().includes(search.toLowerCase()) ||
-      u.prezime.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase())
+      (u.ime.toLowerCase().includes(search.toLowerCase()) ||
+        u.prezime.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase())) &&
+      (!paketFilter || u.kursevi.some((k) => k.paketNaziv === paketFilter))
   );
 
   const total = filtered.length;
@@ -354,7 +363,8 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
         </button>
       </div>
 
-      <div className="relative max-w-sm" style={{ marginBlock: "10px" }}>
+      <div className="flex flex-col sm:flex-row gap-3" style={{ marginBlock: "10px" }}>
+      <div className="relative max-w-sm flex-1">
         <input
           type="text"
           placeholder="Pretraži korisnike..."
@@ -367,13 +377,29 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
           className="w-full h-10 pl-11 pr-4 text-sm text-neutral-200 bg-neutral-900 border border-neutral-800 rounded-lg outline-none focus:border-neutral-700 transition-colors duration-200 placeholder-neutral-600"
         />
       </div>
+      <select
+        value={paketFilter}
+        onChange={(e) => {
+          setPaketFilter(e.target.value);
+          setPage(0);
+        }}
+        className="h-10 px-3 text-sm text-neutral-200 bg-neutral-900 border border-neutral-800 rounded-lg outline-none focus:border-neutral-700 cursor-pointer sm:w-60"
+      >
+        <option value="">Svi paketi</option>
+        {sviPaketi.map((p) => (
+          <option key={p} value={p}>
+            {p}
+          </option>
+        ))}
+      </select>
+      </div>
 
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden" style={{ paddingInline: "20px", paddingBlock: "10px" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neutral-800">
-                {["ID", "Korisnik", "Email", "Status", "Uređaj", "Akcije"].map((h) => (
+                {["ID", "Korisnik", "Email", "Kursevi i paket", "Status", "Uređaj", "Akcije"].map((h) => (
                   <th
                     key={h}
                     className="text-left px-5 py-3 text-[11px] font-semibold tracking-wider uppercase text-neutral-500"
@@ -405,6 +431,24 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
                     </div>
                   </td>
                   <td className="px-5 py-3 text-neutral-400">{u.email}</td>
+                  <td className="px-5 py-3">
+                    {u.kursevi.length === 0 ? (
+                      <span className="text-xs text-neutral-600">—</span>
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        {u.kursevi.map((k) => (
+                          <div key={k.kursId} className="flex flex-wrap items-center gap-1.5 text-xs">
+                            <span className="text-neutral-300">{lepNaziv(k.naziv)}</span>
+                            {k.paketNaziv && (
+                              <span className="inline-flex px-2 py-0.5 rounded-full bg-blue-900/20 text-blue-400 border border-blue-800/30 text-[11px] font-medium whitespace-nowrap">
+                                {k.paketNaziv}
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </td>
                   <td className="px-5 py-3">
                     <span
                       className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${
@@ -471,7 +515,7 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
 
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-10 text-center text-sm text-neutral-500">
+                  <td colSpan={7} className="px-5 py-10 text-center text-sm text-neutral-500">
                     Nema pronađenih korisnika.
                   </td>
                 </tr>
@@ -560,9 +604,9 @@ export default function UsersPage({ students = [], sviKursevi = [], token }: Use
                 {editUser.kursevi.map((k) => (
                   <div
                     key={k.kursId}
-                    className="flex items-center gap-1 bg-neutral-800 text-neutral-300 text-xs font-medium px-2 py-1 rounded-md max-w-[180px]"
+                    className="flex items-center gap-1 bg-neutral-800 text-neutral-300 text-xs font-medium px-2 py-1 rounded-md max-w-[300px]"
                   >
-                    <span className="truncate">{k.naziv}</span>
+                    <span className="truncate">{lepNaziv(k.naziv)}{k.paketNaziv ? ` · ${k.paketNaziv}` : ""}</span>
                     <button
                       onClick={() =>
                         setEditUser({
