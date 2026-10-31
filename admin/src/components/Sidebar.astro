@@ -6,7 +6,10 @@ const currentPath = Astro.url.pathname;
 const navSections = [
   {
     label: "Pregled",
-    items: [{ href: "/", label: "Dashboard", icon: "home" }],
+    items: [
+      { href: "/", label: "Dashboard", icon: "home" },
+      { href: "/uzivo", label: "Uživo", icon: "live" },
+    ],
   },
   {
     label: "Upravljanje",
@@ -155,6 +158,12 @@ const navSections = [
                   {item.icon === "book" && (
                     <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
                       <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                    </svg>
+                  )}
+                  {item.icon === "live" && (
+                    <svg viewBox="0 0 20 20" fill="currentColor" class="w-4.5 h-4.5">
+                      <circle cx="10" cy="10" r="3" />
+                      <path d="M5.05 5.05a7 7 0 000 9.9l1.06-1.06a5.5 5.5 0 010-7.78L5.05 5.05zm9.9 0l-1.06 1.06a5.5 5.5 0 010 7.78l1.06 1.06a7 7 0 000-9.9z" />
                     </svg>
                   )}
                   {item.icon === "star" && (

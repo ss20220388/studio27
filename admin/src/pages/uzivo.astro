@@ -1,0 +1,13 @@
+---
+import Layout from "../layouts/Layout.astro";
+import UzivoPage from "../react components/UzivoPage";
+import type { AstroCookies } from "astro";
+
+const cookies = Astro.cookies as AstroCookies;
+const refreshToken = cookies.get("refreshToken");
+const token = refreshToken?.value;
+---
+
+<Layout title="Uživo">
+  <UzivoPage token={token ? token : ""} client:load />
+</Layout>

@@ -38,6 +38,38 @@ const VideoPlayerHLS = ({ videoId, fileName = "index.m3u8", accessToken, API_URL
     reachedCheckpoints.current.clear();
   }, [videoId]);
 
+  // Prisutnost za admin -> Uživo: na 20 s (i na play/pauzu) javlja koji video gleda i na kom je minutu.
+  // Dok je tab u pozadini ne javlja, pa korisnik nestaje sa liste posle ~1 min.
+  useEffect(() => {
+    if (!accessToken || !videoId) return;
+    const video = videoRef.current;
+    const javiSe = () => {
+      if (document.hidden || !videoRef.current) return;
+      const v = videoRef.current;
+      fetch(`${API_URL}/api/prisutnost`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({
+          video: videoId,
+          sekunda: v.currentTime || 0,
+          trajanje: Number.isFinite(v.duration) ? v.duration : 0,
+          gleda: !v.paused && !v.ended,
+        }),
+      }).catch(() => {});
+    };
+    javiSe();
+    const interval = setInterval(javiSe, 20000);
+    video?.addEventListener("play", javiSe);
+    video?.addEventListener("pause", javiSe);
+    document.addEventListener("visibilitychange", javiSe);
+    return () => {
+      clearInterval(interval);
+      video?.removeEventListener("play", javiSe);
+      video?.removeEventListener("pause", javiSe);
+      document.removeEventListener("visibilitychange", javiSe);
+    };
+  }, [videoId, accessToken, API_URL]);
+
   useEffect(() => {
     if (!videoRef.current) return;
 
