@@ -7,8 +7,10 @@ import Layout from "../../layouts/Layout.astro";
 import Ikona from "../../components/novo/Ikona.astro";
 import KupiDugme from "../../components/novo/KupiDugme.astro";
 import AiHero from "../../components/kurs/AiHero.astro";
+import AiOpis from "../../components/kurs/AiOpis.astro";
 import Paketi from "../../components/kurs/Paketi.astro";
 import InstagramRecenzije from "../../components/novo/InstagramRecenzije.astro";
+import GlasovneRecenzije from "../../components/novo/GlasovneRecenzije.astro";
 import {
   API_URL,
   CLIENT_URL,
@@ -69,6 +71,10 @@ type Recenzija = {
   ocena: number;
   ime?: string | null;
   instagram?: string | null;
+  audioUrl?: string | null;
+  trajanje?: number | null;
+  talas?: string | null;
+  slikaUrl?: string | null;
   student: { ime?: string; prezime?: string } | null;
   kurs: { id?: number; naziv?: string } | null;
 };
@@ -400,6 +406,7 @@ const dugmeOkvir =
 >
   <main class="bg-white text-neutral-900">
     {aiKurs && <AiHero kurs={kurs} slika={glavna} kupljen={kupljen} />}
+    {aiKurs && <AiOpis kurs={kurs} kupljen={kupljen} />}
 
     <!-- 1. NASLOVNI EKRAN: glavna slika kursa iz baze sa belim prelivom -->
     {!aiKurs && (
@@ -698,7 +705,8 @@ const dugmeOkvir =
       )
     }
 
-    {/* 7. UTISCI POLAZNIKA (Instagram recenzije iz admina) */}
+    {/* 7. UTISCI POLAZNIKA: glasovne recenzije ovog kursa, pa Instagram recenzije (iz admina) */}
+    <GlasovneRecenzije recenzije={sveRecenzije.filter((r) => r.audioUrl && String(r.kurs?.id) === String(id))} />
     <InstagramRecenzije recenzije={recenzije} />
 
     {/* PAKETI I CENE (kursevi sa paketima iz admina) */}

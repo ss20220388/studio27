@@ -67,6 +67,13 @@ public class SemaBaze implements ApplicationRunner {
                 "Mesec i po dana organizovane nastave uživo\n**Individualno ili u malim grupama od 2**\nModelovanje od nule + Level Up\n"
                 + "**AI alati za vizualizaciju i animaciju**\nBiblioteka materijala i gotovih scena\nRad na konkretnom projektu\n"
                 + "Renderi spremni za portfolio\nKontinuirano mentorstvo\n**Snimci održanih časova i sertifikat**")
+        )),
+        // glasovne recenzije: snimak (uploads), trajanje u sekundama, talas (40 visina 0-9 za prikaz) i fotografija
+        new Korak("2026-11-01-glasovne-recenzije", List.of(
+            "ALTER TABLE recenzija ADD COLUMN audioUrl VARCHAR(255) NULL",
+            "ALTER TABLE recenzija ADD COLUMN trajanje INT NULL",
+            "ALTER TABLE recenzija ADD COLUMN talas VARCHAR(200) NULL",
+            "ALTER TABLE recenzija ADD COLUMN slikaUrl VARCHAR(255) NULL"
         ))
     );
 

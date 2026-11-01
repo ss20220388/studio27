@@ -1,0 +1,118 @@
+---
+// Opis online AI kursa ispod naslovnog ekrana: o kursu, teme (iste stavke kao u naslovnom
+// ekranu, iz lekcija ili programa kursa), šta polaznik dobija i poziv na kupovinu.
+// Tekst o kursu je napisan za ovaj kurs (u bazi je kod kursa 5 ostao tekst ranijeg kursa uživo).
+import Ikona from "../novo/Ikona.astro";
+import KupiDugme from "../novo/KupiDugme.astro";
+import { imaCenu, lepNaziv, parsirajSadrzaj, type KursIzBaze } from "../../data/sajt";
+
+interface Props {
+  kurs: KursIzBaze;
+  kupljen?: boolean;
+}
+const { kurs, kupljen = false } = Astro.props;
+
+const naslov = lepNaziv(kurs.naziv) || "Kurs";
+
+// isti spisak tema kao u naslovnom ekranu (AiHero)
+const teme = (
+  kurs.lekcije?.length ? kurs.lekcije.map((l) => l.naziv) : parsirajSadrzaj(kurs.sadrzaj).flatMap((s) => s.stavke)
+)
+  .map((s) => (s || "").trim())
+  .map((s) => (s === s.toUpperCase() ? lepNaziv(s) : s))
+  .filter(Boolean)
+  .slice(0, 6);
+
+// Kratko objašnjenje teme po ključnoj reči iz naziva
+function opisTeme(tema: string) {
+  const t = tema.toLowerCase();
+  if (/story|prič|telling/.test(t))
+    return { ikona: "kamera", tekst: "Kako od jednog projekta napraviti priču: kadrovi, redosled i atmosfera koji klijentu prodaju ideju." };
+  if (/namešt|namest|fotelj/.test(t))
+    return { ikona: "fotelja", tekst: "Brzo pravljenje i varijacije nameštaja uz AI alate, spremnih za tvoje scene i prezentacije." };
+  if (/animac|video|film/.test(t))
+    return { ikona: "playKrug", tekst: "Pretvaranje statičnih rendera u kratke animacije enterijera za prezentacije i društvene mreže." };
+  if (/šetnj|setnj|prostor|\b3d\b/.test(t))
+    return { ikona: "kocka", tekst: "3D šetnja kroz prostor: pokret kamere, ritam i montaža koji daju utisak da si u prostoru." };
+  return { ikona: "stapic", tekst: "Praktičan rad na primerima iz stvarnih projekata, korak po korak." };
+}
+
+const uvod = [
+  "AI menja način na koji predstavljamo arhitekturu. Na ovom kursu učiš kako da postojeće rendere pretvoriš u vizuelne priče koje ostavljaju utisak — animacije enterijera, 3D šetnje kroz prostor i prezentacije koje klijent pamti.",
+  "Kurs je praktičan: svaki korak prolazimo na konkretnim primerima, uz alate koje odmah možeš da primeniš u svom radu. Nije potrebno veliko predznanje — dovoljno je da imaš rendere ili projekat koji želiš da predstaviš na nov način.",
+];
+
+const dobijas = [
+  { ikona: "monitorPlay", naslov: "Video lekcije", tekst: "Gledaš kad tebi odgovara, svojim tempom." },
+  { ikona: "beskonacno", naslov: "Neograničen pristup", tekst: "Lekcijama se vraćaš kad god ti zatrebaju." },
+  { ikona: "slika", naslov: "Praktični primeri", tekst: "Radimo na pravim renderima i projektima." },
+  { ikona: "chat", naslov: "Podrška", tekst: "Pitanja i pomoć tokom celog kursa." },
+];
+---
+
+<section class="bg-[#f7f6f3]" aria-labelledby="ai-o-kursu">
+  <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24 grid lg:grid-cols-[0.9fr_1.1fr] gap-10 lg:gap-20">
+    <div class="pojava">
+      <p class="text-[11px] font-medium uppercase tracking-[0.24em] text-neutral-500">O kursu</p>
+      <h2 id="ai-o-kursu" class="mt-4 font-serif text-[34px] md:text-[46px] leading-[1.05] tracking-[-0.02em]">
+        Pretvori statične rendere u vizuelne priče
+      </h2>
+    </div>
+    <div class="pojava space-y-4 text-[15px] leading-relaxed text-neutral-700" style="--kasnjenje:0.1s">
+      {uvod.map((p) => <p>{p}</p>)}
+    </div>
+  </div>
+
+  {
+    teme.length > 0 && (
+      <div class="max-w-[1300px] mx-auto px-5 md:px-10 pb-16 md:pb-24">
+        <h3 class="pojava text-[11px] font-medium uppercase tracking-[0.24em] text-neutral-500">Šta učiš</h3>
+        <ol class={`mt-6 grid gap-3 md:gap-4 sm:grid-cols-2 ${teme.length >= 4 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
+          {teme.map((tema, i) => {
+            const o = opisTeme(tema);
+            return (
+              <li class="pojava bg-white border border-neutral-200 p-6 md:p-7" style={`--kasnjenje:${(i % 4) * 0.06}s`}>
+                <div class="flex items-center justify-between">
+                  <Ikona ime={o.ikona} class="w-7 h-7 text-neutral-800" />
+                  <span class="font-serif text-[20px] text-neutral-300">{String(i + 1).padStart(2, "0")}</span>
+                </div>
+                <h4 class="mt-5 font-serif text-[20px] leading-snug text-neutral-900">{tema}</h4>
+                <p class="mt-2 text-[13.5px] leading-relaxed text-neutral-600">{o.tekst}</p>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    )
+  }
+</section>
+
+<section class="bg-white border-t border-neutral-100" aria-label="Šta dobijaš">
+  <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-14 md:py-20">
+    <ul class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        dobijas.map((d, i) => (
+          <li class="pojava flex gap-4" style={`--kasnjenje:${i * 0.06}s`}>
+            <Ikona ime={d.ikona} class="w-6 h-6 shrink-0 text-neutral-800" />
+            <div>
+              <p class="text-[15px] font-semibold text-neutral-900">{d.naslov}</p>
+              <p class="mt-1 text-[13.5px] text-neutral-600">{d.tekst}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="pojava mt-12 md:mt-16 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-[#1a1512] text-white px-7 py-8 md:px-10 md:py-10">
+      <div>
+        <p class="font-serif text-[26px] md:text-[32px] leading-tight">{naslov}</p>
+        {imaCenu(kurs) && <p class="mt-2 text-[14px] text-white/70">Kompletan online kurs · {kurs.cena} €</p>}
+      </div>
+      <KupiDugme
+        kurs={kurs}
+        kupljen={kupljen}
+        class="group shrink-0 inline-flex items-center justify-center gap-4 bg-[#ead9c4] px-9 py-4 text-[15px] font-semibold text-neutral-900 hover:bg-[#f3e6d6] transition-colors"
+      />
+    </div>
+  </div>
+</section>

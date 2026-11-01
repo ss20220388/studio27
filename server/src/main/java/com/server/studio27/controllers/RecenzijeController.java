@@ -23,6 +23,7 @@ public class RecenzijeController {
 
         String SQL = """
             SELECT r.recenzijaId, r.opis, r.ocena, r.datum, r.instagram, r.ime AS imeRecenzije,
+                   r.audioUrl, r.trajanje, r.talas, r.slikaUrl AS slikaRecenzije,
                    s.studentId, s.ime, s.prezime, s.brojTelefona,
                    k.kursId, k.naziv as kursNaziv
             FROM recenzija r
@@ -68,6 +69,10 @@ public class RecenzijeController {
             );
             recenzija.setInstagram((String) row.get("instagram"));
             recenzija.setIme((String) row.get("imeRecenzije"));
+            recenzija.setAudioUrl((String) row.get("audioUrl"));
+            recenzija.setTrajanje(row.get("trajanje") instanceof Number n ? n.intValue() : null);
+            recenzija.setTalas((String) row.get("talas"));
+            recenzija.setSlikaUrl((String) row.get("slikaRecenzije"));
             recenzije.add(recenzija);
         }
 
@@ -77,16 +82,60 @@ public class RecenzijeController {
     // Admin: recenzija bez naloga na sajtu (npr. poruka sa Instagrama)
     public void dodaj(Map<String, Object> podaci) {
         jdbcTemplate.update(
-            "INSERT INTO recenzija (opis, ocena, datum, kursId, instagram, ime) VALUES (?, ?, CURDATE(), ?, ?, ?)",
+            "INSERT INTO recenzija (opis, ocena, datum, kursId, instagram, ime, audioUrl, trajanje, talas, slikaUrl) VALUES (?, ?, CURDATE(), ?, ?, ?, ?, ?, ?, ?)",
             tekst(podaci.get("opis")), ocena(podaci.get("ocena")), kursId(podaci.get("kursId")),
-            prazanUNull(podaci.get("instagram")), prazanUNull(podaci.get("ime")));
+            prazanUNull(podaci.get("instagram")), prazanUNull(podaci.get("ime")),
+            putanja(podaci.get("audioUrl")), trajanje(podaci.get("trajanje")), talas(podaci.get("talas")), putanja(podaci.get("slikaUrl")));
     }
 
     public boolean izmeni(int recenzijaId, Map<String, Object> podaci) {
         return jdbcTemplate.update(
-            "UPDATE recenzija SET opis = ?, ocena = ?, kursId = ?, instagram = ?, ime = ? WHERE recenzijaId = ?",
+            "UPDATE recenzija SET opis = ?, ocena = ?, kursId = ?, instagram = ?, ime = ?, audioUrl = ?, trajanje = ?, talas = ?, slikaUrl = ? WHERE recenzijaId = ?",
             tekst(podaci.get("opis")), ocena(podaci.get("ocena")), kursId(podaci.get("kursId")),
-            prazanUNull(podaci.get("instagram")), prazanUNull(podaci.get("ime")), recenzijaId) > 0;
+            prazanUNull(podaci.get("instagram")), prazanUNull(podaci.get("ime")),
+            putanja(podaci.get("audioUrl")), trajanje(podaci.get("trajanje")), talas(podaci.get("talas")), putanja(podaci.get("slikaUrl")),
+            recenzijaId) > 0;
+    }
+
+    private static final String UPLOAD_DIR = "/assets/uploads/";
+
+    // Snimak glasovne recenzije -> /uploads/...; sa ffmpeg-om (server) samo zvuk u .m4a, inače original
+    public String sacuvajSnimak(org.springframework.web.multipart.MultipartFile file) throws Exception {
+        String original = java.nio.file.Paths.get(String.valueOf(file.getOriginalFilename())).getFileName().toString();
+        String ime = System.currentTimeMillis() + "-" + original.replaceAll("[^A-Za-z0-9._-]", "-");
+        java.nio.file.Path folder = java.nio.file.Paths.get(UPLOAD_DIR);
+        java.nio.file.Files.createDirectories(folder);
+        java.nio.file.Path ulaz = folder.resolve(ime);
+        file.transferTo(ulaz);
+
+        String bezEkstenzije = ime.contains(".") ? ime.substring(0, ime.lastIndexOf('.')) : ime;
+        java.nio.file.Path izlaz = folder.resolve(bezEkstenzije + "-glas.m4a");
+        if (uM4a(ulaz, izlaz, true) || uM4a(ulaz, izlaz, false)) {
+            java.nio.file.Files.deleteIfExists(ulaz);
+            return "/uploads/" + izlaz.getFileName();
+        }
+        return "/uploads/" + ime;
+    }
+
+    // kopija = samo prepakuje AAC zvuk (brzo); inače ponovo kodira u AAC
+    private static boolean uM4a(java.nio.file.Path ulaz, java.nio.file.Path izlaz, boolean kopija) {
+        String ffmpeg = System.getProperty("os.name").toLowerCase().contains("win") ? "C:\\ffmpeg\\bin\\ffmpeg.exe" : "ffmpeg";
+        List<String> komanda = new ArrayList<>(List.of(ffmpeg, "-y", "-i", ulaz.toString(), "-vn"));
+        komanda.addAll(kopija ? List.of("-c:a", "copy") : List.of("-c:a", "aac", "-b:a", "128k"));
+        komanda.add(izlaz.toString());
+        try {
+            Process proces = new ProcessBuilder(komanda).redirectErrorStream(true)
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
+            boolean gotovo = proces.waitFor(120, java.util.concurrent.TimeUnit.SECONDS);
+            if (!gotovo) {
+                proces.destroyForcibly();
+                return false;
+            }
+            return proces.exitValue() == 0 && java.nio.file.Files.size(izlaz) > 0;
+        } catch (Exception e) {
+            // nema ffmpeg-a (npr. lokalno): ostaje originalni fajl
+            return false;
+        }
     }
 
     public void obrisi(int recenzijaId) {
@@ -95,6 +144,22 @@ public class RecenzijeController {
 
     private static String tekst(Object o) {
         return o == null ? "" : o.toString().trim();
+    }
+
+    // putanja fajla iz upload-a (/uploads/...), samo unutar uploads foldera
+    private static String putanja(Object o) {
+        String s = tekst(o);
+        return s.startsWith("/uploads/") && !s.contains("..") && s.length() <= 255 ? s : null;
+    }
+
+    private static Integer trajanje(Object o) {
+        return o instanceof Number n && n.intValue() > 0 ? Math.min(n.intValue(), 24 * 3600) : null;
+    }
+
+    // "3,5,9,..." najviše 60 brojeva 0-9 (izgled talasa u plejeru)
+    private static String talas(Object o) {
+        String s = tekst(o);
+        return s.matches("[0-9](,[0-9]){0,59}") ? s : null;
     }
 
     // Instagram nalog se čuva bez @ (dodaje se pri prikazu)

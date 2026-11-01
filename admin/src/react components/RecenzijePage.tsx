@@ -1,4 +1,4 @@
-import { API_URL } from "../lib/adrese";
+import { API_URL, SLIKE_URL } from "../lib/adrese";
 import React, { useEffect, useState } from "react";
 import { SharedModal } from "./SharedModal";
 
@@ -12,6 +12,10 @@ interface Recenzija {
   datum: string | null;
   instagram: string | null;
   ime: string | null;
+  audioUrl: string | null;
+  trajanje: number | null;
+  talas: string | null;
+  slikaUrl: string | null;
   student: { ime?: string; prezime?: string } | null;
   kurs: { id: number; naziv: string } | null;
 }
@@ -21,7 +25,37 @@ interface Kurs {
   naziv: string;
 }
 
-const prazna = { opis: "", kursId: "", instagram: "", ime: "", ocena: 5 };
+const prazna = { opis: "", kursId: "", instagram: "", ime: "", ocena: 5, audioUrl: "", trajanje: 0, talas: "", slikaUrl: "" };
+
+const slikaSrc = (url?: string | null) => (url ? `${SLIKE_URL}/api/uploaded-images/${url.replace(/^\/+/, "")}` : "");
+const minuti = (s?: number | null) => (s ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}` : "");
+
+// Trajanje i "talas" (40 visina 0-9) iz snimka, za prikaz plejera na sajtu
+async function analizirajSnimak(fajl: File): Promise<{ trajanje: number; talas: string }> {
+  try {
+    const ctx = new AudioContext();
+    const zvuk = await ctx.decodeAudioData(await fajl.arrayBuffer());
+    ctx.close();
+    const kanal = zvuk.getChannelData(0);
+    const delova = 40;
+    const korak = Math.floor(kanal.length / delova) || 1;
+    const vrhovi = Array.from({ length: delova }, (_, i) => {
+      let max = 0;
+      for (let j = i * korak; j < Math.min((i + 1) * korak, kanal.length); j += 16) max = Math.max(max, Math.abs(kanal[j]));
+      return max;
+    });
+    const najvise = Math.max(...vrhovi) || 1;
+    return { trajanje: Math.round(zvuk.duration), talas: vrhovi.map((v) => Math.round((v / najvise) * 9)).join(",") };
+  } catch {
+    // pregledač ne ume da dekodira fajl: trajanje iz audio elementa, talas se crta podrazumevano
+    const trajanje = await new Promise<number>((resolve) => {
+      const a = new Audio(URL.createObjectURL(fajl));
+      a.onloadedmetadata = () => resolve(Number.isFinite(a.duration) ? Math.round(a.duration) : 0);
+      a.onerror = () => resolve(0);
+    });
+    return { trajanje, talas: "" };
+  }
+}
 
 const labelClass = "block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1.5";
 const poljeClass =
@@ -78,14 +112,66 @@ export default function RecenzijePage({ token }: { token: string }) {
       instagram: r.instagram || "",
       ime: r.ime || "",
       ocena: r.ocena || 5,
+      audioUrl: r.audioUrl || "",
+      trajanje: r.trajanje || 0,
+      talas: r.talas || "",
+      slikaUrl: r.slikaUrl || "",
     });
     setMenjaSe(r.id);
     setGreskaForme("");
     setOtvoreno(true);
   }
 
+  const [otpremanje, setOtpremanje] = useState<"" | "snimak" | "slika">("");
+
+  // Snimak glasovne recenzije: analiza u pregledaču (trajanje, talas), pa upload na server
+  async function izaberiSnimak(fajl: File | undefined) {
+    if (!fajl) return;
+    setOtpremanje("snimak");
+    setGreskaForme("");
+    try {
+      const { trajanje, talas } = await analizirajSnimak(fajl);
+      const podaci = new FormData();
+      podaci.append("file", fajl);
+      const res = await fetch(`${API_URL}/api/admin-recenzije/audio`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: podaci,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.url) throw new Error(data.error || "Snimak nije otpremljen.");
+      setForma((f) => ({ ...f, audioUrl: data.url, trajanje, talas }));
+    } catch (e: any) {
+      setGreskaForme(e?.message || "Snimak nije otpremljen.");
+    } finally {
+      setOtpremanje("");
+    }
+  }
+
+  async function izaberiSliku(fajl: File | undefined) {
+    if (!fajl) return;
+    setOtpremanje("slika");
+    setGreskaForme("");
+    try {
+      const podaci = new FormData();
+      podaci.append("file", fajl);
+      const res = await fetch(`${API_URL}/api/upload-local`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: podaci,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.filename) throw new Error("Fotografija nije otpremljena.");
+      setForma((f) => ({ ...f, slikaUrl: `/uploads/${data.filename}` }));
+    } catch (e: any) {
+      setGreskaForme(e?.message || "Fotografija nije otpremljena.");
+    } finally {
+      setOtpremanje("");
+    }
+  }
+
   async function sacuvaj() {
-    if (!forma.opis.trim()) return setGreskaForme("Upišite tekst recenzije.");
+    if (!forma.opis.trim() && !forma.audioUrl) return setGreskaForme("Upišite tekst recenzije ili dodajte glasovni snimak.");
     setCuvanje(true);
     setGreskaForme("");
     try {
@@ -173,7 +259,15 @@ export default function RecenzijePage({ token }: { token: string }) {
                 </div>
                 <span className="shrink-0 text-xs text-neutral-500">{"★".repeat(r.ocena || 5)}</span>
               </div>
-              <p className="text-sm text-neutral-300 line-clamp-5 whitespace-pre-line">{r.opis}</p>
+              {r.audioUrl && (
+                <div className="space-y-1.5">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-800/30 bg-emerald-900/20 px-2 py-0.5 text-[11px] font-medium text-emerald-500">
+                    🎙 Glasovna recenzija{r.trajanje ? ` · ${minuti(r.trajanje)}` : ""}
+                  </span>
+                  <audio controls preload="none" src={slikaSrc(r.audioUrl)} className="h-9 w-full" />
+                </div>
+              )}
+              {r.opis && <p className="text-sm text-neutral-300 line-clamp-5 whitespace-pre-line">{r.opis}</p>}
               <div className="mt-auto flex items-center justify-between gap-2 pt-2 border-t border-neutral-800">
                 <span className="text-[11px] text-neutral-500 truncate">{r.kurs?.naziv || "Bez kursa"}</span>
                 <div className="flex shrink-0 gap-1">
@@ -228,13 +322,61 @@ export default function RecenzijePage({ token }: { token: string }) {
             </div>
           </div>
           <div>
-            <label className={labelClass}>Tekst recenzije</label>
+            <label className={labelClass}>Tekst recenzije {forma.audioUrl && "(opciono uz glasovni snimak)"}</label>
             <textarea
               value={forma.opis}
               onChange={(e) => setForma({ ...forma, opis: e.target.value })}
-              rows={7}
+              rows={5}
               className={`${poljeClass} resize-y`}
             />
+          </div>
+          <div className="grid grid-cols-[1fr_auto] gap-3 items-start">
+            <div>
+              <label className={labelClass}>Glasovna recenzija</label>
+              {forma.audioUrl ? (
+                <div className="flex items-center gap-2">
+                  <audio controls src={slikaSrc(forma.audioUrl)} className="h-9 flex-1 min-w-0" />
+                  {forma.trajanje > 0 && <span className="text-xs text-neutral-500">{minuti(forma.trajanje)}</span>}
+                  <button
+                    type="button"
+                    onClick={() => setForma({ ...forma, audioUrl: "", trajanje: 0, talas: "" })}
+                    className="cursor-pointer px-2 py-1 text-xs text-red-400 hover:bg-neutral-800 rounded-md"
+                  >
+                    Ukloni
+                  </button>
+                </div>
+              ) : (
+                <label className="flex h-10 items-center justify-center rounded-lg border border-dashed border-neutral-700 text-xs text-neutral-400 hover:border-neutral-500 cursor-pointer">
+                  {otpremanje === "snimak" ? "Otpremanje snimka..." : "+ Dodaj snimak (mp3, m4a, mov, wav...)"}
+                  <input
+                    type="file"
+                    accept="audio/*,video/*,.mov,.m4a"
+                    className="hidden"
+                    disabled={!!otpremanje}
+                    onChange={(e) => {
+                      izaberiSnimak(e.target.files?.[0]);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+            <div>
+              <label className={labelClass}>Fotografija</label>
+              <label className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-dashed border-neutral-700 text-neutral-500 hover:border-neutral-500 cursor-pointer" title="Fotografija polaznika (opciono)">
+                {forma.slikaUrl ? <img src={slikaSrc(forma.slikaUrl)} alt="" className="h-full w-full object-cover" /> : otpremanje === "slika" ? "…" : "+"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={!!otpremanje}
+                  onChange={(e) => {
+                    izaberiSliku(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
           </div>
           <div>
             <label className={labelClass}>Ocena</label>

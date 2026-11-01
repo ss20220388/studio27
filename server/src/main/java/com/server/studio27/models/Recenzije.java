@@ -12,6 +12,11 @@ public class Recenzije {
     // za recenzije sa Instagrama (bez naloga na sajtu)
     private String instagram;
     private String ime;
+    // glasovna recenzija
+    private String audioUrl;
+    private Integer trajanje;
+    private String talas;
+    private String slikaUrl;
 
     public Recenzije() {
     }
@@ -87,6 +92,38 @@ public class Recenzije {
 
     public void setIme(String ime) {
         this.ime = ime;
+    }
+
+    public String getAudioUrl() {
+        return audioUrl;
+    }
+
+    public void setAudioUrl(String audioUrl) {
+        this.audioUrl = audioUrl;
+    }
+
+    public Integer getTrajanje() {
+        return trajanje;
+    }
+
+    public void setTrajanje(Integer trajanje) {
+        this.trajanje = trajanje;
+    }
+
+    public String getTalas() {
+        return talas;
+    }
+
+    public void setTalas(String talas) {
+        this.talas = talas;
+    }
+
+    public String getSlikaUrl() {
+        return slikaUrl;
+    }
+
+    public void setSlikaUrl(String slikaUrl) {
+        this.slikaUrl = slikaUrl;
     }
 
     

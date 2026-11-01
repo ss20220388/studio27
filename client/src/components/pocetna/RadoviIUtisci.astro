@@ -2,6 +2,7 @@
 // Radovi studenata (mreža 5×3 iz baze, po rasporedu iz admin aplikacije) i utisci polaznika (kartice)
 import Ikona from "../novo/Ikona.astro";
 import InstagramRecenzije from "../novo/InstagramRecenzije.astro";
+import GlasovneRecenzije from "../novo/GlasovneRecenzije.astro";
 import { lepNaziv, manjaSlika, slikaIzBaze, srcsetSlike, ucitajListu } from "../../data/sajt";
 
 type Rad = { idRad: number; url: string; naziv?: string; ime?: string; prezime?: string };
@@ -10,6 +11,10 @@ type Recenzija = {
   ocena: number;
   ime?: string | null;
   instagram?: string | null;
+  audioUrl?: string | null;
+  trajanje?: number | null;
+  talas?: string | null;
+  slikaUrl?: string | null;
   student?: { ime?: string; prezime?: string } | null;
   kurs: { naziv?: string } | null;
 };
@@ -73,5 +78,6 @@ const recenzije = sveRecenzije.filter((r) => !r.student && r.opis && r.opis.trim
   </div>
 </section>
 
-<!-- UTISCI POLAZNIKA (Instagram recenzije) -->
+<!-- UTISCI POLAZNIKA: glasovne recenzije, pa Instagram recenzije -->
+<GlasovneRecenzije recenzije={sveRecenzije.filter((r) => r.audioUrl).reverse()} pozadina="bg-bez" />
 <InstagramRecenzije recenzije={recenzije} naslov="Utisci polaznika" pozadina="bg-bez" />
