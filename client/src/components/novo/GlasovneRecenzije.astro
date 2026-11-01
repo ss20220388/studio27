@@ -19,13 +19,15 @@ interface Props {
 const { recenzije, naslov = "Poslušajte utiske naših polaznika", pozadina = "bg-white" } = Astro.props;
 
 const glasovne = recenzije.filter((r) => r.audioUrl);
-const BROJ_STUBICA = 40;
+const BROJ_STUBICA = 32;
 
-// sačuvan talas iz admina ili ujednačen "podrazumevani" talas
+// sačuvan talas iz admina (svedeno na 32 stubića) ili ujednačen "podrazumevani" talas; visina u %
 function stubici(r: GlasovnaRecenzija, i: number) {
   const sacuvan = (r.talas || "").split(",").map(Number).filter((n) => Number.isFinite(n));
-  if (sacuvan.length >= 10) return sacuvan.map((n) => 20 + n * 9);
-  return Array.from({ length: BROJ_STUBICA }, (_, k) => 25 + Math.round(Math.abs(Math.sin((k + 1) * 1.7 + i * 2.3)) * 70));
+  if (sacuvan.length >= 10) {
+    return Array.from({ length: BROJ_STUBICA }, (_, k) => 18 + sacuvan[Math.floor((k * sacuvan.length) / BROJ_STUBICA)] * 9);
+  }
+  return Array.from({ length: BROJ_STUBICA }, (_, k) => 22 + Math.round(Math.abs(Math.sin((k + 1) * 1.7 + i * 2.3)) * 70));
 }
 const vreme = (s?: number | null) => (s ? `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}` : "");
 const inicijal = (tekst: string) => (tekst.replace(/[^\p{L}]/gu, "").charAt(0) || "S").toUpperCase();
@@ -51,29 +53,40 @@ const inicijal = (tekst: string) => (tekst.replace(/[^\p{L}]/gu, "").charAt(0) |
                 <button
                   type="button"
                   data-glas={slikaIzBaze(r.audioUrl)}
+                  data-ukupno={vreme(r.trajanje)}
                   aria-label={`Pusti glasovnu recenziju: ${ime}`}
-                  class="group cursor-pointer w-full flex items-center gap-4 border border-neutral-200 bg-white px-4 py-4 text-left hover:border-neutral-400 transition-colors"
+                  class="group cursor-pointer w-full flex items-center gap-4 border border-neutral-200 bg-white p-4 md:p-5 text-left transition-colors hover:border-neutral-400 [&.svira]:border-neutral-900"
                 >
-                  <span class="s27-krug relative shrink-0 grid place-items-center w-14 h-14 overflow-hidden rounded-full bg-neutral-200">
-                    {r.slikaUrl ? (
-                      <img src={manjaSlika(slikaIzBaze(r.slikaUrl), 480)} alt="" loading="lazy" class="s27-krug h-full w-full object-cover" />
-                    ) : (
-                      <span class="font-serif text-[22px] text-neutral-700">{inicijal(ime)}</span>
-                    )}
-                    <span class="s27-krug absolute inset-0 grid place-items-center bg-black/35 text-white opacity-0 group-hover:opacity-100 group-[.svira]:opacity-100 transition-opacity">
-                      <svg data-ikona-play viewBox="0 0 24 24" class="w-5 h-5 fill-current"><path d="M8 5v14l11-7z" /></svg>
-                      <svg data-ikona-pauza viewBox="0 0 24 24" class="hidden w-5 h-5 fill-current"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
+                  {/* fotografija (ili inicijal) sa crnim dugmetom za puštanje u uglu */}
+                  <span class="relative shrink-0">
+                    <span class="s27-krug grid place-items-center w-14 h-14 overflow-hidden rounded-full bg-[#ece9e4]">
+                      {r.slikaUrl ? (
+                        <img src={manjaSlika(slikaIzBaze(r.slikaUrl), 480)} alt="" loading="lazy" class="s27-krug h-full w-full object-cover" />
+                      ) : (
+                        <span class="font-serif text-[22px] text-neutral-700">{inicijal(ime)}</span>
+                      )}
+                    </span>
+                    <span class="s27-krug absolute -bottom-1 -right-1 grid place-items-center w-7 h-7 rounded-full bg-neutral-900 text-white ring-2 ring-white transition-transform group-hover:scale-110">
+                      <svg data-ikona-play viewBox="0 0 24 24" class="w-3.5 h-3.5 translate-x-[1px] fill-current"><path d="M8 5v14l11-7z" /></svg>
+                      <svg data-ikona-pauza viewBox="0 0 24 24" class="hidden w-3.5 h-3.5 fill-current"><path d="M6 5h4v14H6zM14 5h4v14h-4z" /></svg>
                     </span>
                   </span>
+
                   <span class="min-w-0 flex-1">
-                    <span class="flex h-10 items-center gap-[2px]" aria-hidden="true" data-talas>
+                    <span class="flex items-baseline justify-between gap-3">
+                      <span class="text-[13.5px] font-medium text-neutral-900 truncate">{ime}</span>
+                      {r.trajanje ? (
+                        <span class="shrink-0 text-[12px] tabular-nums text-neutral-500" data-vreme>
+                          {vreme(r.trajanje)}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span class="mt-2.5 flex h-9 items-center justify-between gap-[2px] overflow-hidden" aria-hidden="true" data-talas>
                       {stubici(r, i).map((v) => (
-                        <span class="flex-1 min-w-[2px] max-w-[4px] bg-neutral-300 transition-colors" style={`height:${v}%`} />
+                        <span class="flex-1 min-w-[2px] max-w-[3px] bg-neutral-300 transition-colors duration-150" style={`height:${v}%`} />
                       ))}
                     </span>
-                    <span class="mt-1 block text-[11px] text-neutral-500 truncate">{ime}</span>
                   </span>
-                  {r.trajanje ? <span class="shrink-0 text-[13px] font-medium text-neutral-800" data-vreme>{vreme(r.trajanje)}</span> : null}
                 </button>
               </li>
             );
@@ -89,10 +102,15 @@ const inicijal = (tekst: string) => (tekst.replace(/[^\p{L}]/gu, "").charAt(0) |
   let audio: HTMLAudioElement | null = null;
   let aktivno: HTMLElement | null = null;
 
-  function oboji(dugme: HTMLElement, udeo: number) {
+  const minuti = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+  // talas se boji do trenutnog mesta, a vreme pokazuje koliko je odslušano (posle kraja opet ukupno)
+  function oboji(dugme: HTMLElement, udeo: number, sekunda = 0) {
     const stubici = dugme.querySelectorAll<HTMLElement>("[data-talas] > span");
     const do_ = Math.round(udeo * stubici.length);
     stubici.forEach((s, i) => s.classList.toggle("!bg-neutral-900", i < do_));
+    const vreme = dugme.querySelector<HTMLElement>("[data-vreme]");
+    if (vreme) vreme.textContent = udeo > 0 ? minuti(sekunda) : dugme.dataset.ukupno || vreme.textContent;
   }
 
   function stanje(dugme: HTMLElement, svira: boolean) {
@@ -119,7 +137,7 @@ const inicijal = (tekst: string) => (tekst.replace(/[^\p{L}]/gu, "").charAt(0) |
       audio.addEventListener("play", () => stanje(ovo, true));
       audio.addEventListener("pause", () => stanje(ovo, false));
       audio.addEventListener("timeupdate", () => {
-        if (audio && audio.duration) oboji(ovo, audio.currentTime / audio.duration);
+        if (audio && audio.duration) oboji(ovo, audio.currentTime / audio.duration, audio.currentTime);
       });
       audio.addEventListener("ended", () => {
         stanje(ovo, false);
