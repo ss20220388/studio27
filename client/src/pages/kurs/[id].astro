@@ -8,6 +8,7 @@ import Ikona from "../../components/novo/Ikona.astro";
 import KupiDugme from "../../components/novo/KupiDugme.astro";
 import AiHero from "../../components/kurs/AiHero.astro";
 import AiOpis from "../../components/kurs/AiOpis.astro";
+import RenderLanding from "../../components/kurs/RenderLanding.astro";
 import Paketi from "../../components/kurs/Paketi.astro";
 import InstagramRecenzije from "../../components/novo/InstagramRecenzije.astro";
 import GlasovneRecenzije from "../../components/novo/GlasovneRecenzije.astro";
@@ -84,6 +85,7 @@ let sporedne: string[] = [];
 let sveRecenzije: Recenzija[] = [];
 let paketi: PaketKursa[] = [];
 let radovi: RadPolaznika[] = [];
+let radoviSvih: RadPolaznika[] = [];
 try {
   const [kursIzBaze, slike, recenzije, paketiKursa, sviRadovi] = await Promise.all([
     ucitajKurs(Number(id)),
@@ -97,6 +99,7 @@ try {
   sveRecenzije = recenzije;
   paketi = paketiKursa;
   radovi = sviRadovi.filter((r) => String(r.idKurs) === String(id));
+  radoviSvih = sviRadovi;
 } catch (e) {
   console.error("Greška pri dohvatanju podataka o kursu:", e);
 }
@@ -125,6 +128,9 @@ const lekcije = kurs.lekcije || [];
 const naUzivo = !!kurs.komentarGore?.toUpperCase().includes("UŽIVO");
 // Online AI kurs ima poseban tamni naslovni ekran (po skici klijentkinje)
 const aiKurs = /\bAI\b/.test(`${kurs.naziv} ${kurs.glavniKurs}`.toUpperCase()) && !naUzivo;
+// Kurs "Od nule do profesionalnog rendera" ima svoj landing po skici klijentkinje (RenderLanding)
+const KURS_RENDER_ID = 7;
+const renderKurs = !aiKurs && Number(id) === KURS_RENDER_ID;
 const porukaZaWhatsApp = `Zdravo, imam pitanje u vezi kursa "${naslov}".`;
 const recenica = (s: string) => lepNaziv(s.trim());
 
@@ -409,7 +415,7 @@ const dugmeOkvir =
     {aiKurs && <AiOpis kurs={kurs} kupljen={kupljen} />}
 
     <!-- 1. NASLOVNI EKRAN: glavna slika kursa iz baze sa belim prelivom -->
-    {!aiKurs && (
+    {!aiKurs && !renderKurs && (
     <section class="relative overflow-hidden bg-white">
       {
         glavna && (
@@ -486,10 +492,14 @@ const dugmeOkvir =
     </section>
     )}
 
+    {renderKurs && <RenderLanding deo="vrh" kurs={kurs} kupljen={kupljen} imaPakete={paketi.length > 0} radovi={radovi.length >= 3 ? radovi : radoviSvih} />}
+
     {/* AI kurs ima samo naslovni ekran (po želji klijentkinje) */}
     {!aiKurs && (
     <Fragment>
     {/* 2. TRAKA: softver i oznake kursa */}
+    {!renderKurs && (
+    <Fragment>
     {
       traka.length > 0 && (
         <section class="border-y border-neutral-200 bg-white">
@@ -511,8 +521,12 @@ const dugmeOkvir =
         </section>
       )
     }
+    </Fragment>
+    )}
 
     {/* 3. O KURSU: slika iz baze levo, opis desno */}
+    {!renderKurs && (
+    <Fragment>
     {
       opis.length > 0 && (
         <section id="o-kursu" class="bg-white scroll-mt-20">
@@ -533,6 +547,8 @@ const dugmeOkvir =
         </section>
       )
     }
+    </Fragment>
+    )}
 
     {/* 4. ŠTA ĆEŠ NAUČITI: kartice iz programa kursa (polje "sadrzaj") */}
     {
@@ -570,6 +586,8 @@ const dugmeOkvir =
     }
 
     {/* 5. KAKO IZGLEDA UČENJE */}
+    {!renderKurs && (
+    <Fragment>
     <section class="bg-[#faf9f7] border-y border-neutral-100">
       <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-20">
         <h2 class:list={[naslovSekcije, "pojava text-center"]}>Kako izgleda učenje?</h2>
@@ -591,38 +609,12 @@ const dugmeOkvir =
         </ol>
       </div>
     </section>
-
-    {/* LEKCIJE (video kursevi, iz baze) */}
-    {
-      lekcije.length > 0 && (
-        <section id="lekcije" class="bg-white scroll-mt-20">
-          <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24 grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-20">
-            <div class="pojava">
-              <p class={eyebrow}>Struktura kursa</p>
-              <h2 class:list={[naslovSekcije, "mt-4"]}>Lekcije</h2>
-              <p class="mt-4 text-[14px] text-neutral-600">
-                Video lekcije · neograničen pristup
-              </p>
-            </div>
-            <ol class="pojava border-t border-neutral-200" style="--kasnjenje:0.1s">
-              {lekcije.map((l, i) => (
-                <li class="flex items-baseline gap-6 py-4 border-b border-neutral-200">
-                  <span class="w-8 shrink-0 font-serif text-[15px] text-neutral-400">{String(i + 1).padStart(2, "0")}</span>
-                  <span class="flex-1 text-[15px]">{l.naziv}</span>
-                  {(l.videoUrls?.length || 0) > 0 && (
-                    <span class="shrink-0 text-[11px] uppercase tracking-[0.14em] text-neutral-400">
-                      {l.videoUrls!.length} {l.videoUrls!.length === 1 ? "video" : "videa"}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-      )
-    }
+    </Fragment>
+    )}
 
     {/* RADOVI POLAZNIKA OVOG KURSA (tabela radova u bazi, vezani za kurs) */}
+    {!renderKurs && (
+    <Fragment>
     {
       radovi.length > 0 && (
         <section id="radovi-polaznika" class="bg-[#f7f6f3] scroll-mt-20">
@@ -671,8 +663,12 @@ const dugmeOkvir =
         </section>
       )
     }
+    </Fragment>
+    )}
 
     {/* 6. OD POČETNIKA DO REZULTATA: ostale slike kursa iz baze */}
+    {!renderKurs && (
+    <Fragment>
     {
       sporedne.length > 0 && (
         <section class="bg-white border-t border-neutral-100">
@@ -704,15 +700,19 @@ const dugmeOkvir =
         </section>
       )
     }
+    </Fragment>
+    )}
+
+    {/* PAKETI I CENE (kursevi sa paketima iz admina) */}
+    {paketi.length > 0 && <Paketi kurs={kurs} paketi={paketi} kupljen={kupljen} imaProgram={kartice.length > 0} />}
 
     {/* 7. UTISCI POLAZNIKA: glasovne recenzije ovog kursa, pa Instagram recenzije (iz admina) */}
     <GlasovneRecenzije recenzije={sveRecenzije.filter((r) => r.audioUrl && String(r.kurs?.id) === String(id))} />
     <InstagramRecenzije recenzije={recenzije} />
 
-    {/* PAKETI I CENE (kursevi sa paketima iz admina) */}
-    {paketi.length > 0 && <Paketi kurs={kurs} paketi={paketi} kupljen={kupljen} imaProgram={kartice.length > 0} />}
-
     {/* 8. SVE ŠTO TI JE POTREBNO ZA POČETAK */}
+    {!renderKurs && (
+    <Fragment>
     <section class="bg-white">
       <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-10 md:py-14">
         <div class="pojava relative overflow-hidden bg-[#f4f2ee] grid lg:grid-cols-[1fr_auto_1fr]">
@@ -761,8 +761,12 @@ const dugmeOkvir =
         </div>
       </div>
     </section>
+    </Fragment>
+    )}
 
     {/* 9. IMAŠ DODATNIH PITANJA? (+ WhatsApp kao na starom sajtu) */}
+    {!renderKurs && (
+    <Fragment>
     <section class="bg-white">
       <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-14 md:py-20 grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-20 items-start">
         <div class="pojava">
@@ -797,8 +801,12 @@ const dugmeOkvir =
         </div>
       </div>
     </section>
+    </Fragment>
+    )}
 
     {/* 10. SERTIFIKAT (kursevi uživo) */}
+    {!renderKurs && (
+    <Fragment>
     {
       naUzivo && (
         <section class="relative overflow-hidden bg-[#f7f6f3]">
@@ -823,8 +831,12 @@ const dugmeOkvir =
         </section>
       )
     }
+    </Fragment>
+    )}
 
     {/* 11. ZAVRŠNI POZIV preko slike kursa */}
+    {!renderKurs && (
+    <Fragment>
     <section class="relative overflow-hidden">
       {slikaKraj && <img src={manjaSlika(slikaKraj, 1600)} srcset={srcsetSlike(slikaKraj)} sizes="100vw" alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover" />}
       <div class="absolute inset-0 bg-white/72"></div>
@@ -839,6 +851,10 @@ const dugmeOkvir =
         </div>
       </div>
     </section>
+    </Fragment>
+    )}
+
+    {renderKurs && <RenderLanding deo="dno" kurs={kurs} />}
 
     {/* OSTALI KURSEVI (iz baze) */}
     {

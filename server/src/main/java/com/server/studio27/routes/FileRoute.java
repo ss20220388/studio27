@@ -49,21 +49,30 @@ public class FileRoute {
             @RequestParam("file") MultipartFile file,
             @RequestParam("lekcijaId") int lekcijaId) throws Exception {
         try {
-            String videoId = videoHlsService.convertToHlsAndUpload(file);
-
-            String SQL = "INSERT INTO video (url, lekcijaId) VALUES (?, ?);";
-            jdbcTemplate.update(SQL, videoId, lekcijaId);
+            // snimak se prima odmah, a konverzija i slanje na Hetzner idu u pozadini (4K snimci traju dugo);
+            // video se upisuje u lekciju kad obrada uspe, admin prati stanje preko /api/video-status/{videoId}
+            String videoId = videoHlsService.primiZaLekciju(file, lekcijaId);
 
             Map<String, Object> response = new HashMap<>();
-            response.put("message", "Video uspešno konvertovan, postavljen i sacuvan u bazi!");
+            response.put("message", "Video je primljen i obrađuje se.");
             response.put("videoId", videoId);
-            System.out.println("Video ID: " + videoId);
-            return ResponseEntity.ok(response);
+            response.put("stanje", "OBRADA");
+            System.out.println("Video ID (obrada u pozadini): " + videoId);
+            return ResponseEntity.accepted().body(response);
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Greška prilikom konverzije i postavljanja videa: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
+    }
+
+    @GetMapping("/video-status/{videoId}")
+    public ResponseEntity<Map<String, Object>> statusVidea(@org.springframework.web.bind.annotation.PathVariable String videoId) {
+        VideoHlsService.Status status = videoHlsService.status(videoId);
+        Map<String, Object> response = new HashMap<>();
+        response.put("stanje", status.stanje().name());
+        response.put("poruka", status.poruka());
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/delete-folder")

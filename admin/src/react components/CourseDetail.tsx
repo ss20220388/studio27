@@ -229,6 +229,44 @@ export default function CourseDetail({
     fetchMaterials();
   }, [selectedKurs?.id, accesToken, API_URL]);
 
+  // tekst ispod dugmeta: procenat prenosa, pa obrada na serveru
+  const [videoNapredak, setVideoNapredak] = useState("");
+
+  // XMLHttpRequest umesto fetch-a da bi se video procenat prenosa (veliki 4K snimci traju dugo)
+  const posaljiVideo = (formData: FormData, naziv: string) =>
+    new Promise<any>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${API_URL}/api/upload-hls-hetzner`);
+      if (accesToken) xhr.setRequestHeader("Authorization", `Bearer ${accesToken}`);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) setVideoNapredak(`Prenos „${naziv}“: ${Math.round((e.loaded / e.total) * 100)}%`);
+      };
+      xhr.onload = () => {
+        let data: any = {};
+        try { data = JSON.parse(xhr.responseText); } catch { /* prazan odgovor */ }
+        if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+        else reject(new Error(data.message || `Server je vratio grešku ${xhr.status}`));
+      };
+      xhr.onerror = () => reject(new Error("Veza sa serverom je prekinuta tokom prenosa."));
+      xhr.send(formData);
+    });
+
+  // Server obrađuje video u pozadini (konverzija + slanje na Hetzner); čeka se da bude gotov
+  const sacekajObradu = async (videoId: string, naziv: string) => {
+    const pocetak = Date.now();
+    for (;;) {
+      await new Promise((r) => setTimeout(r, 5000));
+      const res = await fetch(`${API_URL}/api/video-status/${videoId}`, {
+        headers: accesToken ? { Authorization: `Bearer ${accesToken}` } : {},
+      });
+      const status = await res.json().catch(() => ({}));
+      if (status.stanje === "GOTOVO") return;
+      if (status.stanje === "GRESKA") throw new Error(status.poruka || "Obrada videa nije uspela.");
+      const minuta = Math.floor((Date.now() - pocetak) / 60000);
+      setVideoNapredak(`„${naziv}“ se obrađuje na serveru${minuta ? ` (${minuta} min)` : ""}… Veliki 4K snimci traju i po nekoliko minuta.`);
+    }
+  };
+
   const handleVideoUpload = async () => {
     if (!videoFiles || showAddVideo === null) return;
 
@@ -240,19 +278,10 @@ export default function CourseDetail({
         formData.append("file", videoFile);
         formData.append("lekcijaId", lekcijaId.toString());
 
-        const uploadHeaders: any = {};
-        if (accesToken) uploadHeaders["Authorization"] = `Bearer ${accesToken}`;
-
-        const uploadRes = await fetch(`${API_URL}/api/upload-hls-hetzner`, {
-          method: "POST",
-          headers: uploadHeaders,
-          body: formData
-        });
-
-        if (!uploadRes.ok) throw new Error("Greška pri uploadu videa ili dodavanju u bazu");
-
-        const uploadData = await uploadRes.json();
+        setVideoNapredak(`Prenos „${videoFile.name}“: 0%`);
+        const uploadData = await posaljiVideo(formData, videoFile.name);
         const videoId = uploadData.videoId; // Ovo je vraćen folder name / ID na hetzneru
+        if (uploadData.stanje === "OBRADA") await sacekajObradu(videoId, videoFile.name);
 
 
         // 2. Osvežavanje UI-ja (dodaj video selektovanoj lekciji).
@@ -272,11 +301,12 @@ export default function CourseDetail({
       }
       setShowAddVideo(null);
       setvideoFiles(null);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("Došlo je do greške prilikom uploada videa.");
+      alert(`Došlo je do greške prilikom uploada videa.\n${e?.message || ""}`);
     } finally {
       setUploadingVideo(false);
+      setVideoNapredak("");
     }
 
   };
@@ -690,11 +720,12 @@ export default function CourseDetail({
               ) : (
                 <>
                   <p className="text-xs text-neutral-500">Kliknite ili prevucite video fajl ovde</p>
-                  <p className="text-[10px] text-neutral-600 mt-1">MP4, MOV do 2GB</p>
+                  <p className="text-[10px] text-neutral-600 mt-1">MP4, MOV do 5GB (4K se automatski smanjuje na 1080p)</p>
                 </>
               )}
             </div>
           </div>
+          {videoNapredak && <p className="text-xs text-neutral-400">{videoNapredak}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <button disabled={uploadingVideo} onClick={() => { setShowAddVideo(null); setvideoFiles(null); }} className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors disabled:opacity-50">Otkaži</button>
             <button onClick={handleVideoUpload} disabled={!videoFiles || uploadingVideo} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors shadow-lg shadow-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed">

@@ -1,0 +1,324 @@
+---
+// Landing kursa "Od nule do profesionalnog rendera" po skici klijentkinje (Guska).
+// deo="vrh": naslovni ekran, "Nisi zadovoljan...", radovi polaznika, proces učenja, šta dobijaš, ista scena
+// deo="dno": tamni poziv, dileme, sertifikat
+// Program, paketi, recenzije i ostali kursevi su zajedničke sekcije stranice kursa.
+// Renderi su u public/images/kurs-render (slala ih je klijentkinja: ista scena kroz faze rada).
+import Ikona from "../novo/Ikona.astro";
+import KupiDugme from "../novo/KupiDugme.astro";
+import { manjaSlika, slikaIzBaze, srcsetSlike, type KursIzBaze, type RadPolaznika } from "../../data/sajt";
+
+interface Props {
+  deo: "vrh" | "dno";
+  kurs: KursIzBaze;
+  kupljen?: boolean;
+  imaPakete?: boolean;
+  radovi?: RadPolaznika[];
+}
+const { deo, kurs, kupljen = false, imaPakete = false, radovi = [] } = Astro.props;
+
+const slika = (ime: string) => ({
+  src: `/images/kurs-render/${ime}-1400.webp`,
+  srcset: `/images/kurs-render/${ime}-800.webp 800w, /images/kurs-render/${ime}-1400.webp 1400w`,
+});
+
+const eyebrow = "text-[11px] font-medium uppercase tracking-[0.24em] text-neutral-500";
+const naslov = "font-serif text-[34px] md:text-[46px] leading-[1.05] tracking-[-0.02em]";
+
+const faze = [
+  { ime: "model", naziv: "1. Model" },
+  { ime: "rasveta", naziv: "2. Rasveta" },
+  { ime: "finalni", naziv: "3. Finalni render" },
+];
+
+const koraci = [
+  { naziv: "Model", tekst: "Od prazne scene do pravilno postavljenog enterijera." },
+  { naziv: "Materijali", tekst: "Materijali koji izgledaju realno, a ne CGI." },
+  { naziv: "Light", tekst: "Kako da svetlom dobiješ dubinu, atmosferu i realističnost." },
+  { naziv: "Camera", tekst: "Kompozicija, kadar i perspektiva koji menjaju ceo render." },
+  { naziv: "Final render", tekst: "Corona podešavanja i optimizacija scene." },
+  { naziv: "Presentation", tekst: "Kako rad pripremiti za portfolio i predstaviti se kao profesionalac." },
+];
+
+const dobijas = [
+  { ikona: "monitorPlay", naziv: "Kompletan video kurs", tekst: "Gledaš svojim tempom, kad god želiš." },
+  { ikona: "katanac", naziv: "Neograničen pristup", tekst: "Možeš da se vraćaš lekcijama koliko god puta želiš." },
+  { ikona: "folder", naziv: "Scene i fajlovi za vežbu", tekst: "Na realnim primerima, zajedno sa predavačem." },
+  { ikona: "kocka", naziv: "3D modeli, teksture i materijali", tekst: "Već spremljene, gotove biblioteke." },
+  { ikona: "playKvadrat", naziv: "Video sesije", tekst: "Direktan kontakt i feedback na tvoj rad." },
+];
+
+const dileme = [
+  { pitanje: "AI će nas zameniti?", odgovor: "Neće. AI ne može verno da izmodeluje prostor i nameštaj po meri, može samo da pomogne u vidu prezentacije." },
+  { pitanje: "Skupo?", odgovor: "Cena kursa je cena jedne do dve slike rendera koje prodaješ klijentu." },
+  { pitanje: "Nemam vremena da gledam?", odgovor: "Više vremena će ti trebati da učiš sam." },
+  { pitanje: "Sertifikat?", odgovor: "Da, kada odradiš završni zadatak." },
+  { pitanje: "Dokaz?", odgovor: "Pogledaj radove naših polaznika.", link: "/radovi" },
+];
+
+// traka radova polaznika: najviše 5; avatari u naslovnom ekranu su isečci istih radova
+const trakaRadova = radovi.filter((r) => r.url).slice(0, 5);
+const hero = slika("hero");
+---
+
+{
+  deo === "vrh" && (
+    <Fragment>
+      {/* NASLOVNI EKRAN */}
+      <section class="relative bg-white overflow-hidden" aria-labelledby="render-naslov">
+        <div class="max-w-[1300px] mx-auto px-5 md:px-10 grid lg:grid-cols-[0.9fr_1.1fr] items-center gap-10 lg:gap-14 pt-10 md:pt-14 pb-14 lg:pb-0">
+          <div class="s27-ulaz lg:py-20">
+            <h1 id="render-naslov" class="font-serif text-[46px] sm:text-[58px] lg:text-[68px] leading-[0.98] tracking-[-0.025em]">
+              Nauči da praviš rendere koji se ističu.
+            </h1>
+            <p class="mt-6 max-w-[440px] text-[15px] leading-relaxed text-neutral-700">
+              Kompletan online kurs 3ds Max + Corona Renderer koji će te voditi kroz ceo proces – od modela do profesionalnog rendera.
+            </p>
+            <div class="mt-8 flex flex-wrap items-center gap-3">
+              <a href="#program" class="group inline-flex items-center gap-3 bg-neutral-900 px-7 py-4 text-[12.5px] font-semibold uppercase tracking-[0.08em] text-white hover:bg-black transition-colors">
+                Pogledaj program kursa
+                <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </a>
+              <KupiDugme
+                kurs={kurs}
+                kupljen={kupljen}
+                naPakete={imaPakete}
+                class="inline-flex items-center gap-3 border border-neutral-900 px-7 py-4 text-[12.5px] font-semibold uppercase tracking-[0.08em] hover:bg-neutral-900 hover:text-white transition-colors"
+              />
+            </div>
+            {trakaRadova.length >= 3 && (
+              <div class="mt-8 flex items-center gap-3">
+                <div class="flex -space-x-2.5">
+                  {trakaRadova.slice(0, 4).map((r) => (
+                    <img src={manjaSlika(slikaIzBaze(r.url), 480)} alt="" loading="lazy" class="s27-krug w-9 h-9 rounded-full object-cover ring-2 ring-white" />
+                  ))}
+                </div>
+                <p class="text-[13px] text-neutral-600">250+ polaznika</p>
+              </div>
+            )}
+          </div>
+          <div class="relative h-[340px] sm:h-[460px] lg:h-[640px] -mx-5 md:mx-0 lg:-mr-[max(0px,calc((100vw_-_1300px)/2_+_40px))]">
+            <img
+              src={hero.src}
+              srcset={hero.srcset}
+              sizes="(min-width: 1024px) 58vw, 100vw"
+              alt="Render enterijera iz kursa 3ds Max + Corona – Studio 27"
+              class="s27-zum h-full w-full object-cover"
+              fetchpriority="high"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* NISI ZADOVOLJAN SVOJIM RENDERIMA: ista scena kroz faze rada */}
+      <section class="bg-white border-t border-neutral-100" aria-labelledby="render-problem">
+        <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24 grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-14 items-center">
+          <div class="pojava">
+            <h2 id="render-problem" class={naslov}>Nisi zadovoljan svojim dosadašnjim renderima?</h2>
+            <div class="mt-6 space-y-3 text-[15px] leading-relaxed text-neutral-700">
+              <p>Problem nije u jednom podešavanju.</p>
+              <p>Render je ceo proces — od modela, materijala i svetla do kamere, kompozicije i postprodukcije.</p>
+              <p>Na ovom kursu prolazimo kroz ceo workflow kako bi rezultati konačno izgledali onako kako želiš.</p>
+            </div>
+          </div>
+          <ol class="grid grid-cols-3 gap-2 md:gap-3">
+            {faze.map((f, i) => {
+              const s = slika(f.ime);
+              return (
+                <li class="pojava" style={`--kasnjenje:${i * 0.08}s`}>
+                  <img src={s.src} srcset={s.srcset} sizes="(min-width: 1024px) 22vw, 33vw" alt={`${f.naziv} – ista scena kroz faze rada`} loading="lazy" class="aspect-[3/4] w-full object-cover" />
+                  <p class="mt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-800">{f.naziv}</p>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </section>
+
+      {/* RADOVI POLAZNIKA */}
+      {trakaRadova.length > 0 && (
+        <section class="bg-[#f7f6f3]" aria-labelledby="render-radovi">
+          <div class="max-w-[1300px] mx-auto px-5 md:px-10 pt-16 md:pt-20 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div class="pojava">
+              <p class={eyebrow}>Radovi polaznika Studio 27</p>
+              <h2 id="render-radovi" class:list={[naslov, "mt-4 max-w-[760px]"]}>Od prvog modela do rendera koji možeš da staviš u portfolio.</h2>
+            </div>
+            <a href="/radovi" class="group self-start md:self-auto inline-flex items-center gap-2 border border-neutral-900 px-5 py-3 text-[11.5px] font-semibold uppercase tracking-[0.1em] hover:bg-neutral-900 hover:text-white transition-colors">
+              Pogledaj više radova
+              <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </a>
+          </div>
+          <ul class="flex gap-2 md:gap-3 overflow-x-auto snap-x snap-mandatory px-5 md:px-10 pb-16 md:pb-20 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {trakaRadova.map((r, i) => (
+              <li class="pojava snap-start shrink-0 w-[70%] sm:w-[40%] lg:w-[calc((100%-48px)/5)]" style={`--kasnjenje:${i * 0.06}s`}>
+                <img
+                  src={manjaSlika(slikaIzBaze(r.url), 800)}
+                  srcset={srcsetSlike(slikaIzBaze(r.url), 1200)}
+                  sizes="(min-width: 1024px) 20vw, 70vw"
+                  alt={`Render polaznika${r.ime ? ` ${r.ime}` : ""} – kurs 3ds Max + Corona, Studio 27`}
+                  loading="lazy"
+                  class="aspect-[4/5] w-full object-cover"
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* PROCES UČENJA */}
+      <section class="bg-white" aria-labelledby="render-proces">
+        <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24">
+          <div class="grid lg:grid-cols-[1.2fr_0.8fr] gap-6 lg:gap-16 items-end">
+            <div class="pojava">
+              <p class={eyebrow}>Kako izgleda proces učenja</p>
+              <h2 id="render-proces" class:list={[naslov, "mt-4"]}>Ne učiš samo softver.<br />Učiš kako nastaje dobra slika.</h2>
+            </div>
+            <p class="pojava text-[14.5px] leading-relaxed text-neutral-700" style="--kasnjenje:0.1s">
+              Kroz jasno strukturisan proces prolazimo zajedno od prazne scene do finalnog rendera, uz objašnjenja zašto svaka odluka u tom procesu utiče na rezultat.
+            </p>
+          </div>
+          <ol class="relative mt-12 md:mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-6 lg:gap-6">
+            <span class="absolute left-0 right-0 top-[5px] hidden lg:block h-px bg-neutral-900" aria-hidden="true"></span>
+            {koraci.map((k, i) => (
+              <li class="pojava relative" style={`--kasnjenje:${i * 0.06}s`}>
+                <span class="s27-krug relative block w-[11px] h-[11px] rounded-full bg-neutral-900" aria-hidden="true"></span>
+                <p class="mt-4 font-serif text-[15px] text-neutral-400">{String(i + 1).padStart(2, "0")}</p>
+                <h3 class="mt-1 text-[13px] font-semibold uppercase tracking-[0.1em] text-neutral-900">{k.naziv}</h3>
+                <p class="mt-2 text-[13.5px] leading-relaxed text-neutral-600">{k.tekst}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* ŠTA DOBIJAŠ */}
+      <section class="bg-[#f7f6f3]" aria-labelledby="render-dobijas">
+        <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24">
+          <div class="pojava">
+            <p class={eyebrow}>Šta dobijaš</p>
+            <h2 id="render-dobijas" class:list={[naslov, "mt-4 max-w-[820px]"]}>Sve što ti treba da počneš i da nastaviš da koristiš i nakon kursa.</h2>
+          </div>
+          <ul class="mt-10 md:mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+            {dobijas.map((d, i) => (
+              <li class="pojava flex gap-4 lg:flex-col lg:gap-5 bg-white border border-neutral-200 p-6" style={`--kasnjenje:${i * 0.06}s`}>
+                <Ikona ime={d.ikona} class="w-7 h-7 shrink-0 text-neutral-900" />
+                <div>
+                  <h3 class="text-[15px] font-semibold leading-snug text-neutral-900">{d.naziv}</h3>
+                  <p class="mt-2 text-[13.5px] leading-relaxed text-neutral-600">{d.tekst}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ISTA SCENA, DRUGAČIJI REZULTAT: pre / posle */}
+      <section class="bg-white" aria-labelledby="render-ista-scena">
+        <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24 grid lg:grid-cols-[0.75fr_1.25fr] gap-10 lg:gap-14 items-center">
+          <div class="pojava">
+            <h2 id="render-ista-scena" class={naslov}>Ista scena.<br />Potpuno drugačiji rezultat.</h2>
+            <p class="mt-6 text-[15px] leading-relaxed text-neutral-700">
+              Kurs te ne uči da kopiraš tuđa podešavanja. Uči zašto određeni kadar, svetlo, materijal ili podešavanje funkcioniše – kako bi isto mogao/la da primeniš na svojim projektima.
+            </p>
+          </div>
+          <div class="pojava relative grid grid-cols-2 gap-2 md:gap-3" style="--kasnjenje:0.1s">
+            {[
+              { ime: "pre", oznaka: "Pre" },
+              { ime: "posle", oznaka: "Posle" },
+            ].map((p) => {
+              const s = slika(p.ime);
+              return (
+                <figure class="relative">
+                  <img src={s.src} srcset={s.srcset} sizes="(min-width: 1024px) 30vw, 50vw" alt={`${p.oznaka} – ista scena, render iz kursa`} loading="lazy" class="aspect-[4/3] w-full object-cover" />
+                  <figcaption class="absolute right-3 top-3 bg-black/70 px-3 py-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-white">{p.oznaka}</figcaption>
+                </figure>
+              );
+            })}
+            <span class="s27-krug absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 grid place-items-center w-11 h-11 rounded-full bg-white shadow-md" aria-hidden="true">
+              <Ikona ime="strelica" class="w-4 h-4" />
+            </span>
+          </div>
+        </div>
+      </section>
+    </Fragment>
+  )
+}
+
+{
+  deo === "dno" && (
+    <Fragment>
+      {/* TAMNI POZIV */}
+      <section class="relative overflow-hidden bg-[#1a1512] text-white" aria-labelledby="render-poziv">
+        <img
+          src={slika("posle").src}
+          srcset={slika("posle").srcset}
+          sizes="100vw"
+          alt=""
+          loading="lazy"
+          class="absolute inset-0 h-full w-full object-cover opacity-60"
+        />
+        <div class="absolute inset-0 bg-gradient-to-r from-[#140f0c]/95 via-[#140f0c]/70 to-[#140f0c]/10"></div>
+        <div class="relative max-w-[1300px] mx-auto px-5 md:px-10 py-20 md:py-28">
+          <h2 id="render-poziv" class="pojava max-w-[620px] font-serif text-[34px] md:text-[48px] leading-[1.05] tracking-[-0.02em]">
+            Sledeći render koji napraviš može izgledati potpuno drugačije.
+          </h2>
+          <p class="pojava mt-5 max-w-[480px] text-[15px] leading-relaxed text-white/80" style="--kasnjenje:0.1s">
+            Ne treba ti još jedan nasumičan tutorijal. Treba ti proces koji možeš da ponoviš na svakom projektu.
+          </p>
+          <button
+            type="button"
+            data-otvori-kontakt
+            class="pojava cursor-pointer mt-8 inline-flex items-center gap-3 bg-white px-7 py-4 text-[13px] font-semibold text-neutral-900 hover:bg-neutral-200 transition-colors"
+            style="--kasnjenje:0.2s"
+          >
+            Imaš pitanje? Pošalji poruku
+            <Ikona ime="strelica" class="w-4 h-4" />
+          </button>
+        </div>
+      </section>
+
+      {/* DILEME */}
+      <section class="bg-white border-b border-neutral-100" aria-labelledby="render-dileme">
+        <div class="max-w-[1300px] mx-auto px-5 md:px-10 py-14 md:py-16">
+          <h2 id="render-dileme" class="pojava text-[13px] font-semibold uppercase tracking-[0.2em] text-neutral-900">Dileme?</h2>
+          <dl class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-5 lg:gap-0 lg:divide-x lg:divide-neutral-200">
+            {dileme.map((d, i) => (
+              <div class="pojava lg:px-6 first:lg:pl-0" style={`--kasnjenje:${i * 0.06}s`}>
+                <dt class="text-[14px] font-semibold text-neutral-900">{d.pitanje}</dt>
+                <dd class="mt-2 text-[13.5px] leading-relaxed text-neutral-600">
+                  {d.link ? (
+                    <a href={d.link} class="underline underline-offset-4 hover:no-underline">{d.odgovor}</a>
+                  ) : (
+                    d.odgovor
+                  )}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* SERTIFIKAT */}
+      <section class="relative overflow-hidden bg-[#f4f2ee]" aria-labelledby="render-sertifikat">
+        <img
+          src={slika("kancelarija").src}
+          srcset={slika("kancelarija").srcset}
+          sizes="(min-width: 1024px) 45vw, 100vw"
+          alt=""
+          loading="lazy"
+          class="absolute inset-y-0 right-0 hidden md:block h-full w-[45%] object-cover"
+        />
+        <div class="absolute inset-y-0 right-0 hidden md:block w-[45%] bg-gradient-to-r from-[#f4f2ee] via-[#f4f2ee]/40 to-transparent"></div>
+        <div class="relative max-w-[1300px] mx-auto px-5 md:px-10 py-16 md:py-24">
+          <div class="pojava max-w-[560px]">
+            <p class={eyebrow}>Sertifikat</p>
+            <h2 id="render-sertifikat" class:list={[naslov, "mt-4"]}>Dobijaš sertifikat po završetku kursa.</h2>
+            <p class="mt-5 text-[15px] leading-relaxed text-neutral-700">
+              Nakon odslušanog kursa i završenog projekta, dobijaš sertifikat Studio 27 kao potvrdu stečenog znanja.
+            </p>
+          </div>
+        </div>
+      </section>
+    </Fragment>
+  )
+}
