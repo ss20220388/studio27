@@ -56,8 +56,13 @@ const dileme = [
   { pitanje: "Dokaz?", odgovor: "Pogledaj radove naših polaznika.", link: "/radovi" },
 ];
 
-// traka radova polaznika: najviše 5; avatari u naslovnom ekranu su isečci istih radova
-const trakaRadova = radovi.filter((r) => r.url).slice(0, 5);
+// traka radova polaznika: radovi polaznice koju je izabrala klijentkinja (ako ih ima bar 3), inače prvi radovi;
+// najviše 5, avatari u naslovnom ekranu su isečci istih radova
+const ISTAKNUTI_POLAZNIK = "mina jeremić";
+const imePolaznika = (r: RadPolaznika) => `${r.ime || ""} ${r.prezime || ""}`.trim().toLowerCase();
+const sviSaSlikom = radovi.filter((r) => r.url);
+const istaknuti = sviSaSlikom.filter((r) => imePolaznika(r) === ISTAKNUTI_POLAZNIK);
+const trakaRadova = (istaknuti.length >= 3 ? istaknuti : sviSaSlikom).slice(0, 5);
 const hero = slika("hero");
 ---
 
