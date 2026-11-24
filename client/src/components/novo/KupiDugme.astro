@@ -1,6 +1,6 @@
 ---
 import Ikona from "./Ikona.astro";
-import { APP_URL, imaCenu, type KursIzBaze } from "../../data/sajt";
+import { APP_URL, cenaKursa, imaCenu, popustKursa, type KursIzBaze } from "../../data/sajt";
 
 // Glavno dugme kursa (isto ponašanje kao na starom sajtu):
 // - kupljen kurs   -> otvara web aplikaciju
@@ -22,7 +22,8 @@ const zaKorpu = imaCenu(kurs)
       id: kurs!.id,
       title: kurs!.naziv || "Kurs",
       subtitle: kurs!.opis || "",
-      price: kurs!.cena,
+      price: cenaKursa(kurs),
+      ...(popustKursa(kurs) ? { oldPrice: kurs!.cena } : {}),
       image: kurs!.slikaUrl || "",
     })
   : "";

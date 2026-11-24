@@ -15,15 +15,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.server.studio27.services.PopustService;
+
 // Paketi kursa (npr. Online / Online + Review / Live mentorship): svaki ima svoju cenu i stavke.
 // Čitanje je javno (stranica kursa), izmene sme samo admin.
 @RestController
 @RequestMapping("/api")
 public class PaketRoute {
     private final JdbcTemplate jdbcTemplate;
+    private final PopustService popustService;
 
-    public PaketRoute(JdbcTemplate jdbcTemplate) {
+    public PaketRoute(JdbcTemplate jdbcTemplate, PopustService popustService) {
         this.jdbcTemplate = jdbcTemplate;
+        this.popustService = popustService;
     }
 
     private static boolean jeAdmin(Authentication authentication) {
@@ -33,9 +37,15 @@ public class PaketRoute {
 
     @GetMapping("/paketi/{kursId}")
     public List<Map<String, Object>> paketiKursa(@PathVariable long kursId) {
-        return jdbcTemplate.queryForList(
-                "SELECT paketId, kursId, naziv, cena, opis, redosled, podnaslov, uvod, istaknuto, dugme FROM paket WHERE kursId = ? ORDER BY redosled, paketId",
+        List<Map<String, Object>> paketi = jdbcTemplate.queryForList(
+                "SELECT paketId, kursId, naziv, cena, opis, redosled, podnaslov, uvod, istaknuto, dugme, cenaPopust FROM paket WHERE kursId = ? ORDER BY redosled, paketId",
                 kursId);
+        // cena sa popustom kursa (null ako popust ne traje)
+        Map<Long, Integer> saPopustom = popustService.ceneSaPopustomPaketa(kursId);
+        for (Map<String, Object> p : paketi) {
+            p.put("cenaSaPopustom", saPopustom.get(((Number) p.get("paketId")).longValue()));
+        }
+        return paketi;
     }
 
     @PostMapping("/paketi")

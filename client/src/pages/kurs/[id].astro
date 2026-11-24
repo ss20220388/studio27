@@ -12,7 +12,11 @@ import RenderLanding from "../../components/kurs/RenderLanding.astro";
 import Paketi from "../../components/kurs/Paketi.astro";
 import InstagramRecenzije from "../../components/novo/InstagramRecenzije.astro";
 import GlasovneRecenzije from "../../components/novo/GlasovneRecenzije.astro";
+import PopustTraka from "../../components/novo/PopustTraka.astro";
 import {
+  cenaKursa,
+  cenaPaketa,
+  popustKursa,
   API_URL,
   CLIENT_URL,
   TELEFON,
@@ -117,8 +121,12 @@ const naslov = lepNaziv(kurs.naziv) || "Kurs";
 const glavna = slikaIzBaze(kurs.slikaUrl);
 const sveSlike = [glavna, ...sporedne].filter(Boolean);
 // sa paketima se prikazuje najniža cena paketa ("od 350 €")
-const najnizaCena = paketi.length ? Math.min(...paketi.map((p) => p.cena)) : kurs.cena;
+// dok traje popust (admin -> Popust) prikazuju se stara (precrtana) i nova cena
+const popust = popustKursa(kurs);
+const najnizaRedovna = paketi.length ? Math.min(...paketi.map((p) => p.cena)) : kurs.cena ?? 0;
+const najnizaCena = paketi.length ? Math.min(...paketi.map(cenaPaketa)) : cenaKursa(kurs);
 const cenaTekst = paketi.length > 1 ? `od ${najnizaCena} €` : `${najnizaCena} €`;
+const staraCenaTekst = popust ? (paketi.length > 1 ? `od ${najnizaRedovna} €` : `${najnizaRedovna} €`) : "";
 const saCenom = imaCenu(kurs);
 const pasusi = (tekst?: string) => (tekst || "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 const uvod = pasusi(kurs.komentarSredina);
@@ -400,7 +408,7 @@ const dugmeOkvir =
   keywords={kljucneReci}
   image={sveSlike[0] || undefined}
   glavnaSlika={glavna ? { src: manjaSlika(glavna, 1600), srcset: srcsetSlike(glavna), sizes: aiKurs ? "100vw" : "(min-width: 1024px) 62vw, 100vw" } : undefined}
-  poppins={aiKurs}
+  poppins={aiKurs || !!popust}
   imageAlt={`${naslov} – Studio 27`}
   canonicalURL={canonicalUrl}
   breadcrumbs={[
@@ -411,6 +419,7 @@ const dugmeOkvir =
   faq={pitanja}
 >
   <main class="bg-white text-neutral-900">
+    {popust && <PopustTraka kurs={kurs} kupljen={kupljen} imaPakete={paketi.length > 0} staraCena={najnizaRedovna} novaCena={najnizaCena} />}
     {aiKurs && <AiHero kurs={kurs} slika={glavna} kupljen={kupljen} />}
     {aiKurs && <AiOpis kurs={kurs} kupljen={kupljen} />}
 
@@ -474,7 +483,9 @@ const dugmeOkvir =
             {
               saCenom ? (
                 <>
-                  Cena kursa: <strong class="font-serif text-[22px] font-normal text-neutral-900">{cenaTekst}</strong>
+                  Cena kursa:{" "}
+                  {staraCenaTekst && <s class="mr-1.5 text-neutral-400">{staraCenaTekst}</s>}
+                  <strong class="font-serif text-[22px] font-normal text-neutral-900">{cenaTekst}</strong>
                 </>
               ) : (
                 <>
@@ -723,7 +734,10 @@ const dugmeOkvir =
             <div class="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
               {
                 saCenom ? (
-                  <p class="font-serif text-[34px] leading-none">{cenaTekst}</p>
+                  <p class="font-serif text-[34px] leading-none">
+                    {staraCenaTekst && <s class="mr-2 text-[22px] text-neutral-400">{staraCenaTekst}</s>}
+                    {cenaTekst}
+                  </p>
                 ) : (
                   <p class="max-w-[260px] text-[13px] leading-relaxed text-neutral-700">
                     Za više informacija javite se na{" "}
@@ -892,7 +906,7 @@ const dugmeOkvir =
                   )}
                   <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
                   <div class="absolute top-5 right-5 border border-white/40 bg-black/25 backdrop-blur-sm px-3 py-1.5 text-[12px] tracking-wide text-white">
-                    {imaCenu(k) ? `${k.cena} €` : "Cena na upit"}
+                    {imaCenu(k) ? (popustKursa(k) ? <Fragment><s class="mr-1.5 text-white/60">{k.cena} €</s>{cenaKursa(k)} €</Fragment> : `${k.cena} €`) : "Cena na upit"}
                   </div>
                   <div class="absolute inset-x-0 bottom-0 p-6 text-white">
                     {k.glavniKurs && <p class="text-[11px] uppercase tracking-[0.2em] text-white/75">{k.glavniKurs}</p>}

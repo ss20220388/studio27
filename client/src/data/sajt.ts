@@ -35,7 +35,67 @@ export type KursIzBaze = {
   komentarSredina?: string;
   komentarDole?: string;
   lekcije?: Lekcija[];
+  popust?: PopustKursa | null;
 };
+
+// Popust kursa (Black Friday i sl.) iz admina; "traje" i "novaCena" računa server
+export type PopustKursa = {
+  traje: boolean;
+  procenat: number | null;
+  novaCena: number | null;
+  doMs: number | null; // kraj popusta (ms od 1970) ili null = dok se ne isključi
+  oznaka?: string | null;
+  naslov?: string | null;
+  tekst?: string | null;
+  boja?: string | null;
+  slika?: string | null;
+};
+
+// Akcija na početnoj (admin -> Kursevi -> Akcija na početnoj): poseban vizual, nezavisan od kursa
+export type Akcija = {
+  traje: boolean;
+  doMs: number | null;
+  oznaka?: string | null;
+  naslov?: string | null;
+  tekst?: string | null;
+  boja?: string | null;
+  slika?: string | null;
+  dugme?: string | null;
+  link?: string | null;
+};
+
+export async function ucitajAkciju(): Promise<Akcija | null> {
+  try {
+    const a: Akcija = await apiJson("/api/akcija");
+    return a?.traje && a.naslov ? a : null;
+  } catch {
+    return null;
+  }
+}
+
+// Popust koji trenutno važi, ili null
+export function popustKursa(kurs: { popust?: PopustKursa | null } | null | undefined): PopustKursa | null {
+  const p = kurs?.popust;
+  return p?.traje && p.novaCena && p.novaCena > 0 ? p : null;
+}
+
+// Cena koju kupac plaća (sa popustom ako traje)
+export function cenaKursa(kurs: { cena?: number; popust?: PopustKursa | null } | null | undefined) {
+  return popustKursa(kurs)?.novaCena ?? kurs?.cena ?? 0;
+}
+
+export function cenaPaketa(p: { cena: number; cenaSaPopustom?: number | null }) {
+  return p.cenaSaPopustom ?? p.cena;
+}
+
+export function procenatPopusta(p: PopustKursa) {
+  return Math.round(Number(p.procenat) || 0);
+}
+
+// boja akcenta iz admina (samo #rgb / #rrggbb), podrazumevano topla zlatna sa sajta
+export function bojaPopusta(p: { boja?: string | null } | null | undefined) {
+  return p?.boja && /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(p.boja) ? p.boja : "#c49a5a";
+}
 
 // Slike kursa iz baze: glavna (kurs.slikaUrl) i ostale/sporedne (tabela kursslika)
 export type SlikeKursa = { glavna: string; sporedne: string[] };
@@ -178,6 +238,7 @@ export type PaketKursa = {
   uvod?: string | null;
   istaknuto?: string | null;
   dugme?: string | null;
+  cenaSaPopustom?: number | null; // cena paketa sa popustom kursa (null ako popust ne traje)
 };
 
 export async function ucitajPakete(kursId: number | null): Promise<PaketKursa[]> {

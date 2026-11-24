@@ -85,8 +85,18 @@ const KursDetaljiModal = ({
                         
                         {kurs.cena > 0 && !pohadjanje && (
                             <div className="inline-block bg-neutral-800/80 border border-neutral-700 backdrop-blur-md rounded-xl mt-4 px-6 py-3">
-                                <div className="text-sm text-neutral-400 font-medium">Cena Kursa</div>
-                                <div className="text-3xl font-bold text-red-500">{kurs.cena} <span className="text-lg">EUR</span></div>
+                                <div className="text-sm text-neutral-400 font-medium">
+                                    Cena Kursa
+                                    {kurs.popust?.traje && (
+                                        <span className="ml-2 rounded bg-red-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
+                                            {(kurs.popust.oznaka || "Popust").toUpperCase()} -{Math.round(kurs.popust.procenat)}%
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="text-3xl font-bold text-red-500">
+                                    {kurs.popust?.traje && <span className="mr-2 text-lg font-medium text-neutral-500 line-through">{kurs.cena}</span>}
+                                    {kurs.popust?.traje ? kurs.popust.novaCena : kurs.cena} <span className="text-lg">EUR</span>
+                                </div>
                             </div>
                         )}
                     </div>

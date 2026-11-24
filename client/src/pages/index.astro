@@ -10,12 +10,16 @@ import RadoviIUtisci from "../components/pocetna/RadoviIUtisci.astro";
 import Pitanja from "../components/pocetna/Pitanja.astro";
 import SeoTekst from "../components/pocetna/SeoTekst.astro";
 
-import { CLIENT_URL, imaCenu, kursPutanja, lepNaziv, manjaSlika, slikaIzBaze, srcsetSlike, ucitajKurseve, ucitajSporedneSlike } from "../data/sajt";
+import PopustTraka from "../components/novo/PopustTraka.astro";
+import AkcijaVizual from "../components/novo/AkcijaVizual.astro";
+import { CLIENT_URL, ucitajAkciju, cenaKursa, imaCenu, popustKursa, kursPutanja, lepNaziv, manjaSlika, slikaIzBaze, srcsetSlike, ucitajKurseve, ucitajSporedneSlike } from "../data/sajt";
 
 const SITE_URL = CLIENT_URL;
 
 // Svi kursevi i sve njihove slike dolaze iz baze (glavna slika + ostale slike kursa)
-const kursevi = await ucitajKurseve();
+const [kursevi, akcija] = await Promise.all([ucitajKurseve(), ucitajAkciju()]);
+// bez akcije, iznad menija se najavljuje prvi kurs sa popustom
+const najavaKursa = akcija ? null : kursevi.find((k) => popustKursa(k)) ?? null;
 const sporedne = await Promise.all(kursevi.map((k) => ucitajSporedneSlike(k.id)));
 
 // Slajdovi: za svaki kurs prva od ostalih slika (veće su), a ako ih nema, glavna slika
@@ -71,7 +75,7 @@ const kurseviZaSeo = kursevi.map((k) => ({
   opis: (k.opis || k.komentarSredina || "").replace(/\s+/g, " ").slice(0, 300).trim(),
   slika: slikaIzBaze(k.slikaUrl),
   url: `${SITE_URL}${kursPutanja(k)}`,
-  cena: imaCenu(k) ? k.cena : null,
+  cena: imaCenu(k) ? cenaKursa(k) : null,
   uzivo: !!k.komentarGore?.toUpperCase().includes("UŽIVO"),
 }));
 
@@ -149,10 +153,15 @@ const orgSchema = {
 >
   <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
 
-  <Zaglavlje slot="zaglavlje" preko />
+  <Zaglavlje slot="zaglavlje" preko>
+    {/* iznad menija: akcija sa početne, a bez nje prvi kurs sa popustom */}
+    {akcija && <AkcijaVizual slot="najava" akcija={akcija} varijanta="traka" />}
+    {najavaKursa && <PopustTraka slot="najava" kurs={najavaKursa} varijanta="najava" />}
+  </Zaglavlje>
 
   <main class="bg-white text-neutral-900">
     <Hero slajdovi={slajdovi} />
+    {akcija && <AkcijaVizual akcija={akcija} kursevi={kursevi} />}
     <Kursevi kursevi={kursevi} />
     <KvizPoziv />
     <ZastoStudio slike={sveSporedne.slice(0, 2)} />

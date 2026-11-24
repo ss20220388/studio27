@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.server.studio27.models.Kurs;
 import com.server.studio27.models.Lekcija;
+import com.server.studio27.services.PopustService;
 
 @RestController
 public class KursController {
@@ -24,10 +25,17 @@ public class KursController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private PopustService popustService;
+
     public ResponseEntity<Map<String, Object>> getAllKursevi() {
         try {
             String SQL = "Select * from kurs ORDER BY redosled ASC";
             List<Map<String, Object>> result = jdbcTemplate.queryForList(SQL);
+            Map<Integer, Map<String, Object>> popusti = popustService.sviKursevi();
+            for (Map<String, Object> red : result) {
+                red.put("popust", popusti.get(((Number) red.get("kursId")).intValue()));
+            }
             Map<String, Object> response = Map.of("kursevi", result);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -206,7 +214,7 @@ public class KursController {
                     (String) first.get("komentarSredina"),
                     (String) first.get("komentarGore"),
                     lekcije);
-            
+            kurs.setPopust(popustService.zaKurs(kurs.getId()));
 
             return ResponseEntity.ok(kurs);
 
@@ -326,8 +334,10 @@ public class KursController {
         Map<Integer, Integer> brojPoKursu = new HashMap<>();
         jdbcTemplate.query("SELECT kursId, COUNT(DISTINCT studentId) AS broj FROM pohadja GROUP BY kursId",
                 rs -> { brojPoKursu.put(rs.getInt("kursId"), rs.getInt("broj")); });
+        Map<Integer, Map<String, Object>> popusti = popustService.sviKursevi();
         for (Kurs kurs : kursevi) {
             kurs.setBrojStudenata(brojPoKursu.getOrDefault(kurs.getId(), 0));
+            kurs.setPopust(popusti.get(kurs.getId()));
         }
 
         return ResponseEntity.ok(kursevi);

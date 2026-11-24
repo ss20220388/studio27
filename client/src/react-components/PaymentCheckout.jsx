@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { osveziCeneKorpe } from "./ceneKorpe";
 
 export default function UplatnicaCheckout({ onSuccess = null , onBack= null,API_URL, token }) {
   const [tab, setTab] = useState("srb"); // 'srb' ili 'eng'
@@ -34,7 +35,7 @@ export default function UplatnicaCheckout({ onSuccess = null , onBack= null,API_
 
       try {
         const parsedCart = JSON.parse(rawCart);
-        if (Array.isArray(parsedCart) && parsedCart.length > 0) {
+        const postavi = (parsedCart) => {
           setCartList(parsedCart);
 
           // Izračunavanje ukupne cene u EUR i RSD
@@ -55,6 +56,11 @@ export default function UplatnicaCheckout({ onSuccess = null , onBack= null,API_
             .map((item) => `${item.title || item.naslov || item.naziv} (${Number(item.price || item.cena) || 0} EUR)`)
             .join(", ");
           setNazivEng(spisakEng);
+        };
+        if (Array.isArray(parsedCart) && parsedCart.length > 0) {
+          postavi(parsedCart);
+          // trenutne cene sa servera (popust je mogao da počne ili istekne)
+          osveziCeneKorpe(API_URL, parsedCart).then((nova) => nova !== parsedCart && postavi(nova));
         }
       } catch (err) {
         console.error("Greška pri parsiranju korpe iz localStorage-a:", err);

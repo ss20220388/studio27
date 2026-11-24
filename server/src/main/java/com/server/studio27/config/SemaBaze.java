@@ -74,6 +74,40 @@ public class SemaBaze implements ApplicationRunner {
             "ALTER TABLE recenzija ADD COLUMN trajanje INT NULL",
             "ALTER TABLE recenzija ADD COLUMN talas VARCHAR(200) NULL",
             "ALTER TABLE recenzija ADD COLUMN slikaUrl VARCHAR(255) NULL"
+        )),
+        // popust kursa (Black Friday i sl.): procenat važi i za pakete, nova cena za sam kurs;
+        // popustDo je kraj popusta po beogradskom vremenu (prazno = dok se ne isključi);
+        // oznaka/naslov/tekst/boja/slika su izgled popusta na sajtu
+        new Korak("2026-11-24-popust-kursa", List.of(
+            "ALTER TABLE kurs ADD COLUMN popustUkljucen TINYINT(1) NOT NULL DEFAULT 0",
+            "ALTER TABLE kurs ADD COLUMN popustProcenat DECIMAL(5,2) NULL",
+            "ALTER TABLE kurs ADD COLUMN popustCena INT NULL",
+            "ALTER TABLE kurs ADD COLUMN popustDo DATETIME NULL",
+            "ALTER TABLE kurs ADD COLUMN popustOznaka VARCHAR(60) NULL",
+            "ALTER TABLE kurs ADD COLUMN popustNaslov VARCHAR(200) NULL",
+            "ALTER TABLE kurs ADD COLUMN popustTekst VARCHAR(600) NULL",
+            "ALTER TABLE kurs ADD COLUMN popustBoja VARCHAR(20) NULL",
+            "ALTER TABLE kurs ADD COLUMN popustSlika VARCHAR(255) NULL"
+        )),
+        // svaki paket ima svoju cenu na popustu (prazno = procenat popusta kursa);
+        // akcija = poseban vizual na početnoj (npr. Black Friday), nezavisan od kursa, jedan red (id = 1)
+        new Korak("2026-11-24-popust-paketa-i-akcija", List.of(
+            "ALTER TABLE paket ADD COLUMN cenaPopust INT NULL",
+            """
+            CREATE TABLE IF NOT EXISTS akcija (
+                id INT NOT NULL PRIMARY KEY,
+                ukljucen TINYINT(1) NOT NULL DEFAULT 0,
+                oznaka VARCHAR(60) NULL,
+                naslov VARCHAR(200) NULL,
+                tekst VARCHAR(600) NULL,
+                boja VARCHAR(20) NULL,
+                slika VARCHAR(255) NULL,
+                doKada DATETIME NULL,
+                dugme VARCHAR(60) NULL,
+                link VARCHAR(255) NULL
+            ) DEFAULT CHARSET=utf8mb4
+            """,
+            "INSERT IGNORE INTO akcija (id) VALUES (1)"
         ))
     );
 

@@ -2,7 +2,7 @@
 // Kursevi iz baze u mreži 2×2 (po skici klijentkinje): velika slika kursa,
 // naslov, softver i kratka poruka preko fotografije, dole poziv na kurs (bez cene).
 import Ikona from "../novo/Ikona.astro";
-import { kursPutanja, lepNaziv, manjaSlika, slikaIzBaze, srcsetSlike, type KursIzBaze } from "../../data/sajt";
+import { bojaPopusta, kursPutanja, lepNaziv, manjaSlika, popustKursa, procenatPopusta, slikaIzBaze, srcsetSlike, type KursIzBaze } from "../../data/sajt";
 
 interface Props {
   kursevi: KursIzBaze[];
@@ -61,6 +61,7 @@ const kartice = Astro.props.kursevi
     naziv: lepNaziv(k.naziv),
     softver: k.glavniKurs && !/^OD\s/i.test(k.glavniKurs) ? lepNaziv(k.glavniKurs) : v === "ai" || v === "mentorstvo" ? "3ds Max + Corona + AI" : "",
     slika: slikaIzBaze(k.slikaUrl),
+    popust: popustKursa(k),
     ...PORUKE[v],
   }));
 // neparan broj kurseva: poslednja kartica ide preko cele širine
@@ -108,6 +109,12 @@ const sirokaPoslednja = kartice.length > 1 && kartice.length % 2 === 1;
                 />
               )}
               <div class="absolute inset-0 bg-gradient-to-b from-black/75 via-black/15 to-black/55" />
+              {k.popust && (
+                <span class="absolute top-5 right-5 md:top-7 md:right-7 z-10 flex flex-col items-center border border-white/25 bg-[#140f0c]/80 px-4 py-3 text-white backdrop-blur-sm">
+                  <span class="text-[9.5px] font-semibold uppercase tracking-[0.24em]" style={`color:${bojaPopusta(k.popust)}`}>{k.popust.oznaka || "Popust"}</span>
+                  <span class="mt-1 font-serif text-[30px] leading-none tracking-[-0.03em]">-{procenatPopusta(k.popust)}%</span>
+                </span>
+              )}
 
               <div class="s27-senka absolute inset-x-0 top-0 p-6 md:p-8 lg:p-10 text-white">
                 {k.softver && <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/90">{k.softver}</p>}

@@ -1,0 +1,35 @@
+---
+// Odbrojavanje do kraja popusta/akcije (vrednosti upisuje scripts/odbrojavanje.ts preko data-jedinica).
+// Mora biti unutar elementa sa data-popust-traka i data-do (ms).
+interface Props {
+  naslov?: string;
+  velicina?: "mala" | "velika";
+  class?: string;
+}
+const { naslov = "Ističe za", velicina = "velika", class: klasa = "" } = Astro.props;
+const jedinice = [
+  { j: "d", tekst: "dana" },
+  { j: "h", tekst: "sati" },
+  { j: "m", tekst: "min" },
+  { j: "s", tekst: "sek" },
+];
+---
+
+<div class={klasa}>
+  <p class="text-[10.5px] font-medium uppercase tracking-[0.26em] text-white/50">{naslov}</p>
+  <div class="mt-3 inline-flex border-y border-white/15">
+    {
+      jedinice.map((u, i) => (
+        <span class:list={["flex flex-col items-center", velicina === "velika" ? "px-4 md:px-6 py-3" : "px-3 py-2", i > 0 && "border-l border-white/15"]}>
+          <span
+            data-jedinica={u.j}
+            class:list={["font-serif leading-none tabular-nums", velicina === "velika" ? "text-[30px] md:text-[38px]" : "text-[24px]"]}
+          >
+            --
+          </span>
+          <span class="mt-1.5 text-[9.5px] uppercase tracking-[0.2em] text-white/45">{u.tekst}</span>
+        </span>
+      ))
+    }
+  </div>
+</div>

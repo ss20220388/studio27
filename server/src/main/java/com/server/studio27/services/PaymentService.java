@@ -50,6 +50,7 @@ public class PaymentService {
 
     private final ResourceLoader resourceLoader;
     private final NamedParameterJdbcTemplate jdbcTemplate;
+    private final PopustService popustService;
 
     public PaymentService(
             @Value("${payment.merchant-id}") String merchantId,
@@ -61,8 +62,10 @@ public class PaymentService {
             @Value("${payment.locale:rs}") String locale,
             @Value("${payment.signature-algorithm:SHA256withRSA}") String signatureAlgorithm,
             ResourceLoader resourceLoader,
-            NamedParameterJdbcTemplate jdbcTemplate
+            NamedParameterJdbcTemplate jdbcTemplate,
+            PopustService popustService
     ) {
+        this.popustService = popustService;
         this.merchantId = merchantId;
         this.terminalId = terminalId;
         this.currencyId = currencyId;
@@ -221,19 +224,10 @@ public class PaymentService {
     // Cena i paket za jedan kurs iz narudžbine: cena paketa ako je paket tog kursa, inače cena kursa
     private record CenaKursa(BigDecimal cena, Long paketId) {}
 
+    // popust (Black Friday i sl.) se računa u PopustService, isto kao na sajtu
     private CenaKursa cenaKursa(Long kursId, Long paketId) {
-        if (paketId != null) {
-            List<BigDecimal> cenaPaketa = jdbcTemplate.queryForList(
-                    "SELECT cena FROM paket WHERE paketId = :paketId AND kursId = :kursId",
-                    new MapSqlParameterSource().addValue("paketId", paketId).addValue("kursId", kursId),
-                    BigDecimal.class);
-            if (!cenaPaketa.isEmpty()) return new CenaKursa(cenaPaketa.get(0), paketId);
-        }
-        BigDecimal cena = jdbcTemplate.queryForObject(
-                "SELECT cena FROM kurs WHERE kursId = :kursId",
-                new MapSqlParameterSource("kursId", kursId),
-                BigDecimal.class);
-        return new CenaKursa(cena, null);
+        PopustService.Cena c = popustService.cenaKursa(kursId, paketId);
+        return new CenaKursa(c.cena() == null ? null : BigDecimal.valueOf(c.cena()), c.paketId());
     }
 
     /**

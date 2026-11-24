@@ -27,6 +27,7 @@
 // value has extra decimal noise before it hits toMinorUnits() on the server.
 
 import React, { useState, useEffect } from "react";
+import { osveziCeneKorpe } from "./ceneKorpe";
 
 export default function UplatnicaCheckout({
   onBack = null,
@@ -56,10 +57,15 @@ export default function UplatnicaCheckout({
     if (typeof window === "undefined") return;
     try {
       const parsedCart = JSON.parse(localStorage.getItem("cart_items") || "[]");
-      if (Array.isArray(parsedCart) && parsedCart.length > 0) {
-        setCartList(parsedCart);
-        const eur = parsedCart.reduce((acc, item) => acc + (Number(item.price || item.cena) || 0), 0);
+      const postavi = (korpa) => {
+        setCartList(korpa);
+        const eur = korpa.reduce((acc, item) => acc + (Number(item.price || item.cena) || 0), 0);
         setTotals({ eur, rsd: eur * EUR_RSD_RATE });
+      };
+      if (Array.isArray(parsedCart) && parsedCart.length > 0) {
+        postavi(parsedCart);
+        // trenutne cene sa servera (popust je mogao da počne ili istekne)
+        osveziCeneKorpe(API_URL, parsedCart).then((nova) => nova !== parsedCart && postavi(nova));
       }
     } catch (err) {
       console.error("Greška pri čitanju korpe:", err);

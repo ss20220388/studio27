@@ -4,7 +4,7 @@
 // Tekst o kursu je napisan za ovaj kurs (u bazi je kod kursa 5 ostao tekst ranijeg kursa uživo).
 import Ikona from "../novo/Ikona.astro";
 import KupiDugme from "../novo/KupiDugme.astro";
-import { imaCenu, lepNaziv, parsirajSadrzaj, type KursIzBaze } from "../../data/sajt";
+import { cenaKursa, imaCenu, popustKursa, lepNaziv, parsirajSadrzaj, type KursIzBaze } from "../../data/sajt";
 
 interface Props {
   kurs: KursIzBaze;
@@ -106,7 +106,12 @@ const dobijas = [
     <div class="pojava mt-12 md:mt-16 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-[#1a1512] text-white px-7 py-8 md:px-10 md:py-10">
       <div>
         <p class="font-serif text-[26px] md:text-[32px] leading-tight">{naslov}</p>
-        {imaCenu(kurs) && <p class="mt-2 text-[14px] text-white/70">Kompletan online kurs · {kurs.cena} €</p>}
+        {imaCenu(kurs) && (
+          <p class="mt-2 text-[14px] text-white/70">
+            Kompletan online kurs · {popustKursa(kurs) && <s class="mr-1 text-white/45">{kurs.cena} €</s>}
+            <span class:list={[popustKursa(kurs) && "font-semibold text-white"]}>{cenaKursa(kurs)} €</span>
+          </p>
+        )}
       </div>
       <KupiDugme
         kurs={kurs}

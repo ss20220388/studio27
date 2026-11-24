@@ -1,0 +1,131 @@
+---
+// Traka popusta (Black Friday i sl.) dok popust kursa traje. Izgled se podešava u adminu
+// (Kursevi -> Izmeni -> Popust): oznaka, naslov, tekst, boja akcenta i pozadinska slika.
+// Izgled prati sajt (topla tamna pozadina, serif, tanke linije); boja iz admina je samo akcenat.
+// - na stranici kursa: traka na vrhu (procenat, stara/nova cena, odbrojavanje, dugme)
+// - na početnoj ("najava"): uska traka iznad menija koja vodi na kurs
+// Odbrojavanje radi u pregledaču; kad istekne, traka nestaje.
+import Ikona from "./Ikona.astro";
+import KupiDugme from "./KupiDugme.astro";
+import Odbrojavanje from "./Odbrojavanje.astro";
+import {
+  bojaPopusta,
+  cenaKursa,
+  kursPutanja,
+  lepNaziv,
+  manjaSlika,
+  popustKursa,
+  procenatPopusta,
+  slikaIzBaze,
+  type KursIzBaze,
+} from "../../data/sajt";
+
+interface Props {
+  kurs: KursIzBaze;
+  varijanta?: "kurs" | "najava";
+  kupljen?: boolean;
+  imaPakete?: boolean;
+  // za kurs sa paketima: najniža cena paketa pre i posle popusta
+  staraCena?: number;
+  novaCena?: number;
+}
+
+const { kurs, varijanta = "kurs", kupljen = false, imaPakete = false } = Astro.props;
+const popust = popustKursa(kurs);
+const boja = bojaPopusta(popust);
+const procenat = popust ? procenatPopusta(popust) : 0;
+const staraCena = Astro.props.staraCena ?? kurs.cena ?? 0;
+const novaCena = Astro.props.novaCena ?? cenaKursa(kurs);
+const od = imaPakete ? "od " : "";
+const oznaka = popust?.oznaka || "Popust";
+const naslov = popust?.naslov || `-${procenat}% na kurs ${lepNaziv(kurs.naziv)}`;
+const slika = popust?.slika ? slikaIzBaze(popust.slika) : "";
+const dugme =
+  "group inline-flex items-center justify-center gap-3 bg-white px-6 py-3.5 text-[13px] font-semibold text-neutral-900 hover:bg-[#f4f2ee] transition-colors";
+---
+
+{
+  popust && varijanta === "najava" && (
+    <a
+      href={kursPutanja(kurs)}
+      data-popust-traka
+      data-do={popust.doMs ?? ""}
+      class="group relative block border-b border-white/10 bg-[#140f0c] text-white"
+      style={`--popust:${boja}`}
+    >
+      <div class="max-w-[1400px] mx-auto px-5 md:px-10 py-2.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-[12.5px]">
+        <span class="text-[10.5px] font-semibold uppercase tracking-[0.28em]" style="color:var(--popust)">{oznaka}</span>
+        <span class="text-white/30" aria-hidden="true">·</span>
+        <span class="text-white/90">{naslov}</span>
+        {popust.doMs && (
+          <Fragment>
+            <span class="hidden sm:inline text-white/30" aria-hidden="true">·</span>
+            <span class="text-white/55">
+              još <span data-odbrojavanje class="tabular-nums text-white" />
+            </span>
+          </Fragment>
+        )}
+        <Ikona ime="strelica" class="hidden sm:block w-3.5 h-3.5 text-white/60 transition-transform group-hover:translate-x-0.5" />
+      </div>
+    </a>
+  )
+}
+
+{
+  popust && varijanta === "kurs" && (
+    <section
+      data-popust-traka
+      data-do={popust.doMs ?? ""}
+      class="relative overflow-hidden bg-[#140f0c] text-white"
+      style={`--popust:${boja}`}
+      aria-label={`${oznaka}: ${naslov}`}
+    >
+      {slika && (
+        <Fragment>
+          <img src={manjaSlika(slika, 1600)} alt="" class="absolute inset-0 h-full w-full object-cover opacity-40" fetchpriority="high" />
+          <div class="absolute inset-0 bg-gradient-to-r from-[#140f0c] via-[#140f0c]/85 to-[#140f0c]/40" aria-hidden="true" />
+        </Fragment>
+      )}
+
+      <div class="relative max-w-[1300px] mx-auto px-5 md:px-10 py-8 md:py-10 grid gap-7 lg:grid-cols-[auto_1fr_auto] lg:items-center lg:gap-12">
+        <p class="font-serif leading-[0.9] tracking-[-0.04em] text-[68px] md:text-[96px]" style="color:var(--popust)">
+          -{procenat}%
+        </p>
+
+        <div class="min-w-0 lg:border-l lg:border-white/15 lg:pl-12">
+          <p class="flex items-center gap-4 text-[11px] font-semibold uppercase tracking-[0.3em]" style="color:var(--popust)">
+            <span class="h-px w-8" style="background:var(--popust)" />
+            {oznaka}
+          </p>
+          <p class="mt-3 font-serif text-[26px] md:text-[34px] leading-[1.08] tracking-[-0.015em] text-balance">{naslov}</p>
+          {popust.tekst && <p class="mt-2 max-w-[520px] text-[14px] md:text-[15px] leading-relaxed text-white/65">{popust.tekst}</p>}
+        </div>
+
+        <div class="flex flex-col gap-5 lg:items-end">
+          {popust.doMs && <Odbrojavanje naslov="Ponuda ističe za" velicina="mala" />}
+          {staraCena > 0 && (
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <p class="leading-none">
+                <s class="block text-[14px] text-white/45">{od}{staraCena} €</s>
+                <span class="mt-1.5 block font-serif text-[38px] tracking-[-0.02em]">{od}{novaCena} €</span>
+              </p>
+              {!kupljen &&
+                (imaPakete ? (
+                  <a href="#paketi" class={dugme}>
+                    Iskoristi popust
+                    <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                  </a>
+                ) : (
+                  <KupiDugme kurs={kurs} class={dugme} />
+                ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+<script>
+  import "../../scripts/odbrojavanje";
+</script>

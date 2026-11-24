@@ -218,14 +218,13 @@ public class PlatioController {
             return ResponseEntity.status(500).body(Map.of("error", "Greška prilikom ažuriranja statusa plaćanja"));
         }
     }
-    // Cena kursa u EUR: cena paketa (ako pripada tom kursu) ili cena kursa
+    @Autowired
+    private com.server.studio27.services.PopustService popustService;
+
+    // Cena kursa u EUR: cena paketa (ako pripada tom kursu) ili cena kursa, sa popustom ako traje
     public Integer cenaKursa(Integer kursId, Integer paketId) {
-        if (paketId != null) {
-            List<Integer> cena = jdbcTemplate.queryForList("SELECT cena FROM paket WHERE paketId = ? AND kursId = ?", Integer.class, paketId, kursId);
-            if (!cena.isEmpty()) return cena.get(0);
-        }
-        List<Integer> cena = jdbcTemplate.queryForList("SELECT cena FROM kurs WHERE kursId = ?", Integer.class, kursId);
-        return cena.isEmpty() ? null : cena.get(0);
+        if (kursId == null) return null;
+        return popustService.cenaKursa(kursId, paketId == null ? null : paketId.longValue()).cena();
     }
 
     public ResponseEntity<Map<String,Object>> addNewPayment(Integer studentId,Integer kursId,String datumPlacanja,Integer cenaPlacanja,String status,String tip,String url){

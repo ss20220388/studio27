@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import CourseList from "./CourseList";
 import CourseDetail from "./CourseDetail";
 import CourseModals from "./CourseModals";
+import AkcijaPocetna from "./AkcijaPocetna";
+import { SharedModal } from "./SharedModal";
 
 interface Kurs {
   id: number;
@@ -57,6 +59,7 @@ export default function CoursesPage({accesToken}: {accesToken: string | null}) {
   const [showEditCourse, setShowEditCourse] = useState(false);
   const [showDeleteCourse, setShowDeleteCourse] = useState(false);
   const [courseToEditOrDelete, setCourseToEditOrDelete] = useState<Kurs | null>(null);
+  const [showAkcija, setShowAkcija] = useState(false);
 
   // Svaka izmena otvorenog kursa (nova lekcija, video...) se odmah upisuje i u listu,
   // da se po povratku na listu ne prikazuju stari podaci do osvežavanja stranice
@@ -143,6 +146,9 @@ export default function CoursesPage({accesToken}: {accesToken: string | null}) {
 
   return (
     <>
+      <SharedModal open={showAkcija} onClose={() => setShowAkcija(false)} title="Akcija na početnoj stranici" wide>
+        <AkcijaPocetna API_URL={API_URL} accesToken={accesToken} kursevi={kursevi} onZatvori={() => setShowAkcija(false)} />
+      </SharedModal>
       <CourseModals
         showAddModal={showAddCourse}
         setShowAddModal={setShowAddCourse}
@@ -155,6 +161,12 @@ export default function CoursesPage({accesToken}: {accesToken: string | null}) {
         setSelectedKurs={azurirajOtvoreniKurs}
         API_URL={API_URL}
         accesToken={accesToken}
+        onPopust={(kursId, popust) => {
+          const sa = (k: Kurs | null) => (k && k.id === kursId ? ({ ...k, popust } as Kurs) : k);
+          setKursevi((prev) => prev.map((k) => sa(k) as Kurs));
+          setCourseToEditOrDelete(sa);
+          setSelectedKurs(sa);
+        }}
       />
 
       {!selectedKurs ? (
@@ -163,6 +175,7 @@ export default function CoursesPage({accesToken}: {accesToken: string | null}) {
           getImageUrl={getImageUrl}
           onSelectKurs={setSelectedKurs}
           onAddCourseClick={() => setShowAddCourse(true)}
+          onAkcijaClick={() => setShowAkcija(true)}
           onEditCourseClick={(kurs, e) => {
             e.stopPropagation();
             setCourseToEditOrDelete(kurs);

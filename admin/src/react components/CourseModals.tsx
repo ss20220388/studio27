@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { SharedModal } from "./SharedModal";
 import PaketiKursa from "./PaketiKursa";
+import PopustKursa from "./PopustKursa";
 import { GlavnaSlikaPolje, SporedneSlikePolje, otpremiSliku, type PostojecaSlika } from "./SlikeKursa";
 
 
@@ -18,6 +19,8 @@ interface CourseModalsProps {
   setSelectedKurs?: (kurs: any) => void;
   API_URL: string;
   accesToken: string | null;
+  // sačuvan popust: osvežava kurs u listi bez ponovnog učitavanja (ono bi zatvorilo modal)
+  onPopust?: (kursId: number, popust: any) => void;
 }
 
 export default function CourseModals({
@@ -31,7 +34,8 @@ export default function CourseModals({
   onRefresh,
   setSelectedKurs,
   API_URL,
-  accesToken
+  accesToken,
+  onPopust
 }: CourseModalsProps) {
 
   const textAreaClass = "w-full px-3 py-2 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 transition-all placeholder-neutral-600 resize-y min-h-10";
@@ -48,6 +52,8 @@ export default function CourseModals({
   const [trenutneSporedneSlike, setTrenutneSporedneSlike] = useState<PostojecaSlika[]>([]);
   const [zaBrisanje, setZaBrisanje] = useState<Set<number>>(new Set());
   const [cuvanje, setCuvanje] = useState(false);
+  // nesačuvan popust se čuva i dugmetom "Sačuvaj izmene"
+  const sacuvajPopust = useRef<(() => Promise<boolean>) | null>(null);
   const [greska, setGreska] = useState("");
 
   const jsonHeaders = {
@@ -170,6 +176,9 @@ export default function CourseModals({
         })
       });
       if (!response.ok) throw new Error("Greška pri izmeni kursa");
+      if (sacuvajPopust.current && !(await sacuvajPopust.current())) {
+        throw new Error("Kurs je sačuvan, ali popust nije (poruka je kod popusta).");
+      }
 
       // Brisanje označenih sporednih slika, pa dodavanje novih (stare ostaju)
       for (const idSlika of zaBrisanje) {
@@ -437,6 +446,15 @@ export default function CourseModals({
             nove={editSporedneSlike}
             onNove={setEditSporedneSlike}
           />
+          {selectedKurs?.id && (
+            <PopustKursa
+              kurs={selectedKurs}
+              API_URL={API_URL}
+              accesToken={accesToken}
+              onSacuvano={(popust) => onPopust?.(selectedKurs.id, popust)}
+              sacuvajRef={sacuvajPopust}
+            />
+          )}
           {selectedKurs?.id && <PaketiKursa kursId={selectedKurs.id} API_URL={API_URL} accesToken={accesToken} />}
           {greska && <p className="text-xs text-red-400">{greska}</p>}
           <div className="flex justify-end gap-2 pt-2">

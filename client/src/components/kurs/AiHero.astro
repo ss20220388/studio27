@@ -4,7 +4,7 @@
 // lekcije, cena); ako lekcija još nema, koriste se stavke iz programa kursa.
 import Ikona from "../novo/Ikona.astro";
 import KupiDugme from "../novo/KupiDugme.astro";
-import { imaCenu, lepNaziv, manjaSlika, parsirajSadrzaj, srcsetSlike, type KursIzBaze } from "../../data/sajt";
+import { cenaKursa, imaCenu, popustKursa, lepNaziv, manjaSlika, parsirajSadrzaj, srcsetSlike, type KursIzBaze } from "../../data/sajt";
 
 interface Props {
   kurs: KursIzBaze;
@@ -89,7 +89,10 @@ function ikonaZa(tekst: string, i: number) {
       {
         imaCenu(kurs) && (
           <div class="s27-ulaz mt-8 flex items-center gap-5" style="--kasnjenje:0.4s">
-            <p class="font-poppins font-extrabold text-[48px] md:text-[56px] leading-none tracking-[-0.03em]">{kurs.cena} €</p>
+            <p class="font-poppins font-extrabold text-[48px] md:text-[56px] leading-none tracking-[-0.03em]">
+              {popustKursa(kurs) && <s class="mr-3 align-middle text-[24px] md:text-[28px] font-semibold text-white/50">{kurs.cena} €</s>}
+              {cenaKursa(kurs)} €
+            </p>
             <span class="h-12 w-px bg-white/40" />
             <p class="text-[10.5px] font-medium uppercase leading-[1.7] tracking-[0.2em] text-white/80">
               Kompletan

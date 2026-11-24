@@ -36,7 +36,8 @@ export default function CourseList({
   onSelectKurs,
   onAddCourseClick,
   onEditCourseClick,
-  onDeleteCourseClick
+  onDeleteCourseClick,
+  onAkcijaClick
 }: {
   kursevi: Kurs[];
   getImageUrl: (url: string | undefined) => string | null;
@@ -44,6 +45,7 @@ export default function CourseList({
   onAddCourseClick: () => void;
   onEditCourseClick: (kurs: Kurs, e: React.MouseEvent) => void;
   onDeleteCourseClick: (kurs: Kurs, e: React.MouseEvent) => void;
+  onAkcijaClick?: () => void;
 }) {
   return (
     <div className="space-y-8 animate-fade-in" style={{paddingInline:"20px"}}>
@@ -53,7 +55,12 @@ export default function CourseList({
           <h1 className="text-2xl font-bold text-white">Kursevi</h1>
           <p className="text-sm text-neutral-500 mt-1">{kursevi.length} aktivnih kurseva</p>
         </div>
-        <div>
+        <div className="flex gap-2">
+          {onAkcijaClick && (
+            <button onClick={onAkcijaClick} className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-black border border-neutral-700 hover:border-neutral-500 transition-colors">
+              Akcija na početnoj
+            </button>
+          )}
           <button onClick={onAddCourseClick} className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-900 hover:bg-red-800 transition-colors">
             + Dodaj kurs
           </button>
@@ -98,9 +105,17 @@ export default function CourseList({
               
               <div className="mt-auto pt-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-white">
-                    {(kurs.cena || 0).toLocaleString()} <span className="text-xs font-normal text-neutral-500">€</span>
-                  </span>
+                  {(kurs as any).popust?.traje ? (
+                    <span className="flex items-baseline gap-1.5 text-sm font-bold text-white">
+                      {(kurs as any).popust.novaCena} <span className="text-xs font-normal text-neutral-500">€</span>
+                      <span className="text-xs font-normal text-neutral-500 line-through">{kurs.cena} €</span>
+                      <span className="rounded bg-red-900 px-1.5 py-0.5 text-[10px] font-semibold">-{Math.round((kurs as any).popust.procenat)}%</span>
+                    </span>
+                  ) : (
+                    <span className="text-sm font-bold text-white">
+                      {(kurs.cena || 0).toLocaleString()} <span className="text-xs font-normal text-neutral-500">€</span>
+                    </span>
+                  )}
                   <span className="text-xs text-neutral-400">
                     {kurs.trajanje ? `${kurs.trajanje} dana` : ''}
                   </span>

@@ -1,5 +1,6 @@
 import { API_URL, SLIKE_URL } from "../data/sajt";
 import React, { useState, useEffect, useCallback } from "react";
+import { osveziCeneKorpe } from "./ceneKorpe";
 
 export default function CartModal({ accessToken: initialToken }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,6 +47,13 @@ export default function CartModal({ accessToken: initialToken }) {
     fetchUser();
   }, [fetchUser]);
 
+  // trenutne cene sa servera (popust je mogao da počne ili istekne)
+  const osvezi = (items) => {
+    osveziCeneKorpe(API_URL, items).then((nova) => {
+      if (nova !== items) setCart(nova.map((item) => ({ ...item, quantity: 1 })));
+    });
+  };
+
   const loadCart = () => {
     if (typeof window !== "undefined") {
       try {
@@ -53,6 +61,7 @@ export default function CartModal({ accessToken: initialToken }) {
         const items = saved ? JSON.parse(saved) : [];
         const normalized = items.map((item) => ({ ...item, quantity: 1 }));
         setCart(normalized);
+        osvezi(normalized);
       } catch (e) {
         setCart([]);
       }
@@ -66,6 +75,7 @@ export default function CartModal({ accessToken: initialToken }) {
       if (e?.detail) {
         const normalized = e.detail.map((item) => ({ ...item, quantity: 1 }));
         setCart(normalized);
+        osvezi(normalized);
       } else {
         loadCart();
       }
@@ -300,6 +310,9 @@ export default function CartModal({ accessToken: initialToken }) {
                         {item.title || item.naslov || item.naziv}
                       </h3>
                       <div className="text-zinc-700 font-semibold mt-1">
+                        {Number(item.oldPrice) > Number(item.price || item.cena) && (
+                          <span className="mr-2 font-normal text-zinc-400 line-through">{Number(item.oldPrice).toLocaleString()} €</span>
+                        )}
                         {Number(item.price || item.cena || 0).toLocaleString()} €
                       </div>
                     </div>

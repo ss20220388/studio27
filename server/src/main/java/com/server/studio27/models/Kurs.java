@@ -14,6 +14,8 @@ public class Kurs {
     private String komentarSredina;
     private String komentarGore;
     private int brojStudenata;
+    // popust (Black Friday i sl.), vidi PopustService.podaci
+    private java.util.Map<String, Object> popust;
     public Kurs() {
 
     }
@@ -154,5 +156,10 @@ public class Kurs {
     public void setBrojStudenata(int brojStudenata) {
         this.brojStudenata = brojStudenata;
     }
-    
+    public java.util.Map<String, Object> getPopust() {
+        return popust;
+    }
+    public void setPopust(java.util.Map<String, Object> popust) {
+        this.popust = popust;
+    }
 }
