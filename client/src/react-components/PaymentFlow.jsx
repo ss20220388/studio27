@@ -66,6 +66,16 @@ export default function UplatnicaCheckout({
         postavi(parsedCart);
         // trenutne cene sa servera (popust je mogao da počne ili istekne)
         osveziCeneKorpe(API_URL, parsedCart).then((nova) => nova !== parsedCart && postavi(nova));
+        // server pamti korpu: ako kupovina ne bude završena, kupcu stiže podsetnik mejlom (24 h i 3 dana)
+        fetch(`${API_URL}/api/podsetnik/korpa`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          credentials: "include",
+          body: JSON.stringify({
+            kursIds: parsedCart.map((item) => item.id || item.kursId).filter(Boolean),
+            paketi: Object.fromEntries(parsedCart.filter((item) => item.paketId).map((item) => [item.id || item.kursId, item.paketId])),
+          }),
+        }).catch(() => {});
       }
     } catch (err) {
       console.error("Greška pri čitanju korpe:", err);

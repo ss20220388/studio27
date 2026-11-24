@@ -1,0 +1,61 @@
+---
+// Odjava sa podsetnika za nezavršenu kupovinu (link iz mejla: /odjava-podsetnika?t=...).
+// Odjava je tek na klik (POST), da je ne pokrenu programi koji unapred otvaraju linkove iz mejlova.
+import Layout from "../layouts/Layout.astro";
+import { API_URL } from "../data/sajt";
+
+let token = Astro.url.searchParams.get("t") || "";
+let stanje: "pitanje" | "odjavljen" | "greska" = "pitanje";
+
+if (Astro.request.method === "POST") {
+  try {
+    const forma = await Astro.request.formData();
+    token = String(forma.get("t") || "");
+    const res = await fetch(`${API_URL}/api/podsetnik/odjava`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+    stanje = res.ok ? "odjavljen" : "greska";
+  } catch {
+    stanje = "greska";
+  }
+}
+---
+
+<Layout title="Odjava sa podsetnika | Studio 27" description="Odjava sa podsetnika za nezavršenu kupovinu." noIndex>
+  <main class="min-h-[70vh] max-w-[1400px] mx-auto px-5 md:px-10 flex flex-col justify-center py-24">
+    <p class="text-[11px] font-medium uppercase tracking-[0.26em] text-neutral-500">Podsetnici</p>
+    {
+      stanje === "odjavljen" ? (
+        <>
+          <h1 class="mt-5 font-serif text-[42px] md:text-[64px] leading-[1] tracking-[-0.025em]">Odjavljen/a si.</h1>
+          <p class="mt-6 max-w-[480px] text-[16px] leading-relaxed text-neutral-600">
+            Više ti nećemo slati podsetnike za nezavršenu kupovinu. Mejlovi o kupljenim kursevima i nalogu i dalje stižu.
+          </p>
+        </>
+      ) : stanje === "greska" || !token ? (
+        <>
+          <h1 class="mt-5 font-serif text-[42px] md:text-[64px] leading-[1] tracking-[-0.025em]">Link nije ispravan.</h1>
+          <p class="mt-6 max-w-[480px] text-[16px] leading-relaxed text-neutral-600">
+            Pokušaj ponovo iz mejla ili nam piši i odjavićemo te ručno.
+          </p>
+        </>
+      ) : (
+        <>
+          <h1 class="mt-5 font-serif text-[42px] md:text-[64px] leading-[1] tracking-[-0.025em]">Odjava sa podsetnika</h1>
+          <p class="mt-6 max-w-[480px] text-[16px] leading-relaxed text-neutral-600">
+            Ne želiš više podsetnike za kurseve koje si započeo/la da kupuješ?
+          </p>
+          <form method="post" class="mt-10">
+            <input type="hidden" name="t" value={token} />
+            <button type="submit" class="cursor-pointer bg-neutral-900 px-8 py-4 text-[13px] font-medium text-white hover:bg-black transition-colors">
+              Odjavi me
+            </button>
+          </form>
+        </>
+      )
+    }
+    <a href="/" class="mt-10 text-[13px] text-neutral-600 underline underline-offset-4 hover:text-neutral-900">Nazad na početnu</a>
+  </main>
+</Layout>

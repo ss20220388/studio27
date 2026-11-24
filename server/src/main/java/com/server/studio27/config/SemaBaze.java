@@ -108,6 +108,35 @@ public class SemaBaze implements ApplicationRunner {
             ) DEFAULT CHARSET=utf8mb4
             """,
             "INSERT IGNORE INTO akcija (id) VALUES (1)"
+        )),
+        // napuštena kupovina: prijavljen kupac je otvorio stranicu plaćanja a nije platio;
+        // posle 24 h i 3 dana dobija podsetnik mejlom (PodsetnikKupovine). Odjava važi za sve buduće podsetnike.
+        new Korak("2026-11-24-napustena-kupovina", List.of(
+            """
+            CREATE TABLE IF NOT EXISTS napustena_kupovina (
+                id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                studentId BIGINT NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                ime VARCHAR(100) NULL,
+                kursIds VARCHAR(255) NOT NULL,
+                paketIds VARCHAR(255) NULL,
+                kreirano DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                azurirano DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                podsetnik1 DATETIME NULL,
+                podsetnik2 DATETIME NULL,
+                zavrseno DATETIME NULL,
+                pokusaja INT NOT NULL DEFAULT 0,
+                token VARCHAR(64) NOT NULL,
+                UNIQUE KEY uk_napustena_token (token),
+                INDEX idx_napustena_student (studentId)
+            ) DEFAULT CHARSET=utf8mb4
+            """,
+            """
+            CREATE TABLE IF NOT EXISTS podsetnik_odjava (
+                email VARCHAR(255) NOT NULL PRIMARY KEY,
+                datum DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ) DEFAULT CHARSET=utf8mb4
+            """
         ))
     );
 
