@@ -27,6 +27,7 @@ interface Forma {
   ukljucen: boolean;
   procenat: string;
   cena: string;
+  od: string; // datetime-local: "2026-11-27T00:00" ("" = odmah)
   do: string; // datetime-local: "2026-11-30T23:59"
   oznaka: string;
   naslov: string;
@@ -48,6 +49,16 @@ const zaokruzi = (n: number, decimala = 0) => {
 };
 
 // Ponedeljak posle Black Friday-a (petak posle 4. četvrtka u novembru), 23:59; sledeće godine ako je prošao
+
+// petak Black Friday-a (posle 4. četvrtka u novembru) u 00:00, iste godine kao kraj
+function pocetakBlackFridaya(kraj: string): string {
+  if (!kraj) return "";
+  const ponedeljak = new Date(kraj);
+  const petak = new Date(ponedeljak.getFullYear(), ponedeljak.getMonth(), ponedeljak.getDate() - 3);
+  const d = (n: number) => String(n).padStart(2, "0");
+  return `${petak.getFullYear()}-${d(petak.getMonth() + 1)}-${d(petak.getDate())}T00:00`;
+}
+
 function krajBlackFridaya(): string {
   const sad = new Date();
   for (const godina of [sad.getFullYear(), sad.getFullYear() + 1]) {
@@ -66,6 +77,7 @@ const izKursa = (p: any): Forma => ({
   ukljucen: !!p?.ukljucen,
   procenat: p?.procenat != null ? String(zaokruzi(Number(p.procenat), 2)) : "",
   cena: p?.cena != null ? String(p.cena) : "",
+  od: p?.od ? String(p.od).slice(0, 16) : "",
   do: p?.do ? String(p.do).slice(0, 16) : "",
   oznaka: p?.oznaka || "",
   naslov: p?.naslov || "",
@@ -144,6 +156,7 @@ export default function PopustKursa({ kurs, API_URL, accesToken, onSacuvano, sac
       tekst: f.tekst || "Najniža cena ove godine važi samo do ponedeljka u ponoć.",
       boja: "#c49a5a",
       do: f.do || krajBlackFridaya(),
+      od: f.od || pocetakBlackFridaya(f.do || krajBlackFridaya()),
       procenat: f.procenat,
     });
 
@@ -173,7 +186,7 @@ export default function PopustKursa({ kurs, API_URL, accesToken, onSacuvano, sac
           ...(accesToken ? { Authorization: `Bearer ${accesToken}` } : {}),
         },
         body: JSON.stringify({
-          ...f, procenat: f.procenat || null, cena: f.cena || null, do: f.do || null,
+          ...f, procenat: f.procenat || null, cena: f.cena || null, od: f.od || null, do: f.do || null,
           paketi: paketi.map((pk) => ({ paketId: pk.paketId, cena: pk.nova || null })),
         }),
       });
@@ -186,7 +199,7 @@ export default function PopustKursa({ kurs, API_URL, accesToken, onSacuvano, sac
         tekst: data.popust?.traje
           ? "Popust je sačuvan i vidi se na sajtu (za najviše minut)."
           : f.ukljucen
-            ? "Sačuvano, ali popust trenutno ne važi (proverite datum kraja)."
+            ? "Sačuvano. Popust se na sajtu vidi tek u zadatom roku (proverite datum početka i kraja)."
             : "Sačuvano. Popust je isključen.",
       });
       onSacuvano?.(data.popust);
@@ -228,7 +241,7 @@ export default function PopustKursa({ kurs, API_URL, accesToken, onSacuvano, sac
       </div>
 
       <div className="px-4 py-4 space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <label className="block">
             <span className={labelClass}>Popust (%)</span>
             <input type="number" min={1} max={99} step="any" value={f.procenat} onChange={(e) => naProcenat(e.target.value)} placeholder="Npr. 30" className={poljeClass} />
@@ -238,6 +251,10 @@ export default function PopustKursa({ kurs, API_URL, accesToken, onSacuvano, sac
             <input type="number" min={1} value={f.cena} onChange={(e) => naCenu(e.target.value)} placeholder={redovna ? `manje od ${redovna}` : ""} className={poljeClass} />
           </label>
           <label className="block">
+            <span className={labelClass}>Počinje (prazno = odmah)</span>
+            <input type="datetime-local" value={f.od} onChange={(e) => izmeni({ od: e.target.value })} className={`${poljeClass} [color-scheme:dark]`} />
+          </label>
+          <label className="block">
             <span className={labelClass}>Traje do (prazno = dok se ne isključi)</span>
             <input type="datetime-local" value={f.do} onChange={(e) => izmeni({ do: e.target.value })} className={`${poljeClass} [color-scheme:dark]`} />
           </label>
@@ -245,7 +262,7 @@ export default function PopustKursa({ kurs, API_URL, accesToken, onSacuvano, sac
         {paketi.length > 0 && (
           <div className="rounded-lg border border-neutral-800 p-3">
             <p className={labelClass}>Cene paketa na popustu</p>
-            <p className="text-xs text-neutral-500 mb-2">Popune se po procentu, a svaka se može promeniti posebno.</p>
+            <p className="text-xs text-neutral-500 mb-2">Popune se po procentu, a svaka se može promeniti posebno. Upišite redovnu cenu ako paket nije na popustu.</p>
             <div className="space-y-2">
               {paketi.map((pk) => {
                 const nova = Number(pk.nova) || 0;
@@ -262,7 +279,7 @@ export default function PopustKursa({ kurs, API_URL, accesToken, onSacuvano, sac
                       placeholder="nova cena"
                       className={poljeClass}
                     />
-                    <span className="text-xs font-semibold text-red-400">{procenatPaketa != null ? `-${procenatPaketa}%` : ""}</span>
+                    <span className="text-xs font-semibold text-red-400">{procenatPaketa != null ? `-${procenatPaketa}%` : nova === pk.cena ? <span className="font-normal text-neutral-500">bez</span> : ""}</span>
                   </div>
                 );
               })}

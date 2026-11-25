@@ -9,6 +9,7 @@ import React, { useEffect, useState } from "react";
 interface Stavka {
   tekst: string;
   jako: boolean;
+  crveno?: boolean;
 }
 
 interface Paket {
@@ -27,15 +28,23 @@ const prazanPaket = (): Paket => ({
   naziv: "", cena: "", podnaslov: "", uvod: "", istaknuto: "", dugme: "", stavke: [{ tekst: "", jako: false }], izmenjen: true,
 });
 
-// "**Podrška u grupnom chatu**" <-> { tekst: "Podrška u grupnom chatu", jako: true }
+// "**Podrška u privatnom chatu**" <-> { tekst: "Podrška u privatnom chatu", jako: true }
+// "!!Rad na konkretnom projektu!!" <-> { tekst: "Rad na konkretnom projektu", crveno: true } (može i oba: "!!**...**!!")
 const uStavke = (opis: string): Stavka[] =>
   (opis || "").split("\n").map((s) => s.trim()).filter(Boolean).map((s) => {
-    const cela = /^\*\*(.+)\*\*$/.exec(s);
-    return cela && !cela[1].includes("**") ? { tekst: cela[1], jako: true } : { tekst: s, jako: false };
+    const crvena = /^!!(.+)!!$/.exec(s);
+    const t = crvena ? crvena[1] : s;
+    const cela = /^\*\*(.+)\*\*$/.exec(t);
+    return cela && !cela[1].includes("**")
+      ? { tekst: cela[1], jako: true, crveno: !!crvena }
+      : { tekst: t, jako: false, crveno: !!crvena };
   });
 const uOpis = (stavke: Stavka[]) =>
   stavke.map((s) => ({ ...s, tekst: s.tekst.trim() })).filter((s) => s.tekst)
-    .map((s) => (s.jako && !s.tekst.includes("**") ? `**${s.tekst}**` : s.tekst)).join("\n");
+    .map((s) => {
+      const t = s.jako && !s.tekst.includes("**") ? `**${s.tekst}**` : s.tekst;
+      return s.crveno && !s.tekst.includes("!!") ? `!!${t}!!` : t;
+    }).join("\n");
 
 const labelClass = "block text-[11px] font-medium text-neutral-500 uppercase tracking-wider mb-1";
 const poljeClass =
@@ -241,7 +250,7 @@ export default function PaketiKursa({ kursId, API_URL, accesToken }: {
                               }
                             }}
                             placeholder="Npr. Sve video lekcije"
-                            className={`${poljeClass} h-9 ${s.jako ? "font-semibold" : ""}`}
+                            className={`${poljeClass} h-9 ${s.jako ? "font-semibold" : ""} ${s.crveno ? "text-red-400" : ""}`}
                           />
                           <button
                             type="button"
@@ -251,6 +260,15 @@ export default function PaketiKursa({ kursId, API_URL, accesToken }: {
                             className={`cursor-pointer shrink-0 w-9 h-9 rounded-lg border text-sm font-bold ${s.jako ? "border-neutral-400 bg-neutral-700 text-neutral-100" : "border-neutral-700 text-neutral-500 hover:text-neutral-200"}`}
                           >
                             B
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => izmeniStavku(i, k, { crveno: !s.crveno })}
+                            title={s.crveno ? "Ukloni crvenu boju" : "Crvenim slovima"}
+                            aria-pressed={!!s.crveno}
+                            className={`cursor-pointer shrink-0 w-9 h-9 rounded-lg border text-sm font-bold ${s.crveno ? "border-red-800 bg-red-950 text-red-400" : "border-neutral-700 text-red-500/60 hover:text-red-400"}`}
+                          >
+                            A
                           </button>
                           <button type="button" onClick={() => pomeriStavku(i, k, -1)} disabled={k === 0} title="Pomeri gore" className="cursor-pointer shrink-0 w-7 h-9 text-neutral-500 hover:text-neutral-200 disabled:opacity-30">↑</button>
                           <button type="button" onClick={() => pomeriStavku(i, k, 1)} disabled={k === p.stavke.length - 1} title="Pomeri dole" className="cursor-pointer shrink-0 w-7 h-9 text-neutral-500 hover:text-neutral-200 disabled:opacity-30">↓</button>

@@ -12,7 +12,7 @@ import SeoTekst from "../components/pocetna/SeoTekst.astro";
 
 import PopustTraka from "../components/novo/PopustTraka.astro";
 import AkcijaVizual from "../components/novo/AkcijaVizual.astro";
-import { CLIENT_URL, ucitajAkciju, cenaKursa, imaCenu, popustKursa, kursPutanja, lepNaziv, manjaSlika, slikaIzBaze, srcsetSlike, ucitajKurseve, ucitajSporedneSlike } from "../data/sajt";
+import { CLIENT_URL, ucitajAkciju, ucitajListu, ucitajPakete, type PaketKursa, cenaKursa, imaCenu, popustKursa, kursPutanja, lepNaziv, manjaSlika, slikaIzBaze, srcsetSlike, ucitajKurseve, ucitajSporedneSlike } from "../data/sajt";
 
 const SITE_URL = CLIENT_URL;
 
@@ -20,6 +20,16 @@ const SITE_URL = CLIENT_URL;
 const [kursevi, akcija] = await Promise.all([ucitajKurseve(), ucitajAkciju()]);
 // bez akcije, iznad menija se najavljuje prvi kurs sa popustom
 const najavaKursa = akcija ? null : kursevi.find((k) => popustKursa(k)) ?? null;
+// paketi kurseva na popustu, za cenovnik u vizualu akcije
+const paketiPopusta: Record<number, PaketKursa[]> = akcija
+  ? Object.fromEntries(await Promise.all(kursevi.filter((k) => popustKursa(k)).map(async (k) => [k.id, await ucitajPakete(k.id)])))
+  : {};
+// fotografija akcije kad u adminu nije izabrana: izdvojeni rad polaznika (radovi sa rasporedom)
+const radAkcije = akcija && !akcija.slika
+  ? (await ucitajListu<{ url?: string; raspored?: number | null }>("/api/radovi-sa-rasporedom"))
+      .filter((r) => r.url && r.raspored)
+      .sort((a, b) => (a.raspored ?? 0) - (b.raspored ?? 0))[0]?.url ?? ""
+  : "";
 const sporedne = await Promise.all(kursevi.map((k) => ucitajSporedneSlike(k.id)));
 
 // Slajdovi: za svaki kurs prva od ostalih slika (veće su), a ako ih nema, glavna slika
@@ -142,6 +152,7 @@ const orgSchema = {
 ---
 
 <Layout
+  poppins={!!akcija}
   title="Kurs 3ds Max i Corona Render, dizajn enterijera | Studio 27"
   description="Online i uživo kursevi 3ds Max + Corona Renderer, vizualizacije enterijera i eksterijera i dizajna enterijera (AutoCAD + Photoshop). Od početnika do profesionalnog rendera, uz feedback predavača."
   canonicalURL={`${SITE_URL}/`}
@@ -161,7 +172,7 @@ const orgSchema = {
 
   <main class="bg-white text-neutral-900">
     <Hero slajdovi={slajdovi} />
-    {akcija && <AkcijaVizual akcija={akcija} kursevi={kursevi} />}
+    {akcija && <AkcijaVizual akcija={akcija} kursevi={kursevi} paketi={paketiPopusta} slikaRada={radAkcije} />}
     <Kursevi kursevi={kursevi} />
     <KvizPoziv />
     <ZastoStudio slike={sveSporedne.slice(0, 2)} />

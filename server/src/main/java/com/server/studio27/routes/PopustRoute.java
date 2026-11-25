@@ -50,15 +50,15 @@ public class PopustRoute {
         boolean ukljucen = Boolean.TRUE.equals(podaci.get("ukljucen"));
         BigDecimal procenat = decimal(podaci.get("procenat"));
         Integer novaCena = ceo(podaci.get("cena"));
-        LocalDateTime doKada = null;
-        String doTekst = tekst(podaci.get("do"));
-        if (doTekst != null) {
-            try {
-                doKada = LocalDateTime.parse(doTekst.length() == 16 ? doTekst + ":00" : doTekst);
-            } catch (Exception e) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Datum kraja popusta nije ispravan."));
-            }
+        LocalDateTime odKada, doKada;
+        try {
+            odKada = datum(podaci.get("od"));
+            doKada = datum(podaci.get("do"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Datum početka ili kraja popusta nije ispravan."));
         }
+        if (odKada != null && doKada != null && !odKada.isBefore(doKada))
+            return ResponseEntity.badRequest().body(Map.of("error", "Popust mora da počne pre nego što se završi."));
 
         // procenat i nova cena se dopunjuju: dovoljno je upisati jedno
         if (procenat == null && novaCena != null && cena > 0) {
@@ -81,8 +81,9 @@ public class PopustRoute {
                 List<Map<String, Object>> paket = jdbcTemplate.queryForList("SELECT naziv, cena FROM paket WHERE paketId = ? AND kursId = ?", paketId, kursId);
                 if (paket.isEmpty()) continue;
                 int redovnaPaketa = ((Number) paket.get(0).get("cena")).intValue();
-                if (cenaPaketa != null && (cenaPaketa <= 0 || cenaPaketa >= redovnaPaketa))
-                    return ResponseEntity.badRequest().body(Map.of("error", "Cena paketa \"" + paket.get(0).get("naziv") + "\" na popustu mora biti manja od " + redovnaPaketa + " €."));
+                // redovna cena = paket nije na popustu
+                if (cenaPaketa != null && (cenaPaketa <= 0 || cenaPaketa > redovnaPaketa))
+                    return ResponseEntity.badRequest().body(Map.of("error", "Cena paketa \"" + paket.get(0).get("naziv") + "\" na popustu ne sme biti veća od " + redovnaPaketa + " €."));
                 cenePaketa.add(new Object[] { cenaPaketa, paketId });
             }
         }
@@ -95,9 +96,9 @@ public class PopustRoute {
         }
 
         jdbcTemplate.update(
-                "UPDATE kurs SET popustUkljucen = ?, popustProcenat = ?, popustCena = ?, popustDo = ?, popustOznaka = ?, "
+                "UPDATE kurs SET popustUkljucen = ?, popustProcenat = ?, popustCena = ?, popustOd = ?, popustDo = ?, popustOznaka = ?, "
                         + "popustNaslov = ?, popustTekst = ?, popustBoja = ?, popustSlika = ? WHERE kursId = ?",
-                ukljucen ? 1 : 0, procenat, novaCena, doKada, tekst(podaci.get("oznaka")), tekst(podaci.get("naslov")),
+                ukljucen ? 1 : 0, procenat, novaCena, odKada, doKada, tekst(podaci.get("oznaka")), tekst(podaci.get("naslov")),
                 tekst(podaci.get("tekst")), boja(podaci.get("boja")), tekst(podaci.get("slika")), kursId);
         for (Object[] c : cenePaketa) {
             jdbcTemplate.update("UPDATE paket SET cenaPopust = ? WHERE paketId = ?", c[0], c[1]);
@@ -115,24 +116,31 @@ public class PopustRoute {
     @PutMapping("/akcija")
     public ResponseEntity<?> sacuvajAkciju(@RequestBody Map<String, Object> podaci, Authentication authentication) {
         if (!jeAdmin(authentication)) return ResponseEntity.status(403).body(Map.of("error", "Nemate dozvolu"));
-        LocalDateTime doKada = null;
-        String doTekst = tekst(podaci.get("do"));
-        if (doTekst != null) {
-            try {
-                doKada = LocalDateTime.parse(doTekst.length() == 16 ? doTekst + ":00" : doTekst);
-            } catch (Exception e) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Datum kraja akcije nije ispravan."));
-            }
+        LocalDateTime odKada, doKada;
+        try {
+            odKada = datum(podaci.get("od"));
+            doKada = datum(podaci.get("do"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Datum početka ili kraja akcije nije ispravan."));
         }
+        if (odKada != null && doKada != null && !odKada.isBefore(doKada))
+            return ResponseEntity.badRequest().body(Map.of("error", "Akcija mora da počne pre nego što se završi."));
         boolean ukljucen = Boolean.TRUE.equals(podaci.get("ukljucen"));
         if (ukljucen && tekst(podaci.get("naslov")) == null)
             return ResponseEntity.badRequest().body(Map.of("error", "Upišite naslov akcije."));
         jdbcTemplate.update("INSERT IGNORE INTO akcija (id) VALUES (1)");
         jdbcTemplate.update(
-                "UPDATE akcija SET ukljucen = ?, oznaka = ?, naslov = ?, tekst = ?, boja = ?, slika = ?, doKada = ?, dugme = ?, link = ? WHERE id = 1",
+                "UPDATE akcija SET ukljucen = ?, oznaka = ?, naslov = ?, tekst = ?, boja = ?, slika = ?, odKada = ?, doKada = ?, dugme = ?, link = ? WHERE id = 1",
                 ukljucen ? 1 : 0, tekst(podaci.get("oznaka")), tekst(podaci.get("naslov")), tekst(podaci.get("tekst")),
-                boja(podaci.get("boja")), tekst(podaci.get("slika")), doKada, tekst(podaci.get("dugme")), link(podaci.get("link")));
+                boja(podaci.get("boja")), tekst(podaci.get("slika")), odKada, doKada, tekst(podaci.get("dugme")), link(podaci.get("link")));
         return ResponseEntity.ok(Map.of("success", true, "akcija", popustService.akcija()));
+    }
+
+    // "2026-11-27T00:00" iz admina (datetime-local); prazno = null
+    private static LocalDateTime datum(Object o) {
+        String s = tekst(o);
+        if (s == null) return null;
+        return LocalDateTime.parse(s.length() == 16 ? s + ":00" : s);
     }
 
     // samo adrese na sajtu (/kurs/7, /#edukacije) ili https://

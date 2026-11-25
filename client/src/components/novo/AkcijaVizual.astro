@@ -1,40 +1,57 @@
 ---
 // Akcija na početnoj (admin -> Kursevi -> Akcija na početnoj), npr. Black Friday za ceo sajt.
-// Nije vezana za jedan kurs: ima svoj naslov, tekst, boju akcenta, sliku, rok i dugme.
-// Izgled prati sajt (topla tamna pozadina, serif naslovi, tanke linije); boja iz admina je samo akcenat.
-// - "velika": sekcija ispod naslovnog ekrana, sa odbrojavanjem i kursevima na popustu
+// Izgled po vizualu klijentkinje: topla tamna pozadina, "STUDIO 27", veliki naslov (BLACK FRIDAY),
+// oznaka u boji akcenta (AKCIJA), cenovnik kurseva i paketa na popustu (stara precrtana / nova),
+// fotografija enterijera, odbrojavanje i dugme. Nije vezana za jedan kurs.
+// - "velika": sekcija ispod naslovnog ekrana
 // - "traka": uska traka iznad menija
 import Ikona from "./Ikona.astro";
 import Odbrojavanje from "./Odbrojavanje.astro";
 import {
   bojaPopusta,
   cenaKursa,
+  cenaPaketa,
   kursPutanja,
   lepNaziv,
   manjaSlika,
   popustKursa,
-  procenatPopusta,
   slikaIzBaze,
   srcsetSlike,
   type Akcija,
   type KursIzBaze,
+  type PaketKursa,
 } from "../../data/sajt";
 
 interface Props {
   akcija: Akcija;
   varijanta?: "velika" | "traka";
   kursevi?: KursIzBaze[];
+  // paketi kurseva na popustu (kursId -> paketi), za cenovnik
+  paketi?: Record<number, PaketKursa[]>;
+  // rad polaznika (putanja iz baze) kad akcija nema svoju sliku
+  slikaRada?: string;
 }
 
-const { akcija, varijanta = "velika", kursevi = [] } = Astro.props;
+const { akcija, varijanta = "velika", kursevi = [], paketi = {}, slikaRada = "" } = Astro.props;
 const boja = bojaPopusta(akcija);
 const oznaka = akcija.oznaka || "Akcija";
 const link = akcija.link || "/#edukacije";
 const dugme = akcija.dugme || "Pogledaj kurseve";
 const naPopustu = kursevi.filter((k) => popustKursa(k));
-// pozadina: slika akcije, a bez nje glavna slika prvog kursa na popustu
-const slika = akcija.slika ? slikaIzBaze(akcija.slika) : slikaIzBaze(naPopustu[0]?.slikaUrl);
-const najveci = Math.max(0, ...naPopustu.map((k) => procenatPopusta(popustKursa(k)!)));
+// fotografija: slika akcije iz admina, pa rad polaznika, pa glavna slika prvog kursa na popustu
+const slika = slikaIzBaze(akcija.slika || slikaRada || naPopustu[0]?.slikaUrl);
+
+// cenovnik: kurs sa paketima na popustu ima red za svaki takav paket, ostali jedan red
+const cenovnik = naPopustu.map((k) => {
+  const paketiNaPopustu = (paketi[k.id] || []).filter((p) => p.cenaSaPopustom != null);
+  return {
+    naziv: lepNaziv(k.naziv).replace(/^Kurs\s*[–-]\s*/i, ""),
+    url: kursPutanja(k),
+    redovi: paketiNaPopustu.length
+      ? paketiNaPopustu.map((p) => ({ naziv: p.naziv, stara: p.cena, nova: cenaPaketa(p) }))
+      : [{ naziv: "", stara: k.cena ?? 0, nova: cenaKursa(k) }],
+  };
+});
 ---
 
 {
@@ -47,9 +64,8 @@ const najveci = Math.max(0, ...naPopustu.map((k) => procenatPopusta(popustKursa(
       style={`--popust:${boja}`}
     >
       <div class="max-w-[1400px] mx-auto px-5 md:px-10 py-2.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-[12.5px]">
-        <span class="text-[10.5px] font-semibold uppercase tracking-[0.28em]" style="color:var(--popust)">{oznaka}</span>
-        <span class="text-white/30" aria-hidden="true">·</span>
-        <span class="text-white/90">{akcija.naslov}</span>
+        <span class="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white" style="background:var(--popust)">{oznaka}</span>
+        <span class="font-semibold uppercase tracking-[0.12em] text-white/90">{akcija.naslov}</span>
         {akcija.doMs && (
           <Fragment>
             <span class="hidden sm:inline text-white/30" aria-hidden="true">·</span>
@@ -69,95 +85,87 @@ const najveci = Math.max(0, ...naPopustu.map((k) => procenatPopusta(popustKursa(
     <section
       data-popust-traka
       data-do={akcija.doMs ?? ""}
-      class="relative overflow-hidden bg-[#140f0c] text-white"
+      class="relative flex flex-col lg:block overflow-hidden bg-[#1d1814] text-[#f3ece0]"
       style={`--popust:${boja}`}
       aria-labelledby="akcija-naslov"
     >
+      {/* fotografija: desno na računaru, dole na telefonu (kao na vizualu) */}
       {slika && (
-        <Fragment>
+        <div class="relative order-last lg:absolute lg:inset-y-0 lg:right-0 lg:w-[46%] aspect-[4/3] lg:aspect-auto">
           <img
             src={manjaSlika(slika, 1600)}
             srcset={srcsetSlike(slika)}
-            sizes="(min-width: 1024px) 60vw, 100vw"
+            sizes="(min-width: 1024px) 46vw, 100vw"
             alt=""
             loading="lazy"
-            class="absolute inset-y-0 right-0 h-full w-full lg:w-[62%] object-cover opacity-50"
+            class="absolute inset-0 h-full w-full object-cover"
           />
-          <div class="absolute inset-0 bg-gradient-to-r from-[#140f0c] via-[#140f0c]/90 lg:via-[#140f0c]/75 to-[#140f0c]/30" aria-hidden="true" />
-        </Fragment>
-      )}
-      <div class="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#140f0c] to-transparent" aria-hidden="true" />
-      {/* veliki procenat u pozadini, kao vodeni žig */}
-      {najveci > 0 && (
-        <p
-          class="pointer-events-none absolute -bottom-10 right-0 md:right-6 select-none font-serif leading-none tracking-[-0.05em] text-white/[0.05] text-[180px] md:text-[300px]"
-          aria-hidden="true"
-        >
-          -{najveci}%
-        </p>
+          <div class="absolute inset-0 bg-gradient-to-b lg:bg-gradient-to-r from-[#1d1814] via-[#1d1814]/30 to-transparent" aria-hidden="true" />
+        </div>
       )}
 
-      <div class="relative max-w-[1300px] mx-auto px-5 md:px-10 py-20 md:py-28 grid gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-        <div class="pojava">
-          <p class="flex items-center gap-4 text-[11px] font-semibold uppercase tracking-[0.3em]" style="color:var(--popust)">
-            <span class="h-px w-10" style="background:var(--popust)" />
-            {oznaka}
-          </p>
-          <h2 id="akcija-naslov" class="mt-7 max-w-[620px] font-serif text-[42px] md:text-[68px] leading-[1] tracking-[-0.03em] text-balance">
+      <div class="relative max-w-[1300px] mx-auto px-5 md:px-10 pt-16 pb-12 md:pt-24 md:pb-24">
+        <div class="pojava max-w-[620px] lg:max-w-[600px]">
+          <p class="text-[13px] font-semibold uppercase tracking-[0.34em] text-[#f3ece0]/85">Studio 27</p>
+          <h2
+            id="akcija-naslov"
+            class="mt-4 font-poppins font-extrabold uppercase leading-[0.88] tracking-[-0.035em] text-[60px] sm:text-[84px] md:text-[104px] text-balance"
+          >
             {akcija.naslov}
           </h2>
-          {akcija.tekst && <p class="mt-6 max-w-[480px] text-[15px] md:text-[16px] leading-relaxed text-white/70">{akcija.tekst}</p>}
+          <p class="mt-4 inline-block px-4 py-1 font-poppins text-[22px] md:text-[28px] font-bold uppercase tracking-[0.04em] text-white" style="background:var(--popust)">
+            {oznaka}
+          </p>
+          {akcija.tekst && <p class="mt-6 max-w-[480px] text-[15px] leading-relaxed text-[#f3ece0]/70">{akcija.tekst}</p>}
 
-          {akcija.doMs && <Odbrojavanje naslov="Akcija ističe za" class="mt-10" />}
-
-          <a
-            href={link}
-            class="group mt-10 inline-flex items-center gap-3 bg-white px-7 py-4 text-[13px] font-semibold text-neutral-900 hover:bg-[#f4f2ee] transition-colors"
-          >
-            {dugme}
-            <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </a>
-        </div>
-
-        {naPopustu.length > 0 && (
-          <div class="pojava" style="--kasnjenje:0.15s">
-            <p class="text-[10.5px] font-medium uppercase tracking-[0.26em] text-white/50">Kursevi na popustu</p>
-            <ul class="mt-4 border-t border-white/15">
-              {naPopustu.map((k) => {
-                const p = popustKursa(k)!;
-                return (
-                  <li class="border-b border-white/15">
-                    <a href={kursPutanja(k)} class="group grid grid-cols-[72px_1fr_auto] items-center gap-5 py-5">
-                      {k.slikaUrl ? (
-                        <img
-                          src={manjaSlika(slikaIzBaze(k.slikaUrl), 480)}
-                          alt=""
-                          loading="lazy"
-                          class="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-                        />
-                      ) : (
-                        <span />
-                      )}
-                      <span class="min-w-0">
-                        <span class="block font-serif text-[21px] md:text-[23px] leading-tight tracking-[-0.01em]">{lepNaziv(k.naziv)}</span>
-                        <span class="mt-2 flex items-baseline gap-3 text-[14px]">
-                          <s class="text-white/40">{k.cena} €</s>
-                          <span class="font-serif text-[20px]" style="color:var(--popust)">{cenaKursa(k)} €</span>
+          {cenovnik.length > 0 && (
+            <ul class="mt-9">
+              {cenovnik.map((k, i) => (
+                <li class:list={["py-5", i > 0 && "border-t border-[#f3ece0]/35"]}>
+                  <a href={k.url} class="group block">
+                    {k.redovi.length === 1 && !k.redovi[0].naziv ? (
+                      <span class="flex items-baseline justify-between gap-4">
+                        <span class="font-poppins text-[21px] md:text-[25px] font-semibold leading-tight group-hover:underline underline-offset-4 decoration-1">
+                          {k.naziv}
+                        </span>
+                        <span class="shrink-0 flex items-baseline gap-3">
+                          <s class="font-poppins text-[15px] md:text-[17px] text-[#f3ece0]/50">{k.redovi[0].stara} €</s>
+                          <span class="font-poppins text-[24px] md:text-[30px] font-bold">{k.redovi[0].nova} €</span>
                         </span>
                       </span>
-                      <span
-                        class="flex h-14 w-14 items-center justify-center rounded-full border text-[13px] font-semibold transition-colors group-hover:bg-white/10"
-                        style="border-color:var(--popust);color:var(--popust)"
-                      >
-                        -{procenatPopusta(p)}%
-                      </span>
-                    </a>
-                  </li>
-                );
-              })}
+                    ) : (
+                      <Fragment>
+                        <span class="block font-poppins text-[21px] md:text-[25px] font-semibold leading-tight group-hover:underline underline-offset-4 decoration-1">
+                          {k.naziv}
+                        </span>
+                        {k.redovi.map((r) => (
+                          <span class="mt-2 flex items-baseline justify-between gap-4 pl-1">
+                            <span class="font-poppins text-[16px] md:text-[18px] text-[#f3ece0]/85">{r.naziv}</span>
+                            <span class="shrink-0 flex items-baseline gap-3">
+                              <s class="font-poppins text-[15px] md:text-[17px] text-[#f3ece0]/50">{r.stara} €</s>
+                              <span class="font-poppins text-[24px] md:text-[30px] font-bold">{r.nova} €</span>
+                            </span>
+                          </span>
+                        ))}
+                      </Fragment>
+                    )}
+                  </a>
+                </li>
+              ))}
             </ul>
+          )}
+
+          <div class="mt-8 flex flex-wrap items-end gap-x-8 gap-y-6">
+            {akcija.doMs && <Odbrojavanje naslov="Akcija ističe za" velicina="mala" />}
+            <a
+              href={link}
+              class="group inline-flex items-center gap-3 bg-[#f3ece0] px-7 py-4 text-[13px] font-semibold text-neutral-900 hover:bg-white transition-colors"
+            >
+              {dugme}
+              <Ikona ime="strelica" class="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </a>
           </div>
-        )}
+        </div>
       </div>
     </section>
   )

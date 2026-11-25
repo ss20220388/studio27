@@ -137,8 +137,41 @@ public class SemaBaze implements ApplicationRunner {
                 datum DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
             ) DEFAULT CHARSET=utf8mb4
             """
+        )),
+        // datum početka popusta i akcije; Black Friday 2026 (27.11. 00:00 – 30.11. 23:59) sa cenama klijentkinje;
+        // tekstovi paketa kursa 7 ("privatnom chatu", crvena stavka !!...!!). Popust/akcija se upisuju samo
+        // ako u adminu još nisu uključeni, a tekstovi samo ako su i dalje stari.
+        new Korak("2026-11-25-black-friday", List.of(
+            "ALTER TABLE kurs ADD COLUMN popustOd DATETIME NULL",
+            "ALTER TABLE akcija ADD COLUMN odKada DATETIME NULL",
+            "UPDATE paket SET opis = REPLACE(opis, 'Podrška u grupnom chatu', 'Podrška u privatnom chatu') WHERE kursId = 7",
+            "UPDATE paket SET opis = REPLACE(opis, '\nRad na konkretnom projektu\n', '\n!!Rad na konkretnom projektu!!\n') "
+                + "WHERE kursId = 7 AND naziv = 'Live mentorship + AI'",
+            blackFriday(7, 299, "14.57"),
+            blackFriday(3, 335, "12.99"),
+            blackFriday(5, 111, "14.62"),
+            // paketi kursa 7: Online 299, Online + Review 369, Live mentorship bez popusta (redovna cena)
+            "UPDATE paket SET cenaPopust = CASE naziv WHEN 'Online' THEN 299 WHEN 'Online + Review' THEN 369 ELSE cena END "
+                + "WHERE kursId = 7 AND cenaPopust IS NULL",
+            "INSERT IGNORE INTO akcija (id) VALUES (1)",
+            """
+            UPDATE akcija SET ukljucen = 1, oznaka = 'Akcija', naslov = 'Black Friday',
+                tekst = 'Najniže cene ove godine na kurseve 3D vizualizacije – samo od 27. do 30. novembra.',
+                boja = '#e11d2a', odKada = '2026-11-27 00:00:00', doKada = '2026-11-30 23:59:00',
+                dugme = 'Pogledaj kurseve', link = '/#edukacije'
+            WHERE id = 1 AND ukljucen = 0
+            """
         ))
     );
+
+    // Black Friday popust jednog kursa (samo ako popust nije već podešen u adminu)
+    private static String blackFriday(int kursId, int novaCena, String procenat) {
+        return "UPDATE kurs SET popustUkljucen = 1, popustProcenat = " + procenat + ", popustCena = " + novaCena
+             + ", popustOd = '2026-11-27 00:00:00', popustDo = '2026-11-30 23:59:00', popustOznaka = 'Black Friday'"
+             + ", popustNaslov = 'Black Friday akcija'"
+             + ", popustTekst = 'Najniža cena ove godine – važi do ponedeljka 30. novembra u ponoć.'"
+             + ", popustBoja = '#c49a5a' WHERE kursId = " + kursId + " AND popustUkljucen = 0";
+    }
 
     // Popunjava paket kursa 7 samo ako stavke još nisu unete u adminu
     private static String detaljiPaketa(String naziv, String podnaslov, String uvod, String istaknuto, String dugme, String opis) {

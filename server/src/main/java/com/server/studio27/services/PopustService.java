@@ -13,7 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 // Popust kursa (npr. Black Friday): uključuje se u adminu, uz procenat i novu cenu.
-// Važi dok je uključen i dok ne prođe "popustDo" (ako je upisan, po beogradskom vremenu).
+// Važi dok je uključen, od "popustOd" do "popustDo" (ako su upisani, po beogradskom vremenu).
 // Procenat važi i za pakete kursa; nova cena kursa je ona upisana u adminu.
 // Sve cene za plaćanje idu kroz cenaKursa(), da sajt, uplatnice i kartice računaju isto.
 @Service
@@ -22,7 +22,7 @@ public class PopustService {
     public static final ZoneId ZONA = ZoneId.of("Europe/Belgrade");
 
     public static final String KOLONE =
-            "popustUkljucen, popustProcenat, popustCena, popustDo, popustOznaka, popustNaslov, popustTekst, popustBoja, popustSlika";
+            "popustUkljucen, popustProcenat, popustCena, popustOd, popustDo, popustOznaka, popustNaslov, popustTekst, popustBoja, popustSlika";
 
     private final JdbcTemplate jdbc;
 
@@ -37,6 +37,8 @@ public class PopustService {
         p.put("ukljucen", istina(red.get("popustUkljucen")));
         p.put("procenat", procenat(red));
         p.put("cena", red.get("popustCena") instanceof Number n ? n.intValue() : null);
+        LocalDateTime odKada = vreme(red.get("popustOd"));
+        p.put("od", odKada == null ? null : odKada.toString());
         p.put("do", doKada == null ? null : doKada.toString());
         // za odbrojavanje na sajtu (milisekunde od 1970, nezavisno od vremenske zone posetioca)
         p.put("doMs", doKada == null ? null : doKada.atZone(ZONA).toInstant().toEpochMilli());
@@ -56,8 +58,13 @@ public class PopustService {
         if (!istina(red.get("popustUkljucen"))) return false;
         BigDecimal procenat = procenat(red);
         if (procenat == null || procenat.signum() <= 0 || procenat.compareTo(BigDecimal.valueOf(100)) >= 0) return false;
-        LocalDateTime doKada = vreme(red.get("popustDo"));
-        return doKada == null || LocalDateTime.now(ZONA).isBefore(doKada);
+        return uRoku(vreme(red.get("popustOd")), vreme(red.get("popustDo")));
+    }
+
+    // sada je između početka i kraja (prazno = bez ograničenja)
+    private static boolean uRoku(LocalDateTime od, LocalDateTime doKada) {
+        LocalDateTime sada = LocalDateTime.now(ZONA);
+        return (od == null || !sada.isBefore(od)) && (doKada == null || sada.isBefore(doKada));
     }
 
     // Cena kursa (bez paketa) sa popustom: upisana nova cena, a ako je nema, cena umanjena za procenat
@@ -135,13 +142,17 @@ public class PopustService {
         if (redovi.isEmpty() || !traje(redovi.get(0))) return mapa;
         BigDecimal procenat = procenat(redovi.get(0));
         jdbc.query("SELECT paketId, cena, cenaPopust FROM paket WHERE kursId = ?",
-                rs -> { mapa.put(rs.getLong("paketId"), cenaPaketa(rs.getInt("cena"), rs.getObject("cenaPopust"), procenat)); }, kursId);
+                rs -> {
+                    int nova = cenaPaketa(rs.getInt("cena"), rs.getObject("cenaPopust"), procenat);
+                    if (nova < rs.getInt("cena")) mapa.put(rs.getLong("paketId"), nova); // paket bez popusta ostaje bez precrtane cene
+                }, kursId);
         return mapa;
     }
 
-    // Paket na popustu: njegova cena upisana u adminu (ako je manja od redovne), inače procenat kursa
+    // Paket na popustu: njegova cena upisana u adminu, inače procenat kursa.
+    // Upisana redovna cena znači da taj paket nije na popustu.
     private static int cenaPaketa(int cena, Object cenaPopust, BigDecimal procenat) {
-        if (cenaPopust instanceof Number n && n.intValue() > 0 && n.intValue() < cena) return n.intValue();
+        if (cenaPopust instanceof Number n && n.intValue() > 0 && n.intValue() <= cena) return n.intValue();
         return umanji(cena, procenat);
     }
 
@@ -153,7 +164,9 @@ public class PopustService {
         LocalDateTime doKada = vreme(red.get("doKada"));
         boolean ukljucen = istina(red.get("ukljucen"));
         a.put("ukljucen", ukljucen);
-        a.put("traje", ukljucen && (doKada == null || LocalDateTime.now(ZONA).isBefore(doKada)));
+        LocalDateTime odKada = vreme(red.get("odKada"));
+        a.put("traje", ukljucen && uRoku(odKada, doKada));
+        a.put("od", odKada == null ? null : odKada.toString());
         a.put("do", doKada == null ? null : doKada.toString());
         a.put("doMs", doKada == null ? null : doKada.atZone(ZONA).toInstant().toEpochMilli());
         for (String k : List.of("oznaka", "naslov", "tekst", "boja", "slika", "dugme", "link")) a.put(k, red.get(k));

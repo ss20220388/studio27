@@ -25,6 +25,9 @@ const stavke = (opis?: string) => (opis || "").split("\n").map((s) => s.trim()).
 // "**Modelovanje** od nule" -> [{tekst: "Modelovanje", jako: true}, {tekst: " od nule", jako: false}]
 const delovi = (tekst: string) =>
   tekst.split("**").map((t, i) => ({ tekst: t, jako: i % 2 === 1 })).filter((d) => d.tekst);
+// "!!Rad na konkretnom projektu!!" = stavka crvenim slovima (admin: dugme "A" kod stavke)
+const crvena = (s: string) => /^!!(.+)!!$/.test(s);
+const bezOznake = (s: string) => s.replace(/^!!(.+)!!$/, "$1");
 ---
 
 <section id="paketi" class="bg-[#f7f6f3] border-t border-neutral-100 scroll-mt-20" aria-labelledby="paketi-naslov">
@@ -82,8 +85,8 @@ const delovi = (tekst: string) =>
                   {stavke(p.opis).map((s) => (
                     <li class="flex gap-3">
                       <Ikona ime="kvacica" class="w-4 h-4 mt-0.5 shrink-0 text-neutral-900" debljina={2} />
-                      <span>
-                        {delovi(s).map((d) => (d.jako ? <strong class="font-semibold text-neutral-900">{d.tekst}</strong> : d.tekst))}
+                      <span class:list={[crvena(s) && "font-medium text-[#b3261e]"]}>
+                        {delovi(bezOznake(s)).map((d) => (d.jako ? <strong class:list={["font-semibold", crvena(s) ? "text-[#b3261e]" : "text-neutral-900"]}>{d.tekst}</strong> : d.tekst))}
                       </span>
                     </li>
                   ))}

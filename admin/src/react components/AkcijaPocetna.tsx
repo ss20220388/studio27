@@ -12,6 +12,7 @@ interface Forma {
   tekst: string;
   boja: string;
   slika: string;
+  od: string;
   do: string;
   dugme: string;
   link: string;
@@ -30,12 +31,23 @@ const izPodataka = (a: any): Forma => ({
   tekst: a?.tekst || "",
   boja: a?.boja || "#c49a5a",
   slika: a?.slika || "",
+  od: a?.od ? String(a.od).slice(0, 16) : "",
   do: a?.do ? String(a.do).slice(0, 16) : "",
   dugme: a?.dugme || "",
   link: a?.link || "/#edukacije",
 });
 
 // ponedeljak posle Black Friday-a u 23:59 (sledeće godine ako je prošao)
+
+// petak Black Friday-a (posle 4. četvrtka u novembru) u 00:00, iste godine kao kraj
+function pocetakBlackFridaya(kraj: string): string {
+  if (!kraj) return "";
+  const ponedeljak = new Date(kraj);
+  const petak = new Date(ponedeljak.getFullYear(), ponedeljak.getMonth(), ponedeljak.getDate() - 3);
+  const d = (n: number) => String(n).padStart(2, "0");
+  return `${petak.getFullYear()}-${d(petak.getMonth() + 1)}-${d(petak.getDate())}T00:00`;
+}
+
 function krajBlackFridaya(): string {
   const sad = new Date();
   for (const godina of [sad.getFullYear(), sad.getFullYear() + 1]) {
@@ -81,6 +93,7 @@ export default function AkcijaPocetna({ API_URL, accesToken, kursevi, onZatvori 
       tekst: f.tekst || "Najniže cene ove godine – samo do ponedeljka u ponoć.",
       boja: "#c49a5a",
       do: f.do || krajBlackFridaya(),
+      od: f.od || pocetakBlackFridaya(f.do || krajBlackFridaya()),
       dugme: f.dugme || "Pogledaj kurseve",
       link: f.link || "/#edukacije",
     });
@@ -106,7 +119,7 @@ export default function AkcijaPocetna({ API_URL, accesToken, kursevi, onZatvori 
       const res = await fetch(`${API_URL}/api/akcija`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", ...(accesToken ? { Authorization: `Bearer ${accesToken}` } : {}) },
-        body: JSON.stringify({ ...f, do: f.do || null }),
+        body: JSON.stringify({ ...f, od: f.od || null, do: f.do || null }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Čuvanje nije uspelo.");
@@ -116,7 +129,7 @@ export default function AkcijaPocetna({ API_URL, accesToken, kursevi, onZatvori 
         tekst: data.akcija?.traje
           ? "Akcija je sačuvana i vidi se na početnoj (za najviše minut)."
           : f.ukljucen
-            ? "Sačuvano, ali akcija trenutno ne važi (proverite datum kraja)."
+            ? "Sačuvano. Akcija se na početnoj vidi tek u zadatom roku (proverite datum početka i kraja)."
             : "Sačuvano. Akcija je isključena.",
       });
     } catch (e: any) {
@@ -161,11 +174,17 @@ export default function AkcijaPocetna({ API_URL, accesToken, kursevi, onZatvori 
           className="w-full px-3 py-2 text-sm text-neutral-200 bg-neutral-800 border border-neutral-700 rounded-lg outline-none focus:border-red-900 resize-y"
         />
       </label>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="block">
-          <span className={labelClass}>Traje do (prazno = dok se ne isključi)</span>
+          <span className={labelClass}>Počinje (prazno = odmah)</span>
+            <input type="datetime-local" value={f.od} onChange={(e) => izmeni({ od: e.target.value })} className={`${poljeClass} [color-scheme:dark]`} />
+          </label>
+          <label className="block">
+            <span className={labelClass}>Traje do (prazno = dok se ne isključi)</span>
           <input type="datetime-local" value={f.do} onChange={(e) => izmeni({ do: e.target.value })} className={`${poljeClass} [color-scheme:dark]`} />
         </label>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <label className="block">
           <span className={labelClass}>Tekst dugmeta</span>
           <input value={f.dugme} onChange={(e) => izmeni({ dugme: e.target.value })} placeholder="Pogledaj kurseve" maxLength={60} className={poljeClass} />

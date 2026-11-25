@@ -14,8 +14,8 @@ import org.springframework.stereotype.Service;
 
 // Podsetnik za napuštenu kupovinu.
 // Kad prijavljen kupac otvori stranicu plaćanja (/pay), sajt to javi serveru (zabelezi) i nastaje zapis
-// u napustena_kupovina. Ako kurs ne kupi, dobija mejl posle "prvi-sati" (24 h) i poslednji posle
-// "drugi-sati" (3 dana) od poslednjeg dolaska na plaćanje. Kupljeni kursevi (platio P/C ili pohadja)
+// u napustena_kupovina. Ako kurs ne kupi, dobija mejl posle "prvi-sati" (3 dana) od poslednjeg dolaska
+// na plaćanje. Drugi mejl se šalje samo ako je "drugi-sati" veći od "prvi-sati" (podrazumevano nema drugog). Kupljeni kursevi (platio P/C ili pohadja)
 // se izbacuju iz podsetnika, a kad ne ostane nijedan, zapis se zatvara. Svaki mejl ima link za odjavu.
 // Vremena se porede u bazi (NOW()), pa vremenska zona servera ne smeta.
 @Service
@@ -30,9 +30,9 @@ public class PodsetnikKupovine {
 
     @Value("${podsetnik.ukljucen:true}")
     private boolean ukljucen;
-    @Value("${podsetnik.prvi-sati:24}")
+    @Value("${podsetnik.prvi-sati:72}")
     private int prviSati;
-    @Value("${podsetnik.drugi-sati:72}")
+    @Value("${podsetnik.drugi-sati:0}")
     private int drugiSati;
 
     public PodsetnikKupovine(JdbcTemplate jdbc, MailService mailService, PopustService popustService) {
@@ -86,9 +86,9 @@ public class PodsetnikKupovine {
                 WHERE n.zavrseno IS NULL AND n.pokusaja < ?
                   AND NOT EXISTS (SELECT 1 FROM podsetnik_odjava o WHERE o.email = n.email)
                   AND ((n.podsetnik1 IS NULL AND n.azurirano <= NOW() - INTERVAL ? HOUR)
-                    OR (n.podsetnik1 IS NOT NULL AND n.podsetnik2 IS NULL AND n.azurirano <= NOW() - INTERVAL ? HOUR
+                    OR (? AND n.podsetnik1 IS NOT NULL AND n.podsetnik2 IS NULL AND n.azurirano <= NOW() - INTERVAL ? HOUR
                         AND n.podsetnik1 <= NOW() - INTERVAL ? HOUR))
-                """, NAJVISE_POKUSAJA, prviSati, drugiSati, Math.max(1, drugiSati - prviSati) / 2);
+                """, NAJVISE_POKUSAJA, prviSati, imaDrugi(), drugiSati, Math.max(1, (drugiSati - prviSati) / 2));
         for (Map<String, Object> z : zapisi) {
             try {
                 obradi(z);
@@ -130,8 +130,14 @@ public class PodsetnikKupovine {
         mailService.sendHtmlEmail((String) z.get("email"), naslov, podnaslov, mejl);
         jdbc.update(drugi
                 ? "UPDATE napustena_kupovina SET podsetnik2 = NOW(), zavrseno = NOW(), pokusaja = 0 WHERE id = ?"
-                : "UPDATE napustena_kupovina SET podsetnik1 = NOW(), pokusaja = 0 WHERE id = ?", id);
+                : imaDrugi()
+                        ? "UPDATE napustena_kupovina SET podsetnik1 = NOW(), pokusaja = 0 WHERE id = ?"
+                        : "UPDATE napustena_kupovina SET podsetnik1 = NOW(), zavrseno = NOW(), pokusaja = 0 WHERE id = ?", id);
         System.out.println("[Podsetnik] Poslat " + (drugi ? "drugi" : "prvi") + " podsetnik (zapis " + id + ")");
+    }
+
+    private boolean imaDrugi() {
+        return drugiSati > prviSati;
     }
 
     // HTML mejla: pozdrav, kursevi sa cenom (stara precrtana ako traje popust), dugme i odjava
@@ -174,6 +180,8 @@ public class PodsetnikKupovine {
         String uvod = drugi
                 ? "Primetili smo da još nisi završio/la kupovinu. Ako ti nešto nije jasno oko kursa, plaćanja ili paketa, samo odgovori na ovaj mejl ili nam piši na WhatsApp – rado ćemo pomoći."
                 : "Video smo da si započeo/la kupovinu, ali plaćanje nije završeno. Kurs te i dalje čeka:";
+        String pomoc = drugi ? ""
+                : "<p>Ako ti nešto nije jasno oko kursa, paketa ili plaćanja, samo odgovori na ovaj mejl – rado ćemo pomoći.</p>";
         String popustTekst = popustDo == null ? ""
                 : "<p style='color:#e8c48f'><strong>Popust važi još do " + popustDo + "</strong> – posle toga cena se vraća na redovnu.</p>";
         String link = sajt + (prviKurs != null ? "/kurs/" + prviKurs : "/#edukacije");
@@ -183,6 +191,7 @@ public class PodsetnikKupovine {
                 + "<p>" + uvod + "</p>"
                 + "<div class='invoice-box'>" + stavke + "</div>"
                 + popustTekst
+                + pomoc
                 + "<p style='text-align:center'><a class='btn' href='" + link + "'>Završi kupovinu</a></p>"
                 + "<p style='margin-top:30px;font-size:12px;color:#71717a'>Ovaj mejl smo poslali jer si otvorio/la stranicu za plaćanje na našem sajtu. "
                 + "Ne želiš ovakve podsetnike? <a href='" + odjava + "'>Odjavi se</a>.</p>";

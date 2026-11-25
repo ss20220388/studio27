@@ -30,6 +30,11 @@ interface Lekcija {
   videoUrls: string[];
 }
 
+// "27.11. 00:00 – 30.11. 23:59" iz popust.od / popust.do ("2026-11-27T00:00")
+const datumKratko = (s?: string | null) => (s ? `${s.slice(8, 10)}.${s.slice(5, 7)}. ${s.slice(11, 16)}` : "");
+const periodPopusta = (p: { od?: string | null; do?: string | null }) =>
+  p.od && p.do ? `${datumKratko(p.od)} – ${datumKratko(p.do)}` : p.od ? `od ${datumKratko(p.od)}` : `do ${datumKratko(p.do)}`;
+
 export default function CourseList({
   kursevi,
   getImageUrl,
@@ -104,6 +109,11 @@ export default function CourseList({
               <p className="text-xs text-neutral-500 mt-1 line-clamp-2">{kurs.glavniKurs || kurs.opis}</p>
               
               <div className="mt-auto pt-4 space-y-3">
+                {(kurs as any).popust?.ukljucen && ((kurs as any).popust.od || (kurs as any).popust.do) && (
+                  <p className={`text-[11px] ${(kurs as any).popust.traje ? "text-green-400" : "text-amber-500"}`}>
+                    {(kurs as any).popust.traje ? "Popust traje" : "Popust zakazan"}: {periodPopusta((kurs as any).popust)}
+                  </p>
+                )}
                 <div className="flex items-center justify-between">
                   {(kurs as any).popust?.traje ? (
                     <span className="flex items-baseline gap-1.5 text-sm font-bold text-white">
