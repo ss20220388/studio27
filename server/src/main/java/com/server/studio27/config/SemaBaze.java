@@ -161,6 +161,11 @@ public class SemaBaze implements ApplicationRunner {
                 dugme = 'Pogledaj kurseve', link = '/#edukacije'
             WHERE id = 1 AND ukljucen = 0
             """
+        )),
+        // fotografija vizuala akcije: rad Mine Jeremić (dnevna soba sa zelenom sofom), po izboru klijentkinje;
+        // samo ako slika akcije nije već izabrana u adminu
+        new Korak("2026-11-25-akcija-slika", List.of(
+            "UPDATE akcija SET slika = '/uploads/MinaJeremic03.webp' WHERE id = 1 AND (slika IS NULL OR slika = '')"
         ))
     );
 
