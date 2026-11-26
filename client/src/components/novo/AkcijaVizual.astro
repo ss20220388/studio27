@@ -36,6 +36,13 @@ const { akcija, varijanta = "velika", kursevi = [], paketi = {}, slikaRada = "" 
 const boja = bojaPopusta(akcija);
 const oznaka = akcija.oznaka || "Akcija";
 const link = akcija.link || "/#edukacije";
+// period akcije: "27.11. – 30.11."
+const dan = (v?: string | null) => {
+  const m = v?.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${+m[3]}.${+m[2]}.` : "";
+};
+const period = akcija.od && akcija.do ? `${dan(akcija.od)} – ${dan(akcija.do)}` : "";
+const najnizaCena = (() => { const c = kursevi.filter((k) => popustKursa(k)).map((k) => cenaKursa(k)).filter((c) => c > 0); return c.length ? Math.min(...c) : 0; })();
 const dugme = akcija.dugme || "Pogledaj kurseve";
 const naPopustu = kursevi.filter((k) => popustKursa(k));
 // fotografija: slika akcije iz admina, pa rad polaznika, pa glavna slika prvog kursa na popustu
@@ -60,21 +67,31 @@ const cenovnik = naPopustu.map((k) => {
       href={link}
       data-popust-traka
       data-do={akcija.doMs ?? ""}
-      class="group relative block border-b border-white/10 bg-[#140f0c] text-white"
+      class="group relative block overflow-hidden border-b border-white/10 bg-[#140f0c] text-white"
       style={`--popust:${boja}`}
+      aria-label={`${akcija.naslov}${period ? ", " + period : ""}`}
     >
-      <div class="max-w-[1400px] mx-auto px-5 md:px-10 py-2.5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-center text-[12.5px]">
-        <span class="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white" style="background:var(--popust)">{oznaka}</span>
-        <span class="font-semibold uppercase tracking-[0.12em] text-white/90">{akcija.naslov}</span>
-        {akcija.doMs && (
-          <Fragment>
-            <span class="hidden sm:inline text-white/30" aria-hidden="true">·</span>
-            <span class="text-white/55">
-              još <span data-odbrojavanje class="tabular-nums text-white" />
-            </span>
-          </Fragment>
+      {slika && (
+        <Fragment>
+          <img src={manjaSlika(slika, 800)} alt="" class="absolute inset-y-0 right-0 h-full w-2/3 sm:w-1/2 object-cover opacity-70" />
+          <div class="absolute inset-0 bg-gradient-to-r from-[#140f0c] via-[#140f0c]/90 to-[#140f0c]/20" aria-hidden="true" />
+        </Fragment>
+      )}
+      <div class="relative max-w-[1400px] mx-auto px-5 md:px-10 py-3 flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1.5 text-center">
+        <span class="px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.2em] text-white" style="background:var(--popust)">{oznaka}</span>
+        <span class="text-[15px] md:text-[17px] font-extrabold uppercase tracking-[0.1em]">{akcija.naslov}</span>
+        {period && <span class="text-[13px] md:text-[14px] font-medium tabular-nums text-white/85">{period}</span>}
+        {najnizaCena > 0 && (
+          <span class="hidden sm:inline text-[13px] text-white/60">
+            <span class="mr-3 text-white/25" aria-hidden="true">|</span>kursevi od <b class="text-white font-semibold">{najnizaCena} €</b>
+          </span>
         )}
-        <Ikona ime="strelica" class="hidden sm:block w-3.5 h-3.5 text-white/60 transition-transform group-hover:translate-x-0.5" />
+        {akcija.doMs && (
+          <span class="hidden md:inline text-[13px] text-white/55">
+            <span class="mr-3 text-white/25" aria-hidden="true">|</span>još <span data-odbrojavanje class="tabular-nums text-white" />
+          </span>
+        )}
+        <Ikona ime="strelica" class="hidden md:block w-3.5 h-3.5 text-white/60 transition-transform group-hover:translate-x-0.5" />
       </div>
     </a>
   )

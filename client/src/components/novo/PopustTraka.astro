@@ -38,7 +38,7 @@ const staraCena = Astro.props.staraCena ?? kurs.cena ?? 0;
 const novaCena = Astro.props.novaCena ?? cenaKursa(kurs);
 const od = imaPakete ? "od " : "";
 const oznaka = popust?.oznaka || "Popust";
-const naslov = popust?.naslov || `-${procenat}% na kurs ${lepNaziv(kurs.naziv)}`;
+const naslov = popust?.naslov || `Akcija na kurs ${lepNaziv(kurs.naziv)}`;
 const slika = popust?.slika ? slikaIzBaze(popust.slika) : "";
 const dugme =
   "group inline-flex items-center justify-center gap-3 bg-white px-6 py-3.5 text-[13px] font-semibold text-neutral-900 hover:bg-[#f4f2ee] transition-colors";
@@ -87,12 +87,8 @@ const dugme =
         </Fragment>
       )}
 
-      <div class="relative max-w-[1300px] mx-auto px-5 md:px-10 py-8 md:py-10 grid gap-7 lg:grid-cols-[auto_1fr_auto] lg:items-center lg:gap-12">
-        <p class="font-serif leading-[0.9] tracking-[-0.04em] text-[68px] md:text-[96px]" style="color:var(--popust)">
-          -{procenat}%
-        </p>
-
-        <div class="min-w-0 lg:border-l lg:border-white/15 lg:pl-12">
+      <div class="relative max-w-[1300px] mx-auto px-5 md:px-10 py-8 md:py-10 grid gap-7 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-12">
+        <div class="min-w-0">
           <p class="flex items-center gap-4 text-[11px] font-semibold uppercase tracking-[0.3em]" style="color:var(--popust)">
             <span class="h-px w-8" style="background:var(--popust)" />
             {oznaka}

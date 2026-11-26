@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import MejlNeaktivnima from "./MejlNeaktivnima";
 
 export default function SettingsPage({ token, apiUrl,clientUrl }: { token: string | null, apiUrl: string,clientUrl: string }) {
   const [emailForm, setEmailForm] = useState({ subject: "", body: "" });
@@ -164,6 +165,8 @@ export default function SettingsPage({ token, apiUrl,clientUrl }: { token: strin
           </div>
         </div>
       </div>
+
+      <MejlNeaktivnima token={token} apiUrl={apiUrl} />
 
       <div className="border border-red-900/30 bg-red-950/20 rounded-xl overflow-hidden mt-12">
         <div className="p-5">

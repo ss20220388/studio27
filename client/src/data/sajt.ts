@@ -55,6 +55,8 @@ export type PopustKursa = {
 export type Akcija = {
   traje: boolean;
   doMs: number | null;
+  od?: string | null;
+  do?: string | null;
   oznaka?: string | null;
   naslov?: string | null;
   tekst?: string | null;

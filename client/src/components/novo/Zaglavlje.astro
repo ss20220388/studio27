@@ -4,7 +4,8 @@
 // - "preko": providno preko fotografije na početnoj, a pri skrolovanju postaje belo
 import Ikona from "./Ikona.astro";
 import NalogDugme from "../../react-components/NalogDugme";
-import { API_URL, APP_URL, ADMIN_URL } from "../../data/sajt";
+import AkcijaVizual from "./AkcijaVizual.astro";
+import { API_URL, APP_URL, ADMIN_URL, ucitajAkciju, ucitajKurseve } from "../../data/sajt";
 
 export type Link = { tekst: string; href?: string; kontakt?: boolean };
 
@@ -25,6 +26,8 @@ const {
 } = Astro.props;
 
 const korisnik = (Astro.locals as any).korisnik ?? null;
+// akcija (npr. Black Friday) stoji iznad menija na svakoj stranici dok traje
+const [akcija, kursevi] = await Promise.all([ucitajAkciju(), ucitajKurseve()]);
 ---
 
 <header
@@ -36,6 +39,7 @@ const korisnik = (Astro.locals as any).korisnik ?? null;
   ]}
 >
   {/* traka iznad zaglavlja (npr. najava Black Friday popusta na početnoj) */}
+  {akcija && <AkcijaVizual akcija={akcija} kursevi={kursevi} varijanta="traka" />}
   <slot name="najava" />
   <div class="mx-auto flex max-w-[1400px] items-center justify-between gap-6 px-5 md:px-10 py-4">
     <a href="/" class="shrink-0" aria-label="Studio 27 – početna">
