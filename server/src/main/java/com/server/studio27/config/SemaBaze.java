@@ -166,6 +166,17 @@ public class SemaBaze implements ApplicationRunner {
         // samo ako slika akcije nije već izabrana u adminu
         new Korak("2026-11-25-akcija-slika", List.of(
             "UPDATE akcija SET slika = '/uploads/MinaJeremic03.webp' WHERE id = 1 AND (slika IS NULL OR slika = '')"
+        )),
+        // podešavanja sajta (ključ -> vrednost); kurs evra za plaćanje u dinarima menja se u adminu
+        new Korak("2026-11-27-kurs-evra", List.of(
+            """
+            CREATE TABLE IF NOT EXISTS podesavanje (
+                kljuc VARCHAR(60) NOT NULL PRIMARY KEY,
+                vrednost VARCHAR(255) NULL,
+                azurirano DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) DEFAULT CHARSET=utf8mb4
+            """,
+            "INSERT IGNORE INTO podesavanje (kljuc, vrednost) VALUES ('kursEvra', '117.4')"
         ))
     );
 

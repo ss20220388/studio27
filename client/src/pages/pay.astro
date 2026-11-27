@@ -36,6 +36,18 @@ if (accessToken) {
 } else {
   isAuthError = true;
 }
+
+// kurs evra iz admina (Podešavanja); ako server ne odgovori, važi podrazumevani
+let kursEvra = 117.4;
+try {
+  const kursRes = await fetch(`${API_URL}/api/kurs-evra`);
+  if (kursRes.ok) {
+    const k = Number((await kursRes.json())?.kurs);
+    if (Number.isFinite(k) && k > 0) kursEvra = k;
+  }
+} catch (err) {
+  console.error("Greška pri učitavanju kursa evra:", err);
+}
 ---
 
 <html lang="sr">
@@ -63,7 +75,7 @@ if (accessToken) {
         </a>
       </div>
     ) : (
-      <PaymentFlow API_URL={API_URL} token={accessToken} client:only="react" studentId={userData.userId} />
+      <PaymentFlow API_URL={API_URL} token={accessToken} client:only="react" studentId={userData.userId} kursEvra={kursEvra} />
     )}
   </body>
 </html>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import MejlNeaktivnima from "./MejlNeaktivnima";
+import KursEvra from "./KursEvra";
 
 export default function SettingsPage({ token, apiUrl,clientUrl }: { token: string | null, apiUrl: string,clientUrl: string }) {
   const [emailForm, setEmailForm] = useState({ subject: "", body: "" });
@@ -98,6 +99,8 @@ export default function SettingsPage({ token, apiUrl,clientUrl }: { token: strin
         <h1 className="text-2xl font-bold text-white">Podešavanja</h1>
         <p className="text-sm text-neutral-500 mt-1">Admin nalog i sistemske opcije</p>
       </div>
+
+      <KursEvra token={token} apiUrl={apiUrl} />
 
       <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-neutral-800">

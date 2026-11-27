@@ -100,6 +100,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/paketi/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/cene-korpe").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/akcija").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/kurs-evra").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/podsetnik/odjava").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/uploaded-images/**").permitAll()
                         .requestMatchers("/api/send-code-to-mail", "/api/send-mail-to-person").permitAll()

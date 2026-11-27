@@ -37,6 +37,8 @@ export default function UplatnicaCheckout({
   // (koji ga dobavlja preko /api/auth/me pre nego što se komponenta
   // uopšte renderuje).
   studentId,
+  // 1 EUR = x RSD, podešava se u adminu (Podešavanja → Kurs evra)
+  kursEvra = 117.4,
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -44,7 +46,7 @@ export default function UplatnicaCheckout({
   const [totals, setTotals] = useState({ eur: 0, rsd: 0 });
   const [termsAccepted, setTermsAccepted] = useState(false);
 
-  const EUR_RSD_RATE = 117.4;
+  const EUR_RSD_RATE = Number(kursEvra) > 0 ? Number(kursEvra) : 117.4;
 
   const handleGoHome = () => (onBack ? onBack() : (window.location.href = "/"));
 
